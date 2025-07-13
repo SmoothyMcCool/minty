@@ -10,7 +10,7 @@
 		</license>
 	</licenses>
 
-	<groupId>tom.mr-ai</groupId>
+	<groupId>tom.minty</groupId>
 	<artifactId>parent</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>

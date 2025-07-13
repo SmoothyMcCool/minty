@@ -11,7 +11,7 @@
 	</licenses>
 
 	<parent>
-		<groupId>tom.mr-ai</groupId>
+		<groupId>tom.minty</groupId>
 		<artifactId>parent</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 		<relativePath>../parent/pom.xml</relativePath>
@@ -22,12 +22,12 @@
 	<dependencies>
 
 		<dependency>
-			<groupId>tom.mr-ai</groupId>
+			<groupId>tom.minty</groupId>
 			<artifactId>app</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-			<groupId>tom.mr-ai</groupId>
+			<groupId>tom.minty</groupId>
 			<artifactId>task</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>

@@ -1,10 +1,10 @@
 {
-  "name": "mrai",
+  "name": "minty",
   "version": "1.0.0",
   "keywords": [],
   "author": "Thomas von Moos",
   "license": "MIT",
-  "description": "MrAi",
+  "description": "Minty",
   "scripts": {
     "ng": "ng",
     "start": "ng serve --open --proxy-config proxy.conf.json",

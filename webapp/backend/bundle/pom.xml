@@ -11,7 +11,7 @@
 	</licenses>
 
 	<parent>
-		<groupId>tom.mr-ai</groupId>
+		<groupId>tom.minty</groupId>
 		<artifactId>parent</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 		<relativePath>../parent/pom.xml</relativePath>
@@ -21,12 +21,12 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>tom.mr-ai</groupId>
+			<groupId>tom.minty</groupId>
 			<artifactId>app</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-			<groupId>tom.mr-ai</groupId>
+			<groupId>tom.minty</groupId>
 			<artifactId>workflow</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
@@ -58,7 +58,7 @@
 				<version>${maven.war.version}</version>
 				<configuration>
 					<warSourceDirectory>src/main/resources</warSourceDirectory>
-					<warName>MrAi</warName>
+					<warName>Minty</warName>
 					<outputDirectory>D:/projects/tomcat/webapps</outputDirectory>
 					<failOnMissingWebXml>false</failOnMissingWebXml>
 					<webResources>
@@ -71,7 +71,7 @@
 				</configuration>
 			</plugin>
 		</plugins>
-		<finalName>MrAi</finalName>
+		<finalName>Minty</finalName>
 	</build>
 
 </project>
