@@ -1,0 +1,17 @@
+<div class="container-fluid bg-image text-light">
+  <div class="row pt-2">
+    <h3>Please enjoy this friendly conversational robot :)</h3>
+  </div>
+  <div class="row m-2">
+    <textarea class="well" rows="10" cols="80" id="aiQuery" name="aiQuery" placeholder="Put your question here" [(ngModel)]="queryText"></textarea>
+  </div>
+  <div class="row mb-2">
+    <div class="col me-auto">
+      <button class="btn btn-primary" (click)="submit()">Submit!</button>
+    </div>
+    <div class="col-auto">
+      <button class="btn btn-primary" (click)="restart()">Start over</button>
+    </div>
+  </div>
+  <ai-conversation [messages]="chatHistory"></ai-conversation>
+</div>

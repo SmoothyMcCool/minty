@@ -1,0 +1,23 @@
+doctype html
+html(lang='en')
+
+  head
+    title Result
+    meta(charset='UTF-8')
+    meta(
+      name='viewport'
+      content='width=device-width, initial-scale=1'
+    )
+    style(type="text/css").
+        pre {white-space: pre-wrap}
+    
+  body
+    h1 Results
+    p
+        strong Start Time:
+            samp #{startTime}
+    p
+        strong End Time:
+            samp #{endTime}
+
+    pre #{result}

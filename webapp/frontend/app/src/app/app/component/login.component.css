@@ -1,0 +1,32 @@
+.btn-float {
+	float: right;
+	margin: 5px 5px 5px 5px;
+}
+.bg-image {
+	background-image: url('../../../assets/login.jpg');
+	min-height: 100vh;
+	background-position: center top;
+	background-repeat: no-repeat;
+	background-size: cover;
+	image-orientation: from-image;
+}
+body, html {
+	height: 100%;
+	margin: 0px;
+}
+.centred {
+	text-align: center;
+}
+.big-margin {
+	margin: 25px;
+}
+.blue {
+	color: #0275d8;
+}
+.well {
+	background-color: rgba(245, 245, 245, 0.66);
+	border-radius: 25px;
+}
+.vertical-centre {
+	margin-top: 15%;
+}

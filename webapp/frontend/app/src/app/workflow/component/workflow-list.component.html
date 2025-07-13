@@ -1,0 +1,36 @@
+<h2>Runnable Tasks</h2>
+<div class="row">
+  <div class="col-4" *ngFor="let task of tasks">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">{{task.name}}</h5>
+        <p class="card-text">{{task.description}}</p>
+        <button class="btn btn-primary" (click)="navigateToTask(task.id)">Yeahhh boi!!!</button>
+      </div>
+    </div>
+  </div>
+</div>
+<h2>Triggered Tasks</h2>
+<div class="row">
+  <div class="col-4" *ngFor="let task of triggerTasks">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">{{task.name}}</h5>
+        <p class="card-text">{{task.description}}</p>
+      </div>
+    </div>
+  </div>
+</div>
+  
+<div class="row well p-2 mx-1 my-2">
+  <div class="col-3">
+    This list refreshes every five seconds.
+    <div class="d-grid gap-3" *ngFor="let result of results">
+      <div class="p-2 bg-light border btn text-start" (click)="displayResultsFor(result)">{{result}}</div>
+    </div>
+  </div>
+  <div class="col-9">
+    <button class="btn btn-primary" *ngIf="responseText" (click)="copyToClipboard()">Copy to clipboard</button>
+    <div [innerHtml]="responseText"></div>
+  </div>
+</div>

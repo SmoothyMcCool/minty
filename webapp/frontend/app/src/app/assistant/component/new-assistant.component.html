@@ -1,0 +1,28 @@
+<h5 class="text-light">Making a new assistant? That's really exciting my guy!</h5>
+<form role="form" class="container-fluid" (submit)="createAssistant()">
+  <div class="form-group mb-2">
+    <label class="text-light" for="assistantName">Name</label>
+    <input type="text" class="form-control opacity-50" id="assistantName" name="assistantName" [(ngModel)]="workingAssistant.name">
+  </div>
+  <div class="form-group mb-2">
+    <input type="checkbox" class="form-check-input text-light" id="isShared" name="isShared" [(ngModel)]="workingAssistant.shared">
+    <label class="text-light ms-1" for="isShared">Shared</label>
+  </div>
+  <div class="form-group mb-2">
+    <label class="text-light" for="assistantPrompt">Prompt</label>
+    <textarea class="form-control opacity-50" id="assistantPrompt" name="assistantPrompt" rows="10" [(ngModel)]="workingAssistant.prompt"></textarea>
+  </div>
+  <div class="form-group mb-2">
+    <label for="ragFile" class="form-label text-light">File to make your assistant less dumb</label>
+    <input class="form-control text-light opacity-50" type="file" multiple id="ragFile" (change)="fileListChanged($event)">
+    <ul class="list-group" *ngFor="let file of fileList">
+      <li class="list-group-item">{{file.name}}
+        <button class="position-absolute top-0 end-0 bi bi-trash3" style="font-size: 20px; color: red" (click)="removeFile(file.name)"></button>
+      </li>
+    </ul>
+  </div>
+  <div>
+    <button type="submit" id="submitButton" class="btn btn-primary">OMG OMG OMG LET'S F'IN GO!!!!!</button>
+    <button type="button" id="cancelButton" class="btn btn-primary float-end" (click)="navigateTo('assistants')">Nopin' out</button>
+  </div>
+</form>

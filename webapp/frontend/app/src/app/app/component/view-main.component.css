@@ -1,0 +1,15 @@
+.bg-image {
+    background-image: url('../../../assets/friendly-bot.png');
+    min-height: 100vh;
+    background-position: center top;
+    background-repeat: no-repeat;
+    background-size: cover;
+    image-orientation: from-image;
+}
+.well {
+    background-color: rgba(245, 245, 245, 0.66);
+    border-radius: 10px;
+}
+.wrap-text {
+    white-space: pre-wrap;
+}

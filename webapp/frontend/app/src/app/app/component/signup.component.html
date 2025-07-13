@@ -1,0 +1,65 @@
+<div class="bg-image">
+  <div class="containerpt-5">
+    <h1 class="well blue rounded text-center">A.T.H.E.N.A.2.0</h1>
+    <div class="big-margin well rounded p-3 vertical-centre">
+
+      <div *ngIf="messages.length > 0" class="alert alert-danger container">
+        <div class="row">
+          <div class="col me-auto align-middle">
+            <p class="col-form-label" *ngFor="let message of messages">{{message}}</p>
+          </div>
+          <div class="col-auto">
+            <button (click)="messages = []" class="btn btn-danger">&times;</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="header">
+        <h1 class="blue">Sign Up!</h1>
+      </div>
+
+      <form role="form" #userForm="ngForm" class="container-fluid" (submit)="signup()">
+        <div class="mb-3 row">
+          <label for="account" class="col-sm-6 col-form-label">User Name</label>
+          <div class="col-sm-6" required>
+            <input id="account" name="account" type="text" size="20" maxlength="50" placeholder="User name" class="form-control"
+              [class.is-invalid]="user.name.length === 0" [(ngModel)]="user.name" required>
+          </div>
+        </div>
+        <div class="mb-3 row">
+          <label for="password" class="col-sm-6 col-form-label">Password</label>
+          <div class="col-sm-6" required>
+            <input id="password" name="password" type="password" size="10" maxlength="50" placeholder="Password" class="form-control"
+              [class.is-invalid]="passwordMismatch" [(ngModel)]="user.password" (input)="passwordUpdated()"
+              required>
+          </div>
+        </div>
+        <div class="mb-3 row">
+          <label for="password" class="col-sm-6 col-form-label">Type It
+            Again.</label>
+          <div class="col-sm-6" required>
+            <input id="passwordRepeated" name="password" type="password" size="10" maxlength="50" placeholder="Password" class="form-control"
+              [class.is-invalid]="passwordMismatch" [(ngModel)]="repeatPassword" (input)="passwordUpdated()" required>
+          </div>
+        </div>
+        <div class="mb-3 row">
+          <label for="corpAccount" class="col-sm-6 col-form-label">GD Username</label>
+          <div class="col-sm-6" required>
+            <input id="corpAccount" name="corpAccount" type="text" size="20" maxlength="50" placeholder="User name. I pinky swear it's encrypted in storage :)" class="form-control"
+              [class.is-invalid]="user.corpAccount.length === 0" [(ngModel)]="user.corpAccount" required>
+          </div>
+        </div>
+        <div class="mb-3 row">
+          <label for="corpPassword" class="col-sm-6 col-form-label">GD Password</label>
+          <div class="col-sm-6" required>
+            <input id="corpPassword" name="corpPassword" type="password" size="20" maxlength="50" placeholder="GD account password. I pinky swear it's encrypted in storage :)" class="form-control"
+              [class.is-invalid]="user.corpPassword.length === 0" [(ngModel)]="user.corpPassword" required>
+          </div>
+        </div>
+        <div class="centred space-after">
+          <button type="submit" id="loginButton" class="btn btn-primary" [class.disabled]="!formValid()" [disabled]="!formValid()">Create Account!</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

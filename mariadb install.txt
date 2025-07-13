@@ -1,0 +1,132 @@
+Ubuntu VM
+
+Must be MariaDB 11.7 or later!
+https://mariadb.org/download/?t=repo-config&d=22.04+%22jammy%22&v=11.8&r_m=mirhosting-us
+
+sudo apt-get install apt-transport-https curl
+sudo mkdir -p /etc/apt/keyrings
+sudo curl -o /etc/apt/keyrings/mariadb-keyring.pgp 'https://mariadb.org/mariadb_release_signing_key.pgp'
+
+
+==========================
+Once the key is imported, copy and paste the following into a file under /etc/apt/sources.list.d (for instance /etc/apt/sources.list.d/mariadb.sources):
+
+# MariaDB 11.8 repository list - created 2025-06-11 00:44 UTC
+# https://mariadb.org/download/
+X-Repolib-Name: MariaDB
+Types: deb
+# deb.mariadb.org is a dynamic mirror if your preferred mirror goes offline. See https://mariadb.org/mirrorbits/ for details.
+# URIs: https://deb.mariadb.org/11.8/ubuntu
+URIs: https://mirrors.gigenet.com/mariadb/repo/11.8/ubuntu
+Suites: jammy
+Components: main main/debug
+Signed-By: /etc/apt/keyrings/mariadb-keyring.pgp
+===========================
+
+sudo apt update
+sudo apt install mariadb-server
+sudo systemctl enable mariadb
+sudo systemctl start mariadb
+sudo systemctl status mariadb
+
+sudo mysql_service_installation
+
+sudo mariadb -u root -p -h localhost
+>>>Default password is just blank
+
+>>> Make the database;
+CREATE DATABASE MrAi;
+
+
+>>> Create the tables for MrAi Assistants
+USE MrAi;
+CREATE TABLE IF NOT EXISTS Assistant (
+	id INTEGER NOT NULL AUTO_INCREMENT,
+	name VARCHAR(50),
+	numFiles INTEGER,
+	processedFiles INTEGER,
+	state VARCHAR(20),
+	prompt TEXT,
+	ownerId INTEGER,
+	shared BOOLEAN,
+	PRIMARY KEY (id)
+);
+CREATE TABLE IF NOT EXISTS WorkflowTask (
+	id INTEGER NOT NULL AUTO_INCREMENT,
+	workflow VARCHAR(100),
+	name VARCHAR(100),
+	description TEXT,
+	defaultConfig TEXT,
+	PRIMARY KEY (id)
+);
+CREATE TABLE IF NOT EXISTS FilesystemWatcher (
+	id INTEGER NOT NULL AUTO_INCREMENT,
+	name VARCHAR(100),
+	description TEXT,
+	locationToWatch TEXT,
+	request TEXT,
+	PRIMARY KEY (id)
+);
+CREATE TABLE IF NOT EXISTS User (
+	id INTEGER NOT NULL AUTO_INCREMENT,
+	account VARCHAR(50),
+	password VARCHAR(100),
+	crypt TEXT,
+	salt TEXT,
+	PRIMARY KEY (id)
+);
+CREATE TABLE IF NOT EXISTS SPRING_AI_CHAT_MEMORY (
+	conversation_id TEXT,
+	content TEXT,
+	type TEXT,
+	timestamp TIMESTAMP
+);
+
+
+
+>>> Create tables for Spring Session
+CREATE TABLE SPRING_SESSION (
+	PRIMARY_ID CHAR(36) NOT NULL,
+	SESSION_ID CHAR(36) NOT NULL,
+	CREATION_TIME BIGINT NOT NULL,
+	LAST_ACCESS_TIME BIGINT NOT NULL,
+	MAX_INACTIVE_INTERVAL INT NOT NULL,
+	EXPIRY_TIME BIGINT NOT NULL,
+	PRINCIPAL_NAME VARCHAR(100),
+	CONSTRAINT SPRING_SESSION_PK PRIMARY KEY (PRIMARY_ID)
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC;
+
+CREATE UNIQUE INDEX SPRING_SESSION_IX1 ON SPRING_SESSION (SESSION_ID);
+CREATE INDEX SPRING_SESSION_IX2 ON SPRING_SESSION (EXPIRY_TIME);
+CREATE INDEX SPRING_SESSION_IX3 ON SPRING_SESSION (PRINCIPAL_NAME);
+
+CREATE TABLE SPRING_SESSION_ATTRIBUTES (
+	SESSION_PRIMARY_ID CHAR(36) NOT NULL,
+	ATTRIBUTE_NAME VARCHAR(200) NOT NULL,
+	ATTRIBUTE_BYTES BLOB NOT NULL,
+	CONSTRAINT SPRING_SESSION_ATTRIBUTES_PK PRIMARY KEY (SESSION_PRIMARY_ID, ATTRIBUTE_NAME),
+	CONSTRAINT SPRING_SESSION_ATTRIBUTES_FK FOREIGN KEY (SESSION_PRIMARY_ID) REFERENCES SPRING_SESSION(PRIMARY_ID) ON DELETE CASCADE
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC;
+
+
+
+>>>create user with super open privileges to do anything from anywhere
+CREATE USER IF NOT EXISTS 'vectorUser'@'%' IDENTIFIED BY 'Password123';
+GRANT ALL PRIVILEGES ON *.* TO 'vectorUser'@'%' WITH GRANT OPTION;
+CREATE USER IF NOT EXISTS 'MrAiUser'@'%' IDENTIFIED BY 'hothamcakes';
+GRANT ALL PRIVILEGES ON *.* TO 'MrAiUser'@'%' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+
+
+
+
+
+>>> Open the server to accept connections from any IP
+sudo nano /etc/mysql/mariadb.conf.d/50-server.cnf
+>>>change
+>>>		bind-address = 127.0.0.1
+>>>to
+>>>		bind-address = 0.0.0.0
+>>>to allow access from any IP
+
+sudo systemctl restart mariadb
