@@ -1,0 +1,11 @@
+.well-bot {
+    background-color: rgba(127, 255, 212, 0.66);
+    border-radius: 10px;
+}
+.well-user {
+    background-color: rgba(240, 248, 255, 0.66);
+    border-radius: 10px;
+}
+.wrap-text {
+    white-space: pre-wrap;
+}

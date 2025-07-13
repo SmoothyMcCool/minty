@@ -1,0 +1,47 @@
+/* #docregion , quickstart, toh */
+/* Master Styles */
+h2, h3 {
+	color: #444;
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: lighter;
+}
+/* #enddocregion quickstart */
+body, input[text], button {
+	color: #888;
+	font-family: Cambria, Georgia;
+}
+/* #enddocregion toh */
+a {
+	cursor: pointer;
+	cursor: hand;
+}
+button {
+	font-family: Arial;
+	background-color: #eee;
+	border: none;
+	padding: 5px 10px;
+	border-radius: 4px;
+	cursor: pointer;
+	cursor: hand;
+}
+button:hover {
+	background-color: #cfd8dc;
+}
+button:disabled {
+	background-color: #eee;
+	color: #aaa;
+	cursor: auto;
+}
+
+/* hacky override for flot legends to display properly */
+.legendLayer .background {
+	fill: rgba(255, 255, 255, 0.85);
+	stroke: rgba(0, 0, 0, 0.85);
+	stroke-width: 1;
+}
+
+/* #docregion toh */
+/* everywhere else */
+* {
+	font-family: Arial, Helvetica, sans-serif;
+}

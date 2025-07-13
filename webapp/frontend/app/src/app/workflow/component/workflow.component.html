@@ -1,0 +1,13 @@
+<div class="container well m-2 p-2">
+  <h1>{{task.name}}</h1>
+  <p>{{task.description}}</p>
+  <div class="row mb-3">
+    <form role="form" (submit)="submit()">
+      <ai-workflow-config [configParams]="taskConfigParams" [(ngModel)]="taskConfig" name="workflowConfig"></ai-workflow-config>
+      <button type="submit" class="btn btn-primary">Submit!</button>
+      <button type="button" id="submitButton" class="btn btn-primary float-end" (click)="navigateTo('workflow')">I changed my mind, yo.</button>
+    </form>
+    <div class="col-10">
+    </div>
+  </div>
+</div>

@@ -1,0 +1,12 @@
+logs/**
+**/*.class
+**/.classpath
+**/.project
+**/.settings
+**/.factorypath
+**/target/
+**/bin
+**/*.jar
+**/*.war
+/results/**
+**/.metadata
