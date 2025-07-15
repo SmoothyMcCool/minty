@@ -21,14 +21,14 @@
       <div class="mb-3 row">
         <label for="account" class="col-sm-6 col-form-label text-light">User Name</label>
         <div class="col-sm-6" required>
-          <input id="account" name="account" type="text" size="20" maxlength="50" placeholder="User name" class="form-control opacity-50"
+          <input id="account" name="account" type="text" size="20" maxlength="50" placeholder="User name" class="form-control opacity-75"
             [class.is-invalid]="user.name.length === 0" [(ngModel)]="user.name" required>
         </div>
       </div>
       <div class="mb-3 row">
         <label for="password" class="col-sm-6 col-form-label text-light">Password</label>
         <div class="col-sm-6" required>
-          <input id="password" name="password" type="password" size="10" maxlength="50" placeholder="Password" class="form-control opacity-50"
+          <input id="password" name="password" type="password" size="10" maxlength="50" placeholder="Password" class="form-control opacity-75"
             [class.is-invalid]="passwordMismatch" [(ngModel)]="user.password" (input)="passwordUpdated()"
             required>
         </div>
@@ -37,21 +37,21 @@
         <label for="password" class="col-sm-6 col-form-label text-light">Type It
           Again.</label>
         <div class="col-sm-6" required>
-          <input id="passwordRepeated" name="password" type="password" size="10" maxlength="50" placeholder="Password" class="form-control opacity-50"
+          <input id="passwordRepeated" name="password" type="password" size="10" maxlength="50" placeholder="Password" class="form-control opacity-75"
             [class.is-invalid]="passwordMismatch" [(ngModel)]="repeatPassword" (input)="passwordUpdated()" required>
         </div>
       </div>
       <div class="mb-3 row">
         <label for="corpAccount" class="col-sm-6 col-form-label text-light">GD Username</label>
         <div class="col-sm-6" required>
-          <input id="corpAccount" name="corpAccount" type="text" size="20" maxlength="50" placeholder="User name. I pinky swear it's encrypted in storage :)" class="form-control opacity-50"
+          <input id="corpAccount" name="corpAccount" type="text" size="20" maxlength="50" placeholder="User name. I pinky swear it's encrypted in storage :)" class="form-control opacity-75"
             [class.is-invalid]="user.corpAccount.length === 0" [(ngModel)]="user.corpAccount" required>
         </div>
       </div>
       <div class="mb-3 row">
         <label for="corpPassword" class="col-sm-6 col-form-label text-light">GD Password</label>
         <div class="col-sm-6" required>
-          <input id="corpPassword" name="corpPassword" type="password" size="20" maxlength="50" placeholder="GD account password. I pinky swear it's encrypted in storage :)" class="form-control opacity-50"
+          <input id="corpPassword" name="corpPassword" type="password" size="20" maxlength="50" placeholder="GD account password. I pinky swear it's encrypted in storage :)" class="form-control opacity-75"
             [class.is-invalid]="user.corpPassword.length === 0" [(ngModel)]="user.corpPassword" required>
         </div>
       </div>

@@ -1,14 +1,14 @@
 <ng-container *ngFor="let message of messages">
     <ng-container *ngIf="message.user; else botMessage">
-        <div class="row mb-2 flex-row-reverse">
-            <div class="col-10 well-user">
+        <div class="row flex-row-reverse m-2">
+            <div class="col-10 well-user p-2">
                 <p class="text-body wrap-text">{{message.message}}</p>
             </div>
         </div>
     </ng-container>
     <ng-template #botMessage>
-        <div class="row mb-2">
-            <div class="col-10 well-bot">
+        <div class="row m-2">
+            <div class="col-10 well-bot p-2">
                 <p class="text-body wrap-text">{{message.message}}</p>
             </div>
         </div>

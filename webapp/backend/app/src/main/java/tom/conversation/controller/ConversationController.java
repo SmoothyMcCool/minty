@@ -1,4 +1,4 @@
-package tom.conversation;
+package tom.conversation.controller;
 
 import java.util.Collections;
 import java.util.List;
@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import tom.config.security.UserDetailsUser;
 import tom.controller.ResponseWrapper;
 import tom.conversation.repository.ChatMessage;
+import tom.meta.service.MetadataService;
 import tom.task.services.ConversationService;
 
 @Controller
@@ -29,11 +30,13 @@ public class ConversationController {
 	private final ConversationService conversationService;
 	private final ChatMemory chatMemory;
 	private final ChatMemoryRepository chatMemoryRepository;
+	private final MetadataService metadataService;
 
-	public ConversationController(ConversationService conversationService, ChatMemoryRepository chatMemoryRepository, ChatMemory chatMemory) {
+	public ConversationController(ConversationService conversationService, ChatMemoryRepository chatMemoryRepository, ChatMemory chatMemory, MetadataService metadataService) {
 		this.conversationService = conversationService;
 		this.chatMemoryRepository = chatMemoryRepository;
 		this.chatMemory = chatMemory;
+		this.metadataService = metadataService;
 	}
 
 	@RequestMapping(value = { "new" }, method = RequestMethod.GET)
@@ -41,6 +44,7 @@ public class ConversationController {
 			@RequestParam("assistantId") String assistantId) {
 		ResponseWrapper<String> response = ResponseWrapper
 				.SuccessResponse(user.getId() + ":" + assistantId + ":" + UUID.randomUUID().toString());
+		metadataService.newConversation(user.getId());
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 

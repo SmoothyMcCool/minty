@@ -45,7 +45,7 @@ public class TestHttpRequestTask implements AiTask, ServiceConsumer {
 
 	@Override
 	public List<AiTask> doWork() {
-		user = taskServices.getHttpService().getBasicAuth(userId, "http://localhost:8080/MrAi/api/login", null, new TestUser());
+		user = taskServices.getHttpService().getBasicAuth(userId, "http://localhost:8080/Minty/api/login", null, new TestUser());
 		return null;
 	}
 

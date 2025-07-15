@@ -3,6 +3,7 @@
   <div class="col-4" *ngFor="let task of tasks">
     <div class="card">
       <div class="card-body">
+        <button type="button" class="bi bi-trash3" style="font-size: 20px; color: red; float: right;" (click)="deleteTask(task)"></button>
         <h5 class="card-title">{{task.name}}</h5>
         <p class="card-text">{{task.description}}</p>
         <button class="btn btn-primary" (click)="navigateToTask(task.id)">Yeahhh boi!!!</button>
@@ -26,7 +27,10 @@
   <div class="col-3">
     This list refreshes every five seconds.
     <div class="d-grid gap-3" *ngFor="let result of results">
-      <div class="p-2 bg-light border btn text-start" (click)="displayResultsFor(result)">{{result}}</div>
+      <div class="p-2 bg-light border btn text-start" (click)="displayResultsFor(result)">
+        <button type="button" class="bi bi-trash3" style="font-size: 20px; color: red; float: right;" (click)="deleteResult(result)"></button>
+        {{result}}
+      </div>
     </div>
   </div>
   <div class="col-9">

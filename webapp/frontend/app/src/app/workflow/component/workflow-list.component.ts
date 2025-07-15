@@ -47,6 +47,16 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
         });
     }
 
+    deleteTask(task: WorkflowTask) {
+        this.workflowService.deleteTask(task).subscribe((tasks) => {
+            this.tasks = tasks;
+        });
+    }
+
+    deleteResult(result: string) {
+        this.workflowService.deleteResult(result).subscribe();
+    }
+
     copyToClipboard() {
         navigator.clipboard.writeText(this.responseText as string).then(() => {
             console.log('Copied: ' + this.responseText as string);

@@ -1,4 +1,4 @@
-package tom.user;
+package tom.user.controller;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +24,7 @@ import tom.ApiError;
 import tom.ApiException;
 import tom.config.security.UserDetailsUser;
 import tom.controller.ResponseWrapper;
+import tom.meta.service.MetadataService;
 import tom.user.repository.EncryptedUser;
 import tom.user.repository.User;
 import tom.user.repository.UserRepository;
@@ -37,10 +38,12 @@ public class UserController {
 
 	private final UserRepository userRepository;
 	private final UserService userService;
+	private final MetadataService metadataService;
 
-	public UserController(UserRepository userRepository, UserService userService) {
+	public UserController(UserRepository userRepository, UserService userService, MetadataService metadataService) {
 		this.userRepository = userRepository;
 		this.userService = userService;
+		this.metadataService = metadataService;
 	}
 
 	@RequestMapping(value = { "/new" }, method = RequestMethod.POST)
@@ -83,6 +86,9 @@ public class UserController {
 		}
 
 		user.setPassword("");
+
+		metadataService.addUser(user.getId());
+
 		ResponseWrapper<User> response = ResponseWrapper.SuccessResponse(user);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}

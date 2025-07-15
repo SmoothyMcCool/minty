@@ -35,11 +35,11 @@ sudo mariadb -u root -p -h localhost
 >>>Default password is just blank
 
 >>> Make the database;
-CREATE DATABASE MrAi;
+CREATE DATABASE Minty;
 
 
->>> Create the tables for MrAi Assistants
-USE MrAi;
+>>> Create the tables for Minty Assistants
+USE Minty;
 CREATE TABLE IF NOT EXISTS Assistant (
 	id INTEGER NOT NULL AUTO_INCREMENT,
 	name VARCHAR(50),
@@ -73,6 +73,17 @@ CREATE TABLE IF NOT EXISTS User (
 	password VARCHAR(100),
 	crypt TEXT,
 	salt TEXT,
+	PRIMARY KEY (id)
+);
+CREATE TABLE IF NOT EXISTS UserMeta (
+	id INTEGER NOT NULL AUTO_INCREMENT,
+	userId INTEGER,
+	totalAssistantsCreated INTEGER,
+	totalConversations INTEGER,
+	totalWorkflowsCreated INTEGER,
+	totalWorkflowRuns INTEGER,
+	totalLogins INTEGER,
+	lastLogin TIMESTAMP,
 	PRIMARY KEY (id)
 );
 CREATE TABLE IF NOT EXISTS SPRING_AI_CHAT_MEMORY (
@@ -113,8 +124,8 @@ CREATE TABLE SPRING_SESSION_ATTRIBUTES (
 >>>create user with super open privileges to do anything from anywhere
 CREATE USER IF NOT EXISTS 'vectorUser'@'%' IDENTIFIED BY 'Password123';
 GRANT ALL PRIVILEGES ON *.* TO 'vectorUser'@'%' WITH GRANT OPTION;
-CREATE USER IF NOT EXISTS 'MrAiUser'@'%' IDENTIFIED BY 'hothamcakes';
-GRANT ALL PRIVILEGES ON *.* TO 'MrAiUser'@'%' WITH GRANT OPTION;
+CREATE USER IF NOT EXISTS 'MintyUser'@'%' IDENTIFIED BY 'hothamcakes';
+GRANT ALL PRIVILEGES ON *.* TO 'MintyUser'@'%' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
 
 
