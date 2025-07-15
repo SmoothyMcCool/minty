@@ -16,6 +16,7 @@ export class WorkflowService{
 
     private static readonly ExecuteTask = 'api/workflow/execute';
     private static readonly GetTask = 'api/workflow/task';
+    private static readonly DeleteTask = 'api/workflow/task';
     private static readonly GetTaskConfig = 'api/workflow/config';
     private static readonly ListWorkflowTasks = 'api/workflow/task/list';
     private static readonly ListTriggeredWorkflowTasks = 'api/workflow/task/trigger/list';
@@ -24,6 +25,7 @@ export class WorkflowService{
     private static readonly ListWorkflows = 'api/workflow/workflows';
     private static readonly GetResultList = 'api/workflow/resultList';
     private static readonly GetResult  = 'api/workflow/result';
+    private static readonly DeleteResult  = 'api/workflow/result';
 
     constructor(private http: HttpClient, private alertService: AlertService) {
         this.doRefresh();
@@ -79,6 +81,22 @@ export class WorkflowService{
             );
     }
 
+    deleteResult(resultId: string): Observable<unknown> {
+        let params: HttpParams = new HttpParams();
+        params = params.append('resultName', resultId);
+
+        return this.http.delete<ApiResult>(WorkflowService.DeleteResult, { params: params })
+            .pipe(
+                catchError(error => {
+                    this.alertService.postFailure(JSON.stringify(error));
+                    return EMPTY;
+                }),
+                map((result: ApiResult) => {
+                    return null;
+                })
+            );
+    }
+
     getTask(taskId: number): Observable<WorkflowTask> {
         let params: HttpParams = new HttpParams();
         params = params.append('taskId', taskId);
@@ -93,6 +111,22 @@ export class WorkflowService{
                     const ret = result.data as WorkflowTask;
                     ret.defaultConfig = new Map(Object.entries(ret.defaultConfig));
                     return ret;
+                })
+            );
+    }
+
+    deleteTask(task: WorkflowTask): Observable<WorkflowTask[]> {
+        let params: HttpParams = new HttpParams();
+        params = params.append('taskId', task.id);
+
+        return this.http.delete<ApiResult>(WorkflowService.DeleteTask, { params: params })
+            .pipe(
+                catchError(error => {
+                    this.alertService.postFailure(JSON.stringify(error));
+                    return EMPTY;
+                }),
+                map((result: ApiResult) => {
+                    return result.data as WorkflowTask[];
                 })
             );
     }
@@ -197,7 +231,7 @@ export class WorkflowService{
     }
 
     execute(request: string, data: Map<String, String>): Observable<string> {
-        
+
         const body = {
             request: request,
             data: Object.fromEntries(data)

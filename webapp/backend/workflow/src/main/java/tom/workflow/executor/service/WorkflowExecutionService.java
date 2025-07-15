@@ -15,4 +15,6 @@ public interface WorkflowExecutionService {
 
 	void reportTaskComplete(TaskTracker tracker);
 
+	boolean deleteResult(String resultName) throws IOException;
+
 }

@@ -8,4 +8,5 @@
 }
 .wrap-text {
     white-space: pre-wrap;
+    margin: 0
 }

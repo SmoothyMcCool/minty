@@ -21,13 +21,13 @@
 
 		<!-- Mr. Ai-->
 		<dependency>
-			<groupId>tom.mr-ai</groupId>
+			<groupId>tom.minty</groupId>
 			<artifactId>parent</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 			<type>pom</type>
 		</dependency>
 		<dependency>
-			<groupId>tom.mr-ai</groupId>
+			<groupId>tom.minty</groupId>
 			<artifactId>task</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
@@ -48,7 +48,7 @@
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>3.4.2</version>
 				<configuration>
-					<outputDirectory>D:/projects/MrAi/taskLib</outputDirectory>
+					<outputDirectory>D:/projects/Minty/taskLib</outputDirectory>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -63,7 +63,7 @@
 							<goal>copy-resources</goal>
 						</goals>
 						<configuration>
-							<outputDirectory>D:/projects/MrAi/taskLib</outputDirectory>
+							<outputDirectory>D:/projects/Minty/taskLib</outputDirectory>
 							<resources>
 								<resource>
 									<directory>/src/main/resources/templates</directory>

@@ -1,4 +1,4 @@
-package tom.assistant;
+package tom.assistant.controller;
 
 import java.util.List;
 
@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import tom.ApiError;
 import tom.config.security.UserDetailsUser;
 import tom.controller.ResponseWrapper;
+import tom.meta.service.MetadataService;
 import tom.task.model.Assistant;
 import tom.task.model.AssistantQuery;
 import tom.task.services.AssistantService;
@@ -22,11 +23,12 @@ import tom.task.services.AssistantService;
 @RequestMapping("/api/assistant")
 public class AssistantController {
 
+    private final MetadataService metadataService;
 	private final AssistantService assistantService;
 
-	public AssistantController(AssistantService assistantService) {
-
+	public AssistantController(AssistantService assistantService, MetadataService metadataService) {
 		this.assistantService = assistantService;
+		this.metadataService = metadataService;
 	}
 
 	@RequestMapping(value = { "/new" }, method = RequestMethod.POST)
@@ -34,6 +36,7 @@ public class AssistantController {
 			@RequestBody Assistant assistant) {
 
 		assistant = assistantService.createAssistant(user.getId(), assistant);
+		metadataService.newAssistant(user.getId());
 
 		ResponseWrapper<Assistant> response = ResponseWrapper.SuccessResponse(assistant);
 		return new ResponseEntity<>(response, HttpStatus.OK);

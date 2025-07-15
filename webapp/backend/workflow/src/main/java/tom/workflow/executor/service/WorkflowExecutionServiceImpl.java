@@ -83,6 +83,20 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 	}
 
 	@Override
+	public boolean deleteResult(String resultName) throws IOException {
+		Path dir = Paths.get(resultsDir);
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
+			for (Path entry : stream) {
+				if (entry.getFileName().endsWith(resultName)) {
+					Files.delete(entry);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	@Override
 	public void reportTaskComplete(TaskTracker tracker) {
 		logger.info("reportTaskComplete: Task " + tracker.getTaskName() + " is complete.");
 		Path location = Path.of(resultsDir + "/" + tracker.getTaskName());

@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import tom.ApiError;
 import tom.config.security.UserDetailsUser;
 import tom.controller.ResponseWrapper;
+import tom.meta.service.MetadataService;
 import tom.task.AiTask;
 import tom.workflow.executor.service.WorkflowExecutionService;
 import tom.workflow.filesystem.repository.FilesystemWatcher;
@@ -42,19 +43,23 @@ public class WorkflowController {
 	private final TaskRegistryService taskRegistry;
 	private final FilesystemWatcherService filesystemWatcherService;
 	private final FilesystemWatcherRepository filesystemWatcherRepository;
+	private final MetadataService metadataService;
 
 	public WorkflowController(WorkflowExecutionService workflowExecutionService, WorkflowTaskRepository workflowTaskRepository,
-			TaskRegistryService taskRegistry, FilesystemWatcherService filesystemWatcherService, FilesystemWatcherRepository filesystemWatcherRepository) {
+			TaskRegistryService taskRegistry, FilesystemWatcherService filesystemWatcherService, FilesystemWatcherRepository filesystemWatcherRepository,
+			MetadataService metadataService) {
 		this.workflowExecutionService = workflowExecutionService;
 		this.workflowTaskRepository = workflowTaskRepository;
 		this.taskRegistry = taskRegistry;
 		this.filesystemWatcherService = filesystemWatcherService;
 		this.filesystemWatcherRepository = filesystemWatcherRepository;
+		this.metadataService = metadataService;
 	}
 
 	@RequestMapping(value = { "/new" }, method = RequestMethod.POST)
 	public ResponseEntity<ResponseWrapper<WorkflowTask>> newTask(@AuthenticationPrincipal UserDetailsUser user, @RequestBody WorkflowTask newTask) {
 		WorkflowTask task = workflowTaskRepository.save(newTask);
+		metadataService.newWorkflow(user.getId());
 		return new ResponseEntity<>(ResponseWrapper.SuccessResponse(task), HttpStatus.OK);
 	}
 
@@ -62,6 +67,7 @@ public class WorkflowController {
 	public ResponseEntity<ResponseWrapper<FilesystemWatcher>> newTriggeredTask(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestBody TriggeredWorkflowTask newTask) {
 		FilesystemWatcher watcher = filesystemWatcherService.newFilesystemWatcher(newTask);
+		metadataService.newWorkflow(user.getId());
 		return new ResponseEntity<>(ResponseWrapper.SuccessResponse(watcher), HttpStatus.OK);
 	}
 
@@ -70,6 +76,14 @@ public class WorkflowController {
 		WorkflowTask task = workflowTaskRepository.findById(taskId).get();
 
 		return new ResponseEntity<>(ResponseWrapper.SuccessResponse(task), HttpStatus.OK);
+	}
+
+	@RequestMapping(value = { "/task" }, method = RequestMethod.DELETE)
+	public ResponseEntity<ResponseWrapper<List<WorkflowTask>>> deleteTask(@AuthenticationPrincipal UserDetailsUser user, @RequestParam("taskId") int taskId) {
+		WorkflowTask task = workflowTaskRepository.findById(taskId).get();
+		workflowTaskRepository.delete(task);
+
+		return listAllTasks(user);
 	}
 
 	@RequestMapping(value = { "/config" }, method = RequestMethod.GET)
@@ -118,6 +132,7 @@ public class WorkflowController {
 		}
 
 		workflowExecutionService.executeTask(task);
+		metadataService.workflowExecuted(user.getId());
 		return new ResponseEntity<>(ResponseWrapper.SuccessResponse(task.taskName()), HttpStatus.OK);
 	}
 
@@ -150,5 +165,18 @@ public class WorkflowController {
 			ResponseWrapper<String> response = ResponseWrapper.FailureResponse(500, "Couldn't generate list of results.");
 			return new ResponseEntity<>(response, headers, HttpStatus.NOT_FOUND);
 		}
+	}
+
+	@RequestMapping(value = { "/result" }, method = RequestMethod.DELETE)
+	public ResponseEntity<ResponseWrapper<Boolean>> deleteResult(@AuthenticationPrincipal UserDetailsUser user, @RequestParam("resultName") String resultName) {
+		boolean success;
+		try {
+			success = workflowExecutionService.deleteResult(resultName);
+		} catch (IOException e) {
+			success = false;
+			logger.warn("Caught exception while trying to delete result " + resultName);
+		}
+
+		return new ResponseEntity<>(ResponseWrapper.SuccessResponse(success), HttpStatus.OK);
 	}
 }

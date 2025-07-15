@@ -1,4 +1,4 @@
-package tom.user;
+package tom.user.controller;
 
 import java.util.List;
 
@@ -20,6 +20,7 @@ import tom.ApiError;
 import tom.ApiException;
 import tom.config.security.UserDetailsUser;
 import tom.controller.ResponseWrapper;
+import tom.meta.service.MetadataService;
 import tom.user.repository.EncryptedUser;
 import tom.user.repository.User;
 import tom.user.repository.UserRepository;
@@ -33,10 +34,12 @@ public class LoginController {
 
 	private final UserRepository userRepository;
 	private final UserService userService;
+	private final MetadataService metadataService;
 
-	public LoginController(UserRepository userRepository, UserService userService) {
+	public LoginController(UserRepository userRepository, UserService userService, MetadataService metadataService) {
 		this.userRepository = userRepository;
 		this.userService = userService;
+		this.metadataService = metadataService;
 	}
 
 	@RequestMapping(method = RequestMethod.GET)
@@ -62,6 +65,8 @@ public class LoginController {
 		} catch (JsonProcessingException e) {
 			throw new ApiException(ApiError.FAILED_TO_DECRYPT_USER);
 		}
+
+		metadataService.userLoggedIn(user.getId());
 
 		return ResponseWrapper.SuccessResponse(result);
 	}

@@ -1,4 +1,4 @@
-package tom.document;
+package tom.document.controller;
 
 import java.io.File;
 import java.io.IOException;

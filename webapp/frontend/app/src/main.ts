@@ -16,6 +16,7 @@ import { ViewWorkflowComponent } from './app/workflow/component/view-workflow.co
 import { WorkflowListComponent } from './app/workflow/component/workflow-list.component';
 import { WorkflowComponent } from './app/workflow/component/workflow.component';
 import { NewAssistantComponent } from './app/assistant/component/new-assistant.component';
+import { ViewStatisticsComponent } from './app/app/component/view-statistics.component';
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -82,6 +83,10 @@ bootstrapApplication(AppComponent, {
             {
                 path: 'user',
                 component: ViewUserComponent,
+            },
+            {
+                path: 'statistics',
+                component: ViewStatisticsComponent,
             }
         ]/*, withDebugTracing()*/),
         provideHttpClient(withInterceptorsFromDi())

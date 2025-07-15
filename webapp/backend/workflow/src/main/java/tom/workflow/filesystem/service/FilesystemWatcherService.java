@@ -4,8 +4,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
@@ -23,8 +21,6 @@ import tom.workflow.taskregistry.TaskRegistryService;
 
 @Service
 public class FilesystemWatcherService {
-
-	private static final Logger logger = LogManager.getLogger(FilesystemWatcherService.class);
 
 	private final FilesystemWatcherRepository filesystemWatcherRepository;
 	private final TaskExecutor taskExecutor;
@@ -70,10 +66,12 @@ public class FilesystemWatcherService {
 		watcher.setName(newTask.getName());
 		watcher.setDescription(newTask.getDescription());
 		watcher.setLocationToWatch(newTask.getDirectory());
+
 		WorkflowRequest request = new WorkflowRequest();
 		request.setRequest(newTask.getWorkflow());
 		request.setData(newTask.getDefaultConfig());
 		watcher.setRequest(request);
+
 		return filesystemWatcherRepository.save(watcher);
 	}
 
