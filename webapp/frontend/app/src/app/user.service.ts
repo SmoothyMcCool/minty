@@ -1,6 +1,5 @@
 import { HttpClient, HttpHeaders, HttpResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { AlertService } from "./alert.service";
 import { User } from "./model/user";
 import { finalize, map, Observable } from "rxjs";
 import { ApiResult } from "./model/api-result";
@@ -20,6 +19,10 @@ export class UserService {
     private user: User = null;
 
     constructor(private http: HttpClient, private router: Router) { }
+
+    loggedIn(): boolean {
+        return this.user != null && sessionStorage.getItem('x-auth-token') != undefined;
+    }
 
     getUser(): User {
         if (this.user === null) {

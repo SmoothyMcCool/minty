@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewEncapsulation } from '@angular/core';
-import { Event, NavigationStart, Router, RouterEvent, RouterModule } from '@angular/router';
+import { Event, NavigationEnd, NavigationStart, Router, RouterEvent, RouterModule } from '@angular/router';
 import { Alert, AlertService } from '../../alert.service';
 import { filter } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
@@ -42,6 +42,13 @@ export class AppComponent implements OnInit {
         this.alertList.set('info', []);
         this.alertList.set('success', []);
         this.alertService.alert.subscribe(item => this.handleAlert(item));
+
+        this.router.events.pipe(filter(event => event instanceof NavigationEnd)).subscribe((event: NavigationEnd) => {
+            console.log('loggedIn? ' + this.userService.loggedIn());
+            if (!this.userService.loggedIn() && event.url != '/signup') {
+                this.logout();
+            }
+        });
     }
 
 
