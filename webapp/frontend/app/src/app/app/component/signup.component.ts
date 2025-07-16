@@ -9,7 +9,7 @@ import { UserService } from '../../user.service';
     selector: 'ai-signup',
     imports: [CommonModule, FormsModule],
     templateUrl: 'signup.component.html',
-    styleUrls: ['./login.component.css']
+    styleUrls: ['./signup.component.css']
 })
 export class SignupComponent {
     user: User;
