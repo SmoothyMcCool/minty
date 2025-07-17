@@ -11,7 +11,7 @@ import { AlertService } from "src/app/alert.service";
     selector: 'ai-new-workflow-task',
     imports: [CommonModule, FormsModule, WorkflowConfigComponent],
     templateUrl: 'new-workflow.component.html',
-    styleUrls: ['workflow.component.css']
+    styleUrls: ['../../global.css', 'workflow.component.css']
 })
 export class NewWorkflowTaskComponent implements OnInit {
 

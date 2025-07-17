@@ -7,7 +7,7 @@ import { MetadataService } from '../../metadata.service';
     selector: 'ai-view-statistics',
     imports: [CommonModule, DatePipe],
     templateUrl: 'view-statistics.component.html',
-    styleUrls: ['./view-statistics.component.css']
+    styleUrls: ['../../global.css', './view-statistics.component.css']
 })
 export class ViewStatisticsComponent {
     metadata: UserMeta[];

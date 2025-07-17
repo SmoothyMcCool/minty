@@ -10,7 +10,7 @@ import { UserService } from '../../user.service';
     selector: 'ai-user',
     imports: [CommonModule, FormsModule],
     templateUrl: 'view-user.component.html',
-    styleUrls: ['./view-user.component.css']
+    styleUrls: ['../../global.css', './view-user.component.css']
 })
 export class ViewUserComponent {
     user: User;

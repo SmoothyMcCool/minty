@@ -2,15 +2,9 @@
 	float: right;
 	margin: 5px 5px 5px 5px;
 }
-.bg-image {
+.img-signup {
 	background-image: url('../../../assets/signup.jpg');
-	min-height: 100vh;
-	max-width: 100vh;
-	height: 100%;
-	background-position: center top;
-	background-repeat: no-repeat;
-	background-size: 100%;
-	image-orientation: from-image;
+
 }
 body, html {
 	height: 100%;

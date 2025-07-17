@@ -10,8 +10,7 @@ import { FilterPipe } from '../../pipe/filter-pipe';
 @Component({
     selector: 'ai-assistants-list',
     imports: [CommonModule, FormsModule, RouterModule, FilterPipe],
-    templateUrl: 'assistants-list.component.html',
-    //styleUrls: ['assistants-list.component.css']
+    templateUrl: 'assistants-list.component.html'
 })
 export class AssistantsListComponent {
 

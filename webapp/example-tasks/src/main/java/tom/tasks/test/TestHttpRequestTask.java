@@ -13,51 +13,51 @@ import tom.task.services.TaskServices;
 @PublicWorkflow(name = "TestHttpRequest")
 public class TestHttpRequestTask implements AiTask, ServiceConsumer {
 
-	private TaskServices taskServices;
-	private int userId;
-	private TestUser user = null;
+    private TaskServices taskServices;
+    private int userId;
+    private TestUser user = null;
 
-	@Override
-	public String taskName() {
-		return "TestHttpRequest-" + UUID.randomUUID();
-	}
+    @Override
+    public String taskName() {
+        return "TestHttpRequest-" + UUID.randomUUID();
+    }
 
-	@Override
-	public Map<String, Object> getResult() {
-		if (user == null) {
-			return new HashMap<>();
-		}
+    @Override
+    public Map<String, Object> getResult() {
+        if (user == null) {
+            return new HashMap<>();
+        }
 
-		Map<String, Object> result = new HashMap<>();
-		result.put("corpAccount", user.getCorpAccount());
-		result.put("corpPassword", user.getCorpPassword());
-		result.put("name", user.getName());
-		result.put("password", user.getPassword());
-		result.put("id", user.getId());
+        Map<String, Object> result = new HashMap<>();
+        result.put("corpAccount", user.getCorpAccount());
+        result.put("corpPassword", user.getCorpPassword());
+        result.put("name", user.getName());
+        result.put("password", user.getPassword());
+        result.put("id", user.getId());
 
-		return result;
-	}
+        return result;
+    }
 
-	@Override
-	public String getResultTemplateFilename() {
-		return "test-user.pug";
-	}
+    @Override
+    public String getResultTemplateFilename() {
+        return "test-user.pug";
+    }
 
-	@Override
-	public List<AiTask> doWork() {
-		user = taskServices.getHttpService().getBasicAuth(userId, "http://localhost:8080/Minty/api/login", null, new TestUser());
-		return null;
-	}
+    @Override
+    public List<AiTask> doWork() {
+        user = taskServices.getHttpService().getBasicAuth(userId, "http://localhost:8080/Minty/api/login", null,
+                new TestUser());
+        return null;
+    }
 
-	@Override
-	public void setTaskServices(TaskServices taskServices) {
-		this.taskServices = taskServices;
-	}
+    @Override
+    public void setTaskServices(TaskServices taskServices) {
+        this.taskServices = taskServices;
+    }
 
-	@Override
-	public void setUserId(int userId) {
-		this.userId = userId;
-	}
-
+    @Override
+    public void setUserId(int userId) {
+        this.userId = userId;
+    }
 
 }

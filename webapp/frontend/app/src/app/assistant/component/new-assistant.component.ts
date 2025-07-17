@@ -6,14 +6,12 @@ import { AssistantService } from '../../assistant.service';
 import { Router, RouterModule } from '@angular/router';
 import { concatAll, mergeMap, of } from 'rxjs';
 import { DocumentService } from '../../document.service';
-import { ConversationService } from '../../conversation.service';
 import { FilterPipe } from '../../pipe/filter-pipe';
 
 @Component({
     selector: 'ai-new-assistant',
     imports: [CommonModule, FormsModule, RouterModule, FilterPipe],
-    templateUrl: 'new-assistant.component.html',
-    //styleUrls: ['assistants-list.component.css']
+    templateUrl: 'new-assistant.component.html'
 })
 export class NewAssistantComponent {
 

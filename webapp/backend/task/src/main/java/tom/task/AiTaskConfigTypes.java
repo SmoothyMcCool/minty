@@ -1,7 +1,5 @@
 package tom.task;
 
 public enum AiTaskConfigTypes {
-	Number,
-	String,
-	AssistantIdentifier
+    Number, String, AssistantIdentifier
 }

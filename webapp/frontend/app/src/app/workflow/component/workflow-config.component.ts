@@ -14,8 +14,7 @@ import { Assistant } from "src/app/model/assistant";
             useExisting: forwardRef(() => WorkflowConfigComponent),
             multi: true
         }
-    ],
-    //styleUrls: []
+    ]
 })
 export class WorkflowConfigComponent implements OnInit, ControlValueAccessor {
 

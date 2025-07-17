@@ -5,7 +5,7 @@ import { RouterModule } from '@angular/router';
     selector: 'ai-view-assistants',
     imports: [RouterModule],
     templateUrl: 'view-assistants.component.html',
-    styleUrls: ['view-assistants.component.css']
+    styleUrls: ['../../global.css', 'view-assistants.component.css']
 })
 export class ViewAssistantsComponent {
 

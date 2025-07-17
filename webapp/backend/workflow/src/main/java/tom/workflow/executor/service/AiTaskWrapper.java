@@ -12,108 +12,107 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import tom.task.AiTask;
 
 public class AiTaskWrapper implements Runnable {
-	private final Logger logger = LogManager.getLogger(AiTaskWrapper.class);
+    private final Logger logger = LogManager.getLogger(AiTaskWrapper.class);
 
-	private TaskTracker tracker;
-	private AsyncTaskExecutor taskExecutor;
-	private boolean complete;
-	private Instant startTime;
-	private Instant endTime;
-	private AiTask wrappedTask;
-	private List<AiTaskWrapper> wrappedChildren;
+    private TaskTracker tracker;
+    private AsyncTaskExecutor taskExecutor;
+    private boolean complete;
+    private Instant startTime;
+    private Instant endTime;
+    private AiTask wrappedTask;
+    private List<AiTaskWrapper> wrappedChildren;
 
-	public AiTaskWrapper(AiTask wrappedTask) {
-		this.wrappedTask = wrappedTask;
-		wrappedChildren = null;
-		startTime = Instant.MAX;
-		endTime = Instant.MAX;
+    public AiTaskWrapper(AiTask wrappedTask) {
+        this.wrappedTask = wrappedTask;
+        wrappedChildren = null;
+        startTime = Instant.MAX;
+        endTime = Instant.MAX;
 
-	}
+    }
 
-	@Override
-	public void run() {
-		try {
-			logger.info("Starting task name: " + wrappedTask.taskName());
-			startTime = Instant.now();
+    @Override
+    public void run() {
+        try {
+            logger.info("Starting task name: " + wrappedTask.taskName());
+            startTime = Instant.now();
 
-			List<AiTask> children = wrappedTask.doWork();
+            List<AiTask> children = wrappedTask.doWork();
 
-			if (children != null && children.size() > 0) {
-				wrappedChildren = new ArrayList<>();
-				for (AiTask child : children) {
-					AiTaskWrapper wrappedChild = new AiTaskWrapper(child);
-					wrappedChildren.add(wrappedChild);
-				}
+            if (children != null && children.size() > 0) {
+                wrappedChildren = new ArrayList<>();
+                for (AiTask child : children) {
+                    AiTaskWrapper wrappedChild = new AiTaskWrapper(child);
+                    wrappedChildren.add(wrappedChild);
+                }
 
-				for (AiTaskWrapper child : wrappedChildren) {
-					child.setResultTracker(tracker);
-					child.setExecutor(taskExecutor);
-					taskExecutor.submit(child);
-				}
-			}
+                for (AiTaskWrapper child : wrappedChildren) {
+                    child.setResultTracker(tracker);
+                    child.setExecutor(taskExecutor);
+                    taskExecutor.submit(child);
+                }
+            }
 
-			endTime = Instant.now();
-			complete = true;
-			tracker.taskComplete();
-		}
-		catch (Exception e) {
-			logger.error("Caught exception while running task: " + e);
-		}
-	}
+            endTime = Instant.now();
+            complete = true;
+            tracker.taskComplete();
+        } catch (Exception e) {
+            logger.error("Caught exception while running task: " + e);
+        }
+    }
 
-	public boolean isComplete() {
-		boolean childrenComplete = true;
-		if (wrappedChildren != null && !wrappedChildren.isEmpty()) {
-			for (AiTaskWrapper child : wrappedChildren) {
-				if (!child.isComplete()) {
-					childrenComplete = false;
-					break;
-				}
-			}
-		}
-		return complete && childrenComplete;
-	}
+    public boolean isComplete() {
+        boolean childrenComplete = true;
+        if (wrappedChildren != null && !wrappedChildren.isEmpty()) {
+            for (AiTaskWrapper child : wrappedChildren) {
+                if (!child.isComplete()) {
+                    childrenComplete = false;
+                    break;
+                }
+            }
+        }
+        return complete && childrenComplete;
+    }
 
-	public void setResultTracker(TaskTracker tracker) {
-		this.tracker = tracker;
-	}
+    public void setResultTracker(TaskTracker tracker) {
+        this.tracker = tracker;
+    }
 
-	public void setExecutor(AsyncTaskExecutor taskExecutor) {
-		this.taskExecutor = taskExecutor;
-	}
+    public void setExecutor(AsyncTaskExecutor taskExecutor) {
+        this.taskExecutor = taskExecutor;
+    }
 
-	public Instant getStartTime() {
-		return startTime;
-	}
+    public Instant getStartTime() {
+        return startTime;
+    }
 
-	public Instant getEndTime() {
-		return endTime;
-	}
+    public Instant getEndTime() {
+        return endTime;
+    }
 
-	public Map<String, Object> getResult() {
-		Map<String, Object> result = wrappedTask.getResult();
+    public Map<String, Object> getResult() {
+        Map<String, Object> result = wrappedTask.getResult();
 
-		if (wrappedChildren != null) {
-			List<Map<String, Object>> childResults = new ArrayList<>();
+        if (wrappedChildren != null) {
+            List<Map<String, Object>> childResults = new ArrayList<>();
 
-			for (AiTaskWrapper child : wrappedChildren) {
-				childResults.add(child.wrappedTask.getResult());
-			}
+            for (AiTaskWrapper child : wrappedChildren) {
+                childResults.add(child.wrappedTask.getResult());
+            }
 
-			if (childResults.size() > 0) {
-				result.put("subtasks", childResults);
-			}
-		}
+            if (childResults.size() > 0) {
+                result.put("subtasks", childResults);
+            }
+        }
 
-		return result;
-	}
+        return result;
+    }
 
-	public String taskName() {
-		return wrappedTask.taskName();
-	}
+    public String taskName() {
+        return wrappedTask.taskName();
+    }
 
-	public String getResultTemplateFilename() {
-		return wrappedTask.getResultTemplateFilename();
-	}
+    public String getResultTemplateFilename() {
+        return wrappedTask.getResultTemplateFilename();
+    }
 
 }

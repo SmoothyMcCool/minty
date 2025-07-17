@@ -22,50 +22,50 @@ import com.zaxxer.hikari.HikariDataSource;
 @EnableJpaRepositories("tom")
 public class DatabaseConfig {
 
-	// Properties for JPA
-	@Value("${applicationDbUrl}")
-	private String applicationDbUrl;
-	@Value("${applicationDbUser}")
-	private String applicationDbUser;
-	@Value("${applicationDbPassword}")
-	private String applicationDbPassword;
+    // Properties for JPA
+    @Value("${applicationDbUrl}")
+    private String applicationDbUrl;
+    @Value("${applicationDbUser}")
+    private String applicationDbUser;
+    @Value("${applicationDbPassword}")
+    private String applicationDbPassword;
 
-	@Bean
-	@SpringSessionDataSource
-	public DataSource applicationDataSource() {
-		HikariConfig config = new HikariConfig();
-		config.setJdbcUrl(applicationDbUrl);
-		config.setUsername(applicationDbUser);
-		config.setPassword(applicationDbPassword);
-		config.setDriverClassName("org.mariadb.jdbc.Driver");
-		config.setMaximumPoolSize(10);
+    @Bean
+    @SpringSessionDataSource
+    public DataSource applicationDataSource() {
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(applicationDbUrl);
+        config.setUsername(applicationDbUser);
+        config.setPassword(applicationDbPassword);
+        config.setDriverClassName("org.mariadb.jdbc.Driver");
+        config.setMaximumPoolSize(10);
 
-		return new HikariDataSource(config);
-	}
+        return new HikariDataSource(config);
+    }
 
-	@Bean
-	public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
-		LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
-		em.setDataSource(applicationDataSource());
-		em.setPackagesToScan("tom");
-		// em.set.setHibernateProperties(getHibernateProperties());
+    @Bean
+    public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+        LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
+        em.setDataSource(applicationDataSource());
+        em.setPackagesToScan("tom");
+        // em.set.setHibernateProperties(getHibernateProperties());
 
-		JpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
-		em.setJpaVendorAdapter(vendorAdapter);
+        JpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+        em.setJpaVendorAdapter(vendorAdapter);
 
-		Properties properties = new Properties();
-		properties.setProperty("ssl", "false");
-		//properties.setProperty("show_sql", "true");
-		em.setJpaProperties(properties);
+        Properties properties = new Properties();
+        properties.setProperty("ssl", "false");
+        // properties.setProperty("show_sql", "true");
+        em.setJpaProperties(properties);
 
-		return em;
-	}
+        return em;
+    }
 
-	@Bean
-	public PlatformTransactionManager transactionManager() {
-		JpaTransactionManager transactionManager = new JpaTransactionManager();
-		transactionManager.setEntityManagerFactory(entityManagerFactory().getObject());
-		return transactionManager;
-	}
+    @Bean
+    public PlatformTransactionManager transactionManager() {
+        JpaTransactionManager transactionManager = new JpaTransactionManager();
+        transactionManager.setEntityManagerFactory(entityManagerFactory().getObject());
+        return transactionManager;
+    }
 
 }

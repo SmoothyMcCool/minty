@@ -19,16 +19,16 @@ public class MetadataController {
 
     private final MetadataRepository metadataRepository;
 
-	public MetadataController(MetadataRepository metadataRepository) {
-		this.metadataRepository = metadataRepository;
-	}
+    public MetadataController(MetadataRepository metadataRepository) {
+        this.metadataRepository = metadataRepository;
+    }
 
-	@RequestMapping(value = { "/all" }, method = RequestMethod.GET)
-	public ResponseEntity<ResponseWrapper<List<UserMeta>>> getAllStats() {
+    @RequestMapping(value = { "/all" }, method = RequestMethod.GET)
+    public ResponseEntity<ResponseWrapper<List<UserMeta>>> getAllStats() {
 
-		List<UserMeta> metadata = StreamSupport.stream(metadataRepository.findAll().spliterator(), false).toList();
+        List<UserMeta> metadata = StreamSupport.stream(metadataRepository.findAll().spliterator(), false).toList();
 
-		ResponseWrapper<List<UserMeta>> response = ResponseWrapper.SuccessResponse(metadata);
-		return new ResponseEntity<>(response, HttpStatus.OK);
-	}
+        ResponseWrapper<List<UserMeta>> response = ResponseWrapper.SuccessResponse(metadata);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }

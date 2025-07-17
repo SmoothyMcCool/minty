@@ -20,9 +20,9 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
 import tom.ApiError;
-import tom.task.model.Assistant;
 import tom.config.security.UserDetailsUser;
 import tom.controller.ResponseWrapper;
+import tom.task.model.Assistant;
 import tom.task.services.AssistantService;
 import tom.task.services.DocumentService;
 
@@ -30,50 +30,50 @@ import tom.task.services.DocumentService;
 @RequestMapping("/api/document")
 public class DocumentController {
 
-	private static final Logger logger = LogManager.getLogger(DocumentController.class);
+    private static final Logger logger = LogManager.getLogger(DocumentController.class);
 
-	@Value("${tempFileStore}")
-	private String tempFileStore;
-	private final AssistantService assistantService;
-	private final DocumentService documentService;
+    @Value("${tempFileStore}")
+    private String tempFileStore;
+    private final AssistantService assistantService;
+    private final DocumentService documentService;
 
-	public DocumentController(DocumentService documentService, AssistantService assistantService) {
-		this.assistantService = assistantService;
-		this.documentService = documentService;
-	}
+    public DocumentController(DocumentService documentService, AssistantService assistantService) {
+        this.assistantService = assistantService;
+        this.documentService = documentService;
+    }
 
-	@RequestMapping(value = { "/add" }, method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<ResponseWrapper<String>> addDocument(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("assistantId") int assistantId, @RequestPart("file") MultipartFile mpf) {
+    @RequestMapping(value = { "/add" }, method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ResponseWrapper<String>> addDocument(@AuthenticationPrincipal UserDetailsUser user,
+            @RequestParam("assistantId") int assistantId, @RequestPart("file") MultipartFile mpf) {
 
-		Assistant assistant = assistantService.findAssistant(user.getId(), assistantId);
+        Assistant assistant = assistantService.findAssistant(user.getId(), assistantId);
 
-		if (assistant == null) {
-			ResponseWrapper<String> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
-					List.of(ApiError.NOT_OWNED));
-			return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
-		}
+        if (assistant == null) {
+            ResponseWrapper<String> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
+                    List.of(ApiError.NOT_OWNED));
+            return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+        }
 
-		File file = new File(tempFileStore + "/" + assistantId + "-" + mpf.getOriginalFilename());
-		try {
-			Files.createDirectories(file.toPath());
-			mpf.transferTo(file);
-			documentService.processFile(file);
-		} catch (IllegalStateException | IOException e) {
-			logger.error("Failed to store file: " + e);
-			ResponseWrapper<String> response = ResponseWrapper
-					.ApiFailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), List.of(ApiError.REQUEST_FAILED));
-			return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-		}
+        File file = new File(tempFileStore + "/" + assistantId + "-" + mpf.getOriginalFilename());
+        try {
+            Files.createDirectories(file.toPath());
+            mpf.transferTo(file);
+            documentService.processFile(file);
+        } catch (IllegalStateException | IOException e) {
+            logger.error("Failed to store file: " + e);
+            ResponseWrapper<String> response = ResponseWrapper
+                    .ApiFailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), List.of(ApiError.REQUEST_FAILED));
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
 
-		// The file will get processed asynchronously.
+        // The file will get processed asynchronously.
 
-		ResponseWrapper<String> response = ResponseWrapper.SuccessResponse("ok");
-		return new ResponseEntity<>(response, HttpStatus.OK);
-	}
+        ResponseWrapper<String> response = ResponseWrapper.SuccessResponse("ok");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 
-	public void deleteDocumentsForAssistant(int id) {
-		documentService.deleteDocumentsForAssistant(id);
-	}
+    public void deleteDocumentsForAssistant(int assistantId) {
+        documentService.deleteDocumentsForAssistant(assistantId);
+    }
 
 }

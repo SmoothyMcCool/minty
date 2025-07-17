@@ -4,5 +4,5 @@ import java.util.Map;
 
 public interface AiTaskConfig {
 
-	Map<String, AiTaskConfigTypes> getConfig();
+    Map<String, AiTaskConfigTypes> getConfig();
 }

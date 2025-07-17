@@ -7,12 +7,12 @@ import tom.workflow.controller.WorkflowRequest;
 
 public interface TaskRegistryService {
 
-	AiTask newTask(int userId, WorkflowRequest request);
+    AiTask newTask(int userId, WorkflowRequest request);
 
-	Map<String, Map<String, String>> getWorkflows();
+    Map<String, Map<String, String>> getWorkflows();
 
-	Map<String, String> getConfigFor(String workflowName);
+    Map<String, String> getConfigFor(String workflowName);
 
-	ClassLoader getClassLoader();
+    ClassLoader getClassLoader();
 
 }

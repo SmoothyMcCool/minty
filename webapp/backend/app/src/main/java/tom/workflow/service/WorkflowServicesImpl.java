@@ -12,43 +12,44 @@ import tom.task.services.TaskServices;
 @Service
 public class WorkflowServicesImpl implements TaskServices {
 
-	private final AssistantService assistantService;
-	private final ConversationService conversationService;
-	private final DocumentService documentService;
-	private final HttpService httpService;
-	private final PythonService pythonService;
+    private final AssistantService assistantService;
+    private final ConversationService conversationService;
+    private final DocumentService documentService;
+    private final HttpService httpService;
+    private final PythonService pythonService;
 
-	public WorkflowServicesImpl(AssistantService assistantService, ConversationService conversationService, DocumentService documentService, HttpService httpService, PythonService pythonService) {
-		this.assistantService = assistantService;
-		this.conversationService = conversationService;
-		this.documentService = documentService;
-		this.httpService = httpService;
-		this.pythonService = pythonService;
-	}
+    public WorkflowServicesImpl(AssistantService assistantService, ConversationService conversationService,
+            DocumentService documentService, HttpService httpService, PythonService pythonService) {
+        this.assistantService = assistantService;
+        this.conversationService = conversationService;
+        this.documentService = documentService;
+        this.httpService = httpService;
+        this.pythonService = pythonService;
+    }
 
-	@Override
-	public AssistantService getAssistantService() {
-		return assistantService;
-	}
+    @Override
+    public AssistantService getAssistantService() {
+        return assistantService;
+    }
 
-	@Override
-	public ConversationService getConversationService() {
-		return conversationService;
-	}
+    @Override
+    public ConversationService getConversationService() {
+        return conversationService;
+    }
 
-	@Override
-	public DocumentService getDocumentService() {
-		return documentService;
-	}
+    @Override
+    public DocumentService getDocumentService() {
+        return documentService;
+    }
 
-	@Override
-	public HttpService getHttpService() {
-		return httpService;
-	}
+    @Override
+    public HttpService getHttpService() {
+        return httpService;
+    }
 
-	@Override
-	public PythonService getPythonService() {
-		return pythonService;
-	}
+    @Override
+    public PythonService getPythonService() {
+        return pythonService;
+    }
 
 }
