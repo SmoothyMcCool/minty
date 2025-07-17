@@ -1,10 +1,15 @@
 .bg-image {
-	background-image: url('../../../assets/assistant-robot.png');
 	min-height: 100vh;
 	max-width: 100%;
 	height: 100%;
 	background-position: center top;
 	background-repeat: no-repeat;
 	background-size: 100%;
+	background-attachment: fixed;
 	image-orientation: from-image;
+}
+
+.wrap-text {
+    white-space: pre-wrap;
+    margin: 0
 }

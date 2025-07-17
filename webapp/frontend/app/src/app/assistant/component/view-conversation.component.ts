@@ -13,7 +13,7 @@ import { ChatMessage } from '../../model/chat-message';
     selector: 'ai-view-conversation',
     imports: [CommonModule, FormsModule, ConversationComponent],
     templateUrl: 'view-conversation.component.html',
-    styleUrls: ['view-assistants.component.css']
+    styleUrls: ['../../global.css', 'view-assistants.component.css']
 })
 export class ViewConversationComponent implements OnInit, OnDestroy {
 

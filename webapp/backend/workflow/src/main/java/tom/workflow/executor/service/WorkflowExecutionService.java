@@ -7,14 +7,14 @@ import tom.task.AiTask;
 
 public interface WorkflowExecutionService {
 
-	List<String> getAvailableResults() throws IOException;
+    List<String> getAvailableResults() throws IOException;
 
-	String getResult(String taskName) throws IOException;
+    String getResult(String taskName) throws IOException;
 
-	String executeTask(AiTask task);
+    String executeTask(AiTask task);
 
-	void reportTaskComplete(TaskTracker tracker);
+    void reportTaskComplete(TaskTracker tracker);
 
-	boolean deleteResult(String resultName) throws IOException;
+    boolean deleteResult(String resultName) throws IOException;
 
 }

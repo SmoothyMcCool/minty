@@ -10,7 +10,7 @@ import { WorkflowTask } from '../../model/workflow-task';
     selector: 'ai-workflow-list',
     imports: [CommonModule, FormsModule, RouterModule ],
     templateUrl: 'workflow-list.component.html',
-    styleUrls: ['workflow.component.css']
+    styleUrls: ['../../global.css', 'workflow.component.css']
 })
 export class WorkflowListComponent implements OnInit, OnDestroy {
 

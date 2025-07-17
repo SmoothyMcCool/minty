@@ -7,7 +7,7 @@ import { RouterModule } from '@angular/router';
     selector: 'ai-view-workflow',
     imports: [CommonModule, FormsModule, RouterModule],
     templateUrl: 'view-workflow.component.html',
-    styleUrls: ['workflow.component.css']
+    styleUrls: ['../../global.css', 'workflow.component.css']
 })
 export class ViewWorkflowComponent {
 

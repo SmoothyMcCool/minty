@@ -6,7 +6,7 @@ import { ChatMessage } from "../../model/chat-message";
     selector: 'ai-conversation',
     imports: [CommonModule],
     templateUrl: 'conversation.component.html',
-    styleUrls: ['conversation.component.css']
+    styleUrls: ['../../global.css', 'conversation.component.css']
 })
 export class ConversationComponent {
     @Input() messages: ChatMessage[];

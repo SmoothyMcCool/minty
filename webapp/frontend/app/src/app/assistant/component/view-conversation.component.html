@@ -1,4 +1,4 @@
-<div class="container-fluid bg-image">
+<div class="container-fluid bg-image img-assistant">
   <div class="row mb-2">
     <h1>{{assistant.name}}</h1>
     <p>{{assistant.prompt}}</p>
@@ -15,5 +15,7 @@
       <button class="btn btn-primary" (click)="restart()">Start over</button>
     </div>
   </div>
+  <div class="overflow-auto">
   <ai-conversation [messages]="chatHistory"></ai-conversation>
+  </div>
 </div>

@@ -41,85 +41,85 @@ import de.neuland.pug4j.template.FileTemplateLoader;
 @EnableTransactionManagement
 public class ApplicationConfig implements WebMvcConfigurer {
 
-	@Bean
-	public HttpSessionIdResolver httpSessionIdResolver() {
-		return HeaderHttpSessionIdResolver.xAuthToken();
-	}
+    @Bean
+    public HttpSessionIdResolver httpSessionIdResolver() {
+        return HeaderHttpSessionIdResolver.xAuthToken();
+    }
 
-	@Bean
-	@Qualifier("taskExecutor")
-	ThreadPoolTaskExecutor taskExecutor() {
-		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-		taskExecutor.setCorePoolSize(5);
-		taskExecutor.setMaxPoolSize(10);
-		return taskExecutor;
-	}
+    @Bean
+    @Qualifier("taskExecutor")
+    ThreadPoolTaskExecutor taskExecutor() {
+        ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
+        taskExecutor.setCorePoolSize(5);
+        taskExecutor.setMaxPoolSize(10);
+        return taskExecutor;
+    }
 
-	@Bean
-	@Qualifier("fileProcessingExecutor")
-	ThreadPoolTaskExecutor fileProcessingExecutor() {
-		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-		taskExecutor.setCorePoolSize(5);
-		taskExecutor.setMaxPoolSize(10);
-		return taskExecutor;
-	}
+    @Bean
+    @Qualifier("fileProcessingExecutor")
+    ThreadPoolTaskExecutor fileProcessingExecutor() {
+        ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
+        taskExecutor.setCorePoolSize(5);
+        taskExecutor.setMaxPoolSize(10);
+        return taskExecutor;
+    }
 
-	@Bean
-	@Qualifier("simpleExecutor")
-	SimpleAsyncTaskExecutor simpleExecutor() {
-		SimpleAsyncTaskExecutor simpleExecutor = new SimpleAsyncTaskExecutor();
-		return simpleExecutor;
-	}
+    @Bean
+    @Qualifier("simpleExecutor")
+    SimpleAsyncTaskExecutor simpleExecutor() {
+        SimpleAsyncTaskExecutor simpleExecutor = new SimpleAsyncTaskExecutor();
+        return simpleExecutor;
+    }
 
-	@Bean
-	public MultipartResolver multipartResolver() {
-		return new StandardServletMultipartResolver();
-	}
+    @Bean
+    public MultipartResolver multipartResolver() {
+        return new StandardServletMultipartResolver();
+    }
 
-	@Bean
-	FileTemplateLoader pugFileLoader() {
-		FileTemplateLoader templateLoader = new FileTemplateLoader();
-		templateLoader.setBase("");
-		return templateLoader;
-	}
+    @Bean
+    FileTemplateLoader pugFileLoader() {
+        FileTemplateLoader templateLoader = new FileTemplateLoader();
+        templateLoader.setBase("");
+        return templateLoader;
+    }
 
-	@Bean
-	public PugConfiguration pugConfiguration(FileTemplateLoader pugFileLoader) {
-		PugConfiguration config = new PugConfiguration();
-		config.setCaching(true);
-		config.setTemplateLoader(pugFileLoader);
-		return config;
-	}
+    @Bean
+    public PugConfiguration pugConfiguration(FileTemplateLoader pugFileLoader) {
+        PugConfiguration config = new PugConfiguration();
+        config.setCaching(true);
+        config.setTemplateLoader(pugFileLoader);
+        return config;
+    }
 
-	@Override
-	public void configureMessageConverters(@NonNull List<HttpMessageConverter<?>> converters) {
-		Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder();
-		builder.indentOutput(true);// .dateFormat(new SimpleDateFormat("EEE MMM dd hh:mm:ss yyyy"));
-		// .serializationInclusion(Include.NON_EMPTY);
+    @Override
+    public void configureMessageConverters(@NonNull List<HttpMessageConverter<?>> converters) {
+        Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder();
+        builder.indentOutput(true);// .dateFormat(new SimpleDateFormat("EEE MMM dd hh:mm:ss yyyy"));
+        // .serializationInclusion(Include.NON_EMPTY);
 
-		// builder.featuresToDisable(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE);
+        // builder.featuresToDisable(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE);
 
-		ObjectMapper mapper = builder.build();
-		// mapper.configure(DeserializationFeature.date, state);
+        ObjectMapper mapper = builder.build();
+        // mapper.configure(DeserializationFeature.date, state);
 
-		MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(mapper);
-		// converter.setJsonPrefix(")]}',\n");
-		converters.add(converter);
+        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(mapper);
+        // converter.setJsonPrefix(")]}',\n");
+        converters.add(converter);
 
-		AnnotationIntrospector introspector = new JaxbAnnotationIntrospector(null, false);
-		AnnotationIntrospector secondary = new JacksonXmlAnnotationIntrospector();
-		builder.annotationIntrospector(AnnotationIntrospector.pair(introspector, secondary));
+        AnnotationIntrospector introspector = new JaxbAnnotationIntrospector(null, false);
+        AnnotationIntrospector secondary = new JacksonXmlAnnotationIntrospector();
+        builder.annotationIntrospector(AnnotationIntrospector.pair(introspector, secondary));
 
-		converters.add(new MappingJackson2XmlHttpMessageConverter(builder.createXmlMapper(true).build()));
-	}
+        converters.add(new MappingJackson2XmlHttpMessageConverter(builder.createXmlMapper(true).build()));
+    }
 
-	@Override
-	public void addResourceHandlers(@NonNull ResourceHandlerRegistry registry) {
-		registry.addResourceHandler("/**").addResourceLocations("/static/");
-	}
+    @Override
+    public void addResourceHandlers(@NonNull ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/**").addResourceLocations("/static/");
+    }
 
-	@Override
-	public void addViewControllers(@NonNull ViewControllerRegistry registry) {
-		registry.addViewController("/").setViewName("forward:/index.html");
-	}
+    @Override
+    public void addViewControllers(@NonNull ViewControllerRegistry registry) {
+        registry.addViewController("/").setViewName("forward:/index.html");
+    }
 }

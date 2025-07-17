@@ -12,61 +12,61 @@ import tom.workflow.converters.MapToStringConverter;
 @Entity
 public class TriggeredWorkflowTask {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private int id;
-	private String workflow;
-	private String name;
-	private String description;
-	private String directory;
-	@Convert(converter = MapToStringConverter.class)
-	private Map<String, String> defaultConfig;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+    private String workflow;
+    private String name;
+    private String description;
+    private String directory;
+    @Convert(converter = MapToStringConverter.class)
+    private Map<String, String> defaultConfig;
 
-	public int getId() {
-		return id;
-	}
+    public int getId() {
+        return id;
+    }
 
-	public void setId(int id) {
-		this.id = id;
-	}
+    public void setId(int id) {
+        this.id = id;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public String getWorkflow() {
-		return workflow;
-	}
+    public String getWorkflow() {
+        return workflow;
+    }
 
-	public void setWorkflow(String workflow) {
-		this.workflow = workflow;
-	}
+    public void setWorkflow(String workflow) {
+        this.workflow = workflow;
+    }
 
-	public String getDescription() {
-		return description;
-	}
+    public String getDescription() {
+        return description;
+    }
 
-	public void setDescription(String description) {
-		this.description = description;
-	}
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-	public String getDirectory() {
-		return directory;
-	}
+    public String getDirectory() {
+        return directory;
+    }
 
-	public void setDirectory(String directory) {
-		this.directory = directory;
-	}
+    public void setDirectory(String directory) {
+        this.directory = directory;
+    }
 
-	public Map<String, String> getDefaultConfig() {
-		return defaultConfig;
-	}
+    public Map<String, String> getDefaultConfig() {
+        return defaultConfig;
+    }
 
-	public void setDefaultConfig(Map<String, String> defaultConfig) {
-		this.defaultConfig = defaultConfig;
-	}
+    public void setDefaultConfig(Map<String, String> defaultConfig) {
+        this.defaultConfig = defaultConfig;
+    }
 }

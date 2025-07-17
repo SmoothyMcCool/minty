@@ -1,47 +1,49 @@
-<div class="container bg-image">
-    <div class="pt-5">
-        <h1 class="well blue rounded text-center">A.T.H.E.N.A.2.0</h1>
-        <div class="big-margin well rounded p-3 vertical-centre">
+<div class="bg-image img-splash">
+    <div class="container">
+        <div class="pt-5">
+            <h1 class="well blue rounded text-center">A.T.H.E.N.A.2.0</h1>
+            <div class="big-margin well rounded p-3 vertical-centre">
 
-            <div *ngIf="loginFailed" class="alert alert-danger container">
-                <div class="row">
-                    <div class="col me-auto align-middle">
-                        <label class="col-form-label">Couldn't log in :( Try again.</label>
-                    </div>
-                    <div class="col-auto">
-                        <button (click)="loginFailed = false" class="btn btn-danger">&times;</button>
+                <div *ngIf="loginFailed" class="alert alert-danger container">
+                    <div class="row">
+                        <div class="col me-auto align-middle">
+                            <label class="col-form-label">Couldn't log in :( Try again.</label>
+                        </div>
+                        <div class="col-auto">
+                            <button (click)="loginFailed = false" class="btn btn-danger">&times;</button>
+                        </div>
                     </div>
                 </div>
+
+                <div class="header">
+                    <button type="submit" id="accountButton" (click)="signup()" class="btn btn-primary btn-float">Sign
+                        Up!</button>
+                    <h1 class="blue">Log in!</h1>
+                </div>
+                <form role="form" #userForm="ngForm" class="container-fluid" (submit)="login()">
+                    <div class="mb-3 row">
+                        <div class="col" required>
+                            <input id="account" name="account" type="text" size="10" maxlength="50" placeholder="User name"
+                                class="form-control" [(ngModel)]="credentials.account" required>
+                        </div>
+                    </div>
+                    <div class="mb-3 row">
+                        <div class="col" required>
+                            <input id="password" name="password" type="password" size="10" maxlength="50" placeholder="Password"
+                                class="form-control" [(ngModel)]="credentials.password" required>
+                        </div>
+                    </div>
+
+                    <div class="centred space-after">
+                        <button type="submit" id="loginButton" class="btn btn-primary">Login</button>
+                    </div>
+                </form>
             </div>
-
-            <div class="header">
-                <button type="submit" id="accountButton" (click)="signup()" class="btn btn-primary btn-float">Sign
-                    Up!</button>
-                <h1 class="blue">Log in!</h1>
-            </div>
-            <form role="form" #userForm="ngForm" class="container-fluid" (submit)="login()">
-                <div class="mb-3 row">
-                    <div class="col" required>
-                        <input id="account" name="account" type="text" size="10" maxlength="50" placeholder="User name"
-                            class="form-control" [(ngModel)]="credentials.account" required>
-                    </div>
-                </div>
-                <div class="mb-3 row">
-                    <div class="col" required>
-                        <input id="password" name="password" type="password" size="10" maxlength="50" placeholder="Password"
-                            class="form-control" [(ngModel)]="credentials.password" required>
-                    </div>
-                </div>
-
-                <div class="centred space-after">
-                    <button type="submit" id="loginButton" class="btn btn-primary">Login</button>
-                </div>
-            </form>
         </div>
-    </div>
-    <div class="row">
-        <div class="col d-flex justify-content-end opacity-75">
-            <img src="assets/splash-logo.jpg" style="width:300px; height: 300px" class=" p-3"/>
+        <div class="row fixed-bottom">
+            <div class="col d-flex justify-content-end opacity-75">
+                <img src="assets/splash-logo.jpg" style="width:300px; height: 300px" class=" p-3"/>
+            </div>
         </div>
     </div>
 </div>

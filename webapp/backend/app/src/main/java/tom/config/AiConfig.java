@@ -27,59 +27,49 @@ import io.micrometer.observation.ObservationRegistry;
 @Configuration
 public class AiConfig {
 
-	private static final Logger logger = LogManager.getLogger(AiConfig.class);
+    private static final Logger logger = LogManager.getLogger(AiConfig.class);
 
-	@Value("${ollamaUri}")
-	private String ollamaUri;
+    @Value("${ollamaUri}")
+    private String ollamaUri;
 
-	@Value("${chatMemoryDepth}")
-	private int chatMemoryDepth;
+    @Value("${chatMemoryDepth}")
+    private int chatMemoryDepth;
 
-	@Bean
-	JdbcTemplate vectorJdbcTemplate(DataSource dataSource) {
-		return new JdbcTemplate(dataSource);
-	}
+    @Bean
+    JdbcTemplate vectorJdbcTemplate(DataSource dataSource) {
+        return new JdbcTemplate(dataSource);
+    }
 
-	@Bean
-	OllamaApi ollamaApi() {
-		logger.info("ollama URI is " + ollamaUri);
-		return OllamaApi.builder().
-				baseUrl(ollamaUri)
-				.build();
-	}
+    @Bean
+    OllamaApi ollamaApi() {
+        logger.info("ollama URI is " + ollamaUri);
+        return OllamaApi.builder().baseUrl(ollamaUri).build();
+    }
 
-	@Bean
-	EmbeddingModel embeddingModel(OllamaApi ollamaApi) {
-		OllamaOptions options = OllamaOptions.builder()
-				.model(OllamaModel.LLAMA3_2)
-				.build();
+    @Bean
+    EmbeddingModel embeddingModel(OllamaApi ollamaApi) {
+        OllamaOptions options = OllamaOptions.builder().model(OllamaModel.LLAMA3_2).build();
 
-		return new OllamaEmbeddingModel(ollamaApi, options, ObservationRegistry.NOOP,
-				ModelManagementOptions.defaults());
-	}
+        return new OllamaEmbeddingModel(ollamaApi, options, ObservationRegistry.NOOP,
+                ModelManagementOptions.defaults());
+    }
 
-	@Bean
-	VectorStore vectorStore(JdbcTemplate vectorJdbcTemplate, EmbeddingModel embeddingModel) {
-		return MariaDBVectorStore.builder(vectorJdbcTemplate, embeddingModel)
-				.initializeSchema(true)
-				.build();
-		// return SimpleVectorStore.builder(embeddingModel).build();
-	}
+    @Bean
+    VectorStore vectorStore(JdbcTemplate vectorJdbcTemplate, EmbeddingModel embeddingModel) {
+        return MariaDBVectorStore.builder(vectorJdbcTemplate, embeddingModel).initializeSchema(true).build();
+        // return SimpleVectorStore.builder(embeddingModel).build();
+    }
 
-	@Bean
-	ChatMemory chatMemory(ChatMemoryRepository chatMemoryRepository) {
-		return MessageWindowChatMemory.builder()
-				.maxMessages(chatMemoryDepth)
-				.chatMemoryRepository(chatMemoryRepository)
-				.build();
-	}
+    @Bean
+    ChatMemory chatMemory(ChatMemoryRepository chatMemoryRepository) {
+        return MessageWindowChatMemory.builder().maxMessages(chatMemoryDepth).chatMemoryRepository(chatMemoryRepository)
+                .build();
+    }
 
-	@Bean
-	ChatMemoryRepository chatMemoryRepository(JdbcTemplate jdbcTemplate, DataSource dataSource) {
-		return JdbcChatMemoryRepository.builder()
-				.jdbcTemplate(jdbcTemplate)
-				.dialect(JdbcChatMemoryRepositoryDialect.from(dataSource))
-				.build();
-		// return new InMemoryChatMemoryRepository();
-	}
+    @Bean
+    ChatMemoryRepository chatMemoryRepository(JdbcTemplate jdbcTemplate, DataSource dataSource) {
+        return JdbcChatMemoryRepository.builder().jdbcTemplate(jdbcTemplate)
+                .dialect(JdbcChatMemoryRepositoryDialect.from(dataSource)).build();
+        // return new InMemoryChatMemoryRepository();
+    }
 }

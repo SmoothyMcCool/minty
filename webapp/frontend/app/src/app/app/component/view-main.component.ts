@@ -10,7 +10,7 @@ import { ChatMessage } from '../../model/chat-message';
     selector: 'ai-view-main',
     imports: [CommonModule, FormsModule, ConversationComponent],
     templateUrl: 'view-main.component.html',
-    styleUrls: ['view-main.component.css']
+    styleUrls: ['../../global.css', 'view-main.component.css']
 })
 export class ViewMainComponent implements AfterViewInit {
 
@@ -30,6 +30,7 @@ export class ViewMainComponent implements AfterViewInit {
         this.chatHistory.unshift({ user: true, message: this.queryText });
         this.assistantService.askDefaultAssistant(this.queryText).subscribe(result => {
                 this.chatHistory.unshift({ user: false, message: result });
+                this.queryText = '';
             });
     }
 
