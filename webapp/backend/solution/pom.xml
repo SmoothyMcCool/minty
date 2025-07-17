@@ -23,6 +23,7 @@
 		<module>../app</module>
 		<module>../workflow</module>
 		<module>../task</module>
+		<module>../task-library</module>
 		<module>../bundle</module>
 	</modules>
 
