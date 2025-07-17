@@ -47,11 +47,14 @@ export class AssistantsListComponent {
     }
 
     deleteAssistant(assistant: Assistant) {
-        this.assistantService.delete(assistant).subscribe(() =>
+        this.assistantService.delete(assistant).subscribe(() => {
             this.assistantService.list().subscribe(assistants => {
                 this.assistants = assistants;
-            })
-        );
+            });
+            this.conversationService.list().subscribe(conversations => {
+                this.conversations = conversations;
+            });
+        });
     }
 
     startConversation(assistant: Assistant): void {
@@ -66,9 +69,12 @@ export class AssistantsListComponent {
 
     deleteConversation(conversationId: string) {
         this.conversationService.delete(conversationId).subscribe(() => {
+            this.assistantService.list().subscribe(assistants => {
+                this.assistants = assistants;
+            });
             this.conversationService.list().subscribe(conversations => {
                 this.conversations = conversations;
-            })
+            });
         });
     }
 

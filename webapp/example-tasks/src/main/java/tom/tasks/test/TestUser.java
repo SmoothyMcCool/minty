@@ -1,4 +1,4 @@
-package tvm.tasks.test;
+package tom.tasks.test;
 
 public class TestUser {
 

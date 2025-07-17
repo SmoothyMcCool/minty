@@ -6,5 +6,6 @@ public interface TaskServices {
 	ConversationService getConversationService();
 	DocumentService getDocumentService();
 	HttpService getHttpService();
-	
+
+	PythonService getPythonService();
 }

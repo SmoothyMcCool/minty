@@ -1,4 +1,4 @@
-package tvm.tasks.athena;
+package tom.tasks.aiassistant;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -6,19 +6,19 @@ import java.util.Map;
 import tom.task.AiTaskConfig;
 import tom.task.AiTaskConfigTypes;
 
-public class AthenaTaskConfig implements AiTaskConfig {
+public class AiAssistantTaskConfig implements AiTaskConfig {
 
 	private int assistant;
 	private String rtcQueryId;
 	private String prompt;
 
-	public AthenaTaskConfig() {
+	public AiAssistantTaskConfig() {
 		assistant = 0;
 		rtcQueryId = "";
 		prompt = "";
 	}
 
-	public AthenaTaskConfig(Map<String, String> config) {
+	public AiAssistantTaskConfig(Map<String, String> config) {
 		assistant = Integer.parseInt(config.get("assistant"));
 		rtcQueryId = config.get("RTC Query ID");
 		prompt = config.get("prompt");

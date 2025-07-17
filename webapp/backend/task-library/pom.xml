@@ -3,9 +3,14 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-    <groupId>tvm.tasks</groupId>
-	<artifactId>tasklib</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<parent>
+		<groupId>tom.minty</groupId>
+		<artifactId>parent</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>../parent/pom.xml</relativePath>
+	</parent>
+
+	<artifactId>task-library</artifactId>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -16,16 +21,15 @@
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-core</artifactId>
-			<version>2.24.3</version>
+			<version>${log4j.version}</version>
+		</dependency>
+		<!-- Jackson -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>${jackson.version}</version>
 		</dependency>
 
-		<!-- Mr. Ai-->
-		<dependency>
-			<groupId>tom.minty</groupId>
-			<artifactId>parent</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-			<type>pom</type>
-		</dependency>
 		<dependency>
 			<groupId>tom.minty</groupId>
 			<artifactId>task</artifactId>
@@ -37,18 +41,10 @@
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.14.0</version>
-				<configuration>
-					<release>21</release>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>3.4.2</version>
 				<configuration>
-					<outputDirectory>D:/projects/Minty/taskLib</outputDirectory>
+					<outputDirectory>D:/projects/Minty/working/taskLib</outputDirectory>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -63,12 +59,30 @@
 							<goal>copy-resources</goal>
 						</goals>
 						<configuration>
-							<outputDirectory>D:/projects/Minty/taskLib</outputDirectory>
+							<outputDirectory>D:/projects/Minty/working/taskLib</outputDirectory>
 							<resources>
 								<resource>
 									<directory>/src/main/resources/templates</directory>
 									<includes>
 										<include>*.pug</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+					<execution>
+						<id>copy-python</id>
+						<phase>install</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>D:/projects/Minty/working/taskLib</outputDirectory>
+							<resources>
+								<resource>
+									<directory>/src/main/resources/python</directory>
+									<includes>
+										<include>*.py</include>
 									</includes>
 								</resource>
 							</resources>

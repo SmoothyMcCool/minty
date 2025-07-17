@@ -1,4 +1,4 @@
-package tvm.tasks.daemon;
+package tom.tasks.daemon;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,7 +14,7 @@ public class VideoTranscriberConfig implements AiTaskConfig {
 	}
 
 	public VideoTranscriberConfig(Map<String, String> config) {
-		// Read out file - it's provided to us by the filesystem monitor.
+		// Video file - it's provided to us by the filesystem monitor, not the UI.
 		file = config.get("file");
 	}
 
