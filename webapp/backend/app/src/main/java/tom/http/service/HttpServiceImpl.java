@@ -25,115 +25,115 @@ import tom.user.service.UserService;
 @Service
 public class HttpServiceImpl implements HttpService {
 
-    private static final Logger logger = LogManager.getLogger(HttpServiceImpl.class);
+	private static final Logger logger = LogManager.getLogger(HttpServiceImpl.class);
 
-    private final UserService userService;
-    private final UserRepository userRepository;
+	private final UserService userService;
+	private final UserRepository userRepository;
 
-    public HttpServiceImpl(UserService userService, UserRepository userRepository) {
-        this.userService = userService;
-        this.userRepository = userRepository;
-    }
+	public HttpServiceImpl(UserService userService, UserRepository userRepository) {
+		this.userService = userService;
+		this.userRepository = userRepository;
+	}
 
-    @Override
-    public <ResponseType> ResponseType getNoAuth(String url, Map<String, String> parameters, ResponseType dummy) {
-        try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
+	@Override
+	public <ResponseType> ResponseType getNoAuth(String url, Map<String, String> parameters, ResponseType dummy) {
+		try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
 
-            final HttpGet request = new HttpGet(url);
+			final HttpGet request = new HttpGet(url);
 
-            if (parameters != null) {
-                URIBuilder uriBuilder = new URIBuilder(request.getUri());
-                parameters.forEach((key, value) -> {
-                    uriBuilder.addParameter(key, value);
-                });
-                request.setUri(uriBuilder.build());
-            }
+			if (parameters != null) {
+				URIBuilder uriBuilder = new URIBuilder(request.getUri());
+				parameters.forEach((key, value) -> {
+					uriBuilder.addParameter(key, value);
+				});
+				request.setUri(uriBuilder.build());
+			}
 
-            ResponseType response = client.execute(request, new HttpResponseHandler<ResponseType>(dummy));
-            return response;
+			ResponseType response = client.execute(request, new HttpResponseHandler<ResponseType>(dummy));
+			return response;
 
-        } catch (URISyntaxException e) {
-            logger.error("get: Invalid URL: " + url);
-        } catch (IOException e) {
-            logger.error("get: failed to execute request " + e);
-        }
+		} catch (URISyntaxException e) {
+			logger.error("get: Invalid URL: " + url);
+		} catch (IOException e) {
+			logger.error("get: failed to execute request " + e);
+		}
 
-        return null;
-    }
+		return null;
+	}
 
-    @Override
-    public <ResponseType> ResponseType getBasicAuth(int userId, String url, Map<String, String> parameters,
-            ResponseType dummy) {
+	@Override
+	public <ResponseType> ResponseType getBasicAuth(int userId, String url, Map<String, String> parameters,
+			ResponseType dummy) {
 
-        try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
+		try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
 
-            // Get credentials and create the Basic auth header
-            User user = userService.decrypt(userRepository.findById(userId).get());
-            final String auth = user.getCorpAccount() + ":" + user.getCorpPassword();
-            final byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(StandardCharsets.ISO_8859_1));
-            final String authHeader = "Basic " + new String(encodedAuth);
+			// Get credentials and create the Basic auth header
+			User user = userService.decrypt(userRepository.findById(userId).get());
+			final String auth = user.getCorpAccount() + ":" + user.getCorpPassword();
+			final byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(StandardCharsets.ISO_8859_1));
+			final String authHeader = "Basic " + new String(encodedAuth);
 
-            final HttpGet request = new HttpGet(url);
-            request.setHeader(HttpHeaders.AUTHORIZATION, authHeader);
+			final HttpGet request = new HttpGet(url);
+			request.setHeader(HttpHeaders.AUTHORIZATION, authHeader);
 
-            if (parameters != null) {
-                URIBuilder uriBuilder = new URIBuilder(request.getUri());
-                parameters.forEach((key, value) -> {
-                    uriBuilder.addParameter(key, value);
-                });
-                request.setUri(uriBuilder.build());
-            }
+			if (parameters != null) {
+				URIBuilder uriBuilder = new URIBuilder(request.getUri());
+				parameters.forEach((key, value) -> {
+					uriBuilder.addParameter(key, value);
+				});
+				request.setUri(uriBuilder.build());
+			}
 
-            ResponseType response = client.execute(request, new HttpResponseHandler<ResponseType>(dummy));
-            return response;
+			ResponseType response = client.execute(request, new HttpResponseHandler<ResponseType>(dummy));
+			return response;
 
-        } catch (JsonProcessingException e) {
-            logger.error("get: Failed to get User object for userId " + userId);
-        } catch (URISyntaxException e) {
-            logger.error("get: Invalid URL: " + url);
-        } catch (IOException e) {
-            logger.error("get: failed to execute request " + e);
-        }
+		} catch (JsonProcessingException e) {
+			logger.error("get: Failed to get User object for userId " + userId);
+		} catch (URISyntaxException e) {
+			logger.error("get: Invalid URL: " + url);
+		} catch (IOException e) {
+			logger.error("get: failed to execute request " + e);
+		}
 
-        return null;
-    }
+		return null;
+	}
 
-    @Override
-    public <ResponseType> ResponseType getJavaEEFormAuth(int userId, String url, Map<String, String> parameters,
-            ResponseType dummy) {
+	@Override
+	public <ResponseType> ResponseType getJavaEEFormAuth(int userId, String url, Map<String, String> parameters,
+			ResponseType dummy) {
 
-        // TODO
-        try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
+		// TODO
+		try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
 
-            // Get credentials and create the Basic auth header
-            User user = userService.decrypt(userRepository.findById(userId).get());
-            final String auth = user.getCorpAccount() + ":" + user.getCorpPassword();
-            final byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(StandardCharsets.ISO_8859_1));
-            final String authHeader = "Basic " + new String(encodedAuth);
+			// Get credentials and create the Basic auth header
+			User user = userService.decrypt(userRepository.findById(userId).get());
+			final String auth = user.getCorpAccount() + ":" + user.getCorpPassword();
+			final byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(StandardCharsets.ISO_8859_1));
+			final String authHeader = "Basic " + new String(encodedAuth);
 
-            final HttpGet request = new HttpGet(url);
-            request.setHeader(HttpHeaders.AUTHORIZATION, authHeader);
+			final HttpGet request = new HttpGet(url);
+			request.setHeader(HttpHeaders.AUTHORIZATION, authHeader);
 
-            if (parameters != null) {
-                URIBuilder uriBuilder = new URIBuilder(request.getUri());
-                parameters.forEach((key, value) -> {
-                    uriBuilder.addParameter(key, value);
-                });
-                request.setUri(uriBuilder.build());
-            }
+			if (parameters != null) {
+				URIBuilder uriBuilder = new URIBuilder(request.getUri());
+				parameters.forEach((key, value) -> {
+					uriBuilder.addParameter(key, value);
+				});
+				request.setUri(uriBuilder.build());
+			}
 
-            ResponseType response = client.execute(request, new HttpResponseHandler<ResponseType>(dummy));
+			ResponseType response = client.execute(request, new HttpResponseHandler<ResponseType>(dummy));
 
-            return response;
+			return response;
 
-        } catch (JsonProcessingException e) {
-            logger.error("get: Failed to get User object for userId " + userId);
-        } catch (URISyntaxException e) {
-            logger.error("get: Invalid URL: " + url);
-        } catch (IOException e) {
-            logger.error("get: failed to execute request " + e);
-        }
+		} catch (JsonProcessingException e) {
+			logger.error("get: Failed to get User object for userId " + userId);
+		} catch (URISyntaxException e) {
+			logger.error("get: Invalid URL: " + url);
+		} catch (IOException e) {
+			logger.error("get: failed to execute request " + e);
+		}
 
-        return null;
-    }
+		return null;
+	}
 }

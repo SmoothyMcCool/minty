@@ -23,38 +23,38 @@ import tom.user.service.UserService;
 @ComponentScan("tom")
 public class SecurityConfig {
 
-    @Bean
-    BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+	@Bean
+	BCryptPasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
+	}
 
-    @Bean
-    UserDetailsService userDetailsService(UserRepository userRepository, UserService userService) {
-        return new ExerciseTrackerUserDetailsService(userRepository, userService);
-    }
+	@Bean
+	UserDetailsService userDetailsService(UserRepository userRepository, UserService userService) {
+		return new ExerciseTrackerUserDetailsService(userRepository, userService);
+	}
 
-    @Bean
-    public AuthenticationManager authenticationManager(PasswordEncoder passwordEncoder,
-            UserDetailsService userDetailsService) {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setPasswordEncoder(passwordEncoder);
-        provider.setUserDetailsService(userDetailsService);
-        return new ProviderManager(provider);
-    }
+	@Bean
+	public AuthenticationManager authenticationManager(PasswordEncoder passwordEncoder,
+			UserDetailsService userDetailsService) {
+		DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+		provider.setPasswordEncoder(passwordEncoder);
+		provider.setUserDetailsService(userDetailsService);
+		return new ProviderManager(provider);
+	}
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf((csrf) -> csrf.disable())
-                // .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
-                .sessionManagement(configurer -> {
-                    configurer.sessionCreationPolicy(SessionCreationPolicy.ALWAYS);
-                })
-                .authorizeHttpRequests(authorizeRequests -> authorizeRequests
-                        .requestMatchers("/api/user/new", "/api/login").permitAll().anyRequest().authenticated())
-                .requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()))
-                .httpBasic(httpBasic -> {
-                }).logout(logout -> logout.logoutUrl("/api/logout").logoutSuccessUrl("/login"));
+	@Bean
+	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+		http.csrf((csrf) -> csrf.disable())
+				// .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+				.sessionManagement(configurer -> {
+					configurer.sessionCreationPolicy(SessionCreationPolicy.ALWAYS);
+				})
+				.authorizeHttpRequests(authorizeRequests -> authorizeRequests
+						.requestMatchers("/api/user/new", "/api/login").permitAll().anyRequest().authenticated())
+				.requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()))
+				.httpBasic(httpBasic -> {
+				}).logout(logout -> logout.logoutUrl("/api/logout").logoutSuccessUrl("/login"));
 
-        return http.build();
-    }
+		return http.build();
+	}
 }

@@ -8,5 +8,5 @@ import org.springframework.stereotype.Service;
 @Service
 public interface MetadataRepository extends CrudRepository<UserMeta, Integer> {
 
-    Optional<UserMeta> findByUserId(int userId);
+	Optional<UserMeta> findByUserId(int userId);
 }
