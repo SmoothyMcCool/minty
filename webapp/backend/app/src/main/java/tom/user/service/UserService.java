@@ -8,9 +8,9 @@ import tom.user.repository.User;
 
 public interface UserService {
 
-    public User decrypt(EncryptedUser encryptedUser) throws JsonMappingException, JsonProcessingException;
+	public User decrypt(EncryptedUser encryptedUser) throws JsonMappingException, JsonProcessingException;
 
-    public EncryptedUser encrypt(User user) throws JsonProcessingException;
+	public EncryptedUser encrypt(User user) throws JsonProcessingException;
 
-    public String getUsernameFromId(int userId);
+	public String getUsernameFromId(int userId);
 }

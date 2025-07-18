@@ -9,23 +9,23 @@ import tom.config.security.SecurityConfig;
 
 public class ApplicationInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
 
-    @Override
-    protected Class<?>[] getRootConfigClasses() {
-        return null;
-    }
+	@Override
+	protected Class<?>[] getRootConfigClasses() {
+		return null;
+	}
 
-    @Override
-    protected Class<?>[] getServletConfigClasses() {
-        return new Class[] { SecurityConfig.class, ApplicationConfig.class };
-    }
+	@Override
+	protected Class<?>[] getServletConfigClasses() {
+		return new Class[] { SecurityConfig.class, ApplicationConfig.class };
+	}
 
-    @Override
-    protected @NonNull String[] getServletMappings() {
-        return new String[] { "/" };
-    }
+	@Override
+	protected @NonNull String[] getServletMappings() {
+		return new String[] { "/" };
+	}
 
-    @Override
-    protected void customizeRegistration(@NonNull ServletRegistration.Dynamic registration) {
-        registration.setMultipartConfig(new MultipartConfigElement(""));
-    }
+	@Override
+	protected void customizeRegistration(@NonNull ServletRegistration.Dynamic registration) {
+		registration.setMultipartConfig(new MultipartConfigElement(""));
+	}
 }

@@ -31,136 +31,136 @@ import tom.task.services.DocumentService;
 @Service
 public class AssistantServiceImpl implements AssistantService {
 
-    private static final Logger logger = LogManager.getLogger(AssistantServiceImpl.class);
+	private static final Logger logger = LogManager.getLogger(AssistantServiceImpl.class);
 
-    private final AssistantRepository assistantRepository;
-    private final DocumentService documentService;
-    private final ConversationService conversationService;
-    private final VectorStore vectorStore;
-    private final ChatMemory chatMemory;
-    private final OllamaApi ollamaApi;
+	private final AssistantRepository assistantRepository;
+	private final DocumentService documentService;
+	private final ConversationService conversationService;
+	private final VectorStore vectorStore;
+	private final ChatMemory chatMemory;
+	private final OllamaApi ollamaApi;
 
-    private static final int MaxResults = 5;
+	private static final int MaxResults = 5;
 
-    public AssistantServiceImpl(AssistantRepository assistantRepository, DocumentService documentService,
-            ConversationService conversationService, VectorStore vectorStore, ChatMemory chatMemory,
-            OllamaApi ollamaApi) {
+	public AssistantServiceImpl(AssistantRepository assistantRepository, DocumentService documentService,
+			ConversationService conversationService, VectorStore vectorStore, ChatMemory chatMemory,
+			OllamaApi ollamaApi) {
 
-        this.assistantRepository = assistantRepository;
-        this.documentService = documentService;
-        this.conversationService = conversationService;
-        this.vectorStore = vectorStore;
-        this.chatMemory = chatMemory;
-        this.ollamaApi = ollamaApi;
-    }
+		this.assistantRepository = assistantRepository;
+		this.documentService = documentService;
+		this.conversationService = conversationService;
+		this.vectorStore = vectorStore;
+		this.chatMemory = chatMemory;
+		this.ollamaApi = ollamaApi;
+	}
 
-    @Override
-    public Assistant createAssistant(int userId, Assistant assistant) {
-        tom.assistant.repository.Assistant repoAsst = new tom.assistant.repository.Assistant(assistant);
-        repoAsst.setOwnerId(userId);
-        repoAsst.setId(null);
-        if (repoAsst.getNumFiles() > 0) {
-            repoAsst.setState(AssistantState.PROCESSING_FILES);
-        } else {
-            repoAsst.setState(AssistantState.READY);
-        }
-        repoAsst.setProcessedFiles(0);
+	@Override
+	public Assistant createAssistant(int userId, Assistant assistant) {
+		tom.assistant.repository.Assistant repoAsst = new tom.assistant.repository.Assistant(assistant);
+		repoAsst.setOwnerId(userId);
+		repoAsst.setId(null);
+		if (repoAsst.getNumFiles() > 0) {
+			repoAsst.setState(AssistantState.PROCESSING_FILES);
+		} else {
+			repoAsst.setState(AssistantState.READY);
+		}
+		repoAsst.setProcessedFiles(0);
 
-        return assistantRepository.save(repoAsst).toTaskAssistant();
-    }
+		return assistantRepository.save(repoAsst).toTaskAssistant();
+	}
 
-    @Override
-    public List<Assistant> listAssistants(int userId) {
-        List<tom.assistant.repository.Assistant> asstList = assistantRepository.findAllByOwnerIdOrSharedTrue(userId);
+	@Override
+	public List<Assistant> listAssistants(int userId) {
+		List<tom.assistant.repository.Assistant> asstList = assistantRepository.findAllByOwnerIdOrSharedTrue(userId);
 
-        if (asstList == null || asstList.size() == 0) {
-            return new ArrayList<>();
-        }
+		if (asstList == null || asstList.size() == 0) {
+			return new ArrayList<>();
+		}
 
-        return asstList.stream().map(asst -> asst.toTaskAssistant()).toList();
-    }
+		return asstList.stream().map(asst -> asst.toTaskAssistant()).toList();
+	}
 
-    @Override
-    public Assistant findAssistant(int userId, int assistantId) {
-        tom.assistant.repository.Assistant assistant = assistantRepository.findById(assistantId).get();
-        if (assistant.isShared() || assistant.getOwnerId() == userId) {
-            return assistant.toTaskAssistant();
-        }
-        return null;
-    }
+	@Override
+	public Assistant findAssistant(int userId, int assistantId) {
+		tom.assistant.repository.Assistant assistant = assistantRepository.findById(assistantId).get();
+		if (assistant.isShared() || assistant.getOwnerId() == userId) {
+			return assistant.toTaskAssistant();
+		}
+		return null;
+	}
 
-    @Override
-    public boolean deleteAssistant(int userId, int assistantId) {
-        Assistant assistant = findAssistant(userId, assistantId);
+	@Override
+	public boolean deleteAssistant(int userId, int assistantId) {
+		Assistant assistant = findAssistant(userId, assistantId);
 
-        if (assistant == null) {
-            return false;
-        }
+		if (assistant == null) {
+			return false;
+		}
 
-        assistantRepository.deleteById(assistantId);
-        documentService.deleteDocumentsForAssistant(assistantId);
-        conversationService.deleteConversationsForAssistant(assistantId);
+		assistantRepository.deleteById(assistantId);
+		documentService.deleteDocumentsForAssistant(assistantId);
+		conversationService.deleteConversationsForAssistant(assistantId);
 
-        return true;
+		return true;
 
-    }
+	}
 
-    @Override
-    public String ask(int userId, AssistantQuery query) {
-        var chatModel = OllamaChatModel.builder().ollamaApi(ollamaApi)
-                .defaultOptions(OllamaOptions.builder().model(OllamaModel.LLAMA3_2).temperature(0.9).build()).build();
+	@Override
+	public String ask(int userId, AssistantQuery query) {
+		var chatModel = OllamaChatModel.builder().ollamaApi(ollamaApi)
+				.defaultOptions(OllamaOptions.builder().model(OllamaModel.LLAMA3_2).temperature(0.9).build()).build();
 
-        List<Advisor> advisors = new ArrayList<>();
-        advisors.add(MessageChatMemoryAdvisor.builder(chatMemory).build());
+		List<Advisor> advisors = new ArrayList<>();
+		advisors.add(MessageChatMemoryAdvisor.builder(chatMemory).build());
 
-        boolean defaultAssistant = false;
-        String conversationId = null;
-        String prompt = null;
+		boolean defaultAssistant = false;
+		String conversationId = null;
+		String prompt = null;
 
-        if (query.getConversationId() == null || query.getConversationId().compareTo("default") == 0) {
-            defaultAssistant = true;
-            conversationId = conversationService.getDefaultConversationId(userId);
-        } else {
-            conversationId = query.getConversationId();
-            Assistant assistant = findAssistant(userId, query.getAssistantId());
-            assistantRepository.findById(query.getAssistantId()).get();
+		if (query.getConversationId() == null || query.getConversationId().compareTo("default") == 0) {
+			defaultAssistant = true;
+			conversationId = conversationService.getDefaultConversationId(userId);
+		} else {
+			conversationId = query.getConversationId();
+			Assistant assistant = findAssistant(userId, query.getAssistantId());
+			assistantRepository.findById(query.getAssistantId()).get();
 
-            if (assistant == null) {
-                logger.warn(
-                        "Tried to build a chat session from an assistant " + "that user doesn't have access to. User: "
-                                + userId + ", assistant: " + query.getAssistantId());
-                return null;
-            }
+			if (assistant == null) {
+				logger.warn(
+						"Tried to build a chat session from an assistant " + "that user doesn't have access to. User: "
+								+ userId + ", assistant: " + query.getAssistantId());
+				return null;
+			}
 
-            prompt = assistant.prompt();
+			prompt = assistant.prompt();
 
-            if (assistant.numFiles() > 0) {
-                SearchRequest searchRequest = SearchRequest.builder().query(query.getQuery())
-                        .filterExpression(" assistantId == " + query.getAssistantId()).topK(MaxResults).build();
-                Advisor ragAdvisor = QuestionAnswerAdvisor.builder(vectorStore).searchRequest(searchRequest).build();
-                advisors.add(ragAdvisor);
-            }
-        }
+			if (assistant.numFiles() > 0) {
+				SearchRequest searchRequest = SearchRequest.builder().query(query.getQuery())
+						.filterExpression(" assistantId == " + query.getAssistantId()).topK(MaxResults).build();
+				Advisor ragAdvisor = QuestionAnswerAdvisor.builder(vectorStore).searchRequest(searchRequest).build();
+				advisors.add(ragAdvisor);
+			}
+		}
 
-        ChatClient chatClient = ChatClient.builder(chatModel).defaultAdvisors(advisors).build();
+		ChatClient chatClient = ChatClient.builder(chatModel).defaultAdvisors(advisors).build();
 
-        ChatClientRequestSpec spec = null;
-        if (defaultAssistant || prompt == null) {
-            spec = chatClient.prompt();
-        } else {
-            spec = chatClient.prompt(prompt);
-        }
+		ChatClientRequestSpec spec = null;
+		if (defaultAssistant || prompt == null) {
+			spec = chatClient.prompt();
+		} else {
+			spec = chatClient.prompt(prompt);
+		}
 
-        final String finalConversationId = conversationId;
-        ChatResponse chatResponse = spec.user(query.getQuery())
-                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, finalConversationId)).call().chatResponse();
+		final String finalConversationId = conversationId;
+		ChatResponse chatResponse = spec.user(query.getQuery())
+				.advisors(a -> a.param(ChatMemory.CONVERSATION_ID, finalConversationId)).call().chatResponse();
 
-        if (chatResponse != null) {
-            return chatResponse.getResult().getOutput().getText();
-        }
+		if (chatResponse != null) {
+			return chatResponse.getResult().getOutput().getText();
+		}
 
-        logger.warn("ask: Chat response was null");
-        return null;
-    }
+		logger.warn("ask: Chat response was null");
+		return null;
+	}
 
 }

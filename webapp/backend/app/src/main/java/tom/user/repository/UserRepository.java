@@ -6,6 +6,6 @@ import org.springframework.stereotype.Service;
 @Service
 public interface UserRepository extends CrudRepository<EncryptedUser, Integer> {
 
-    EncryptedUser findByAccount(String account);
+	EncryptedUser findByAccount(String account);
 
 }

@@ -23,85 +23,85 @@ import tom.task.services.AssistantService;
 @RequestMapping("/api/assistant")
 public class AssistantController {
 
-    private final MetadataService metadataService;
-    private final AssistantService assistantService;
+	private final MetadataService metadataService;
+	private final AssistantService assistantService;
 
-    public AssistantController(AssistantService assistantService, MetadataService metadataService) {
-        this.assistantService = assistantService;
-        this.metadataService = metadataService;
-    }
+	public AssistantController(AssistantService assistantService, MetadataService metadataService) {
+		this.assistantService = assistantService;
+		this.metadataService = metadataService;
+	}
 
-    @RequestMapping(value = { "/new" }, method = RequestMethod.POST)
-    public ResponseEntity<ResponseWrapper<Assistant>> addAssistant(@AuthenticationPrincipal UserDetailsUser user,
-            @RequestBody Assistant assistant) {
+	@RequestMapping(value = { "/new" }, method = RequestMethod.POST)
+	public ResponseEntity<ResponseWrapper<Assistant>> addAssistant(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestBody Assistant assistant) {
 
-        assistant = assistantService.createAssistant(user.getId(), assistant);
-        metadataService.newAssistant(user.getId());
+		assistant = assistantService.createAssistant(user.getId(), assistant);
+		metadataService.newAssistant(user.getId());
 
-        ResponseWrapper<Assistant> response = ResponseWrapper.SuccessResponse(assistant);
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
+		ResponseWrapper<Assistant> response = ResponseWrapper.SuccessResponse(assistant);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
 
-    @RequestMapping(value = { "/list" }, method = RequestMethod.GET)
-    public ResponseEntity<ResponseWrapper<List<Assistant>>> listAssistants(
-            @AuthenticationPrincipal UserDetailsUser user) {
-        List<Assistant> assistants = assistantService.listAssistants(user.getId());
-        ResponseWrapper<List<Assistant>> response = ResponseWrapper.SuccessResponse(assistants);
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
+	@RequestMapping(value = { "/list" }, method = RequestMethod.GET)
+	public ResponseEntity<ResponseWrapper<List<Assistant>>> listAssistants(
+			@AuthenticationPrincipal UserDetailsUser user) {
+		List<Assistant> assistants = assistantService.listAssistants(user.getId());
+		ResponseWrapper<List<Assistant>> response = ResponseWrapper.SuccessResponse(assistants);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
 
-    @RequestMapping(value = { "/get" }, method = RequestMethod.GET)
-    public ResponseEntity<ResponseWrapper<Assistant>> getAssistant(@AuthenticationPrincipal UserDetailsUser user,
-            @RequestParam("id") int assistantId) {
-        Assistant assistant = assistantService.findAssistant(user.getId(), assistantId);
+	@RequestMapping(value = { "/get" }, method = RequestMethod.GET)
+	public ResponseEntity<ResponseWrapper<Assistant>> getAssistant(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("id") int assistantId) {
+		Assistant assistant = assistantService.findAssistant(user.getId(), assistantId);
 
-        if (assistant == null) {
-            ResponseWrapper<Assistant> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
-                    List.of(ApiError.NOT_OWNED));
-            return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
-        }
+		if (assistant == null) {
+			ResponseWrapper<Assistant> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
+					List.of(ApiError.NOT_OWNED));
+			return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+		}
 
-        ResponseWrapper<Assistant> response = ResponseWrapper.SuccessResponse(assistant);
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
+		ResponseWrapper<Assistant> response = ResponseWrapper.SuccessResponse(assistant);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
 
-    @RequestMapping(value = { "/conversation" }, method = RequestMethod.GET)
-    public ResponseEntity<ResponseWrapper<Assistant>> getAssistantForChat(@AuthenticationPrincipal UserDetailsUser user,
-            @RequestParam("conversationId") String conversationId) {
-        int assistantId = Integer.parseInt(conversationId.split(":")[1]);
-        return getAssistant(user, assistantId);
-    }
+	@RequestMapping(value = { "/conversation" }, method = RequestMethod.GET)
+	public ResponseEntity<ResponseWrapper<Assistant>> getAssistantForChat(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("conversationId") String conversationId) {
+		int assistantId = Integer.parseInt(conversationId.split(":")[1]);
+		return getAssistant(user, assistantId);
+	}
 
-    @RequestMapping(value = { "/delete" }, method = RequestMethod.DELETE)
-    public ResponseEntity<ResponseWrapper<Boolean>> deleteAssistant(@AuthenticationPrincipal UserDetailsUser user,
-            @RequestParam("id") int assistantId) {
+	@RequestMapping(value = { "/delete" }, method = RequestMethod.DELETE)
+	public ResponseEntity<ResponseWrapper<Boolean>> deleteAssistant(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("id") int assistantId) {
 
-        boolean success = assistantService.deleteAssistant(user.getId(), assistantId);
+		boolean success = assistantService.deleteAssistant(user.getId(), assistantId);
 
-        if (!success) {
-            ResponseWrapper<Boolean> response = ResponseWrapper.ApiFailureResponse(HttpStatus.BAD_REQUEST.value(),
-                    List.of(ApiError.REQUEST_FAILED));
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        }
+		if (!success) {
+			ResponseWrapper<Boolean> response = ResponseWrapper.ApiFailureResponse(HttpStatus.BAD_REQUEST.value(),
+					List.of(ApiError.REQUEST_FAILED));
+			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+		}
 
-        ResponseWrapper<Boolean> response = ResponseWrapper.SuccessResponse(true);
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
+		ResponseWrapper<Boolean> response = ResponseWrapper.SuccessResponse(true);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
 
-    @RequestMapping(value = { "/ask" }, method = RequestMethod.POST)
-    public ResponseEntity<ResponseWrapper<String>> ask(@AuthenticationPrincipal UserDetailsUser user,
-            @RequestBody AssistantQuery query) {
+	@RequestMapping(value = { "/ask" }, method = RequestMethod.POST)
+	public ResponseEntity<ResponseWrapper<String>> ask(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestBody AssistantQuery query) {
 
-        String chatResponse = assistantService.ask(user.getId(), query);
+		String chatResponse = assistantService.ask(user.getId(), query);
 
-        ResponseWrapper<String> response;
-        if (chatResponse != null) {
-            response = ResponseWrapper.SuccessResponse(chatResponse);
-        } else {
-            response = ResponseWrapper.ApiFailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    List.of(ApiError.REQUEST_FAILED));
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
+		ResponseWrapper<String> response;
+		if (chatResponse != null) {
+			response = ResponseWrapper.SuccessResponse(chatResponse);
+		} else {
+			response = ResponseWrapper.ApiFailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+					List.of(ApiError.REQUEST_FAILED));
+			return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
 }

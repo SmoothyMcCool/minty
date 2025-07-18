@@ -27,74 +27,74 @@ import tom.task.services.ConversationService;
 @RequestMapping("/api/conversation")
 public class ConversationController {
 
-    private final ConversationService conversationService;
-    private final ChatMemory chatMemory;
-    private final ChatMemoryRepository chatMemoryRepository;
-    private final MetadataService metadataService;
+	private final ConversationService conversationService;
+	private final ChatMemory chatMemory;
+	private final ChatMemoryRepository chatMemoryRepository;
+	private final MetadataService metadataService;
 
-    public ConversationController(ConversationService conversationService, ChatMemoryRepository chatMemoryRepository,
-            ChatMemory chatMemory, MetadataService metadataService) {
-        this.conversationService = conversationService;
-        this.chatMemoryRepository = chatMemoryRepository;
-        this.chatMemory = chatMemory;
-        this.metadataService = metadataService;
-    }
+	public ConversationController(ConversationService conversationService, ChatMemoryRepository chatMemoryRepository,
+			ChatMemory chatMemory, MetadataService metadataService) {
+		this.conversationService = conversationService;
+		this.chatMemoryRepository = chatMemoryRepository;
+		this.chatMemory = chatMemory;
+		this.metadataService = metadataService;
+	}
 
-    @RequestMapping(value = { "new" }, method = RequestMethod.GET)
-    public ResponseEntity<ResponseWrapper<String>> startNewConversation(@AuthenticationPrincipal UserDetailsUser user,
-            @RequestParam("assistantId") String assistantId) {
-        ResponseWrapper<String> response = ResponseWrapper
-                .SuccessResponse(user.getId() + ":" + assistantId + ":" + UUID.randomUUID().toString());
-        metadataService.newConversation(user.getId());
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
+	@RequestMapping(value = { "new" }, method = RequestMethod.GET)
+	public ResponseEntity<ResponseWrapper<String>> startNewConversation(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("assistantId") String assistantId) {
+		ResponseWrapper<String> response = ResponseWrapper
+				.SuccessResponse(user.getId() + ":" + assistantId + ":" + UUID.randomUUID().toString());
+		metadataService.newConversation(user.getId());
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
 
-    @RequestMapping(value = { "/list" }, method = RequestMethod.GET)
-    public ResponseEntity<ResponseWrapper<List<String>>> listChats(@AuthenticationPrincipal UserDetailsUser user) {
-        List<String> chats = chatMemoryRepository.findConversationIds();
+	@RequestMapping(value = { "/list" }, method = RequestMethod.GET)
+	public ResponseEntity<ResponseWrapper<List<String>>> listChats(@AuthenticationPrincipal UserDetailsUser user) {
+		List<String> chats = chatMemoryRepository.findConversationIds();
 
-        chats = chats.stream().filter(item -> item.startsWith(user.getId() + ":")).toList();
+		chats = chats.stream().filter(item -> item.startsWith(user.getId() + ":")).toList();
 
-        ResponseWrapper<List<String>> response = ResponseWrapper.SuccessResponse(chats);
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
+		ResponseWrapper<List<String>> response = ResponseWrapper.SuccessResponse(chats);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
 
-    @RequestMapping(value = { "/history" }, method = RequestMethod.GET)
-    public ResponseEntity<ResponseWrapper<List<ChatMessage>>> getChatHistory(
-            @RequestParam("conversationId") String conversationId) {
+	@RequestMapping(value = { "/history" }, method = RequestMethod.GET)
+	public ResponseEntity<ResponseWrapper<List<ChatMessage>>> getChatHistory(
+			@RequestParam("conversationId") String conversationId) {
 
-        List<Message> messages = chatMemory.get(conversationId);
-        List<ChatMessage> result = messages.stream()
-                .map(message -> new ChatMessage(message.getMessageType() == MessageType.USER, message.getText()))
-                .collect(Collectors.toList());
-        Collections.reverse(result);
+		List<Message> messages = chatMemory.get(conversationId);
+		List<ChatMessage> result = messages.stream()
+				.map(message -> new ChatMessage(message.getMessageType() == MessageType.USER, message.getText()))
+				.collect(Collectors.toList());
+		Collections.reverse(result);
 
-        ResponseWrapper<List<ChatMessage>> response = ResponseWrapper.SuccessResponse(result);
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
+		ResponseWrapper<List<ChatMessage>> response = ResponseWrapper.SuccessResponse(result);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
 
-    @RequestMapping(value = { "/delete" }, method = RequestMethod.DELETE)
-    public ResponseEntity<ResponseWrapper<String>> deleteConversation(@AuthenticationPrincipal UserDetailsUser user,
-            @RequestParam("conversationId") String conversationId) {
+	@RequestMapping(value = { "/delete" }, method = RequestMethod.DELETE)
+	public ResponseEntity<ResponseWrapper<String>> deleteConversation(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("conversationId") String conversationId) {
 
-        chatMemory.clear(conversationId);
+		chatMemory.clear(conversationId);
 
-        ResponseWrapper<String> response = ResponseWrapper.SuccessResponse("success");
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
+		ResponseWrapper<String> response = ResponseWrapper.SuccessResponse("success");
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
 
-    @RequestMapping(value = { "/delete/default" }, method = RequestMethod.DELETE)
-    public ResponseEntity<ResponseWrapper<String>> deleteDefaultConversation(
-            @AuthenticationPrincipal UserDetailsUser user) {
+	@RequestMapping(value = { "/delete/default" }, method = RequestMethod.DELETE)
+	public ResponseEntity<ResponseWrapper<String>> deleteDefaultConversation(
+			@AuthenticationPrincipal UserDetailsUser user) {
 
-        chatMemory.clear(conversationService.getDefaultConversationId(user.getId()));
+		chatMemory.clear(conversationService.getDefaultConversationId(user.getId()));
 
-        ResponseWrapper<String> response = ResponseWrapper.SuccessResponse("success");
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
+		ResponseWrapper<String> response = ResponseWrapper.SuccessResponse("success");
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
 
-    public void deleteConversationsForAssistant(int id) {
-        conversationService.deleteConversationsForAssistant(id);
-    }
+	public void deleteConversationsForAssistant(int id) {
+		conversationService.deleteConversationsForAssistant(id);
+	}
 
 }

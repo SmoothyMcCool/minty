@@ -30,52 +30,52 @@ import tom.user.service.UserService;
 @RequestMapping("/api/login")
 public class LoginController {
 
-    private static final Logger logger = LogManager.getLogger(LoginController.class);
+	private static final Logger logger = LogManager.getLogger(LoginController.class);
 
-    private final UserRepository userRepository;
-    private final UserService userService;
-    private final MetadataService metadataService;
+	private final UserRepository userRepository;
+	private final UserService userService;
+	private final MetadataService metadataService;
 
-    public LoginController(UserRepository userRepository, UserService userService, MetadataService metadataService) {
-        this.userRepository = userRepository;
-        this.userService = userService;
-        this.metadataService = metadataService;
-    }
+	public LoginController(UserRepository userRepository, UserService userService, MetadataService metadataService) {
+		this.userRepository = userRepository;
+		this.userService = userService;
+		this.metadataService = metadataService;
+	}
 
-    @RequestMapping(method = RequestMethod.GET)
-    public ResponseWrapper<User> user(@AuthenticationPrincipal UserDetailsUser user, HttpServletRequest request)
-            throws ApiException {
+	@RequestMapping(method = RequestMethod.GET)
+	public ResponseWrapper<User> user(@AuthenticationPrincipal UserDetailsUser user, HttpServletRequest request)
+			throws ApiException {
 
-        if (user == null) {
-            return ResponseWrapper.FailureResponse(HttpStatus.BAD_REQUEST.value(), List.of("No user provided."));
-        }
-        EncryptedUser _user = userRepository.findById(user.getId()).get();
-        _user.setPassword("");
+		if (user == null) {
+			return ResponseWrapper.FailureResponse(HttpStatus.BAD_REQUEST.value(), List.of("No user provided."));
+		}
+		EncryptedUser _user = userRepository.findById(user.getId()).get();
+		_user.setPassword("");
 
-        // Set a 30-minute session timeout.
-        HttpSession s = request.getSession(true);
-        if (s != null) {
-            s.setMaxInactiveInterval(30 * 60);
-        }
-        User result;
-        try {
-            result = userService.decrypt(_user);
-            result.setCorpAccount("no");
-            result.setCorpPassword("lol");
-        } catch (JsonProcessingException e) {
-            throw new ApiException(ApiError.FAILED_TO_DECRYPT_USER);
-        }
+		// Set a 30-minute session timeout.
+		HttpSession s = request.getSession(true);
+		if (s != null) {
+			s.setMaxInactiveInterval(30 * 60);
+		}
+		User result;
+		try {
+			result = userService.decrypt(_user);
+			result.setCorpAccount("no");
+			result.setCorpPassword("lol");
+		} catch (JsonProcessingException e) {
+			throw new ApiException(ApiError.FAILED_TO_DECRYPT_USER);
+		}
 
-        metadataService.userLoggedIn(user.getId());
+		metadataService.userLoggedIn(user.getId());
 
-        return ResponseWrapper.SuccessResponse(result);
-    }
+		return ResponseWrapper.SuccessResponse(result);
+	}
 
-    @ExceptionHandler(ApiException.class)
-    public ResponseEntity<ResponseWrapper<String>> badUserExceptionHandler(HttpServletRequest req, ApiException e) {
-        logger.error("LoginController: Caught ApiException: ", e.getMessage());
-        ResponseWrapper<String> response = ResponseWrapper.ApiFailureResponse(HttpStatus.BAD_REQUEST.value(),
-                e.getApiErrors());
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-    }
+	@ExceptionHandler(ApiException.class)
+	public ResponseEntity<ResponseWrapper<String>> badUserExceptionHandler(HttpServletRequest req, ApiException e) {
+		logger.error("LoginController: Caught ApiException: ", e.getMessage());
+		ResponseWrapper<String> response = ResponseWrapper.ApiFailureResponse(HttpStatus.BAD_REQUEST.value(),
+				e.getApiErrors());
+		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+	}
 }

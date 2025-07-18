@@ -12,28 +12,28 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class HttpResponseHandler<T> implements HttpClientResponseHandler<T> {
 
-    private T type;
+	private T type;
 
-    public HttpResponseHandler(T type) {
-    }
+	public HttpResponseHandler(T type) {
+	}
 
-    @Override
-    public T handleResponse(ClassicHttpResponse response) throws HttpException, IOException {
-        int status = response.getCode();
+	@Override
+	public T handleResponse(ClassicHttpResponse response) throws HttpException, IOException {
+		int status = response.getCode();
 
-        if (status >= HttpStatus.SC_SUCCESS && status < HttpStatus.SC_REDIRECTION) {
-            HttpEntity entity = response.getEntity();
-            if (entity == null) {
-                return null;
-            }
+		if (status >= HttpStatus.SC_SUCCESS && status < HttpStatus.SC_REDIRECTION) {
+			HttpEntity entity = response.getEntity();
+			if (entity == null) {
+				return null;
+			}
 
-            ObjectMapper mapper = new ObjectMapper();
-            @SuppressWarnings("unchecked")
-            T result = (T) mapper.readValue(entity.getContent(), type.getClass());
-            return result;
-        }
+			ObjectMapper mapper = new ObjectMapper();
+			@SuppressWarnings("unchecked")
+			T result = (T) mapper.readValue(entity.getContent(), type.getClass());
+			return result;
+		}
 
-        return null;
-    }
+		return null;
+	}
 
 }
