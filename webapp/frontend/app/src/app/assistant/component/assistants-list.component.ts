@@ -24,6 +24,7 @@ export class AssistantsListComponent {
             id: 0,
             name: '',
             prompt: '',
+            model: '',
             numFiles: 0,
             state: AssistantState.READY,
             shared: false

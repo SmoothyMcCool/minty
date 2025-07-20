@@ -25,6 +25,7 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
         id: 0,
         name: '',
         prompt: '',
+        model: '',
         numFiles: 0,
         state: AssistantState.READY,
         shared: false
@@ -58,8 +59,11 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 
     submit(text: string) {
         this.chatHistory.unshift({ user: true, message: text });
-        this.assistantService.ask(this.conversationId, this.assistant.id, text).subscribe(response => {
-            this.chatHistory.unshift({ user: false, message: response });
+        let response = '';
+        this.chatHistory.unshift({ user: false, message: response });
+        this.assistantService.ask(this.conversationId, this.assistant.id, text).subscribe(responseChunk => {
+            response += responseChunk;
+            this.chatHistory[0] = { user: false, message: response };
         });
         this.userText = '';
     }

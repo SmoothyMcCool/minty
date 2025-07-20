@@ -8,25 +8,25 @@ import tom.task.AiTaskConfigTypes;
 
 public class VideoTranscriberConfig implements AiTaskConfig {
 
-    private String file;
+	private String file;
 
-    public VideoTranscriberConfig() {
-    }
+	public VideoTranscriberConfig() {
+	}
 
-    public VideoTranscriberConfig(Map<String, String> config) {
-        // Video file - it's provided to us by the filesystem monitor, not the UI.
-        file = config.get("file");
-    }
+	public VideoTranscriberConfig(Map<String, String> config) {
+		// Video file - it's provided to us by the filesystem monitor, not the UI.
+		file = config.get("file");
+	}
 
-    @Override
-    public Map<String, AiTaskConfigTypes> getConfig() {
-        Map<String, AiTaskConfigTypes> config = new HashMap<>();
-        // Don't add file because we will get that passed to us by the filesystem
-        // monitor.
-        return config;
-    }
+	@Override
+	public Map<String, AiTaskConfigTypes> getConfig() {
+		Map<String, AiTaskConfigTypes> config = new HashMap<>();
+		// Don't add file because we will get that passed to us by the filesystem
+		// monitor.
+		return config;
+	}
 
-    public String getFile() {
-        return file;
-    }
+	public String getFile() {
+		return file;
+	}
 }

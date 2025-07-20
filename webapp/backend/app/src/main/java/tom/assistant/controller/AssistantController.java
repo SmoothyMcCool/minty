@@ -1,8 +1,12 @@
 package tom.assistant.controller;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -10,11 +14,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import tom.ApiError;
 import tom.config.security.UserDetailsUser;
 import tom.controller.ResponseWrapper;
 import tom.meta.service.MetadataService;
+import tom.ollama.OllamaService;
 import tom.task.model.Assistant;
 import tom.task.model.AssistantQuery;
 import tom.task.services.AssistantService;
@@ -25,10 +31,13 @@ public class AssistantController {
 
 	private final MetadataService metadataService;
 	private final AssistantService assistantService;
+	private final OllamaService ollamaService;
 
-	public AssistantController(AssistantService assistantService, MetadataService metadataService) {
+	public AssistantController(AssistantService assistantService, MetadataService metadataService,
+			OllamaService ollamaService) {
 		this.assistantService = assistantService;
 		this.metadataService = metadataService;
+		this.ollamaService = ollamaService;
 	}
 
 	@RequestMapping(value = { "/new" }, method = RequestMethod.POST)
@@ -50,15 +59,22 @@ public class AssistantController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
+	@RequestMapping(value = { "/models" }, method = RequestMethod.GET)
+	public ResponseEntity<ResponseWrapper<List<String>>> listModels(@AuthenticationPrincipal UserDetailsUser user) {
+		List<String> models = ollamaService.listModels().stream().map(model -> model.toString()).toList();
+		ResponseWrapper<List<String>> response = ResponseWrapper.SuccessResponse(models);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
 	@RequestMapping(value = { "/get" }, method = RequestMethod.GET)
 	public ResponseEntity<ResponseWrapper<Assistant>> getAssistant(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestParam("id") int assistantId) {
 		Assistant assistant = assistantService.findAssistant(user.getId(), assistantId);
 
-		if (assistant == null) {
+		if (assistant.isNull()) {
 			ResponseWrapper<Assistant> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
 					List.of(ApiError.NOT_OWNED));
-			return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
 		ResponseWrapper<Assistant> response = ResponseWrapper.SuccessResponse(assistant);
@@ -88,20 +104,20 @@ public class AssistantController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "/ask" }, method = RequestMethod.POST)
-	public ResponseEntity<ResponseWrapper<String>> ask(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestBody AssistantQuery query) {
+	@RequestMapping(value = { "/ask" }, method = RequestMethod.POST, produces = MediaType.TEXT_PLAIN_VALUE)
+	public StreamingResponseBody ask(@AuthenticationPrincipal UserDetailsUser user, @RequestBody AssistantQuery query) {
 
-		String chatResponse = assistantService.ask(user.getId(), query);
+		Stream<String> responseStream = assistantService.askStreaming(user.getId(), query);
+		return outputStream -> {
+			responseStream.forEach(item -> {
+				try {
+					outputStream.write((item).getBytes(StandardCharsets.UTF_8));
+					outputStream.flush();
+				} catch (IOException e) {
+					throw new RuntimeException("Error writing to stream", e);
+				}
+			});
+		};
 
-		ResponseWrapper<String> response;
-		if (chatResponse != null) {
-			response = ResponseWrapper.SuccessResponse(chatResponse);
-		} else {
-			response = ResponseWrapper.ApiFailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-					List.of(ApiError.REQUEST_FAILED));
-			return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-		}
-		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 }

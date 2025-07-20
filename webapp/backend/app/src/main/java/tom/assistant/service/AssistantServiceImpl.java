@@ -2,6 +2,8 @@ package tom.assistant.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,6 +23,7 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 
 import tom.assistant.repository.AssistantRepository;
+import tom.ollama.OllamaService;
 import tom.task.model.Assistant;
 import tom.task.model.AssistantQuery;
 import tom.task.model.AssistantState;
@@ -34,24 +37,28 @@ public class AssistantServiceImpl implements AssistantService {
 	private static final Logger logger = LogManager.getLogger(AssistantServiceImpl.class);
 
 	private final AssistantRepository assistantRepository;
-	private final DocumentService documentService;
-	private final ConversationService conversationService;
-	private final VectorStore vectorStore;
-	private final ChatMemory chatMemory;
+	private DocumentService documentService;
+	private ConversationService conversationService;
+	private final OllamaService ollamaService;
 	private final OllamaApi ollamaApi;
 
 	private static final int MaxResults = 5;
 
-	public AssistantServiceImpl(AssistantRepository assistantRepository, DocumentService documentService,
-			ConversationService conversationService, VectorStore vectorStore, ChatMemory chatMemory,
+	public AssistantServiceImpl(AssistantRepository assistantRepository, OllamaService ollamaService,
 			OllamaApi ollamaApi) {
-
 		this.assistantRepository = assistantRepository;
-		this.documentService = documentService;
-		this.conversationService = conversationService;
-		this.vectorStore = vectorStore;
-		this.chatMemory = chatMemory;
+		this.ollamaService = ollamaService;
 		this.ollamaApi = ollamaApi;
+	}
+
+	@Override
+	public void setDocumentService(DocumentService documentService) {
+		this.documentService = documentService;
+	}
+
+	@Override
+	public void setConversationService(ConversationService conversationService) {
+		this.conversationService = conversationService;
 	}
 
 	@Override
@@ -82,24 +89,37 @@ public class AssistantServiceImpl implements AssistantService {
 
 	@Override
 	public Assistant findAssistant(int userId, int assistantId) {
-		tom.assistant.repository.Assistant assistant = assistantRepository.findById(assistantId).get();
-		if (assistant.isShared() || assistant.getOwnerId() == userId) {
-			return assistant.toTaskAssistant();
+		// Special case: 0 is the default assistant
+		if (assistantId == 0) {
+			return Assistant.DefaultAssistant();
 		}
-		return null;
+
+		try {
+			tom.assistant.repository.Assistant assistant = assistantRepository.findById(assistantId).get();
+			if (assistant.isShared() || assistant.getOwnerId() == userId) {
+				return assistant.toTaskAssistant();
+			}
+		} catch (Exception e) {
+			logger.warn("Could not find assistant: " + assistantId);
+			return Assistant.NullAssistant();
+		}
+
+		return Assistant.NullAssistant();
 	}
 
 	@Override
 	public boolean deleteAssistant(int userId, int assistantId) {
 		Assistant assistant = findAssistant(userId, assistantId);
 
-		if (assistant == null) {
+		if (assistant.isNull()) {
+			logger.warn("Tried to delete an assistant that doesn't exist or user cannot access. User: " + userId
+					+ ", assistant: " + assistantId);
 			return false;
 		}
 
+		documentService.deleteDocumentsForAssistant(userId, assistantId);
+		conversationService.deleteConversationsForAssistant(userId, assistantId);
 		assistantRepository.deleteById(assistantId);
-		documentService.deleteDocumentsForAssistant(assistantId);
-		conversationService.deleteConversationsForAssistant(assistantId);
 
 		return true;
 
@@ -107,30 +127,78 @@ public class AssistantServiceImpl implements AssistantService {
 
 	@Override
 	public String ask(int userId, AssistantQuery query) {
-		var chatModel = OllamaChatModel.builder().ollamaApi(ollamaApi)
-				.defaultOptions(OllamaOptions.builder().model(OllamaModel.LLAMA3_2).temperature(0.9).build()).build();
+		Optional<ChatClientRequestSpec> spec = prepare(userId, query);
+		if (spec.isEmpty()) {
+			logger.warn("askStreaming: failed to generate chat request");
+			return "";
+		}
+
+		ChatResponse chatResponse = prepare(userId, query).get().call().chatResponse();
+
+		if (chatResponse != null) {
+			return chatResponse.getResult().getOutput().getText();
+		}
+
+		logger.warn("ask: Chat response was null");
+		return "";
+	}
+
+	@Override
+	public Stream<String> askStreaming(int userId, AssistantQuery query) {
+
+		Optional<ChatClientRequestSpec> spec = prepare(userId, query);
+		if (spec.isEmpty()) {
+			logger.warn("askStreaming: failed to generate chat request");
+			return Stream.empty();
+		}
+
+		Stream<String> chatResponse = prepare(userId, query).get().stream().content().toStream();
+
+		if (chatResponse != null) {
+			return chatResponse;
+		}
+
+		logger.warn("askStreaming: Chat response was null");
+		return Stream.empty();
+	}
+
+	private Optional<ChatClientRequestSpec> prepare(int userId, AssistantQuery query) {
+		Assistant assistant = findAssistant(userId, query.getAssistantId());
+		if (assistant.isNull()) {
+			logger.warn(
+					"Tried to build a chat session from an assistant that doesn't exist or user cannot access. User: "
+							+ userId + ", assistant: " + query.getAssistantId());
+			return Optional.empty();
+		}
+
+		OllamaModel model;
+		try {
+			model = OllamaModel.valueOf(assistant.model());
+		} catch (Exception e) {
+			logger.warn("Invalid model: " + assistant.model() + ". Cannot continue");
+			return Optional.empty();
+		}
+
+		ChatMemory chatMemory = ollamaService.getChatMemory(model);
+
+		OllamaChatModel chatModel = OllamaChatModel.builder().ollamaApi(ollamaApi)
+				.defaultOptions(OllamaOptions.builder().model(model).temperature(0.9).build()).build();
+
+		VectorStore vectorStore = ollamaService.getVectorStore(model);
 
 		List<Advisor> advisors = new ArrayList<>();
 		advisors.add(MessageChatMemoryAdvisor.builder(chatMemory).build());
 
 		boolean defaultAssistant = false;
 		String conversationId = null;
-		String prompt = null;
+		String prompt = "";
 
-		if (query.getConversationId() == null || query.getConversationId().compareTo("default") == 0) {
+		if (query.getConversationId().isBlank() || query.getConversationId().compareTo("default") == 0) {
 			defaultAssistant = true;
 			conversationId = conversationService.getDefaultConversationId(userId);
 		} else {
-			conversationId = query.getConversationId();
-			Assistant assistant = findAssistant(userId, query.getAssistantId());
-			assistantRepository.findById(query.getAssistantId()).get();
-
-			if (assistant == null) {
-				logger.warn(
-						"Tried to build a chat session from an assistant " + "that user doesn't have access to. User: "
-								+ userId + ", assistant: " + query.getAssistantId());
-				return null;
-			}
+			conversationId = conversationService.newConversationId(userId, query.getAssistantId(),
+					query.getConversationId());
 
 			prompt = assistant.prompt();
 
@@ -145,22 +213,40 @@ public class AssistantServiceImpl implements AssistantService {
 		ChatClient chatClient = ChatClient.builder(chatModel).defaultAdvisors(advisors).build();
 
 		ChatClientRequestSpec spec = null;
-		if (defaultAssistant || prompt == null) {
+		if (defaultAssistant || prompt.isBlank()) {
 			spec = chatClient.prompt();
 		} else {
 			spec = chatClient.prompt(prompt);
 		}
 
 		final String finalConversationId = conversationId;
-		ChatResponse chatResponse = spec.user(query.getQuery())
-				.advisors(a -> a.param(ChatMemory.CONVERSATION_ID, finalConversationId)).call().chatResponse();
+		return Optional.of(
+				spec.user(query.getQuery()).advisors(a -> a.param(ChatMemory.CONVERSATION_ID, finalConversationId)));
+	}
 
-		if (chatResponse != null) {
-			return chatResponse.getResult().getOutput().getText();
+	@Override
+	public void fileCompleteFor(int assistantId) {
+		tom.assistant.repository.Assistant assistant = assistantRepository.findById(assistantId).get();
+		assistant.fileComplete();
+		assistantRepository.save(assistant);
+	}
+
+	@Override
+	public String getModelForAssistant(int userId, int assistantId) {
+		Assistant assistant = findAssistant(userId, assistantId);
+		if (assistant.isNull()) {
+			logger.warn("Tried to access an assistant that does not exist or user has no permission. User " + userId
+					+ ", assistant: " + assistantId);
+			return "";
 		}
 
-		logger.warn("ask: Chat response was null");
-		return null;
+		try {
+			OllamaModel.valueOf(assistant.model()); // Just to make sure the value is valid.
+			return assistant.model();
+		} catch (Exception e) {
+			logger.warn("Invalid model: " + assistant.model());
+			return "";
+		}
 	}
 
 }

@@ -14,52 +14,53 @@ import tom.task.services.TaskServices;
 @PublicWorkflow(name = "Ask Assistant", configClass = "tom.tasks.aiassistant.AiAssistantTaskConfig")
 public class AiAssistantTask implements AiTask, ServiceConsumer {
 
-    private TaskServices taskServices;
-    private UUID uuid;
-    private String result;
-    private AiAssistantTaskConfig config;
-    private int userId;
+	private TaskServices taskServices;
+	private UUID uuid;
+	private String result;
+	private AiAssistantTaskConfig config;
+	private int userId;
 
-    public AiAssistantTask(AiAssistantTaskConfig data) {
-        config = data;
-    }
+	public AiAssistantTask(AiAssistantTaskConfig data) {
+		config = data;
+	}
 
-    @Override
-    public void setTaskServices(TaskServices taskServices) {
-        this.taskServices = taskServices;
-        uuid = UUID.randomUUID();
-    }
+	@Override
+	public void setTaskServices(TaskServices taskServices) {
+		this.taskServices = taskServices;
+		uuid = UUID.randomUUID();
+	}
 
-    @Override
-    public String taskName() {
-        return "EvaluatePlan-" + uuid;
-    }
+	@Override
+	public String taskName() {
+		return "AskAssistant-" + uuid;
+	}
 
-    @Override
-    public Map<String, Object> getResult() {
-        Map<String, Object> result = new HashMap<>();
-        result.put("result", this.result);
-        return result;
-    }
+	@Override
+	public Map<String, Object> getResult() {
+		Map<String, Object> result = new HashMap<>();
+		result.put("result", this.result);
+		return result;
+	}
 
-    @Override
-    public String getResultTemplateFilename() {
-        return "default.pug";
-    }
+	@Override
+	public String getResultTemplateFilename() {
+		return "default.pug";
+	}
 
-    @Override
-    public List<AiTask> doWork() {
-        AssistantQuery query = new AssistantQuery();
-        query.setAssistantId(config.getAssistant());
-        query.setQuery(config.getPrompt());
+	@Override
+	public List<AiTask> doWork() {
+		AssistantQuery query = new AssistantQuery();
+		query.setAssistantId(config.getAssistant());
+		query.setQuery(config.getQuery());
+		query.setConversationId(config.getConversationId());
 
-        result = taskServices.getAssistantService().ask(userId, query);
-        return null;
-    }
+		result = taskServices.getAssistantService().ask(userId, query);
+		return null;
+	}
 
-    @Override
-    public void setUserId(int userId) {
-        this.userId = userId;
-    }
+	@Override
+	public void setUserId(int userId) {
+		this.userId = userId;
+	}
 
 }

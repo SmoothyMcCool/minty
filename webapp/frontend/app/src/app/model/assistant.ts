@@ -7,6 +7,7 @@ export interface Assistant {
     id: number;
     name: string;
     prompt: string;
+    model: string;
     numFiles: number;
     state: AssistantState
     shared: boolean;

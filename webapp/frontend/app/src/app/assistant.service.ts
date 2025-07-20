@@ -18,6 +18,7 @@ export class AssistantService {
     private static readonly GetAssistant = 'api/assistant/get';
     private static readonly DeleteAssistant = 'api/assistant/delete';
     private static readonly GetAssistantForConversation = '/api/assistant/conversation';
+    private static readonly ListModels = 'api/assistant/models';
 
     constructor(private http: HttpClient, private alertService: AlertService) {
     }
@@ -68,6 +69,19 @@ export class AssistantService {
             );
     }
 
+    models(): Observable<string[]> {
+        return this.http.get<ApiResult>(AssistantService.ListModels)
+            .pipe(
+                catchError(error => {
+                    this.alertService.postFailure(JSON.stringify(error));
+                    return EMPTY;
+                }),
+                map((result: ApiResult) => {
+                    return result.data as string[];
+                })
+            );
+    }
+
     ask(conversationId: string, assistantId: number, query: string): Observable<string> {
         const headers: HttpHeaders = new HttpHeaders({
             'Content-Type': 'application/json'
@@ -79,20 +93,41 @@ export class AssistantService {
             query: query
         };
 
-        return this.http.post<ApiResult>(AssistantService.AskAssistant, body, { headers: headers })
-            .pipe(
-                catchError(error => {
-                    this.alertService.postFailure(JSON.stringify(error));
-                    return EMPTY;
-                }),
-                map((result: ApiResult) => {
-                    return result.data as string;
-                })
-            );
+        // Hideous, but it works?!?!?!
+        return new Observable(observer => {
+            fetch(AssistantService.AskAssistant, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'x-auth-token': sessionStorage.getItem('x-auth-token')
+                },
+                body: JSON.stringify(body)
+
+            }).then(response => {
+                const reader = response.body?.getReader();
+                const decoder = new TextDecoder();
+
+                function read() {
+                    reader?.read().then(({ done, value }) => {
+                    if (done) {
+                        observer.complete();
+                        return;
+                    }
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    observer.next(chunk);
+                    read();
+                    });
+                }
+
+                read();
+                }).catch(err => observer.error(err));
+        });
     }
 
     askDefaultAssistant(query: string): Observable<string> {
-        return this.ask("default", -1, query);
+        return this.ask("default", 0, query);
     }
 
     getAssistant(id: number): Observable<Assistant> {

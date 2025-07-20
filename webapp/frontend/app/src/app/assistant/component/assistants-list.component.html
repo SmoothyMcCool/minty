@@ -5,7 +5,7 @@
       <ul class="list-group" *ngFor="let conversation of conversations">
         <li class="list-group-item list-group-item-action" >
         <button type="button" (click)="selectConversation(conversation)">{{conversation}}</button>
-        <button type="button" class="bi bi-trash3" style="font-size: 20px; color: red" (click)="deleteConversation(conversation)"></button>
+        <button type="button" class="bi bi-trash3" style="font-size: 20px; color: red" [disabled]="deleteInProgress" (click)="deleteConversation(conversation)"></button>
         </li>
       </ul>
     </div>
@@ -16,7 +16,7 @@
         <ng-container *ngIf="assistants.length > 0; else noAssistants">
           <div class="col-4" *ngFor="let assistant of assistants | filter:false; index as i">
             <div class="card">
-              <button class="position-absolute top-0 end-0 bi bi-trash3" style="font-size: 20px; color: red" (click)="deleteAssistant(assistant)"></button>
+              <button class="position-absolute top-0 end-0 bi bi-trash3" style="font-size: 20px; color: red" [disabled]="deleteInProgress" (click)="deleteAssistant(assistant)"></button>
               <span *ngIf="assistant.state !== 'READY'" class="top-0 start-0 bi bi-exclamation-circle" style="font-size: 20px; color: red">Not Ready!</span>
               <div class="card-body">
                 <h5 class="card-title">{{assistant.name}}</h5>

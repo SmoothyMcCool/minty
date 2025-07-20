@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Assistant, AssistantState } from '../../model/assistant';
@@ -13,14 +13,16 @@ import { FilterPipe } from '../../pipe/filter-pipe';
     imports: [CommonModule, FormsModule, RouterModule, FilterPipe],
     templateUrl: 'new-assistant.component.html'
 })
-export class NewAssistantComponent {
+export class NewAssistantComponent implements OnInit {
 
     fileList: File[] = [];
+    models: string[] = [];
     workingAssistant: Assistant = {
             id: 0,
             name: '',
             prompt: '',
             numFiles: 0,
+            model: '',
             state: AssistantState.READY,
             shared: false
         };
@@ -29,6 +31,16 @@ export class NewAssistantComponent {
         private assistantService: AssistantService,
         private documentService: DocumentService,
         private router: Router) {
+    }
+
+    ngOnInit(): void {
+        this.assistantService.models().subscribe((models: string[]) => {
+            this.models = models;
+        });
+    }
+
+    formInvalid(): boolean {
+        return this.workingAssistant.name.length === 0 || this.workingAssistant.model.length === 0;
     }
 
     createAssistant() {
