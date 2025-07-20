@@ -19,9 +19,9 @@ export class NewWorkflowTaskComponent implements OnInit {
 
     task: WorkflowTask = {
         id: 0,
-        name: "",
-        workflow: "",
-        description: "",
+        name: '',
+        workflow: '',
+        description: '',
         defaultConfig: new Map<string, string>()
     };
     isFileTriggered: boolean = false;
@@ -38,6 +38,10 @@ export class NewWorkflowTaskComponent implements OnInit {
         this.workflowService.listWorkflows().subscribe((workflows: any) => {
             this.workflows = workflows as Map<string, Map<string, string>>;
         });
+    }
+
+    formInvalid(): boolean {
+        return this.task.name.length === 0 || this.task.workflow.length === 0;
     }
 
     createWorkflowTask() {

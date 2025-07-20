@@ -9,6 +9,12 @@
     <label class="text-light ms-1" for="isShared">Shared</label>
   </div>
   <div class="form-group mb-2">
+    <label class="text-light" for="model">Model</label>
+    <select class="form-select opacity-50" name="model" [(ngModel)]="workingAssistant.model">
+        <option *ngFor="let model of models" value="{{model}}">{{model}}</option>
+    </select>
+  </div>
+  <div class="form-group mb-2">
     <label class="text-light" for="assistantPrompt">Prompt</label>
     <textarea class="form-control opacity-50" id="assistantPrompt" name="assistantPrompt" rows="10" [(ngModel)]="workingAssistant.prompt"></textarea>
   </div>
@@ -22,7 +28,7 @@
     </ul>
   </div>
   <div>
-    <button type="submit" id="submitButton" class="btn btn-primary">OMG OMG OMG LET'S F'IN GO!!!!!</button>
+    <button type="submit" id="submitButton" [disabled]="formInvalid()" class="btn btn-primary">OMG OMG OMG LET'S F'IN GO!!!!!</button>
     <button type="button" id="cancelButton" class="btn btn-primary float-end" (click)="navigateTo('assistants')">Nopin' out</button>
   </div>
 </form>

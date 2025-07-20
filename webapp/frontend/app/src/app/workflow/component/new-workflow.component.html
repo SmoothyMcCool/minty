@@ -6,7 +6,7 @@
       <div class="mb-2 row">
         <label for="name" class="col-3 col-form-label">Name</label>
         <div class="col-9">
-          <input id="name" name="name" type="text" size="10" maxlength="50" placeholder="Your Bot's Name" class="form-control" [(ngModel)]="task.name" required>
+          <input id="name" name="name" type="text" size="10" maxlength="50" placeholder="Your Bot's Name" class="form-control" [(ngModel)]="task.name" autocomplete="off" required>
         </div>
       </div>
 
@@ -23,16 +23,18 @@
       </div>
 
       <div class="mb-2 row">
-        <label for="workflow" class="col-6 col-form-label">Base Workflow</label>
-        <select class="form-select" name="workflow" [(ngModel)]="task.workflow" (ngModelChange)="workflowChanged($event)">
-          <option *ngFor="let workflow of workflows | keyvalue" [ngValue]="workflow.key">{{workflow.key}}</option>
-        </select>
+        <label for="workflow" class="col-3 col-form-label">Base Workflow</label>
+        <div class="col-9">
+          <select class="form-select" id="workflow" name="workflow" [(ngModel)]="task.workflow" (ngModelChange)="workflowChanged($event)">
+            <option *ngFor="let workflow of workflows | keyvalue" [ngValue]="workflow.key">{{workflow.key}}</option>
+          </select>
+        </div>
       </div>
 
       <ai-workflow-config  [configParams]="configParams" [(ngModel)]="task.defaultConfig" name="workflowConfig"></ai-workflow-config>
 
       <div>
-        <button type="submit" id="submitButton" class="btn btn-primary">I'm so happy RN</button>
+        <button type="submit" id="submitButton" [disabled]="formInvalid()" class="btn btn-primary">I'm so happy RN</button>
         <button type="button" id="submitButton" class="btn btn-primary float-end" (click)="navigateTo('workflow')">I changed my mind, yo.</button>
       </div>
     </form>

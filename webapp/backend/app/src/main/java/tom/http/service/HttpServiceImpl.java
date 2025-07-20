@@ -55,7 +55,7 @@ public class HttpServiceImpl implements HttpService {
 		} catch (URISyntaxException e) {
 			logger.error("get: Invalid URL: " + url);
 		} catch (IOException e) {
-			logger.error("get: failed to execute request " + e);
+			logger.error("get: failed to execute request ", e);
 		}
 
 		return null;
@@ -92,7 +92,7 @@ public class HttpServiceImpl implements HttpService {
 		} catch (URISyntaxException e) {
 			logger.error("get: Invalid URL: " + url);
 		} catch (IOException e) {
-			logger.error("get: failed to execute request " + e);
+			logger.error("get: failed to execute request ", e);
 		}
 
 		return null;
@@ -131,7 +131,7 @@ public class HttpServiceImpl implements HttpService {
 		} catch (URISyntaxException e) {
 			logger.error("get: Invalid URL: " + url);
 		} catch (IOException e) {
-			logger.error("get: failed to execute request " + e);
+			logger.error("get: failed to execute request ", e);
 		}
 
 		return null;

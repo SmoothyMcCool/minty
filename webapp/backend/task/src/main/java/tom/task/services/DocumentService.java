@@ -4,10 +4,12 @@ import java.io.File;
 
 public interface DocumentService {
 
-    void transformAndStore(File file, int assistantId);
+	void transformAndStore(File file, int userId, int assistantId);
 
-    void processFile(File file);
+	void processFile(File file);
 
-    void deleteDocumentsForAssistant(int assistantId);
+	String constructFilename(int userId, int assistantId, String originalFilename);
+
+	void deleteDocumentsForAssistant(int userId, int assistantId);
 
 }

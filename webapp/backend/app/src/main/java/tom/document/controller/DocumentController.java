@@ -48,19 +48,20 @@ public class DocumentController {
 
 		Assistant assistant = assistantService.findAssistant(user.getId(), assistantId);
 
-		if (assistant == null) {
+		if (assistant.isNull()) {
 			ResponseWrapper<String> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
 					List.of(ApiError.NOT_OWNED));
 			return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
 		}
 
-		File file = new File(tempFileStore + "/" + assistantId + "-" + mpf.getOriginalFilename());
+		File file = new File(tempFileStore + "/"
+				+ documentService.constructFilename(user.getId(), assistantId, mpf.getOriginalFilename()));
 		try {
 			Files.createDirectories(file.toPath());
 			mpf.transferTo(file);
 			documentService.processFile(file);
 		} catch (IllegalStateException | IOException e) {
-			logger.error("Failed to store file: " + e);
+			logger.error("Failed to store file: ", e);
 			ResponseWrapper<String> response = ResponseWrapper
 					.ApiFailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), List.of(ApiError.REQUEST_FAILED));
 			return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -70,10 +71,6 @@ public class DocumentController {
 
 		ResponseWrapper<String> response = ResponseWrapper.SuccessResponse("ok");
 		return new ResponseEntity<>(response, HttpStatus.OK);
-	}
-
-	public void deleteDocumentsForAssistant(int assistantId) {
-		documentService.deleteDocumentsForAssistant(assistantId);
 	}
 
 }

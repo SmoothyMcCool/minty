@@ -31,9 +31,12 @@ public class ExerciseTrackerUserDetailsService implements UserDetailsService {
 		try {
 			user = userService.decrypt(userRepository.findByAccount(username));
 		} catch (JsonProcessingException e) {
-			logger.error("ExerciseTrackerUserDetailsService: Failed to decrypt user");
+			logger.error("ExerciseTrackerUserDetailsService: Failed to decrypt user", e);
 		}
-		return user == null ? null : new UserDetailsUser(user);
+		if (user == null) {
+			throw new UsernameNotFoundException("No user with username " + username);
+		}
+		return new UserDetailsUser(user);
 	}
 
 }

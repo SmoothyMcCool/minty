@@ -28,39 +28,55 @@ public class PythonServiceImpl implements PythonService {
 
 	@Override
 	public Map<String, Object> execute(String pythonFile, Map<String, String> inputDictionary) {
-		Path inputFilePath = Paths.get(tempFileDir);
+		Path inputFilePath = null;
+		Path outputFilePath = null;
+
+		inputFilePath = Paths.get(tempFileDir);
 		if (!inputFilePath.toFile().isDirectory()) {
 			logger.error("Specified tempFileStore is not a directory.");
+			return Map.of();
 		}
 
-		Path outputFilePath = null;
 		try {
-			outputFilePath = Files.createTempFile(Paths.get(tempFileDir), "py-out-", ".tom");
+
 			ObjectMapper mapper = new ObjectMapper();
-			Files.writeString(outputFilePath, mapper.writeValueAsString(inputDictionary));
-		} catch (IOException e) {
-			logger.warn("Could not create temporary file!");
-			return null;
-		}
 
-		ProcessBuilder processBuilder = new ProcessBuilder("python", pythonScripts + "/" + pythonFile,
-				inputFilePath.toString(), outputFilePath.toString());
-		processBuilder.redirectErrorStream(true); // Merge error stream with standard output stream. Not that it matters
-													// because we are throwing the output on the floor.
+			inputFilePath = Files.createTempFile(inputFilePath, "py-out-", ".tom");
+			Files.writeString(inputFilePath, mapper.writeValueAsString(inputDictionary));
 
-		try {
+			outputFilePath = Files.createTempFile(Paths.get(tempFileDir), "py-out-", ".tom");
+
+			ProcessBuilder processBuilder = new ProcessBuilder("python", pythonScripts + "/" + pythonFile,
+					inputFilePath.toString(), outputFilePath.toString());
+			processBuilder.redirectErrorStream(true); // Merge error stream with standard output stream. Not that it
+														// matters
+														// because we are throwing the output on the floor.
+
 			Process process = processBuilder.start();
 			int exitCode = process.waitFor();
 			if (exitCode != 0) {
 				logger.warn("Script " + pythonFile + " failed with exit code " + exitCode);
 			}
+
+			Map<String, Object> result = fileToMap(outputFilePath);
+			return result;
+
 		} catch (IOException | InterruptedException e) {
-			logger.warn("Failed to run script: " + e);
+
+			logger.warn("Could not input parameters to file. ", e);
+			return Map.of();
+
+		} finally {
+
+			if (inputFilePath != null && inputFilePath.toFile().isFile()) {
+				inputFilePath.toFile().delete();
+			}
+			if (outputFilePath != null && outputFilePath.toFile().isFile()) {
+				outputFilePath.toFile().delete();
+			}
+
 		}
 
-		Map<String, Object> result = fileToMap(outputFilePath);
-		outputFilePath.toFile().delete();
-		return result;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -72,8 +88,8 @@ public class PythonServiceImpl implements PythonService {
 			return mapper.readValue(content, Map.class);
 
 		} catch (IOException e) {
-			logger.warn("Could not read Python output file " + outputFilePath + ": " + e);
-			return null;
+			logger.warn("Could not read Python output file " + outputFilePath + ": ", e);
+			return Map.of();
 		}
 	}
 

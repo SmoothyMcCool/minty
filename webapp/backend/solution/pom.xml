@@ -24,6 +24,7 @@
 		<module>../workflow</module>
 		<module>../task</module>
 		<module>../task-library</module>
+		<module>../pug4j-shader</module>
 		<module>../bundle</module>
 	</modules>
 

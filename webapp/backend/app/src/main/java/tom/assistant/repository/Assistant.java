@@ -16,6 +16,7 @@ public class Assistant {
 	private Integer id;
 	private String name;
 	private String prompt;
+	private String model;
 	private Integer numFiles;
 	private Integer processedFiles;
 	private AssistantState state;
@@ -30,6 +31,7 @@ public class Assistant {
 		this.id = assistant.id();
 		this.name = assistant.name();
 		this.prompt = assistant.prompt();
+		this.model = assistant.model();
 		this.numFiles = assistant.numFiles();
 		this.processedFiles = assistant.processedFiles();
 		this.ownerId = assistant.ownerId();
@@ -38,7 +40,8 @@ public class Assistant {
 	}
 
 	public tom.task.model.Assistant toTaskAssistant() {
-		return new tom.task.model.Assistant(id, name, prompt, numFiles, processedFiles, state, ownerId, shared);
+		return new tom.task.model.Assistant(id, name, model.toString(), prompt, numFiles, processedFiles, state,
+				ownerId, shared);
 	}
 
 	public Integer getId() {
@@ -63,6 +66,14 @@ public class Assistant {
 
 	public void setPrompt(String prompt) {
 		this.prompt = prompt;
+	}
+
+	public String getModel() {
+		return model;
+	}
+
+	public void setModel(String model) {
+		this.model = model;
 	}
 
 	public Integer getNumFiles() {

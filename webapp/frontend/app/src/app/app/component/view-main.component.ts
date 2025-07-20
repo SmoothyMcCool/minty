@@ -28,10 +28,13 @@ export class ViewMainComponent implements AfterViewInit {
 
     submit() {
         this.chatHistory.unshift({ user: true, message: this.queryText });
-        this.assistantService.askDefaultAssistant(this.queryText).subscribe(result => {
-                this.chatHistory.unshift({ user: false, message: result });
-                this.queryText = '';
-            });
+        let response = '';
+        this.chatHistory.unshift({ user: false, message: response });
+        this.assistantService.askDefaultAssistant(this.queryText).subscribe(responseChunk => {
+            response += responseChunk
+            this.chatHistory[0] = { user: false, message: response };
+        });
+        this.queryText = '';
     }
 
     restart() {

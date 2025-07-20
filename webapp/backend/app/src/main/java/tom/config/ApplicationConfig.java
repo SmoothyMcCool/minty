@@ -2,7 +2,13 @@ package tom.config;
 
 import java.util.List;
 
+import javax.sql.DataSource;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.ai.ollama.api.OllamaApi;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
@@ -11,6 +17,7 @@ import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.http.converter.xml.MappingJackson2XmlHttpMessageConverter;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.lang.NonNull;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -40,6 +47,11 @@ import de.neuland.pug4j.template.FileTemplateLoader;
 @PropertySource("classpath:application.properties")
 @EnableTransactionManagement
 public class ApplicationConfig implements WebMvcConfigurer {
+
+	private static final Logger logger = LogManager.getLogger(ApplicationConfig.class);
+
+	@Value("${ollamaUri}")
+	private String ollamaUri;
 
 	@Bean
 	public HttpSessionIdResolver httpSessionIdResolver() {
@@ -89,6 +101,17 @@ public class ApplicationConfig implements WebMvcConfigurer {
 		config.setCaching(true);
 		config.setTemplateLoader(pugFileLoader);
 		return config;
+	}
+
+	@Bean
+	JdbcTemplate vectorJdbcTemplate(DataSource dataSource) {
+		return new JdbcTemplate(dataSource);
+	}
+
+	@Bean
+	OllamaApi ollamaApi() {
+		logger.info("ollama URI is " + ollamaUri);
+		return OllamaApi.builder().baseUrl(ollamaUri).build();
 	}
 
 	@Override

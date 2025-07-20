@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS Assistant (
 	processedFiles INTEGER,
 	state VARCHAR(20),
 	prompt TEXT,
+	model TEXT,
 	ownerId INTEGER,
 	shared BOOLEAN,
 	PRIMARY KEY (id)
