@@ -43,17 +43,17 @@
           </div>
         </div>
         <div class="mb-3 row">
-          <label for="corpAccount" class="col-sm-6 col-form-label">GD Username</label>
+          <label for="externalAccount" class="col-sm-6 col-form-label">External Username</label>
           <div class="col-sm-6" required>
-            <input id="corpAccount" name="corpAccount" type="text" size="20" maxlength="50" placeholder="User name. I pinky swear it's encrypted in storage :)" class="form-control"
-              [class.is-invalid]="user.corpAccount.length === 0" [(ngModel)]="user.corpAccount" required>
+            <input id="externalAccount" name="externalAccount" type="text" size="20" maxlength="50" placeholder="User name. I pinky swear it's encrypted in storage :)" class="form-control"
+              [class.is-invalid]="user.externalAccount.length === 0" [(ngModel)]="user.externalAccount" required>
           </div>
         </div>
         <div class="mb-3 row">
-          <label for="corpPassword" class="col-sm-6 col-form-label">GD Password</label>
+          <label for="externalPassword" class="col-sm-6 col-form-label">External Password</label>
           <div class="col-sm-6" required>
-            <input id="corpPassword" name="corpPassword" type="password" size="20" maxlength="50" placeholder="GD account password. I pinky swear it's encrypted in storage :)" class="form-control"
-              [class.is-invalid]="user.corpPassword.length === 0" [(ngModel)]="user.corpPassword" required>
+            <input id="externalPassword" name="externalPassword" type="password" size="20" maxlength="50" placeholder="External account password. I pinky swear it's encrypted in storage :)" class="form-control"
+              [class.is-invalid]="user.externalPassword.length === 0" [(ngModel)]="user.externalPassword" required>
           </div>
         </div>
         <div class="centred space-after">

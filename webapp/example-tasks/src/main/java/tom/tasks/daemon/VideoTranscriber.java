@@ -9,9 +9,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import tom.task.AiTask;
-import tom.task.annotations.PublicWorkflow;
+import tom.task.annotations.PublicTask;
 
-@PublicWorkflow(name = "Transcribe Video", configClass = "tom.tasks.daemon.VideoTranscriberConfig")
+@PublicTask(name = "Transcribe Video", configClass = "tom.tasks.daemon.VideoTranscriberConfig")
 public class VideoTranscriber implements AiTask {
 
 	private final Logger logger = LogManager.getLogger(VideoTranscriber.class);
@@ -35,16 +35,24 @@ public class VideoTranscriber implements AiTask {
 	}
 
 	@Override
-	public String getResultTemplateFilename() {
-		return "default.pug";
+	public List<Map<String, String>> runWorkflow() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	@Override
-	public List<AiTask> doWork() {
+	public List<AiTask> runTask() {
 		logger.info("Running transcription on " + configuration.getFile());
 		Path file = Path.of(configuration.getFile());
 		file.toFile().delete();
 		return List.of();
+	}
+
+	@Override
+	public void setInput(Map<String, String> input) {
+		if (input.containsKey("File")) {
+			configuration.setFile((input.get("File")));
+		}
 	}
 
 }

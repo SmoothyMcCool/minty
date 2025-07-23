@@ -5,8 +5,8 @@ public class User {
 	private int id;
 	private String name;
 	private String password;
-	private String corpAccount;
-	private String corpPassword;
+	private String externalAccount;
+	private String externalPassword;
 
 	public int getId() {
 		return id;
@@ -32,20 +32,20 @@ public class User {
 		this.password = password;
 	}
 
-	public String getCorpAccount() {
-		return corpAccount;
+	public String getExternalAccount() {
+		return externalAccount;
 	}
 
-	public void setCorpAccount(String corpAccount) {
-		this.corpAccount = corpAccount;
+	public void setExternalAccount(String externalAccount) {
+		this.externalAccount = externalAccount;
 	}
 
-	public String getCorpPassword() {
-		return corpPassword;
+	public String getExternalPassword() {
+		return externalPassword;
 	}
 
-	public void setCorpPassword(String corpPassword) {
-		this.corpPassword = corpPassword;
+	public void setExternalPassword(String externalPassword) {
+		this.externalPassword = externalPassword;
 	}
 
 }

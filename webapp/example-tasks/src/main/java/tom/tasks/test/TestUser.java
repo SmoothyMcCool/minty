@@ -5,8 +5,6 @@ public class TestUser {
 	private int id;
 	private String name;
 	private String password;
-	private String corpAccount;
-	private String corpPassword;
 
 	public int getId() {
 		return id;
@@ -30,22 +28,6 @@ public class TestUser {
 
 	public void setPassword(String password) {
 		this.password = password;
-	}
-
-	public String getCorpAccount() {
-		return corpAccount;
-	}
-
-	public void setCorpAccount(String corpAccount) {
-		this.corpAccount = corpAccount;
-	}
-
-	public String getCorpPassword() {
-		return corpPassword;
-	}
-
-	public void setCorpPassword(String corpPassword) {
-		this.corpPassword = corpPassword;
 	}
 
 }

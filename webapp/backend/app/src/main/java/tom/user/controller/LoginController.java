@@ -60,8 +60,8 @@ public class LoginController {
 		User result;
 		try {
 			result = userService.decrypt(_user);
-			result.setCorpAccount("no");
-			result.setCorpPassword("lol");
+			result.setExternalAccount("no");
+			result.setExternalPassword("lol");
 		} catch (JsonProcessingException e) {
 			throw new ApiException(ApiError.FAILED_TO_DECRYPT_USER);
 		}

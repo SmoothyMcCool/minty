@@ -7,10 +7,13 @@ import java.util.UUID;
 
 import tom.task.AiTask;
 import tom.task.ServiceConsumer;
-import tom.task.annotations.PublicWorkflow;
+import tom.task.annotations.PublicTask;
 import tom.task.services.TaskServices;
 
-@PublicWorkflow(name = "TestHttpRequest")
+// This class defines no constructor that takes a configuration object because
+// it defines no set-time configuration. It still takes in input from previous tasks though,
+// so it can be controlled as a step in a workflow.
+@PublicTask(name = "TestHttpRequest")
 public class TestHttpRequestTask implements AiTask, ServiceConsumer {
 
 	private TaskServices taskServices;
@@ -29,8 +32,6 @@ public class TestHttpRequestTask implements AiTask, ServiceConsumer {
 		}
 
 		Map<String, Object> result = new HashMap<>();
-		result.put("corpAccount", user.getCorpAccount());
-		result.put("corpPassword", user.getCorpPassword());
 		result.put("name", user.getName());
 		result.put("password", user.getPassword());
 		result.put("id", user.getId());
@@ -39,25 +40,29 @@ public class TestHttpRequestTask implements AiTask, ServiceConsumer {
 	}
 
 	@Override
-	public String getResultTemplateFilename() {
-		return "test-user.pug";
+	public void setTaskServices(TaskServices taskServices) {
+		this.taskServices = taskServices;
 	}
 
 	@Override
-	public List<AiTask> doWork() {
+	public List<Map<String, String>> runWorkflow() {
+		user = taskServices.getHttpService().getBasicAuth(userId, "http://localhost:8080/Minty/api/login", null,
+				new TestUser());
+		return List.of(Map.of("User Name", user.getName()));
+	}
+
+	@Override
+	public List<AiTask> runTask() {
 		user = taskServices.getHttpService().getBasicAuth(userId, "http://localhost:8080/Minty/api/login", null,
 				new TestUser());
 		return List.of();
 	}
 
 	@Override
-	public void setTaskServices(TaskServices taskServices) {
-		this.taskServices = taskServices;
-	}
-
-	@Override
-	public void setUserId(int userId) {
-		this.userId = userId;
+	public void setInput(Map<String, String> input) {
+		if (input.containsKey("UserId")) {
+			userId = Integer.parseInt(input.get("UserId"));
+		}
 	}
 
 }

@@ -27,7 +27,7 @@
 		</dependency>
 		<dependency>
 			<groupId>tom.minty</groupId>
-			<artifactId>workflow</artifactId>
+			<artifactId>task-executor</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>

@@ -21,8 +21,8 @@ export class SignupComponent {
         this.user = {
             name: '',
             password: '',
-            corpAccount: '',
-            corpPassword: ''
+            externalAccount: '',
+            externalPassword: ''
         };
     }
 

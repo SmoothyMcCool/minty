@@ -39,11 +39,31 @@ public class MetadataServiceImpl implements MetadataService {
 	}
 
 	@Override
-	public void newWorkflow(int userId) {
+	public void taskCreated(int userId) {
+		Optional<UserMeta> maybeMeta = metadataRepository.findByUserId(userId);
+		if (maybeMeta.isPresent()) {
+			UserMeta meta = maybeMeta.get();
+			meta.setTotalTasksCreated(meta.getTotalTasksCreated() + 1);
+			metadataRepository.save(meta);
+		}
+	}
+
+	@Override
+	public void workflowCreated(int userId) {
 		Optional<UserMeta> maybeMeta = metadataRepository.findByUserId(userId);
 		if (maybeMeta.isPresent()) {
 			UserMeta meta = maybeMeta.get();
 			meta.setTotalWorkflowsCreated(meta.getTotalWorkflowsCreated() + 1);
+			metadataRepository.save(meta);
+		}
+	}
+
+	@Override
+	public void taskExecuted(int userId) {
+		Optional<UserMeta> maybeMeta = metadataRepository.findByUserId(userId);
+		if (maybeMeta.isPresent()) {
+			UserMeta meta = maybeMeta.get();
+			meta.setTotalTaskRuns(meta.getTotalTaskRuns() + 1);
 			metadataRepository.save(meta);
 		}
 	}

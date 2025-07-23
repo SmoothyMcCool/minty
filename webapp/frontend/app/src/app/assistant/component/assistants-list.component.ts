@@ -30,6 +30,8 @@ export class AssistantsListComponent {
             shared: false
         };
 
+    deleteInProgress = false;
+
     constructor(
         private assistantService: AssistantService,
         private conversationService: ConversationService,
@@ -47,9 +49,11 @@ export class AssistantsListComponent {
     }
 
     deleteAssistant(assistant: Assistant) {
+        this.deleteInProgress = true;
         this.assistantService.delete(assistant).subscribe(() => {
             this.assistantService.list().subscribe(assistants => {
                 this.assistants = assistants;
+                this.deleteInProgress = false;
             });
             this.conversationService.list().subscribe(conversations => {
                 this.conversations = conversations;
