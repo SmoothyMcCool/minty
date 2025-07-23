@@ -17,12 +17,16 @@ public class NullTask implements AiTask {
 	}
 
 	@Override
-	public String getResultTemplateFilename() {
-		return "";
+	public void setInput(Map<String, String> input) {
 	}
 
 	@Override
-	public List<AiTask> doWork() {
+	public List<Map<String, String>> runWorkflow() {
+		return List.of();
+	}
+
+	@Override
+	public List<AiTask> runTask() {
 		return List.of();
 	}
 

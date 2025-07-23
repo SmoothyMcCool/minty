@@ -20,7 +20,7 @@ import tom.ApiError;
 import tom.config.security.UserDetailsUser;
 import tom.controller.ResponseWrapper;
 import tom.meta.service.MetadataService;
-import tom.ollama.OllamaService;
+import tom.ollama.service.OllamaService;
 import tom.task.model.Assistant;
 import tom.task.model.AssistantQuery;
 import tom.task.services.AssistantService;

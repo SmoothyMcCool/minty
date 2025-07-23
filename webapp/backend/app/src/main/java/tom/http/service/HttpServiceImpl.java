@@ -69,7 +69,7 @@ public class HttpServiceImpl implements HttpService {
 
 			// Get credentials and create the Basic auth header
 			User user = userService.decrypt(userRepository.findById(userId).get());
-			final String auth = user.getCorpAccount() + ":" + user.getCorpPassword();
+			final String auth = user.getExternalAccount() + ":" + user.getExternalPassword();
 			final byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(StandardCharsets.ISO_8859_1));
 			final String authHeader = "Basic " + new String(encodedAuth);
 
@@ -107,7 +107,7 @@ public class HttpServiceImpl implements HttpService {
 
 			// Get credentials and create the Basic auth header
 			User user = userService.decrypt(userRepository.findById(userId).get());
-			final String auth = user.getCorpAccount() + ":" + user.getCorpPassword();
+			final String auth = user.getExternalAccount() + ":" + user.getExternalPassword();
 			final byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(StandardCharsets.ISO_8859_1));
 			final String authHeader = "Basic " + new String(encodedAuth);
 

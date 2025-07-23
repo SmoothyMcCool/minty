@@ -7,10 +7,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import tom.task.AiTaskConfig;
-import tom.task.AiTaskConfigTypes;
+import tom.task.TaskConfig;
+import tom.task.TaskConfigTypes;
 
-public class PythonTaskConfig implements AiTaskConfig {
+public class PythonTaskConfig implements TaskConfig {
 
     private String pythonFile;
     private Map<String, String> inputDictionary;
@@ -26,10 +26,10 @@ public class PythonTaskConfig implements AiTaskConfig {
     }
 
     @Override
-    public Map<String, AiTaskConfigTypes> getConfig() {
-        Map<String, AiTaskConfigTypes> config = new HashMap<>();
-        config.put("Python File", AiTaskConfigTypes.String);
-        config.put("InputDictionary", AiTaskConfigTypes.String);
+    public Map<String, TaskConfigTypes> getConfig() {
+        Map<String, TaskConfigTypes> config = new HashMap<>();
+        config.put("Python File", TaskConfigTypes.String);
+        config.put("InputDictionary", TaskConfigTypes.String);
         return config;
     }
 

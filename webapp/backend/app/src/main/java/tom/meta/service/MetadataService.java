@@ -6,7 +6,11 @@ public interface MetadataService {
 
 	void userLoggedIn(int userId);
 
-	void newWorkflow(int userId);
+	void taskCreated(int userId);
+
+	void taskExecuted(int userId);
+
+	void workflowCreated(int userId);
 
 	void workflowExecuted(int userId);
 

@@ -11,10 +11,10 @@ import { ViewMainComponent } from './app/app/component/view-main.component';
 import { ViewUserComponent } from './app/app/component/view-user.component';
 import { ViewConversationComponent } from './app/assistant/component/view-conversation.component';
 import { AssistantsListComponent } from './app/assistant/component/assistants-list.component';
-import { NewWorkflowTaskComponent } from './app/workflow/component/new-workflow.component';
-import { ViewWorkflowComponent } from './app/workflow/component/view-workflow.component';
-import { WorkflowListComponent } from './app/workflow/component/workflow-list.component';
-import { WorkflowComponent } from './app/workflow/component/workflow.component';
+import { NewTaskComponent } from './app/task/component/new-task.component';
+import { ViewTaskComponent } from './app/task/component/view-task.component';
+import { TaskListComponent } from './app/task/component/task-list.component';
+import { TaskComponent } from './app/task/component/task.component';
 import { NewAssistantComponent } from './app/assistant/component/new-assistant.component';
 import { ViewStatisticsComponent } from './app/app/component/view-statistics.component';
 
@@ -63,20 +63,20 @@ bootstrapApplication(AppComponent, {
                 component: ViewConversationComponent
             },
             {
-                path: 'workflow',
-                component: ViewWorkflowComponent,
+                path: 'task',
+                component: ViewTaskComponent,
                 children: [
                     {
                         path: 'new',
-                        component: NewWorkflowTaskComponent
+                        component: NewTaskComponent
                     },
                     {
                         path: ':id',
-                        component: WorkflowComponent
+                        component: TaskComponent
                     },
                     {
                         path: '',
-                        component: WorkflowListComponent
+                        component: TaskListComponent
                     }
                 ]
             },

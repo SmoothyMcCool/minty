@@ -2,13 +2,15 @@ package tom.task.services;
 
 public interface TaskServices {
 
-    AssistantService getAssistantService();
+	AssistantService getAssistantService();
 
-    ConversationService getConversationService();
+	ConversationService getConversationService();
 
-    DocumentService getDocumentService();
+	DocumentService getDocumentService();
 
-    HttpService getHttpService();
+	HttpService getHttpService();
 
-    PythonService getPythonService();
+	PythonService getPythonService();
+
+	PugRenderService getPugRenderService();
 }

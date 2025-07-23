@@ -20,7 +20,6 @@ import org.springframework.http.converter.xml.MappingJackson2XmlHttpMessageConve
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.lang.NonNull;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.session.jdbc.config.annotation.web.http.EnableJdbcHttpSession;
 import org.springframework.session.web.http.HeaderHttpSessionIdResolver;
 import org.springframework.session.web.http.HttpSessionIdResolver;
@@ -42,7 +41,6 @@ import de.neuland.pug4j.template.FileTemplateLoader;
 
 @Configuration
 @EnableWebMvc
-@EnableWebSecurity
 @EnableJdbcHttpSession
 @PropertySource("classpath:application.properties")
 @EnableTransactionManagement

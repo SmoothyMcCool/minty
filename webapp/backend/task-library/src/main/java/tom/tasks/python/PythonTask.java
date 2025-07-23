@@ -9,10 +9,10 @@ import org.apache.logging.log4j.Logger;
 
 import tom.task.AiTask;
 import tom.task.ServiceConsumer;
-import tom.task.annotations.PublicWorkflow;
+import tom.task.annotations.PublicTask;
 import tom.task.services.TaskServices;
 
-@PublicWorkflow(name = "Execute Python", configClass = "tom.tasks.python.PythonTaskConfig")
+@PublicTask(name = "Execute Python", configClass = "tom.tasks.python.PythonTaskConfig")
 public class PythonTask implements AiTask, ServiceConsumer {
 
 	private final Logger logger = LogManager.getLogger(PythonTask.class);
@@ -38,16 +38,8 @@ public class PythonTask implements AiTask, ServiceConsumer {
 	}
 
 	@Override
-	public String getResultTemplateFilename() {
-		return "default.pug";
-	}
-
-	@Override
-	public List<AiTask> doWork() {
-		logger.info("doWork: Executing " + configuration.getPythonFile());
-		result = taskServices.getPythonService().execute(configuration.getPythonFile(),
-				configuration.getInputDictionary());
-		logger.info("doWork: " + configuration.getPythonFile() + " completed.");
+	public List<AiTask> runTask() {
+		doTheThing();
 		return List.of();
 	}
 
@@ -56,4 +48,23 @@ public class PythonTask implements AiTask, ServiceConsumer {
 		this.taskServices = taskServices;
 	}
 
+	@Override
+	public List<Map<String, String>> runWorkflow() {
+		doTheThing();
+		return List.of();
+	}
+
+	@Override
+	public void setInput(Map<String, String> input) {
+		// Merge whatever we get with the input dictionary to pass to the python
+		// interpreter.
+		configuration.getInputDictionary().putAll(input);
+	}
+
+	private void doTheThing() {
+		logger.info("doWork: Executing " + configuration.getPythonFile());
+		result = taskServices.getPythonService().execute(configuration.getPythonFile(),
+				configuration.getInputDictionary());
+		logger.info("doWork: " + configuration.getPythonFile() + " completed.");
+	}
 }

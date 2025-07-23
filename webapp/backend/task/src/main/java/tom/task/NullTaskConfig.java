@@ -3,7 +3,7 @@ package tom.task;
 import java.util.HashMap;
 import java.util.Map;
 
-public class NullTaskConfig implements AiTaskConfig {
+public class NullTaskConfig implements TaskConfig {
 
     public NullTaskConfig() {
     }
@@ -12,7 +12,7 @@ public class NullTaskConfig implements AiTaskConfig {
     }
 
     @Override
-    public Map<String, AiTaskConfigTypes> getConfig() {
+    public Map<String, TaskConfigTypes> getConfig() {
         return new HashMap<>();
     }
 

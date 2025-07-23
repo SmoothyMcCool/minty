@@ -23,7 +23,7 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 
 import tom.assistant.repository.AssistantRepository;
-import tom.ollama.OllamaService;
+import tom.ollama.service.OllamaService;
 import tom.task.model.Assistant;
 import tom.task.model.AssistantQuery;
 import tom.task.model.AssistantState;

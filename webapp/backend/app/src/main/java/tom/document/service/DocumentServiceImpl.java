@@ -27,7 +27,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
-import tom.ollama.OllamaService;
+import tom.ollama.service.OllamaService;
 import tom.task.model.Assistant;
 import tom.task.services.AssistantService;
 import tom.task.services.DocumentService;

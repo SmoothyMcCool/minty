@@ -21,7 +21,7 @@ import tom.config.security.UserDetailsUser;
 import tom.controller.ResponseWrapper;
 import tom.conversation.repository.ChatMessage;
 import tom.meta.service.MetadataService;
-import tom.ollama.OllamaService;
+import tom.ollama.service.OllamaService;
 import tom.task.model.Assistant;
 import tom.task.services.AssistantService;
 import tom.task.services.ConversationService;

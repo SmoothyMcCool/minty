@@ -3,10 +3,10 @@ package tom.tasks.daemon;
 import java.util.HashMap;
 import java.util.Map;
 
-import tom.task.AiTaskConfig;
-import tom.task.AiTaskConfigTypes;
+import tom.task.TaskConfig;
+import tom.task.TaskConfigTypes;
 
-public class VideoTranscriberConfig implements AiTaskConfig {
+public class VideoTranscriberConfig implements TaskConfig {
 
 	private String file;
 
@@ -15,12 +15,12 @@ public class VideoTranscriberConfig implements AiTaskConfig {
 
 	public VideoTranscriberConfig(Map<String, String> config) {
 		// Video file - it's provided to us by the filesystem monitor, not the UI.
-		file = config.get("file");
+		file = config.get("File");
 	}
 
 	@Override
-	public Map<String, AiTaskConfigTypes> getConfig() {
-		Map<String, AiTaskConfigTypes> config = new HashMap<>();
+	public Map<String, TaskConfigTypes> getConfig() {
+		Map<String, TaskConfigTypes> config = new HashMap<>();
 		// Don't add file because we will get that passed to us by the filesystem
 		// monitor.
 		return config;
@@ -28,5 +28,9 @@ public class VideoTranscriberConfig implements AiTaskConfig {
 
 	public String getFile() {
 		return file;
+	}
+
+	public void setFile(String file) {
+		this.file = file;
 	}
 }
