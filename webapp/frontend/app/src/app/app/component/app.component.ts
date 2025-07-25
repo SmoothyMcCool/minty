@@ -8,7 +8,7 @@ import { Popover } from 'bootstrap';
 
 
 @Component({
-    selector: 'ai-app',
+    selector: 'minty-app',
     imports: [CommonModule, RouterModule],
     encapsulation: ViewEncapsulation.None,
     templateUrl: 'app.component.html',

@@ -7,7 +7,7 @@ import { User } from '../../model/user';
 import { UserService } from '../../user.service';
 
 @Component({
-    selector: 'ai-user',
+    selector: 'minty-user',
     imports: [CommonModule, FormsModule],
     templateUrl: 'view-user.component.html',
     styleUrls: ['../../global.css', './view-user.component.css']

@@ -18,6 +18,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -307,13 +308,13 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 	public AiTask newTask(int userId, TaskRequest request) {
 		AiTask task = new NullTask();
 
-		if (!publicTasks.containsKey(request.getRequest())) {
-			logger.warn("Task " + request.getRequest() + " does not exist.");
+		if (!publicTasks.containsKey(request.getName())) {
+			logger.warn("Task " + request.getName() + " does not exist.");
 			return task;
 		}
 
 		try {
-			Class<?> taskClass = publicTasks.get(request.getRequest()).left;
+			Class<?> taskClass = publicTasks.get(request.getName()).left;
 
 			PublicTask annotation = taskClass.getAnnotation(PublicTask.class);
 			Class<?> configClass = classLoader.loadClass(annotation.configClass());
@@ -324,7 +325,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 
 			// If this request contains no config data, then just call the default
 			// constructor
-			if (request.getData().isEmpty()) {
+			if (request.getConfiguration().isEmpty()) {
 				Constructor<?> constructor = configClass.getDeclaredConstructor();
 				taskConfig = (TaskConfig) constructor.newInstance();
 			} else {
@@ -332,7 +333,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 				for (Constructor<?> constructor : constructors) {
 					if (constructor.getParameterCount() == 1
 							&& constructor.getParameterTypes()[0].isAssignableFrom(Map.class)) {
-						taskConfig = (TaskConfig) constructor.newInstance(request.getData());
+						taskConfig = (TaskConfig) constructor.newInstance(request.getConfiguration());
 						break;
 					}
 				}
@@ -363,10 +364,10 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 
 		} catch (SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException
 				| InvocationTargetException e) {
-			logger.warn("Failed to instantiate task for " + request.getRequest() + ": ", e);
+			logger.warn("Failed to instantiate task for " + request.getName() + ": ", e);
 			task = null;
 		} catch (ClassNotFoundException e) {
-			logger.warn("Failed to instantiate task for " + request.getRequest() + ". Class not found: ", e);
+			logger.warn("Failed to instantiate task for " + request.getName() + ". Class not found: ", e);
 		} catch (NoSuchMethodException e) {
 			logger.warn("Failed to instantiate class: ", e);
 		}
@@ -379,13 +380,13 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 	public OutputTask newOutputTask(int userId, TaskRequest request) {
 		OutputTask task = new NullOutput();
 
-		if (!publicOutputTasks.containsKey(request.getOutputTask())) {
-			logger.warn("OutputTask " + request.getOutputTask() + " does not exist.");
+		if (!publicOutputTasks.containsKey(request.getName())) {
+			logger.warn("OutputTask " + request.getName() + " does not exist.");
 			return task;
 		}
 
 		try {
-			Class<?> outputTaskClass = publicOutputTasks.get(request.getOutputTask()).left;
+			Class<?> outputTaskClass = publicOutputTasks.get(request.getName()).left;
 
 			Output annotation = outputTaskClass.getAnnotation(Output.class);
 			Class<?> configClass = classLoader.loadClass(annotation.configClass());
@@ -394,7 +395,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 			TaskConfig taskConfig = new NullTaskConfig();
 
 			// If this out config contains no data, call the default constructor.
-			if (request.getOutputTaskConfig().isEmpty()) {
+			if (request.getConfiguration().isEmpty()) {
 				Constructor<?> constructor = configClass.getDeclaredConstructor();
 				taskConfig = (TaskConfig) constructor.newInstance();
 			} else {
@@ -402,7 +403,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 				for (Constructor<?> constructor : constructors) {
 					if (constructor.getParameterCount() == 1
 							&& constructor.getParameterTypes()[0].isAssignableFrom(Map.class)) {
-						taskConfig = (TaskConfig) constructor.newInstance(request.getOutputTaskConfig());
+						taskConfig = (TaskConfig) constructor.newInstance(request.getConfiguration());
 						break;
 					}
 				}
@@ -433,10 +434,10 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 
 		} catch (SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException
 				| InvocationTargetException e) {
-			logger.warn("Failed to instantiate task for " + request.getRequest() + ": ", e);
+			logger.warn("Failed to instantiate task for " + request.getName() + ": ", e);
 			task = null;
 		} catch (ClassNotFoundException e) {
-			logger.warn("Failed to instantiate task for " + request.getRequest() + ". Class not found: ", e);
+			logger.warn("Failed to instantiate task for " + request.getName() + ". Class not found: ", e);
 		} catch (NoSuchMethodException e) {
 			logger.warn("Failed to instantiate class: ", e);
 		}
@@ -451,7 +452,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 		Map<String, Map<String, String>> result = new HashMap<>();
 
 		entrySet.stream().forEach(entry -> {
-			Map<String, String> taskCfg = aiConfigMapToStringMap(entry.getValue().right);
+			Map<String, String> taskCfg = configMapToStringMap(entry.getValue().right);
 			result.put(entry.getKey(), taskCfg);
 		});
 
@@ -460,6 +461,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 
 	@Override
 	public Map<String, String> getConfigForTask(String taskName) {
+		// TODO: rewrite this like the listTaskConfigurations version
 		if (!publicTasks.containsKey(taskName)) {
 			logger.warn("Task " + taskName + " does not exist.");
 			return Map.of();
@@ -471,7 +473,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 		try {
 			Class<?> configClass = classLoader.loadClass(annotation.configClass());
 			TaskConfig taskCfg = (TaskConfig) configClass.getDeclaredConstructor().newInstance();
-			return aiConfigMapToStringMap(taskCfg.getConfig());
+			return configMapToStringMap(taskCfg.getConfig());
 
 		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException
 				| InvocationTargetException | NoSuchMethodException | SecurityException e) {
@@ -481,14 +483,14 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 	}
 
 	@Override
-	public Map<String, Map<String, String>> getOutputTasks() {
+	public Map<String, Map<String, String>> getOutputTaskTemplates() {
 		Set<Entry<String, ImmutablePair<Class<?>, Map<String, TaskConfigTypes>>>> entrySet = publicOutputTasks
 				.entrySet();
 
 		Map<String, Map<String, String>> result = new HashMap<>();
 
 		entrySet.stream().forEach(entry -> {
-			Map<String, String> taskCfg = aiConfigMapToStringMap(entry.getValue().right);
+			Map<String, String> taskCfg = configMapToStringMap(entry.getValue().right);
 			result.put(entry.getKey(), taskCfg);
 		});
 
@@ -497,6 +499,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 
 	@Override
 	public Map<String, String> getConfigForOutputTask(String outputName) {
+		// TODO: rewrite this like the listTaskConfigurations version
 		if (!publicOutputTasks.containsKey(outputName)) {
 			logger.warn("Output task " + outputName + " does not exist.");
 			return Map.of();
@@ -508,7 +511,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 		try {
 			Class<?> configClass = classLoader.loadClass(annotation.configClass());
 			TaskConfig taskCfg = (TaskConfig) configClass.getDeclaredConstructor().newInstance();
-			return aiConfigMapToStringMap(taskCfg.getConfig());
+			return configMapToStringMap(taskCfg.getConfig());
 
 		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException
 				| InvocationTargetException | NoSuchMethodException | SecurityException e) {
@@ -518,7 +521,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 		}
 	}
 
-	private Map<String, String> aiConfigMapToStringMap(Map<String, TaskConfigTypes> aiConfigMap) {
+	private Map<String, String> configMapToStringMap(Map<String, TaskConfigTypes> aiConfigMap) {
 
 		Map<String, String> taskCfg = new HashMap<>();
 
@@ -529,6 +532,30 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 		}
 
 		return taskCfg;
+	}
+
+	@Override
+	public Map<String, Map<String, String>> listTaskConfigurations() {
+		Map<String, Map<String, String>> result = new HashMap<>();
+
+		publicTasks.forEach((key, value) -> {
+			result.put(key,
+					value.right.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.toString())));
+		});
+
+		return result;
+	}
+
+	@Override
+	public Map<String, Map<String, String>> listOutputTaskConfigurations() {
+		Map<String, Map<String, String>> result = new HashMap<>();
+
+		publicOutputTasks.forEach((key, value) -> {
+			result.put(key,
+					value.right.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.toString())));
+		});
+
+		return result;
 	}
 
 }

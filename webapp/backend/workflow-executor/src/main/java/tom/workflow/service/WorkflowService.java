@@ -13,4 +13,8 @@ public interface WorkflowService {
 
 	List<Workflow> listWorkflows(int userId);
 
+	Workflow getWorkflow(int userId, int workflowId);
+
+	void deleteWorkflow(int userId, int workflowId);
+
 }

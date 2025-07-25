@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 
 @Component({
-    selector: 'ai-view-task',
+    selector: 'minty-view-task',
     imports: [CommonModule, FormsModule, RouterModule],
     templateUrl: 'view-task.component.html',
     styleUrls: ['../../global.css', 'task.component.css']

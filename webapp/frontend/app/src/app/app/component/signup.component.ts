@@ -6,7 +6,7 @@ import { User } from '../../model/user';
 import { UserService } from '../../user.service';
 
 @Component({
-    selector: 'ai-signup',
+    selector: 'minty-signup',
     imports: [CommonModule, FormsModule],
     templateUrl: 'signup.component.html',
     styleUrls: ['../../global.css', './signup.component.css']

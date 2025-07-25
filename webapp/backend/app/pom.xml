@@ -23,7 +23,7 @@
 
 		<dependency>
 			<groupId>tom.minty</groupId>
-			<artifactId>task</artifactId>
+			<artifactId>api</artifactId>
 			</dependency>
 
 		<dependency>
@@ -50,6 +50,10 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.dataformat</groupId>
 			<artifactId>jackson-dataformat-xml</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jsr310</artifactId>
 		</dependency>
 
 		<!-- Spring -->

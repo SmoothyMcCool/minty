@@ -14,9 +14,9 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import tom.output.OutputTask;
 import tom.task.AiTask;
 import tom.task.controller.TaskRequest;
+import tom.task.model.Task;
 import tom.task.taskregistry.TaskRegistryService;
 import tom.workflow.model.Workflow;
-import tom.workflow.model.WorkflowStep;
 
 public class WorkflowTracker {
 
@@ -52,7 +52,12 @@ public class WorkflowTracker {
 
 		taskComplete = true;
 		endTime = Instant.now();
-		OutputTask outputTask = workflow.getOutputTask();
+
+		TaskRequest outputTaskRequest = new TaskRequest();
+		outputTaskRequest.setName(workflow.getOutputStep().getName());
+		outputTaskRequest.setConfiguration(workflow.getOutputStep().getConfiguration());
+		OutputTask outputTask = taskRegistryService.newOutputTask(userId, outputTaskRequest);
+
 		results.put("startTime", startTime);
 		results.put("endTime", endTime);
 
@@ -77,12 +82,12 @@ public class WorkflowTracker {
 			return;
 		}
 
-		WorkflowStep step = workflow.getWorkflowSteps().get(0);
-		TaskRequest taskRequest = new TaskRequest(step.getTaskName(), step.getConfig());
+		Task step = workflow.getWorkflowSteps().get(0);
+		TaskRequest taskRequest = new TaskRequest(step.getName(), step.getConfiguration());
 		AiTask currentTask = taskRegistryService.newTask(userId, taskRequest);
 
 		int stepNumber = 0;
-		WorkflowTaskWrapper wrapper = new WorkflowTaskWrapper(stepTaskCount++, stepNumber, currentTask, this,
+		WorkflowTaskWrapper wrapper = new WorkflowTaskWrapper(++stepTaskCount, stepNumber, currentTask, this,
 				taskRequest);
 
 		pendingTasks.put(stepTaskCount, wrapper);
@@ -97,7 +102,7 @@ public class WorkflowTracker {
 		// If the number of tasks in the step is > 1, then ensure we append the data as
 		// array data.
 		Map<String, Object> result = completedTask.getResult();
-		String key = completedTask.getRequest().getRequest().replaceAll("\\s+", "");
+		String key = completedTask.getRequest().getName().replaceAll("\\s+", "");
 		if (!results.containsKey(key)) { // The key doesn't exist, so just straight up add the result
 			results.put(key, result);
 		} else {
@@ -127,8 +132,8 @@ public class WorkflowTracker {
 		}
 
 		int nextStep = currentWorkflowStep++;
-		WorkflowStep step = workflow.getWorkflowSteps().get(nextStep);
-		TaskRequest taskRequest = new TaskRequest(step.getTaskName(), step.getConfig());
+		Task step = workflow.getWorkflowSteps().get(nextStep);
+		TaskRequest taskRequest = new TaskRequest(step.getName(), step.getConfiguration());
 
 		for (Map<String, String> prevOut : completedTask.getOutput()) {
 			AiTask task = taskRegistryService.newTask(userId, taskRequest);

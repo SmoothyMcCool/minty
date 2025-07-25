@@ -15,34 +15,33 @@ import tom.output.OutputTask;
 import tom.task.AiTask;
 import tom.task.controller.TaskRequest;
 import tom.task.executor.service.TaskExecutionService;
-import tom.task.filesystem.repository.FilesystemWatcher;
-import tom.task.filesystem.repository.FilesystemWatcherRepository;
-import tom.task.filesystem.repository.TriggeredTask;
+import tom.task.model.StandaloneTask;
+import tom.task.repository.StandaloneTaskRepository;
 import tom.task.taskregistry.TaskRegistryService;
 
 @Service
 public class FilesystemWatcherService {
 
-	private final FilesystemWatcherRepository filesystemWatcherRepository;
 	private final TaskExecutor taskExecutor;
 	private final TaskRegistryService taskRegistryService;
 	private final TaskExecutionService taskExecutionService;
 	private final List<FilesystemMonitor> monitorTasks;
+	private final StandaloneTaskRepository standaloneTaskRepository;
 
-	public FilesystemWatcherService(FilesystemWatcherRepository filesystemWatcherRepository,
-			@Qualifier("simpleExecutor") SimpleAsyncTaskExecutor taskExecutor, TaskRegistryService taskRegistryService,
-			TaskExecutionService taskExecutionService) {
-		this.filesystemWatcherRepository = filesystemWatcherRepository;
+	public FilesystemWatcherService(@Qualifier("simpleExecutor") SimpleAsyncTaskExecutor taskExecutor,
+			TaskRegistryService taskRegistryService, TaskExecutionService taskExecutionService,
+			StandaloneTaskRepository standaloneTaskRepository) {
 		this.taskExecutor = taskExecutor;
 		this.taskRegistryService = taskRegistryService;
 		this.taskExecutionService = taskExecutionService;
+		this.standaloneTaskRepository = standaloneTaskRepository;
 		monitorTasks = new ArrayList<>();
 	}
 
 	@PostConstruct
 	private void startWatching() {
 
-		Iterable<FilesystemWatcher> fsWatchers = filesystemWatcherRepository.findAll();
+		Iterable<StandaloneTask> fsWatchers = standaloneTaskRepository.findAllByTriggeredTrue();
 
 		FilesystemMonitor monitor = new FilesystemMonitor(fsWatchers, this);
 		monitorTasks.add(monitor);
@@ -56,28 +55,20 @@ public class FilesystemWatcherService {
 		});
 	}
 
-	public void startTaskFor(FilesystemWatcher watcher, Path filename) {
-		watcher.getRequest().getData().put("File", filename.toString());
-		AiTask task = taskRegistryService.newTask(0, watcher.getRequest());
+	public void startTaskFor(StandaloneTask triggeredTask, Path filename) {
+		TaskRequest request = new TaskRequest();
+		request.setConfiguration(triggeredTask.getTaskTemplate().getConfiguration());
+		request.setName(triggeredTask.getTaskTemplate().getName());
+		request.getConfiguration().put("File", filename.toString());
 
-		OutputTask outputTask = taskRegistryService.newOutputTask(0, watcher.getRequest());
+		AiTask task = taskRegistryService.newTask(0, request);
+
+		TaskRequest outputRequest = new TaskRequest();
+		request.setConfiguration(triggeredTask.getOutputTemplate().getConfiguration());
+		request.setName(triggeredTask.getOutputTemplate().getName());
+		OutputTask outputTask = taskRegistryService.newOutputTask(0, outputRequest);
 
 		taskExecutionService.executeTask(task, outputTask);
-	}
-
-	public FilesystemWatcher newFilesystemWatcher(TriggeredTask newTask) {
-		FilesystemWatcher watcher = new FilesystemWatcher();
-		watcher.setId(null);
-		watcher.setName(newTask.getName());
-		watcher.setDescription(newTask.getDescription());
-		watcher.setLocationToWatch(newTask.getDirectory());
-
-		TaskRequest request = new TaskRequest();
-		request.setRequest(newTask.getTask());
-		request.setData(newTask.getDefaultConfig());
-		watcher.setRequest(request);
-
-		return filesystemWatcherRepository.save(watcher);
 	}
 
 }

@@ -28,7 +28,7 @@
     This list refreshes every five seconds.
     <div class="d-grid gap-3" *ngFor="let result of results">
       <div class="p-2 bg-light border btn text-start" (click)="displayResultsFor(result)">
-        <button type="button" class="bi bi-trash3" style="font-size: 20px; color: red; float: right;" (click)="deleteResult(result)"></button>
+        <button type="button" class="bi bi-trash3" style="font-size: 20px; color: red; float: right;" (click)="deleteResult($event, result)"></button>
         {{result}}
       </div>
     </div>
@@ -38,3 +38,5 @@
     <div [innerHtml]="responseText"></div>
   </div>
 </div>
+<minty-confirmation-dialog [title]="'Delete Task'" [message]="'Are you sure you want to delete this task?'" [visible]="confirmTaskDeleteVisible" (confirm)="confirmDeleteTask()" (cancel)="confirmTaskDeleteVisible = false"></minty-confirmation-dialog>
+<minty-confirmation-dialog [title]="'Delete Result'" [message]="'Are you sure you want to delete this result?'" [visible]="confirmResultDeleteVisible" (confirm)="confirmDeleteResult()" (cancel)="confirmResultDeleteVisible = false"></minty-confirmation-dialog>

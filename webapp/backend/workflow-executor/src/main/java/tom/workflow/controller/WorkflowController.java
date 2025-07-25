@@ -9,7 +9,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
+import tom.ApiError;
 import tom.config.security.UserDetailsUser;
 import tom.controller.ResponseWrapper;
 import tom.meta.service.MetadataService;
@@ -28,7 +30,30 @@ public class WorkflowController {
 		this.metadataService = metadataService;
 	}
 
-	@RequestMapping(value = { "" }, method = RequestMethod.POST)
+	@RequestMapping(value = { "" }, method = RequestMethod.GET)
+	public ResponseEntity<ResponseWrapper<Workflow>> getWorkflow(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("workflowId") int workflowId) {
+
+		Workflow workflow = workflowService.getWorkflow(user.getId(), workflowId);
+		if (workflow == null) {
+			ResponseWrapper<Workflow> response = ResponseWrapper.ApiFailureResponse(HttpStatus.OK.value(),
+					List.of(ApiError.NOT_FOUND));
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
+		ResponseWrapper<Workflow> response = ResponseWrapper.SuccessResponse(workflow);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@RequestMapping(value = { "" }, method = RequestMethod.DELETE)
+	public ResponseEntity<ResponseWrapper<Boolean>> deleteWorkflow(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("workflowId") int workflowId) {
+		workflowService.deleteWorkflow(user.getId(), workflowId);
+		ResponseWrapper<Boolean> response = ResponseWrapper.SuccessResponse(true);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@RequestMapping(value = { "/execute" }, method = RequestMethod.POST)
 	public ResponseEntity<ResponseWrapper<Boolean>> executeWorkflow(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestBody WorkflowRequest request) {
 
@@ -43,6 +68,7 @@ public class WorkflowController {
 	public ResponseEntity<ResponseWrapper<Workflow>> newWorkflow(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestBody Workflow workflow) {
 
+		workflow.setOwnerId(user.getId());
 		Workflow createdWorkflow = workflowService.createWorkflow(user.getId(), workflow);
 		metadataService.workflowCreated(user.getId());
 
@@ -50,7 +76,7 @@ public class WorkflowController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "/list" }, method = RequestMethod.POST)
+	@RequestMapping(value = { "/list" }, method = RequestMethod.GET)
 	public ResponseEntity<ResponseWrapper<List<Workflow>>> listWorkflows(
 			@AuthenticationPrincipal UserDetailsUser user) {
 

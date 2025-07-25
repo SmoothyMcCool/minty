@@ -11,12 +11,16 @@ import { ViewMainComponent } from './app/app/component/view-main.component';
 import { ViewUserComponent } from './app/app/component/view-user.component';
 import { ViewConversationComponent } from './app/assistant/component/view-conversation.component';
 import { AssistantsListComponent } from './app/assistant/component/assistants-list.component';
-import { NewTaskComponent } from './app/task/component/new-task.component';
+import { NewStandaloneTaskComponent } from './app/task/component/new-standalone-task.component';
 import { ViewTaskComponent } from './app/task/component/view-task.component';
 import { TaskListComponent } from './app/task/component/task-list.component';
 import { TaskComponent } from './app/task/component/task.component';
 import { NewAssistantComponent } from './app/assistant/component/new-assistant.component';
 import { ViewStatisticsComponent } from './app/app/component/view-statistics.component';
+import { ViewWorkflowComponent } from './app/workflow/component/view-workflow.component';
+import { NewWorkflowComponent } from './app/workflow/component/new-workflow.component';
+import { WorkflowComponent } from './app/workflow/component/workflow.component';
+import { WorkflowListComponent } from './app/workflow/component/workflow-list.component';
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -68,7 +72,7 @@ bootstrapApplication(AppComponent, {
                 children: [
                     {
                         path: 'new',
-                        component: NewTaskComponent
+                        component: NewStandaloneTaskComponent
                     },
                     {
                         path: ':id',
@@ -77,6 +81,24 @@ bootstrapApplication(AppComponent, {
                     {
                         path: '',
                         component: TaskListComponent
+                    }
+                ]
+            },
+            {
+                path: 'workflow',
+                component: ViewWorkflowComponent,
+                children: [
+                    {
+                        path: 'new',
+                        component: NewWorkflowComponent
+                    },
+                    {
+                        path: ':id',
+                        component: WorkflowComponent
+                    },
+                    {
+                        path: '',
+                        component: WorkflowListComponent
                     }
                 ]
             },

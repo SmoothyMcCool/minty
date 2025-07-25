@@ -2,7 +2,7 @@ package tom.workflow.model;
 
 import java.util.List;
 
-import tom.output.OutputTask;
+import tom.task.model.Task;
 
 public class Workflow {
 
@@ -11,8 +11,8 @@ public class Workflow {
 	private String description;
 	private int ownerId;
 	private boolean shared;
-	private List<WorkflowStep> workflowSteps;
-	private OutputTask outputTask;
+	private List<Task> workflowSteps;
+	private Task outputStep;
 
 	public int getId() {
 		return id;
@@ -54,20 +54,20 @@ public class Workflow {
 		this.shared = shared;
 	}
 
-	public List<WorkflowStep> getWorkflowSteps() {
+	public List<Task> getWorkflowSteps() {
 		return workflowSteps;
 	}
 
-	public void setWorkflowSteps(List<WorkflowStep> workflowSteps) {
+	public void setWorkflowSteps(List<Task> workflowSteps) {
 		this.workflowSteps = workflowSteps;
 	}
 
-	public OutputTask getOutputTask() {
-		return outputTask;
+	public Task getOutputStep() {
+		return outputStep;
 	}
 
-	public void setOutputTask(OutputTask outputTask) {
-		this.outputTask = outputTask;
+	public void setOutputStep(Task outputStep) {
+		this.outputStep = outputStep;
 	}
 
 }

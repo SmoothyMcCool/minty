@@ -1,0 +1,7 @@
+.img-workflow {
+    background-image: url('../../../assets/workflow-bot.png');
+}
+.well {
+    background-color: rgba(245, 245, 245, 0.66);
+    border-radius: 10px;
+}

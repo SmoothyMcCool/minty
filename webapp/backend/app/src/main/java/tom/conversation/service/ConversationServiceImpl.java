@@ -56,8 +56,9 @@ public class ConversationServiceImpl implements ConversationService {
 			String[] split = chat.split(":");
 			if (split.length > 2) {
 				int convoAssistantId = getAssistantIdFromConversationId(chat);
-				int convoUserId = getUserIdFromConversationId(chat);
-				return assistantId == convoAssistantId && userId == convoUserId;
+				String convoUserName = getUserIdFromConversationId(chat);
+				String userName = userService.getUsernameFromId(userId);
+				return assistantId == convoAssistantId && userName == convoUserName;
 			}
 			return false;
 		}).forEach(chat -> chatMemoryRepository.deleteByConversationId(chat));
@@ -65,8 +66,8 @@ public class ConversationServiceImpl implements ConversationService {
 	}
 
 	@Override
-	public int getUserIdFromConversationId(String conversationId) {
-		return Integer.parseInt(conversationId.split(":")[0]);
+	public String getUserIdFromConversationId(String conversationId) {
+		return conversationId.split(":")[0];
 	}
 
 	@Override

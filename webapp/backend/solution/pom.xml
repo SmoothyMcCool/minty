@@ -20,10 +20,10 @@
 	</properties>
 
 	<modules>
+		<module>../api</module>
 		<module>../app</module>
 		<module>../pug4j-shader</module>
 		<module>../task-executor</module>
-		<module>../task</module>
 		<module>../task-library</module>
 		<module>../workflow-executor</module>
 		<module>../bundle</module>

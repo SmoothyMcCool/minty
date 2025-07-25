@@ -5,7 +5,7 @@ import { CommonModule } from '@angular/common';
 import { UserService } from '../../user.service';
 
 @Component({
-    selector: 'ai-login',
+    selector: 'minty-login',
     imports: [CommonModule, FormsModule],
     templateUrl: 'login.component.html',
     styleUrls: ['../../global.css', './login.component.css']
