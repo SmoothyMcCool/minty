@@ -10,7 +10,7 @@ import { ConversationComponent } from './conversation.component';
 import { ChatMessage } from '../../model/chat-message';
 
 @Component({
-    selector: 'ai-view-conversation',
+    selector: 'minty-view-conversation',
     imports: [CommonModule, FormsModule, ConversationComponent],
     templateUrl: 'view-conversation.component.html',
     styleUrls: ['../../global.css', 'view-assistants.component.css']

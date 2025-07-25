@@ -3,11 +3,13 @@ package tom.workflow.repository;
 import java.util.List;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import tom.workflow.model.WorkflowStep;
+import tom.task.converters.TaskConverter;
+import tom.task.model.Task;
 
 @Entity
 public class Workflow {
@@ -20,7 +22,13 @@ public class Workflow {
 	private int ownerId;
 	private boolean shared;
 	@Column(columnDefinition = "json")
-	private List<WorkflowStep> workflowSteps;
+	@Convert(converter = TaskConverter.class)
+	private List<Task> workflowSteps;
+	@Convert(converter = TaskConverter.class)
+	private Task outputStep;
+
+	public Workflow() {
+	}
 
 	public Workflow(tom.workflow.model.Workflow workflow) {
 		this.id = workflow.getId();
@@ -29,6 +37,7 @@ public class Workflow {
 		this.ownerId = workflow.getOwnerId();
 		this.shared = workflow.isShared();
 		this.workflowSteps = workflow.getWorkflowSteps();
+		this.outputStep = workflow.getOutputStep();
 	}
 
 	public Integer getId() {
@@ -71,12 +80,20 @@ public class Workflow {
 		this.shared = shared;
 	}
 
-	public List<WorkflowStep> getWorkflowSteps() {
+	public List<Task> getWorkflowSteps() {
 		return workflowSteps;
 	}
 
-	public void setWorkflowSteps(List<WorkflowStep> workflowSteps) {
+	public void setWorkflowSteps(List<Task> workflowSteps) {
 		this.workflowSteps = workflowSteps;
+	}
+
+	public Task getOutputStep() {
+		return outputStep;
+	}
+
+	public void setOutputStep(Task outputStep) {
+		this.outputStep = outputStep;
 	}
 
 	public tom.workflow.model.Workflow toModelWorkflow() {
@@ -87,6 +104,7 @@ public class Workflow {
 		workflow.setOwnerId(getOwnerId());
 		workflow.setShared(isShared());
 		workflow.setWorkflowSteps(getWorkflowSteps());
+		workflow.setOutputStep(getOutputStep());
 		return workflow;
 	}
 

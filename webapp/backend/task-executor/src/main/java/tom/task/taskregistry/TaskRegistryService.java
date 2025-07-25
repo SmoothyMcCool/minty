@@ -16,7 +16,11 @@ public interface TaskRegistryService {
 
 	Map<String, String> getConfigForTask(String taskName);
 
-	Map<String, Map<String, String>> getOutputTasks();
+	Map<String, Map<String, String>> getOutputTaskTemplates();
 
 	Map<String, String> getConfigForOutputTask(String outputName);
+
+	Map<String, Map<String, String>> listTaskConfigurations();
+
+	Map<String, Map<String, String>> listOutputTaskConfigurations();
 }

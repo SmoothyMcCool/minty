@@ -10,10 +10,10 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
+import tom.task.model.Task;
 import tom.task.taskregistry.TaskRegistryService;
 import tom.workflow.controller.WorkflowRequest;
 import tom.workflow.model.Workflow;
-import tom.workflow.model.WorkflowStep;
 import tom.workflow.repository.WorkflowRepository;
 
 @Service
@@ -34,14 +34,14 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 	@Override
 	public void executeWorkflow(int userId, WorkflowRequest request) {
-		Optional<tom.workflow.repository.Workflow> maybeWorkflow = workflowRepository.findById(request.getWorkflowId());
+		Optional<tom.workflow.repository.Workflow> maybeWorkflow = workflowRepository.findById(request.getId());
 		if (maybeWorkflow.isEmpty()) {
-			logger.warn("Did not find workflow for ID " + request.getWorkflowId() + ". Cannot run.");
+			logger.warn("Did not find workflow for ID " + request.getId() + ". Cannot run.");
 			return;
 		}
 
 		Workflow workflow = maybeWorkflow.get().toModelWorkflow();
-		List<WorkflowStep> steps = workflow.getWorkflowSteps();
+		List<Task> steps = workflow.getWorkflowSteps();
 
 		if (steps.size() != request.getTaskConfigurationList().size()) {
 			logger.warn("Expected to get " + steps.size() + " configuration objects, but instead got "
@@ -50,8 +50,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 		}
 
 		for (int i = 0; i < steps.size(); i++) {
-			steps.get(i).setConfig(request.getTaskConfigurationList().get(i));
+			steps.get(i).setConfiguration(request.getTaskConfigurationList().get(i));
 		}
+		workflow.getOutputStep().setConfiguration(request.getOutputConfiguration());
 
 		WorkflowTracker tracker = new WorkflowTracker(userId, workflow, taskRegistryService, taskExecutor);
 		tracker.runFirstTask();
@@ -68,6 +69,22 @@ public class WorkflowServiceImpl implements WorkflowService {
 	public List<Workflow> listWorkflows(int userId) {
 		return workflowRepository.findAllByOwnerIdOrSharedTrue(userId).stream()
 				.map(workflow -> workflow.toModelWorkflow()).toList();
+	}
+
+	@Override
+	public Workflow getWorkflow(int userId, int workflowId) {
+		Optional<tom.workflow.repository.Workflow> maybeWorkflow = workflowRepository.findById(workflowId);
+		if (maybeWorkflow.isEmpty()) {
+			logger.warn("Did not find workflow for ID " + workflowId);
+			return null;
+		}
+
+		return maybeWorkflow.get().toModelWorkflow();
+	}
+
+	@Override
+	public void deleteWorkflow(int userId, int workflowId) {
+		workflowRepository.deleteById(workflowId);
 	}
 
 }

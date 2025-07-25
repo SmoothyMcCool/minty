@@ -6,10 +6,11 @@ import { AssistantService } from '../../assistant.service';
 import { Router, RouterModule } from '@angular/router';
 import { ConversationService } from '../../conversation.service';
 import { FilterPipe } from '../../pipe/filter-pipe';
+import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
 
 @Component({
-    selector: 'ai-assistants-list',
-    imports: [CommonModule, FormsModule, RouterModule, FilterPipe],
+    selector: 'minty-assistants-list',
+    imports: [CommonModule, FormsModule, RouterModule, FilterPipe, ConfirmationDialogComponent],
     templateUrl: 'assistants-list.component.html'
 })
 export class AssistantsListComponent {
@@ -32,6 +33,12 @@ export class AssistantsListComponent {
 
     deleteInProgress = false;
 
+    confirmDeleteAssistantVisible = false;
+    assistantPendingDeletion: Assistant;
+    confirmDeleteConversationVisible = false;
+    conversationPendingDeletionId: string;
+
+
     constructor(
         private assistantService: AssistantService,
         private conversationService: ConversationService,
@@ -49,8 +56,13 @@ export class AssistantsListComponent {
     }
 
     deleteAssistant(assistant: Assistant) {
+        this.confirmDeleteAssistantVisible = true;
+        this.assistantPendingDeletion = assistant;
+    }
+
+    confirmDeleteAssistant() {
         this.deleteInProgress = true;
-        this.assistantService.delete(assistant).subscribe(() => {
+        this.assistantService.delete(this.assistantPendingDeletion).subscribe(() => {
             this.assistantService.list().subscribe(assistants => {
                 this.assistants = assistants;
                 this.deleteInProgress = false;
@@ -59,6 +71,7 @@ export class AssistantsListComponent {
                 this.conversations = conversations;
             });
         });
+        this.assistants = this.assistants.filter(item => item.id === this.assistantPendingDeletion.id);
     }
 
     startConversation(assistant: Assistant): void {
@@ -72,7 +85,12 @@ export class AssistantsListComponent {
     }
 
     deleteConversation(conversationId: string) {
-        this.conversationService.delete(conversationId).subscribe(() => {
+        this.confirmDeleteConversationVisible = true;
+        this.conversationPendingDeletionId = conversationId;
+    }
+
+    confirmDeleteConversation() {
+        this.conversationService.delete(this.conversationPendingDeletionId).subscribe(() => {
             this.assistantService.list().subscribe(assistants => {
                 this.assistants = assistants;
             });
@@ -80,6 +98,7 @@ export class AssistantsListComponent {
                 this.conversations = conversations;
             });
         });
+        this.conversations = this.conversations.filter(item => item === this.conversationPendingDeletionId);
     }
 
     fileListChanged(event: Event) {

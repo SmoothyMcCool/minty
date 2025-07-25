@@ -4,7 +4,7 @@ import { UserMeta } from '../../model/user-meta';
 import { MetadataService } from '../../metadata.service';
 
 @Component({
-    selector: 'ai-view-statistics',
+    selector: 'minty-view-statistics',
     imports: [CommonModule, DatePipe],
     templateUrl: 'view-statistics.component.html',
     styleUrls: ['../../global.css', './view-statistics.component.css']

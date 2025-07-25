@@ -29,7 +29,7 @@ public class TaskExecutionServiceImpl implements TaskExecutionService {
 	private final AsyncTaskExecutor taskExecutor;
 	private final Map<String, TaskTracker> processTrackerMap;
 
-	@Value("${results.location}")
+	@Value("${taskResultsLocation}")
 	private String resultsDir;
 
 	@Value("${pugTemplates}")

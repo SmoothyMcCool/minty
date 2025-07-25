@@ -3,11 +3,12 @@
   <p>{{task.description}}</p>
   <form role="form" (submit)="submit()">
     <div class="row mb-3">
-      <ai-task-config [configParams]="taskConfigParams" [(ngModel)]="taskConfig" name="taskConfig"></ai-task-config>
+      <minty-task-config-editor name="taskConfig" [configurationDefinition]="taskConfigurationDefinition" [(ngModel)]="task.taskTemplate.configuration" name="{{name}}-taskConfig"></minty-task-config-editor>
     </div>
     <div class="row mb-3">
-      <ai-task-config [configParams]="outputTaskConfigParams" [(ngModel)]="outputTaskConfig" name="outputTaskConfig"></ai-task-config>
+      <minty-task-config-editor name="outputConfig" [configurationDefinition]="outputTaskConfigurationDefinition" [(ngModel)]="task.outputTemplate.configuration" name="{{name}}-outputConfig"></minty-task-config-editor>
     </div>
+
     <button type="submit" class="btn btn-primary">Submit!</button>
     <button type="button" id="submitButton" class="btn btn-primary float-end" (click)="navigateTo('task')">I changed my mind, yo.</button>
   </form>

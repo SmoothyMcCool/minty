@@ -45,9 +45,13 @@
           </div>
         </ng-container>
         <ng-template #noSharedAssistants>
-          <p class="font-monospace ms-4">If any assistants had been shared with you they'd be listed here. I guess you have no friends :(</p>
+          <p class="font-monospace ms-4">If any assistants had been shared with you they'd be listed here.<br>
+            I guess you have no friends 😟
+          </p>
         </ng-template>
       </div>
     </div>
   </div>
 </div>
+<minty-confirmation-dialog [title]="'Delete Assistant'" [message]="'Are you sure you want to delete this Assistant?'" [visible]="confirmDeleteAssistantVisible" (confirm)="confirmDeleteAssistant()" (cancel)="confirmDeleteAssistantVisible = false"></minty-confirmation-dialog>
+<minty-confirmation-dialog [title]="'Delete Conversation'" [message]="'Are you sure you want to delete this Conversation?'" [visible]="confirmDeleteConversationVisible" (confirm)="confirmDeleteConversation()" (cancel)="confirmDeleteConversationVisible = false"></minty-confirmation-dialog>

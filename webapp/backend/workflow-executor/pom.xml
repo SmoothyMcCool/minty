@@ -28,7 +28,7 @@
 		</dependency>
 		<dependency>
 			<groupId>tom.minty</groupId>
-			<artifactId>task</artifactId>
+			<artifactId>api</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>tom.minty</groupId>

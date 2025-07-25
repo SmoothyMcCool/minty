@@ -15,19 +15,19 @@ import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import tom.task.filesystem.repository.FilesystemWatcher;
+import tom.task.model.StandaloneTask;
 
 public class FilesystemMonitor implements Runnable {
 
 	private static final Logger logger = LogManager.getLogger(FilesystemMonitor.class);
 
-	private final Iterable<FilesystemWatcher> watchers;
+	private final Iterable<StandaloneTask> watchers;
 	private WatchService watcher;
 	private final FilesystemWatcherService filesystemWatcherService;
 	private boolean stop;
 	private Map<WatchKey, Path> keyMap;
 
-	public FilesystemMonitor(Iterable<FilesystemWatcher> watchers, FilesystemWatcherService filesystemWatcherService) {
+	public FilesystemMonitor(Iterable<StandaloneTask> watchers, FilesystemWatcherService filesystemWatcherService) {
 		this.watchers = watchers;
 		this.filesystemWatcherService = filesystemWatcherService;
 		stop = false;
@@ -45,9 +45,9 @@ public class FilesystemMonitor implements Runnable {
 		}
 
 		boolean nothingToWatch = true;
-		for (FilesystemWatcher fsWatcher : watchers) {
+		for (StandaloneTask fsWatcher : watchers) {
 
-			Path path = Paths.get(fsWatcher.getLocationToWatch());
+			Path path = Paths.get(fsWatcher.getWatchLocation());
 
 			try {
 				logger.info("Watching for new files in " + path);
@@ -83,8 +83,8 @@ public class FilesystemMonitor implements Runnable {
 						Path directory = keyMap.get(key);
 
 						// directory now holds the directory of the change we are monitoring
-						for (FilesystemWatcher watcher : watchers) {
-							if (watcher.getLocationToWatch().compareToIgnoreCase(directory.toString()) == 0) {
+						for (StandaloneTask watcher : watchers) {
+							if (watcher.getWatchLocation().compareToIgnoreCase(directory.toString()) == 0) {
 								logger.info("Found new file. Starting task: " + filename);
 								filesystemWatcherService.startTaskFor(watcher, filename);
 							}

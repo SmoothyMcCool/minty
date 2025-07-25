@@ -9,7 +9,7 @@ import { DocumentService } from '../../document.service';
 import { FilterPipe } from '../../pipe/filter-pipe';
 
 @Component({
-    selector: 'ai-new-assistant',
+    selector: 'minty-new-assistant',
     imports: [CommonModule, FormsModule, RouterModule, FilterPipe],
     templateUrl: 'new-assistant.component.html'
 })
