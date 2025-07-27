@@ -14,9 +14,9 @@
       <div class="row">
         <h5>My Assistants</h5>
         <ng-container *ngIf="assistants.length > 0; else noAssistants">
-          <div class="col-4" *ngFor="let assistant of assistants | filter:false; index as i">
+          <div class="col-4" *ngFor="let assistant of assistants | filter:{shared: false}; index as i">
             <div class="card">
-              <button class="position-absolute top-0 end-0 bi bi-trash3" style="font-size: 20px; color: red" [disabled]="deleteInProgress" (click)="deleteAssistant(assistant)"></button>
+              <button *ngIf="isOwned(assistant)" class="position-absolute top-0 end-0 bi bi-trash3" style="font-size: 20px; color: red" [disabled]="deleteInProgress" (click)="deleteAssistant(assistant)"></button>
               <span *ngIf="assistant.state !== 'READY'" class="top-0 start-0 bi bi-exclamation-circle" style="font-size: 20px; color: red">Not Ready!</span>
               <div class="card-body">
                 <h5 class="card-title">{{assistant.name}}</h5>
@@ -26,28 +26,28 @@
             </div>
           </div>
         </ng-container>
-        <ng-template #noAssistants>
-          <p class="font-monospace ms-4">If you had any assistants they would be listed here.</p>
-        </ng-template>
-      </div>
-      <div class="row">
-        <h5>Shared Assistants</h5>
-        <ng-container *ngIf="assistants.length > 0; else noSharedAssistants">
-          <div class="col-4" *ngFor="let assistant of assistants | filter:true; index as i">
-            <div class="card">
-              <div class="card-body">
-                <button class="position-absolute top-0 end-0 bi bi-trash3" style="font-size: 20px; color: red" (click)="deleteAssistant(assistant)"></button>
-                <h5 class="card-title">{{assistant.name}}</h5>
-                <p class="card-text">{{assistant.prompt}}</p>
-                <button class="btn btn-primary" (click)="startConversation(assistant)">Run!</button>
+        <div class="row">
+          <h5>Shared Assistants</h5>
+          <ng-container *ngIf="assistants.length > 0; else noSharedAssistants">
+            <div class="col-4" *ngFor="let assistant of assistants | filter:{shared: true}; index as i">
+              <div class="card">
+                <div class="card-body">
+                  <button *ngIf="isOwned(assistant)" class="position-absolute top-0 end-0 bi bi-trash3" style="font-size: 20px; color: red" (click)="deleteAssistant(assistant)"></button>
+                  <h5 class="card-title">{{assistant.name}}</h5>
+                  <p class="card-text">{{assistant.prompt}}</p>
+                  <button class="btn btn-primary" (click)="startConversation(assistant)">Run!</button>
+                </div>
               </div>
             </div>
-          </div>
-        </ng-container>
-        <ng-template #noSharedAssistants>
-          <p class="font-monospace ms-4">If any assistants had been shared with you they'd be listed here.<br>
-            I guess you have no friends 😟
-          </p>
+          </ng-container>
+          <ng-template #noSharedAssistants>
+            <p class="font-monospace ms-4">If any assistants had been shared with you they'd be listed here.<br>
+              I guess you have no friends ðŸ˜Ÿ
+            </p>
+          </ng-template>
+        </div>
+        <ng-template #noAssistants>
+          <p class="font-monospace ms-4">If you had any assistants they would be listed here.</p>
         </ng-template>
       </div>
     </div>

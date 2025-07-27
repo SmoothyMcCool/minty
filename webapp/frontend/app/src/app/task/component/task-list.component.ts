@@ -7,6 +7,7 @@ import { Router, RouterModule } from '@angular/router';
 import { ResultService } from 'src/app/result.service';
 import { StandaloneTask } from 'src/app/model/standalone-task';
 import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
+import { UserService } from 'src/app/user.service';
 
 @Component({
     selector: 'minty-task-list',
@@ -31,7 +32,8 @@ export class TaskListComponent implements OnInit, OnDestroy {
 
     constructor(private router: Router,
         private taskService: TaskService,
-        private resultService: ResultService) {
+        private resultService: ResultService,
+        private userService: UserService) {
     }
 
     ngOnInit() {
@@ -89,6 +91,10 @@ export class TaskListComponent implements OnInit, OnDestroy {
         navigator.clipboard.writeText(this.responseText as string).then(() => {
             console.log('Copied: ' + this.responseText as string);
         });
+    }
+
+    isOwned(task: StandaloneTask): boolean {
+        return task.ownerId === this.userService.getUser().id;
     }
 
     navigateTo(url: string) {

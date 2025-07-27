@@ -56,8 +56,8 @@ public class SleeperTask implements AiTask {
 
 	@Override
 	public void setInput(Map<String, String> input) {
-		if (input.containsKey("delay")) {
-			configuration.setDelay((Integer.parseInt(input.get("delay"))));
+		if (input.containsKey("Delay")) {
+			configuration.setDelay((Integer.parseInt(input.get("Delay"))));
 		}
 	}
 
@@ -70,5 +70,15 @@ public class SleeperTask implements AiTask {
 		} catch (InterruptedException e) {
 			logger.error("Sleep interrupted.");
 		}
+	}
+
+	@Override
+	public String expects() {
+		return "{ \"Delay\": <Integer> } to set the number of seconds this task sleeps for.";
+	}
+
+	@Override
+	public String produces() {
+		return "Produces no output.";
 	}
 }

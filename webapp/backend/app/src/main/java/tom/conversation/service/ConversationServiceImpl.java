@@ -1,6 +1,7 @@
 package tom.conversation.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
@@ -10,10 +11,11 @@ import org.springframework.ai.ollama.api.OllamaModel;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
+import tom.model.Assistant;
 import tom.ollama.service.OllamaService;
-import tom.task.model.Assistant;
 import tom.task.services.AssistantService;
 import tom.task.services.ConversationService;
+import tom.user.repository.User;
 import tom.user.service.UserService;
 
 @Service
@@ -56,7 +58,7 @@ public class ConversationServiceImpl implements ConversationService {
 			String[] split = chat.split(":");
 			if (split.length > 2) {
 				int convoAssistantId = getAssistantIdFromConversationId(chat);
-				String convoUserName = getUserIdFromConversationId(chat);
+				String convoUserName = getUserNameFromConversationId(chat);
 				String userName = userService.getUsernameFromId(userId);
 				return assistantId == convoAssistantId && userName == convoUserName;
 			}
@@ -66,7 +68,7 @@ public class ConversationServiceImpl implements ConversationService {
 	}
 
 	@Override
-	public String getUserIdFromConversationId(String conversationId) {
+	public String getUserNameFromConversationId(String conversationId) {
 		return conversationId.split(":")[0];
 	}
 
@@ -79,6 +81,15 @@ public class ConversationServiceImpl implements ConversationService {
 	public String getDefaultConversationId(int userId) {
 		String username = userService.getUsernameFromId(userId);
 		return username + ":0:default";
+	}
+
+	@Override
+	public boolean conversationOwnedBy(String conversationId, int userId) {
+		Optional<User> convoUserId = userService.getUserFromName(getUserNameFromConversationId(conversationId));
+		if (convoUserId.isEmpty()) {
+			return false;
+		}
+		return userId == convoUserId.get().getId();
 	}
 
 	@Override

@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { UserService } from '../../user.service';
+import { environment } from 'src/environments/environment';
 
 @Component({
     selector: 'minty-login',
@@ -18,6 +19,8 @@ export class LoginComponent {
         account: '',
         password: ''
     };
+
+    applicationName = environment.applicationName;
 
     constructor(private userService: UserService,
         private router: Router) {

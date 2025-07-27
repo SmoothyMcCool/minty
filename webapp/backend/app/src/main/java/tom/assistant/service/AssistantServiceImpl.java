@@ -23,10 +23,10 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 
 import tom.assistant.repository.AssistantRepository;
+import tom.model.Assistant;
+import tom.model.AssistantQuery;
+import tom.model.AssistantState;
 import tom.ollama.service.OllamaService;
-import tom.task.model.Assistant;
-import tom.task.model.AssistantQuery;
-import tom.task.model.AssistantState;
 import tom.task.services.AssistantService;
 import tom.task.services.ConversationService;
 import tom.task.services.DocumentService;
@@ -84,6 +84,14 @@ public class AssistantServiceImpl implements AssistantService {
 			return new ArrayList<>();
 		}
 
+		asstList.stream().map(assistant -> {
+			if (assistant.getOwnerId() == userId) {
+				// Don't mark this as shared since it's owned by the current user.
+				assistant.setShared(false);
+			}
+			return assistant;
+		});
+
 		return asstList.stream().map(asst -> asst.toTaskAssistant()).toList();
 	}
 
@@ -111,7 +119,7 @@ public class AssistantServiceImpl implements AssistantService {
 	public boolean deleteAssistant(int userId, int assistantId) {
 		Assistant assistant = findAssistant(userId, assistantId);
 
-		if (assistant.isNull()) {
+		if (assistant.Null()) {
 			logger.warn("Tried to delete an assistant that doesn't exist or user cannot access. User: " + userId
 					+ ", assistant: " + assistantId);
 			return false;
@@ -164,7 +172,7 @@ public class AssistantServiceImpl implements AssistantService {
 
 	private Optional<ChatClientRequestSpec> prepare(int userId, AssistantQuery query) {
 		Assistant assistant = findAssistant(userId, query.getAssistantId());
-		if (assistant.isNull()) {
+		if (assistant.Null()) {
 			logger.warn(
 					"Tried to build a chat session from an assistant that doesn't exist or user cannot access. User: "
 							+ userId + ", assistant: " + query.getAssistantId());
@@ -182,7 +190,8 @@ public class AssistantServiceImpl implements AssistantService {
 		ChatMemory chatMemory = ollamaService.getChatMemory(model);
 
 		OllamaChatModel chatModel = OllamaChatModel.builder().ollamaApi(ollamaApi)
-				.defaultOptions(OllamaOptions.builder().model(model).temperature(0.9).build()).build();
+				.defaultOptions(OllamaOptions.builder().model(model).temperature(assistant.temperature()).build())
+				.build();
 
 		VectorStore vectorStore = ollamaService.getVectorStore(model);
 
@@ -234,7 +243,7 @@ public class AssistantServiceImpl implements AssistantService {
 	@Override
 	public String getModelForAssistant(int userId, int assistantId) {
 		Assistant assistant = findAssistant(userId, assistantId);
-		if (assistant.isNull()) {
+		if (assistant.Null()) {
 			logger.warn("Tried to access an assistant that does not exist or user has no permission. User " + userId
 					+ ", assistant: " + assistantId);
 			return "";

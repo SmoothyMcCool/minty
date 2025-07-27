@@ -5,15 +5,15 @@ import java.util.Map;
 
 public class NullTaskConfig implements TaskConfig {
 
-    public NullTaskConfig() {
-    }
+	public NullTaskConfig() {
+	}
 
-    public NullTaskConfig(Map<String, String> config) {
-    }
+	public NullTaskConfig(Map<String, String> config) {
+	}
 
-    @Override
-    public Map<String, TaskConfigTypes> getConfig() {
-        return new HashMap<>();
-    }
+	@Override
+	public Map<String, TaskConfigTypes> getConfig() {
+		return new HashMap<>();
+	}
 
 }

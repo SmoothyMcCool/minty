@@ -7,6 +7,7 @@ import { Workflow } from 'src/app/model/workflow';
 import { WorkflowService } from 'src/app/workflow/workflow.service';
 import { TaskTemplateService } from 'src/app/task/task-template.service';
 import { TaskEditorComponent } from 'src/app/task/component/task-editor.component';
+import { TaskDescription } from 'src/app/model/task-description';
 
 @Component({
     selector: 'minty-workflow',
@@ -18,6 +19,7 @@ export class WorkflowComponent implements OnInit {
 
     workflow: Workflow = {
         id: 0,
+        ownerId: 0,
         name: '',
         description: '',
         shared: false,
@@ -27,8 +29,8 @@ export class WorkflowComponent implements OnInit {
             configuration: new Map()
         }
     };
-    templateConfigurations: Map<string, Map<string, string>> = new Map();
-    outputConfigurations: Map<string, Map<string, string>> = new Map();
+    taskTemplates: TaskDescription[] = [];
+    outputTemplates: TaskDescription[] = [];
 
     constructor(
         private router: Router,
@@ -45,11 +47,11 @@ export class WorkflowComponent implements OnInit {
             this.workflow = workflow;
 
             this.taskTemplateService.listTemplates().subscribe(templates => {
-                this.templateConfigurations = templates;
+                this.taskTemplates = templates;
             });
 
             this.taskTemplateService.listOutputTemplates().subscribe(output => {
-                this.outputConfigurations = output;
+                this.outputTemplates = output;
             });
 
         });

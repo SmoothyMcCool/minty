@@ -48,6 +48,13 @@ public class WorkflowController {
 	@RequestMapping(value = { "" }, method = RequestMethod.DELETE)
 	public ResponseEntity<ResponseWrapper<Boolean>> deleteWorkflow(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestParam("workflowId") int workflowId) {
+
+		if (!workflowService.isWorkflowOwned(workflowId, user.getId())) {
+			ResponseWrapper<Boolean> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
+					List.of(ApiError.NOT_OWNED));
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
 		workflowService.deleteWorkflow(user.getId(), workflowId);
 		ResponseWrapper<Boolean> response = ResponseWrapper.SuccessResponse(true);
 		return new ResponseEntity<>(response, HttpStatus.OK);
@@ -56,6 +63,12 @@ public class WorkflowController {
 	@RequestMapping(value = { "/execute" }, method = RequestMethod.POST)
 	public ResponseEntity<ResponseWrapper<Boolean>> executeWorkflow(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestBody WorkflowRequest request) {
+
+		if (!workflowService.isAllowedToExecute(request.getId(), user.getId())) {
+			ResponseWrapper<Boolean> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
+					List.of(ApiError.NOT_OWNED));
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
 
 		workflowService.executeWorkflow(user.getId(), request);
 		metadataService.workflowExecuted(user.getId());

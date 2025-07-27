@@ -4,12 +4,12 @@
   <form role="form" (submit)="submit()">
     <h3>Steps</h3>
     <div class="mb-2 row" *ngFor="let step of workflow.workflowSteps; let last = last; let i = index">
-      <minty-task-editor name="{{step.name}}-editor" [taskTemplates]="templateConfigurations" [(ngModel)]="step"></minty-task-editor>
+      <minty-task-editor name="{{step.name}}-editor" [taskTemplates]="taskTemplates" [(ngModel)]="step"></minty-task-editor>
       <p class="bi bi-arrow-down-circle col text-center fs-2" *ngIf="!last"></p>
     </div>
 
     <h3>Output</h3>
-    <minty-task-editor name="outputEditor" [taskTemplates]="outputConfigurations" [(ngModel)]="workflow.outputStep"></minty-task-editor>
+    <minty-task-editor name="outputEditor" [taskTemplates]="outputTemplates" [(ngModel)]="workflow.outputStep"></minty-task-editor>
     <button type="submit" class="btn btn-primary">Submit!</button>
     <button type="button" id="submitButton" class="btn btn-primary float-end" (click)="navigateTo('workflow')">Nah brah</button>
   </form>

@@ -3,7 +3,7 @@
   <div class="col-4" *ngFor="let workflow of workflows">
     <div class="card">
       <div class="card-body">
-        <button type="button" class="bi bi-trash3" style="font-size: 20px; color: red; float: right;" (click)="deleteWorkflow(workflow)"></button>
+        <button *ngIf="isOwned(workflow)" type="button" class="bi bi-trash3" style="font-size: 20px; color: red; float: right;" (click)="deleteWorkflow(workflow)"></button>
         <h5 class="card-title">{{workflow.name}}</h5>
         <p class="card-text">{{workflow.description}}</p>
         <button class="btn btn-primary" (click)="navigateToWorkflow(workflow.id)">Low-key stoked!</button>

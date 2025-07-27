@@ -13,6 +13,8 @@ public class StandaloneTask {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
+	private int ownerId;
+	private boolean shared;
 	private String name;
 	private boolean triggered;
 	private String watchLocation;
@@ -27,6 +29,22 @@ public class StandaloneTask {
 
 	public void setId(int id) {
 		this.id = id;
+	}
+
+	public int getOwnerId() {
+		return ownerId;
+	}
+
+	public void setOwnerId(int ownerId) {
+		this.ownerId = ownerId;
+	}
+
+	public boolean isShared() {
+		return shared;
+	}
+
+	public void setShared(boolean shared) {
+		this.shared = shared;
 	}
 
 	public String getName() {

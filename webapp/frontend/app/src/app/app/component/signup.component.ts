@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { User } from '../../model/user';
 import { UserService } from '../../user.service';
+import { environment } from 'src/environments/environment';
 
 @Component({
     selector: 'minty-signup',
@@ -17,8 +18,11 @@ export class SignupComponent {
     passwordMismatch = true;
     messages: string[] = [];
 
+    applicationName = environment.applicationName;
+
     constructor(private userService: UserService, private router: Router) {
         this.user = {
+            id: 0,
             name: '',
             password: '',
             externalAccount: '',

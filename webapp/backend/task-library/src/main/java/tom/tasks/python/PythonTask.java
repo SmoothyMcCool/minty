@@ -18,8 +18,12 @@ public class PythonTask implements AiTask, ServiceConsumer {
 	private final Logger logger = LogManager.getLogger(PythonTask.class);
 
 	private final PythonTaskConfig configuration;
-	private Map<String, Object> result;
-	private TaskServices taskServices;
+	private Map<String, Object> result = new HashMap<>();
+	private TaskServices taskServices = null;
+
+	public PythonTask() {
+		configuration = new PythonTaskConfig();
+	}
 
 	public PythonTask(PythonTaskConfig configuration) {
 		this.configuration = configuration;
@@ -66,5 +70,17 @@ public class PythonTask implements AiTask, ServiceConsumer {
 		result = taskServices.getPythonService().execute(configuration.getPythonFile(),
 				configuration.getInputDictionary());
 		logger.info("doWork: " + configuration.getPythonFile() + " completed.");
+	}
+
+	@Override
+	public String expects() {
+		return "This task simply provides whatever input and configuration"
+				+ " is provided as a map to the associated Python file when it is run. "
+				+ "What is expected is entirely up to the python you write.";
+	}
+
+	@Override
+	public String produces() {
+		return "This task doesn't produce output so it should be the last step in your workflow.";
 	}
 }

@@ -5,20 +5,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import tom.model.AssistantQuery;
 import tom.task.AiTask;
 import tom.task.ServiceConsumer;
 import tom.task.annotations.PublicTask;
-import tom.task.model.AssistantQuery;
 import tom.task.services.TaskServices;
 
 @PublicTask(name = "Ask Assistant", configClass = "tom.tasks.ai.query.AiQueryTaskConfig")
 public class AiQueryTask implements AiTask, ServiceConsumer {
 
 	private TaskServices taskServices;
-	private UUID uuid;
-	private String result;
-	private AiQueryTaskConfig config;
-	private int userId;
+	private UUID uuid = UUID.randomUUID();
+	private String result = "";;
+	private AiQueryTaskConfig config = new AiQueryTaskConfig();
+	private int userId = 0;
+
+	public AiQueryTask() {
+
+	}
 
 	public AiQueryTask(AiQueryTaskConfig data) {
 		config = data;
@@ -70,5 +74,15 @@ public class AiQueryTask implements AiTask, ServiceConsumer {
 		query.setConversationId(config.getConversationId());
 
 		return taskServices.getAssistantService().ask(userId, query);
+	}
+
+	@Override
+	public String expects() {
+		return "This task ignores input, but probably shouldn't. Let's define some input that gets appended to the request.";
+	}
+
+	@Override
+	public String produces() {
+		return "This task produces the response from the AI as an output to the nex task, in the form: { \"AiResponse\": string }";
 	}
 }

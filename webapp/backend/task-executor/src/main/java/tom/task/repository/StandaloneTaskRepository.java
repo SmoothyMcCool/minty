@@ -10,6 +10,8 @@ import tom.task.model.StandaloneTask;
 @Service
 public interface StandaloneTaskRepository extends CrudRepository<StandaloneTask, Integer> {
 
+	public List<StandaloneTask> findAllByOwnerIdOrSharedTrue(Integer ownerId);
+
 	public List<StandaloneTask> findAllByTriggeredTrue();
 
 }

@@ -2,7 +2,6 @@ import { HttpClient, HttpParams } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { catchError, map } from "rxjs/operators";
 import { EMPTY, Observable } from "rxjs";
-import { Task } from "../model/task";
 import { AlertService } from "../alert.service";
 import { ApiResult } from "../model/api-result";
 import { StandaloneTask } from "../model/standalone-task";
@@ -162,7 +161,9 @@ export class TaskService {
     private makeProper(task: any): StandaloneTask {
         let st: StandaloneTask = {
             id: task.id,
+            ownerId: task.ownerId,
             name: task.name,
+            shared: task.shared,
             triggered: task.triggered,
             taskTemplate: {
                 name: task.taskTemplate.name,

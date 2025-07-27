@@ -22,6 +22,11 @@ public class SleeperTaskSpawnerTask implements AiTask {
 	private SleeperTaskSpawnerTaskConfig config;
 	private Instant startTime;
 
+	public SleeperTaskSpawnerTask() {
+		this.config = new SleeperTaskSpawnerTaskConfig();
+		startTime = Instant.now();
+	}
+
 	public SleeperTaskSpawnerTask(SleeperTaskSpawnerTaskConfig config) {
 		this.config = config;
 		startTime = Instant.now();
@@ -35,7 +40,7 @@ public class SleeperTaskSpawnerTask implements AiTask {
 	@Override
 	public Map<String, Object> getResult() {
 		Map<String, Object> result = new HashMap<>();
-		result.put("planName", "I slept for " + config.getDelay() + " seconds!");
+		result.put("Spawn Sleeper Tasks", "I slept for " + config.getDelay() + " seconds!");
 		return result;
 	}
 
@@ -86,5 +91,15 @@ public class SleeperTaskSpawnerTask implements AiTask {
 		} catch (InterruptedException e) {
 			logger.error("Sleep interrupted.");
 		}
+	}
+
+	@Override
+	public String expects() {
+		return "Ignores all input.";
+	}
+
+	@Override
+	public String produces() {
+		return "Produces one or more outputs of the form { \"Delay\": <Integer> }";
 	}
 }

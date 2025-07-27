@@ -19,10 +19,12 @@ export class NewAssistantComponent implements OnInit {
     models: string[] = [];
     workingAssistant: Assistant = {
             id: 0,
+            ownerId: 0,
             name: '',
             prompt: '',
             numFiles: 0,
             model: '',
+            temperature: 0,
             state: AssistantState.READY,
             shared: false
         };

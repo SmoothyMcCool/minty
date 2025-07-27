@@ -26,13 +26,13 @@ export class TaskConfigurationEditorComponent implements OnInit, ControlValueAcc
 
     assistants: Assistant[] = [];
 
-    private _configurationDefinition: Map<string, string>;
+    private _taskConfiguration: Map<string, string>;
     @Input()
-    set configurationDefinition(value: Map<string, string>){
-        this._configurationDefinition = value;
+    set taskConfiguration(value: Map<string, string>){
+        this._taskConfiguration = value;
     }
-    get configurationDefinition(): Map<string, string> {
-        return this._configurationDefinition;
+    get taskConfiguration(): Map<string, string> {
+        return this._taskConfiguration;
     }
 
     constructor(private assistantService: AssistantService) {

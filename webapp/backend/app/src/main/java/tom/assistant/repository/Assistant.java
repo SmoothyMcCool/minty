@@ -6,7 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import tom.task.model.AssistantState;
+import tom.model.AssistantState;
 
 @Entity
 public class Assistant {
@@ -17,6 +17,7 @@ public class Assistant {
 	private String name;
 	private String prompt;
 	private String model;
+	private Double temperature;
 	private Integer numFiles;
 	private Integer processedFiles;
 	private AssistantState state;
@@ -27,11 +28,12 @@ public class Assistant {
 	public Assistant() {
 	}
 
-	public Assistant(tom.task.model.Assistant assistant) {
+	public Assistant(tom.model.Assistant assistant) {
 		this.id = assistant.id();
 		this.name = assistant.name();
 		this.prompt = assistant.prompt();
 		this.model = assistant.model();
+		this.temperature = assistant.temperature();
 		this.numFiles = assistant.numFiles();
 		this.processedFiles = assistant.processedFiles();
 		this.ownerId = assistant.ownerId();
@@ -39,8 +41,8 @@ public class Assistant {
 		this.shared = assistant.shared();
 	}
 
-	public tom.task.model.Assistant toTaskAssistant() {
-		return new tom.task.model.Assistant(id, name, model.toString(), prompt, numFiles, processedFiles, state,
+	public tom.model.Assistant toTaskAssistant() {
+		return new tom.model.Assistant(id, name, model.toString(), temperature, prompt, numFiles, processedFiles, state,
 				ownerId, shared);
 	}
 
@@ -74,6 +76,14 @@ public class Assistant {
 
 	public void setModel(String model) {
 		this.model = model;
+	}
+
+	public Double getTemperature() {
+		return temperature;
+	}
+
+	public void setTemperature(Double temperature) {
+		this.temperature = temperature;
 	}
 
 	public Integer getNumFiles() {

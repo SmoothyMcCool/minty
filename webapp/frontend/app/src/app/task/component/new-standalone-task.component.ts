@@ -7,6 +7,7 @@ import { AlertService } from "src/app/alert.service";
 import { TaskTemplateService } from "../task-template.service";
 import { TaskEditorComponent } from "./task-editor.component";
 import { StandaloneTask } from "src/app/model/standalone-task";
+import { TaskDescription } from "src/app/model/task-description";
 
 @Component({
     selector: 'minty-new-task',
@@ -16,21 +17,23 @@ import { StandaloneTask } from "src/app/model/standalone-task";
 })
 export class NewStandaloneTaskComponent implements OnInit {
 
-    taskTemplates: Map<string, Map<string, string>> = new Map();
-    outputTaskTemplates: Map<string, Map<string, string>> = new Map();
+    taskTemplates: TaskDescription[] = [];
+    outputTaskTemplates: TaskDescription[] = [];
 
     task: StandaloneTask = {
         id: 0,
+        ownerId: 0,
         name: '',
+        shared: false,
         triggered: false,
         watchLocation: '',
         taskTemplate: {
             name: '',
-            configuration: new Map()
+            configuration: new Map<string, string>()
         },
         outputTemplate: {
             name: '',
-            configuration: new Map()
+            configuration: new Map<string, string>()
         }
     };
 
@@ -41,11 +44,11 @@ export class NewStandaloneTaskComponent implements OnInit {
     }
 
     ngOnInit() {
-        this.taskTemplateService.listTemplates().subscribe((taskTemplates: any) => {
-            this.taskTemplates = taskTemplates as Map<string, Map<string, string>>;
+        this.taskTemplateService.listTemplates().subscribe((taskTemplates: TaskDescription[]) => {
+            this.taskTemplates = taskTemplates;
         });
-        this.taskTemplateService.listOutputTemplates().subscribe((outputTaskTemplates: any) => {
-            this.outputTaskTemplates = outputTaskTemplates as Map<string, Map<string, string>>;
+        this.taskTemplateService.listOutputTemplates().subscribe((outputTaskTemplates: TaskDescription[]) => {
+            this.outputTaskTemplates = outputTaskTemplates;
         });
     }
 

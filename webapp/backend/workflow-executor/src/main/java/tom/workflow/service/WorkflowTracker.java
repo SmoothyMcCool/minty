@@ -2,6 +2,7 @@ package tom.workflow.service;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -112,7 +113,10 @@ public class WorkflowTracker {
 			} else { // The key exists, but its not an array of results yet. Make it an array and
 						// append the current result.
 				Map<String, Object> singleResult = (Map<String, Object>) results.get(key);
-				results.put(key, List.of(singleResult, result));
+				ArrayList<Map<String, Object>> newList = new ArrayList<>();
+				newList.add(singleResult);
+				newList.add(result);
+				results.put(key, newList);
 			}
 		}
 
@@ -121,8 +125,7 @@ public class WorkflowTracker {
 
 		// If the list of pending tasks is empty, and there are no more tasks to
 		// generate from the just completed task (or the task is the last one in the
-		// list of steps),
-		// then the workflow should stop.
+		// list of steps), then the workflow should stop.
 		List<Map<String, String>> output = completedTask.getOutput();
 		int currentWorkflowStep = completedTask.getStepNumber();
 		int lastWorkflowStep = workflow.getWorkflowSteps().size() - 1;
@@ -131,7 +134,14 @@ public class WorkflowTracker {
 			return;
 		}
 
-		int nextStep = currentWorkflowStep++;
+		// Are there steps after this one?
+		if ((output.isEmpty() || currentWorkflowStep == lastWorkflowStep)) {
+			// Out of steps. Either this is the last step or the task produced no output,
+			// which means don't continue on.
+			return;
+		}
+
+		int nextStep = ++currentWorkflowStep;
 		Task step = workflow.getWorkflowSteps().get(nextStep);
 		TaskRequest taskRequest = new TaskRequest(step.getName(), step.getConfiguration());
 
@@ -139,7 +149,7 @@ public class WorkflowTracker {
 			AiTask task = taskRegistryService.newTask(userId, taskRequest);
 			task.setInput(prevOut);
 
-			WorkflowTaskWrapper wrapper = new WorkflowTaskWrapper(stepTaskCount++, nextStep, task, this, taskRequest);
+			WorkflowTaskWrapper wrapper = new WorkflowTaskWrapper(++stepTaskCount, nextStep, task, this, taskRequest);
 			pendingTasks.put(stepTaskCount, wrapper);
 			taskExecutor.execute(wrapper);
 		}

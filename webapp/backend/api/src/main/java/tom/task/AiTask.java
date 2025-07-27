@@ -34,4 +34,10 @@ public interface AiTask {
 	// of any downstream tasks.
 	void setInput(Map<String, String> input);
 
+	// A description of what the shape of the input map should look like for this
+	// task to make use of it.
+	String expects();
+
+	// A description of shape of the map that is returned from runWorkflow()
+	String produces();
 }

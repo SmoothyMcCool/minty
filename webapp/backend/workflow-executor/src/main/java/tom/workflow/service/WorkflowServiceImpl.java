@@ -79,12 +79,31 @@ public class WorkflowServiceImpl implements WorkflowService {
 			return null;
 		}
 
-		return maybeWorkflow.get().toModelWorkflow();
+		Workflow workflow = maybeWorkflow.get().toModelWorkflow();
+		if (workflow.isShared() || workflow.getOwnerId() == userId) {
+			return workflow;
+		}
+
+		return null;
 	}
 
 	@Override
 	public void deleteWorkflow(int userId, int workflowId) {
 		workflowRepository.deleteById(workflowId);
+	}
+
+	@Override
+	public boolean isAllowedToExecute(int workflowId, int userId) {
+		return this.getWorkflow(userId, workflowId) != null;
+	}
+
+	@Override
+	public boolean isWorkflowOwned(int workflowId, int userId) {
+		Workflow workflow = getWorkflow(userId, workflowId);
+		if (workflow == null) {
+			return false;
+		}
+		return workflow.getOwnerId() == userId;
 	}
 
 }

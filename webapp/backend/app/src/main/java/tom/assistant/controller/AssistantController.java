@@ -20,9 +20,9 @@ import tom.ApiError;
 import tom.config.security.UserDetailsUser;
 import tom.controller.ResponseWrapper;
 import tom.meta.service.MetadataService;
+import tom.model.Assistant;
+import tom.model.AssistantQuery;
 import tom.ollama.service.OllamaService;
-import tom.task.model.Assistant;
-import tom.task.model.AssistantQuery;
 import tom.task.services.AssistantService;
 
 @Controller
@@ -71,7 +71,7 @@ public class AssistantController {
 			@RequestParam("id") int assistantId) {
 		Assistant assistant = assistantService.findAssistant(user.getId(), assistantId);
 
-		if (assistant.isNull()) {
+		if (assistant.Null()) {
 			ResponseWrapper<Assistant> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
 					List.of(ApiError.NOT_OWNED));
 			return new ResponseEntity<>(response, HttpStatus.OK);
@@ -106,6 +106,10 @@ public class AssistantController {
 
 	@RequestMapping(value = { "/ask" }, method = RequestMethod.POST, produces = MediaType.TEXT_PLAIN_VALUE)
 	public StreamingResponseBody ask(@AuthenticationPrincipal UserDetailsUser user, @RequestBody AssistantQuery query) {
+		Assistant assistant = assistantService.findAssistant(user.getId(), query.getAssistantId());
+		if (assistant.Null()) {
+			return null;
+		}
 
 		Stream<String> responseStream = assistantService.askStreaming(user.getId(), query);
 		return outputStream -> {

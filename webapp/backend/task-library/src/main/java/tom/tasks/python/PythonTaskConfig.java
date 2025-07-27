@@ -12,33 +12,33 @@ import tom.task.TaskConfigTypes;
 
 public class PythonTaskConfig implements TaskConfig {
 
-    private String pythonFile;
-    private Map<String, String> inputDictionary;
+	private String pythonFile;
+	private Map<String, String> inputDictionary;
 
-    public PythonTaskConfig() {
-    }
+	public PythonTaskConfig() {
+	}
 
-    @SuppressWarnings("unchecked")
-    public PythonTaskConfig(Map<String, String> config) throws JsonMappingException, JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        pythonFile = config.get("Python File");
-        inputDictionary = objectMapper.readValue(config.get("InputDictionary"), Map.class);
-    }
+	@SuppressWarnings("unchecked")
+	public PythonTaskConfig(Map<String, String> config) throws JsonMappingException, JsonProcessingException {
+		ObjectMapper objectMapper = new ObjectMapper();
+		pythonFile = config.get("Python File");
+		inputDictionary = objectMapper.readValue(config.get("InputDictionary"), Map.class);
+	}
 
-    @Override
-    public Map<String, TaskConfigTypes> getConfig() {
-        Map<String, TaskConfigTypes> config = new HashMap<>();
-        config.put("Python File", TaskConfigTypes.String);
-        config.put("InputDictionary", TaskConfigTypes.String);
-        return config;
-    }
+	@Override
+	public Map<String, TaskConfigTypes> getConfig() {
+		Map<String, TaskConfigTypes> config = new HashMap<>();
+		config.put("Python File", TaskConfigTypes.String);
+		config.put("InputDictionary", TaskConfigTypes.String);
+		return config;
+	}
 
-    public String getPythonFile() {
-        return pythonFile;
-    }
+	public String getPythonFile() {
+		return pythonFile;
+	}
 
-    public Map<String, String> getInputDictionary() {
-        return inputDictionary;
-    }
+	public Map<String, String> getInputDictionary() {
+		return inputDictionary;
+	}
 
 }

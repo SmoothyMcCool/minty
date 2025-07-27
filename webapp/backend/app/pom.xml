@@ -24,7 +24,7 @@
 		<dependency>
 			<groupId>tom.minty</groupId>
 			<artifactId>api</artifactId>
-			</dependency>
+		</dependency>
 
 		<dependency>
 			<groupId>jakarta.servlet</groupId>
@@ -80,26 +80,26 @@
 			<artifactId>spring-ai-ollama</artifactId>
 		</dependency>
 		<dependency>
-		    <groupId>org.springframework.ai</groupId>
-		    <artifactId>spring-ai-mariadb-store</artifactId>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-mariadb-store</artifactId>
 		</dependency>
 		<dependency>
-		    <groupId>org.springframework.ai</groupId>
-		    <artifactId>spring-ai-tika-document-reader</artifactId>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-tika-document-reader</artifactId>
 		</dependency>
 		<dependency>
-		   <groupId>org.springframework.ai</groupId>
-		   <artifactId>spring-ai-advisors-vector-store</artifactId>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-advisors-vector-store</artifactId>
 		</dependency>
 		<dependency>
-		   <groupId>org.springframework.ai</groupId>
-		   <artifactId>spring-ai-model-chat-memory-repository-jdbc</artifactId>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-model-chat-memory-repository-jdbc</artifactId>
 		</dependency>
 
 		<!-- Spring Data -->
 		<dependency>
-		   <groupId>org.springframework.data</groupId>
-		   <artifactId>spring-data-jpa</artifactId>
+			<groupId>org.springframework.data</groupId>
+			<artifactId>spring-data-jpa</artifactId>
 		</dependency>
 
 		<!-- Spring Security -->
@@ -132,9 +132,9 @@
 
 		<!-- MariaDB -->
 		<dependency>
-		    <groupId>org.mariadb.jdbc</groupId>
-		    <artifactId>mariadb-java-client</artifactId>
-		    <scope>runtime</scope>
+			<groupId>org.mariadb.jdbc</groupId>
+			<artifactId>mariadb-java-client</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 
 		<!-- HttpClient -->
@@ -168,7 +168,9 @@
 				</exclusion>
 			</exclusions>
 		</dependency-->
-		<!-- This is a monstrous hack that ChatGPT helped me create. It shades all the libs that pug4j needs and somehow that magically fixes the conflict between pug4j and tika -->
+		<!-- This is a monstrous hack that ChatGPT helped me create. It shades
+		all the libs that pug4j needs and somehow that magically fixes the
+		conflict between pug4j and tika -->
 		<dependency>
 			<groupId>tom.minty</groupId>
 			<artifactId>pug4j-shaded</artifactId>

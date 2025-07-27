@@ -1,5 +1,5 @@
-<ng-container *ngIf="configurationDefinition != undefined && config != undefined">
-    <div class="form-group mb-2" *ngFor="let item of configurationDefinition | keyvalue">
+<ng-container *ngIf="taskConfiguration != undefined && config != undefined">
+    <div class="form-group mb-2" *ngFor="let item of taskConfiguration | keyvalue">
         <ng-container [ngSwitch]="item.value">
             <ng-container *ngSwitchCase="'Number'">
                 <label for="numberInput{{item.key}}">{{item.key}}</label>

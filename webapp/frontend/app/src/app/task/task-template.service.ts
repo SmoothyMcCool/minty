@@ -5,6 +5,7 @@ import { EMPTY, Observable } from "rxjs";
 import { AlertService } from "../alert.service";
 import { ApiResult } from "../model/api-result";
 import { TrackableSubject } from "../trackable-subject";
+import { TaskDescription } from "../model/task-description";
 
 @Injectable({
     providedIn: 'root'
@@ -16,16 +17,14 @@ export class TaskTemplateService {
 
     private static readonly ListTemplates = 'api/task/template/list'; // List all templates that can be used to create tasks
     private static readonly GetTemplateConfiguration = 'api/task/template/config'; // Get description of the configuration of a task template
-    private static readonly ListTemplateConfigurations = 'api/task/template/config/list'; // Get description of the configuration of all task templates
-
+ 
     private static readonly ListOutputTemplates = 'api/task/template/output/list'; // List all output tasks that can be used to format task output
     private static readonly GetOutputTemplatesConfiguration = 'api/task/template/output/config'; // Get description of the configuration of an output template
-    private static readonly ListOutputTemplateConfigurations = 'api/task/template/output/config/list'; // Get description of the configuration of all output templates
-
+ 
     constructor(private http: HttpClient, private alertService: AlertService) {
     }
 
-    listTemplates(): Observable<Map<string, Map<string, string>>> {
+    listTemplates(): Observable<TaskDescription[]> {
         return this.http.get<ApiResult>(TaskTemplateService.ListTemplates)
             .pipe(
                 catchError(error => {
@@ -33,14 +32,12 @@ export class TaskTemplateService {
                     return EMPTY;
                 }),
                 map((result: ApiResult) => {
-                    const map = new Map<string, Map<string, string>>(Object.entries(result.data as any));
-                    const resultMap = new Map<string, Map<string, string>>();
-
-                    map.forEach((value, key, map) => {
-                        resultMap.set(key, new Map<string, string>(Object.entries(value)));
+                    let returnValue = result.data as TaskDescription[];
+                    returnValue.forEach(value => {
+                        value.configuration = new Map(Object.entries(value.configuration));
                     });
 
-                    return resultMap;
+                    return returnValue;
                 })
             );
     }
@@ -61,23 +58,6 @@ export class TaskTemplateService {
             );
     }
 
-    listAllTemplateConfigurations(): Observable<Map<string, Map<string, string>>> {
-        return this.http.get<ApiResult>(TaskTemplateService.ListTemplateConfigurations)
-            .pipe(
-                catchError(error => {
-                    this.alertService.postFailure(JSON.stringify(error));
-                    return EMPTY;
-                }),
-                map((result: ApiResult) => {
-                    const ret = new Map<string, Map<string, string>>(Object.entries(result.data));
-                    ret.forEach((value, key) => {
-                        ret.set(key, new Map<string, string>(Object.entries(value)));
-                    })
-                    return ret;
-                })
-            );
-    }
-
     getOutputTemplateConfiguration(taskId: number): Observable<Map<string, string>> {
         let params: HttpParams = new HttpParams();
         params = params.append('taskId', taskId);
@@ -94,24 +74,7 @@ export class TaskTemplateService {
             );
     }
 
-    listAllOutputTemplateConfigurations(): Observable<Map<string, Map<string, string>>> {
-        return this.http.get<ApiResult>(TaskTemplateService.ListOutputTemplateConfigurations)
-            .pipe(
-                catchError(error => {
-                    this.alertService.postFailure(JSON.stringify(error));
-                    return EMPTY;
-                }),
-                map((result: ApiResult) => {
-                    const ret = new Map<string, Map<string, string>>(Object.entries(result.data));
-                    ret.forEach((value, key) => {
-                        ret.set(key, new Map<string, string>(Object.entries(value)));
-                    })
-                    return ret;
-                })
-            );
-    }
-
-    listOutputTemplates(): Observable<Map<string, Map<string, string>>> {
+    listOutputTemplates(): Observable<TaskDescription[]> {
     return this.http.get<ApiResult>(TaskTemplateService.ListOutputTemplates)
         .pipe(
             catchError(error => {
@@ -119,14 +82,12 @@ export class TaskTemplateService {
                 return EMPTY;
             }),
             map((result: ApiResult) => {
-                const map = new Map<string, Map<string, string>>(Object.entries(result.data as any));
-                const resultMap = new Map<string, Map<string, string>>();
-
-                map.forEach((value, key, map) => {
-                    resultMap.set(key, new Map<string, string>(Object.entries(value)));
+                let returnValue = result.data as TaskDescription[];
+                returnValue.forEach(value => {
+                    value.configuration = new Map(Object.entries(value.configuration));
                 });
 
-                return resultMap;
+                return returnValue;
             })
         );
     }

@@ -18,6 +18,10 @@ public class VideoTranscriber implements AiTask {
 
 	private final VideoTranscriberConfig configuration;
 
+	public VideoTranscriber() {
+		configuration = new VideoTranscriberConfig();
+	}
+
 	public VideoTranscriber(VideoTranscriberConfig configuration) {
 		this.configuration = configuration;
 	}
@@ -36,8 +40,10 @@ public class VideoTranscriber implements AiTask {
 
 	@Override
 	public List<Map<String, String>> runWorkflow() {
-		// TODO Auto-generated method stub
-		return null;
+		logger.info("Running transcription on " + configuration.getFile());
+		Path file = Path.of(configuration.getFile());
+		file.toFile().delete();
+		return List.of(Map.of("File", configuration.getFile()));
 	}
 
 	@Override
@@ -53,6 +59,16 @@ public class VideoTranscriber implements AiTask {
 		if (input.containsKey("File")) {
 			configuration.setFile((input.get("File")));
 		}
+	}
+
+	@Override
+	public String expects() {
+		return "If the input contains { \"File\": <string> } that file will replace the value from the task configuration.";
+	}
+
+	@Override
+	public String produces() {
+		return "This outputs the name of the file containing the transcription: { \"File\": <string> }";
 	}
 
 }

@@ -12,6 +12,8 @@ public interface ConversationService {
 
 	int getAssistantIdFromConversationId(String conversationId);
 
-	String getUserIdFromConversationId(String conversationId);
+	String getUserNameFromConversationId(String conversationId);
+
+	boolean conversationOwnedBy(String conversationId, int userId);
 
 }
