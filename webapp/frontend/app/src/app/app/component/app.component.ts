@@ -44,7 +44,6 @@ export class AppComponent implements OnInit {
         this.alertService.alert.subscribe(item => this.handleAlert(item));
 
         this.router.events.pipe(filter(event => event instanceof NavigationEnd)).subscribe((event: NavigationEnd) => {
-            console.log('loggedIn? ' + this.userService.loggedIn());
             if (!this.userService.loggedIn() && event.url != '/signup') {
                 this.logout();
             }

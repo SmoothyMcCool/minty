@@ -30,4 +30,14 @@ public class NullTask implements AiTask {
 		return List.of();
 	}
 
+	@Override
+	public String expects() {
+		return "This task expects no input. It doesn't matter what you provide.";
+	}
+
+	@Override
+	public String produces() {
+		return "This task produces no output. Using it will cause your workflow to stop running.";
+	}
+
 }

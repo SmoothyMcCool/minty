@@ -60,9 +60,19 @@ public class TestHttpRequestTask implements AiTask, ServiceConsumer {
 
 	@Override
 	public void setInput(Map<String, String> input) {
-		if (input.containsKey("UserId")) {
-			userId = Integer.parseInt(input.get("UserId"));
+		if (input.containsKey("UserName")) {
+			userId = Integer.parseInt(input.get("UserName"));
 		}
+	}
+
+	@Override
+	public String expects() {
+		return "Reads key Username as string if it exists in the input.";
+	}
+
+	@Override
+	public String produces() {
+		return "{ \"User Name\": <String> }";
 	}
 
 }

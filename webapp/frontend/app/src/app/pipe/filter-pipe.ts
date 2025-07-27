@@ -4,11 +4,12 @@ import { Pipe, PipeTransform } from "@angular/core";
     name: 'filter'
 })
 export class FilterPipe implements PipeTransform {
-    transform(items: any[], filter: Object) {
+    transform(items: any[], filter: any) {
         if (!items || !filter) {
             return items;
         }
-        return items.filter(item => item.shared === filter);
+        const result = items.filter(item => item.shared === filter.shared);
+        return result;
     }
     
 }

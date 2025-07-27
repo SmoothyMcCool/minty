@@ -18,7 +18,9 @@ export class TaskComponent implements OnInit {
 
     task: StandaloneTask = {
         id: 0,
+		ownerId: 0,
         name: '',
+		shared: false,
         triggered: false,
         taskTemplate: {
             name: '',
@@ -44,16 +46,15 @@ export class TaskComponent implements OnInit {
         const taskId = Number(this.route.snapshot.paramMap.get('id'));
 
         this.taskService.getTask(taskId).subscribe((task: StandaloneTask) => {
-            
+			this.task = task;
 
             this.taskTemplateService.getTemplateConfiguration(taskId).subscribe((taskConfigurationDefinition: Map<string, string>) => {
                 this.taskConfigurationDefinition = taskConfigurationDefinition;
-                this.taskTemplateService.getOutputTemplateConfiguration(taskId).subscribe((outputTaskConfigurationDefinition: Map<string, string>) => {
-                    this.outputTaskConfigurationDefinition = outputTaskConfigurationDefinition;
-                    this.task = task;
-                })
-            })
-            
+            });
+			this.taskTemplateService.getOutputTemplateConfiguration(taskId).subscribe((outputTaskConfigurationDefinition: Map<string, string>) => {
+				this.outputTaskConfigurationDefinition = outputTaskConfigurationDefinition;
+			});
+
         });
     }
 

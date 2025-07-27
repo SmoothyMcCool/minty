@@ -3,10 +3,10 @@
   <p>{{task.description}}</p>
   <form role="form" (submit)="submit()">
     <div class="row mb-3">
-      <minty-task-config-editor name="taskConfig" [configurationDefinition]="taskConfigurationDefinition" [(ngModel)]="task.taskTemplate.configuration" name="{{name}}-taskConfig"></minty-task-config-editor>
+      <minty-task-config-editor name="taskConfig" [taskConfiguration]="taskConfigurationDefinition" [(ngModel)]="task.taskTemplate.configuration" name="{{name}}-taskConfig"></minty-task-config-editor>
     </div>
     <div class="row mb-3">
-      <minty-task-config-editor name="outputConfig" [configurationDefinition]="outputTaskConfigurationDefinition" [(ngModel)]="task.outputTemplate.configuration" name="{{name}}-outputConfig"></minty-task-config-editor>
+      <minty-task-config-editor name="outputConfig" [taskConfiguration]="outputTaskConfigurationDefinition" [(ngModel)]="task.outputTemplate.configuration" name="{{name}}-outputConfig"></minty-task-config-editor>
     </div>
 
     <button type="submit" class="btn btn-primary">Submit!</button>

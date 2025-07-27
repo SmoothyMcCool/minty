@@ -48,24 +48,30 @@ CREATE TABLE IF NOT EXISTS Assistant (
 	state VARCHAR(20),
 	prompt TEXT,
 	model TEXT,
+	temperature DOUBLE,
 	ownerId INTEGER,
 	shared BOOLEAN,
 	PRIMARY KEY (id)
 );
-CREATE TABLE IF NOT EXISTS WorkflowTask (
+CREATE TABLE IF NOT EXISTS StandaloneTask (
 	id INTEGER NOT NULL AUTO_INCREMENT,
-	workflow VARCHAR(100),
-	name VARCHAR(100),
-	description TEXT,
-	defaultConfig TEXT,
+	name TEXT,
+	ownerId INTEGER,
+	shared BOOLEAN,
+	triggered BOOLEAN,
+	watchLocation TEXT,
+	taskTemplate TEXT,
+	outputTemplate TEXT,
 	PRIMARY KEY (id)
 );
-CREATE TABLE IF NOT EXISTS FilesystemWatcher (
+CREATE TABLE IF NOT EXISTS Workflow (
 	id INTEGER NOT NULL AUTO_INCREMENT,
-	name VARCHAR(100),
+	name VARCHAR(255),
 	description TEXT,
-	locationToWatch TEXT,
-	request TEXT,
+	ownerId INTEGER,
+	shared BOOLEAN,
+	workflowSteps JSON NOT NULL,
+	outputStep JSON NOT NULL,
 	PRIMARY KEY (id)
 );
 CREATE TABLE IF NOT EXISTS User (
@@ -81,6 +87,8 @@ CREATE TABLE IF NOT EXISTS UserMeta (
 	userId INTEGER,
 	totalAssistantsCreated INTEGER,
 	totalConversations INTEGER,
+	totalTasksCreated INTEGER,
+	totalTaskRuns INTEGER,
 	totalWorkflowsCreated INTEGER,
 	totalWorkflowRuns INTEGER,
 	totalLogins INTEGER,

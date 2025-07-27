@@ -23,9 +23,11 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
     private routerSubscription: Subscription;
     private assistant: Assistant = {
         id: 0,
+        ownerId: 0,
         name: '',
         prompt: '',
         model: '',
+        temperature: 0.9,
         numFiles: 0,
         state: AssistantState.READY,
         shared: false

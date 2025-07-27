@@ -22,7 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 import tom.ApiError;
 import tom.config.security.UserDetailsUser;
 import tom.controller.ResponseWrapper;
-import tom.task.model.Assistant;
+import tom.model.Assistant;
 import tom.task.services.AssistantService;
 import tom.task.services.DocumentService;
 
@@ -48,7 +48,7 @@ public class DocumentController {
 
 		Assistant assistant = assistantService.findAssistant(user.getId(), assistantId);
 
-		if (assistant.isNull()) {
+		if (assistant.Null()) {
 			ResponseWrapper<String> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
 					List.of(ApiError.NOT_OWNED));
 			return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);

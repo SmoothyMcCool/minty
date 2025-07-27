@@ -47,6 +47,7 @@ public class TaskController {
 	@RequestMapping(value = { "/new" }, method = RequestMethod.POST)
 	public ResponseEntity<ResponseWrapper<StandaloneTask>> newTask(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestBody StandaloneTask newTask) {
+		newTask.setOwnerId(user.getId());
 		StandaloneTask task = taskRepository.save(newTask);
 		metadataService.taskCreated(user.getId());
 		return new ResponseEntity<>(ResponseWrapper.SuccessResponse(task), HttpStatus.OK);
@@ -57,6 +58,8 @@ public class TaskController {
 			@AuthenticationPrincipal UserDetailsUser user, @RequestBody StandaloneTask newTask) {
 		// Make sure triggered is set.
 		newTask.setTriggered(true);
+		newTask.setOwnerId(user.getId());
+		metadataService.taskCreated(user.getId());
 		return newTask(user, newTask);
 	}
 
@@ -72,8 +75,9 @@ public class TaskController {
 	public ResponseEntity<ResponseWrapper<List<StandaloneTask>>> listAllTasks(
 			@AuthenticationPrincipal UserDetailsUser user) {
 		List<StandaloneTask> tasks = new ArrayList<>();
-		Iterable<StandaloneTask> iterable = taskRepository.findAll();
+		Iterable<StandaloneTask> iterable = taskRepository.findAllByOwnerIdOrSharedTrue(user.getId());
 		iterable.forEach(tasks::add);
+		tasks = tasks.stream().filter(task -> !task.isTriggered()).toList();
 		return new ResponseEntity<>(ResponseWrapper.SuccessResponse(tasks), HttpStatus.OK);
 	}
 
@@ -81,15 +85,24 @@ public class TaskController {
 	public ResponseEntity<ResponseWrapper<List<StandaloneTask>>> listAllTriggeredTasks(
 			@AuthenticationPrincipal UserDetailsUser user) {
 		List<StandaloneTask> tasks = new ArrayList<>();
-		Iterable<StandaloneTask> iterable = taskRepository.findAllByTriggeredTrue();
+		Iterable<StandaloneTask> iterable = taskRepository.findAllByOwnerIdOrSharedTrue(user.getId());
 		iterable.forEach(tasks::add);
+		tasks = tasks.stream().filter(task -> task.isTriggered()).toList();
 		return new ResponseEntity<>(ResponseWrapper.SuccessResponse(tasks), HttpStatus.OK);
 	}
 
 	@RequestMapping(value = { "" }, method = RequestMethod.DELETE)
 	public ResponseEntity<ResponseWrapper<List<StandaloneTask>>> deleteTask(
 			@AuthenticationPrincipal UserDetailsUser user, @RequestParam("taskId") int taskId) {
+
 		StandaloneTask task = taskRepository.findById(taskId).get();
+
+		if (task.getOwnerId() != user.getId()) {
+			return new ResponseEntity<>(
+					ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(), List.of(ApiError.NOT_OWNED)),
+					HttpStatus.OK);
+		}
+
 		taskRepository.delete(task);
 
 		return listAllTasks(user);
@@ -106,7 +119,7 @@ public class TaskController {
 
 		if (task == null) {
 			return new ResponseEntity<>(ResponseWrapper.ApiFailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-					List.of(ApiError.NOT_FOUND)), HttpStatus.INTERNAL_SERVER_ERROR);
+					List.of(ApiError.NOT_FOUND)), HttpStatus.OK);
 		}
 
 		taskExecutionService.executeTask(task, outputTask);

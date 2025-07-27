@@ -116,6 +116,7 @@ export class WorkflowService {
         private makeProper(workflow: any): Workflow {
             let w: Workflow = {
                 id: workflow.id,
+                ownerId: workflow.ownerId,
                 name: workflow.name,
                 description: workflow.description,
                 shared: workflow.shared,

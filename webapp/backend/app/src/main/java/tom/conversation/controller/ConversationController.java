@@ -17,12 +17,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import tom.ApiError;
 import tom.config.security.UserDetailsUser;
 import tom.controller.ResponseWrapper;
 import tom.conversation.repository.ChatMessage;
 import tom.meta.service.MetadataService;
+import tom.model.Assistant;
 import tom.ollama.service.OllamaService;
-import tom.task.model.Assistant;
 import tom.task.services.AssistantService;
 import tom.task.services.ConversationService;
 
@@ -93,7 +94,7 @@ public class ConversationController {
 		int assistantId = conversationService.getAssistantIdFromConversationId(conversationId);
 
 		Assistant assistant = assistantService.findAssistant(userId, assistantId);
-		if (assistant.isNull()) {
+		if (assistant.Null()) {
 			return "";
 		}
 
@@ -103,6 +104,12 @@ public class ConversationController {
 	@RequestMapping(value = { "/delete" }, method = RequestMethod.DELETE)
 	public ResponseEntity<ResponseWrapper<String>> deleteConversation(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestParam("conversationId") String conversationId) {
+
+		if (!conversationService.conversationOwnedBy(conversationId, user.getId())) {
+			ResponseWrapper<String> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
+					List.of(ApiError.NOT_OWNED));
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
 
 		String model = getModelforConversation(user.getId(), conversationId);
 		ChatMemory chatMemory = ollamaService.getChatMemory(OllamaModel.valueOf(model));

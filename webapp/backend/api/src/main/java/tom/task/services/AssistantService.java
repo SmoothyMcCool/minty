@@ -3,8 +3,8 @@ package tom.task.services;
 import java.util.List;
 import java.util.stream.Stream;
 
-import tom.task.model.Assistant;
-import tom.task.model.AssistantQuery;
+import tom.model.Assistant;
+import tom.model.AssistantQuery;
 
 public interface AssistantService {
 

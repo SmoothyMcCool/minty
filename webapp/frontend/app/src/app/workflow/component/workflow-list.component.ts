@@ -8,6 +8,7 @@ import { StandaloneTask } from 'src/app/model/standalone-task';
 import { WorkflowService } from '../workflow.service';
 import { Workflow } from 'src/app/model/workflow';
 import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
+import { UserService } from 'src/app/user.service';
 
 @Component({
     selector: 'minty-workflow-list',
@@ -30,7 +31,8 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 
     constructor(private router: Router,
         private workflowService: WorkflowService,
-        private resultService: ResultService) {
+        private resultService: ResultService,
+        private userService: UserService) {
     }
 
     ngOnInit() {
@@ -86,6 +88,10 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
         navigator.clipboard.writeText(this.responseText as string).then(() => {
             console.log('Copied: ' + this.responseText as string);
         });
+    }
+
+    isOwned(workflow: Workflow): boolean {
+        return workflow.ownerId === this.userService.getUser().id;
     }
 
     navigateTo(url: string) {

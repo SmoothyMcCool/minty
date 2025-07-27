@@ -59,13 +59,13 @@
 				<artifactId>api</artifactId>
 				<version>0.0.1-SNAPSHOT</version>
 			</dependency>
-	
+
 			<dependency>
 				<groupId>jakarta.servlet</groupId>
 				<artifactId>jakarta.servlet-api</artifactId>
 				<version>${jakarta.servlet.version}</version>
 			</dependency>
-	
+
 			<dependency>
 				<groupId>org.apache.commons</groupId>
 				<artifactId>commons-lang3</artifactId>
@@ -102,7 +102,7 @@
 				<artifactId>jackson-datatype-jsr310</artifactId>
 				<version>${jackson.version}</version>
 			</dependency>
-	
+
 			<!-- Spring -->
 			<dependency>
 				<groupId>org.springframework</groupId>
@@ -124,7 +124,7 @@
 				<artifactId>spring-tx</artifactId>
 				<version>${spring.version}</version>
 			</dependency>
-	
+
 			<!-- Spring AI -->
 			<dependency>
 				<groupId>org.springframework.ai</groupId>
@@ -133,14 +133,14 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
-	
+
 			<!-- Spring Data -->
 			<dependency>
-			   <groupId>org.springframework.data</groupId>
-			   <artifactId>spring-data-jpa</artifactId>
-			   <version>${spring.data.version}</version>
+				<groupId>org.springframework.data</groupId>
+				<artifactId>spring-data-jpa</artifactId>
+				<version>${spring.data.version}</version>
 			</dependency>
-	
+
 			<!-- Spring Security -->
 			<dependency>
 				<groupId>org.springframework.security</groupId>
@@ -167,36 +167,36 @@
 				<artifactId>spring-session-jdbc</artifactId>
 				<version>${spring.session.jdbc.version}</version>
 			</dependency>
-	
+
 			<!-- Hibernate -->
 			<dependency>
 				<groupId>org.hibernate.orm</groupId>
 				<artifactId>hibernate-core</artifactId>
 				<version>${hibernate.version}</version>
 			</dependency>
-	
+
 			<!-- MariaDB -->
 			<dependency>
-			    <groupId>org.mariadb.jdbc</groupId>
-			    <artifactId>mariadb-java-client</artifactId>
-			    <version>${mariadb.client.version}</version>
-			    <scope>runtime</scope>
+				<groupId>org.mariadb.jdbc</groupId>
+				<artifactId>mariadb-java-client</artifactId>
+				<version>${mariadb.client.version}</version>
+				<scope>runtime</scope>
 			</dependency>
-	
+
 			<!-- HttpClient -->
 			<dependency>
 				<groupId>org.apache.httpcomponents.client5</groupId>
 				<artifactId>httpclient5</artifactId>
 				<version>${httpclient.version}</version>
 			</dependency>
-	
+
 			<!-- Hikari Datasource-->
 			<dependency>
 				<groupId>com.zaxxer</groupId>
 				<artifactId>HikariCP</artifactId>
 				<version>${hikari.cp.version}</version>
 			</dependency>
-	
+
 			<!-- pug4j -->
 			<dependency>
 				<groupId>de.neuland-bfi</groupId>
@@ -209,7 +209,7 @@
 					</exclusion>
 				</exclusions>
 			</dependency>
-	
+
 			<!-- log4j -->
 			<dependency>
 				<groupId>org.apache.logging.log4j</groupId>

@@ -3,6 +3,7 @@ import { Component, forwardRef, Input } from "@angular/core";
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from "@angular/forms";
 import { Task } from "../../model/task";
 import { TaskConfigurationEditorComponent } from "./task-configuration-editor.component";
+import { TaskDescription } from "src/app/model/task-description";
 
 @Component({
     selector: 'minty-task-editor',
@@ -19,15 +20,15 @@ export class TaskEditorComponent implements ControlValueAccessor {
 
     @Input() name: string;
 
-    private _taskTemplates: Map<string, Map<string, string>> ;
+    private _taskTemplates: TaskDescription[] ;
     @Input()
-    set taskTemplates(value: Map<string, Map<string, string>> ){
+    set taskTemplates(value: TaskDescription[]){
         this._taskTemplates = value;
         if (this.task?.name) {
             this.taskChanged(this.task.name);
         }
     }
-    get taskTemplates(): Map<string, Map<string, string>>  {
+    get taskTemplates(): TaskDescription[]  {
         return this._taskTemplates;
     }
 
@@ -39,7 +40,12 @@ export class TaskEditorComponent implements ControlValueAccessor {
     isFileTriggered: boolean = false;
     triggerDirectory: string = '';
 
-    configurationDefinition = new Map<string, string>();
+    taskDescription: TaskDescription = {
+        name: "",
+        configuration: new Map<string, string>(),
+        inputs: "",
+        outputs: ""
+    };
 
     onChange: any = (value: any) => {};
     onTouched: any = () => {};
@@ -65,15 +71,7 @@ export class TaskEditorComponent implements ControlValueAccessor {
 
     taskChanged($event) {
         this.task.name = $event;
-        this.configurationDefinition = new Map(this.taskTemplates.get($event));
+        this.taskDescription = this.taskTemplates.find(element => element.name === $event);
 
-        /*this.task.configuration = new Map<string, string>();
-
-        if (this.configurationDefinition !== undefined) {
-            this.task.configuration = new Map(this.configurationDefinition);
-        }
-        else {
-            this.task.configuration = new Map<string, string>();
-        }*/
     }
 }

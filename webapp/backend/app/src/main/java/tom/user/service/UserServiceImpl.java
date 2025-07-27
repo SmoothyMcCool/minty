@@ -1,5 +1,9 @@
 package tom.user.service;
 
+import java.util.Optional;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
@@ -16,6 +20,8 @@ import tom.user.repository.UserRepository;
 
 @Service
 public class UserServiceImpl implements UserService {
+
+	private static final Logger logger = LogManager.getLogger(UserServiceImpl.class);
 
 	@Value("${secret}")
 	private String secret;
@@ -64,6 +70,16 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public String getUsernameFromId(int userId) {
 		return userRepository.findById(userId).get().getAccount();
+	}
+
+	@Override
+	public Optional<User> getUserFromName(String userName) {
+		try {
+			return Optional.of(decrypt(userRepository.findByAccount(userName)));
+		} catch (JsonProcessingException e) {
+			logger.warn("Failed to get user for username " + userName);
+			return Optional.empty();
+		}
 	}
 
 }

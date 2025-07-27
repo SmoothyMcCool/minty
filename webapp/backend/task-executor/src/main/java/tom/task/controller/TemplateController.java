@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import tom.ApiError;
 import tom.config.security.UserDetailsUser;
 import tom.controller.ResponseWrapper;
 import tom.task.model.StandaloneTask;
+import tom.task.model.TaskDescription;
 import tom.task.repository.StandaloneTaskRepository;
 import tom.task.taskregistry.TaskRegistryService;
 
@@ -31,13 +31,13 @@ public class TemplateController {
 	}
 
 	@RequestMapping(value = { "/list" }, method = RequestMethod.GET)
-	public ResponseEntity<ResponseWrapper<Map<String, Map<String, String>>>> listTaskTemplates(
+	public ResponseEntity<ResponseWrapper<List<TaskDescription>>> listTaskTemplates(
 			@AuthenticationPrincipal UserDetailsUser user) {
 		return new ResponseEntity<>(ResponseWrapper.SuccessResponse(taskRegistryService.getTasks()), HttpStatus.OK);
 	}
 
 	@RequestMapping(value = { "/output/list" }, method = RequestMethod.GET)
-	public ResponseEntity<ResponseWrapper<Map<String, Map<String, String>>>> listOutputTaskTemplates(
+	public ResponseEntity<ResponseWrapper<List<TaskDescription>>> listOutputTaskTemplates(
 			@AuthenticationPrincipal UserDetailsUser user) {
 		return new ResponseEntity<>(ResponseWrapper.SuccessResponse(taskRegistryService.getOutputTaskTemplates()),
 				HttpStatus.OK);
@@ -59,29 +59,4 @@ public class TemplateController {
 		return new ResponseEntity<>(ResponseWrapper.SuccessResponse(config), HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "/config/list" }, method = RequestMethod.GET)
-	public ResponseEntity<ResponseWrapper<Map<String, Map<String, String>>>> listTaskConfigurations(
-			@AuthenticationPrincipal UserDetailsUser user) {
-		Map<String, Map<String, String>> config = taskRegistryService.listTaskConfigurations();
-
-		if (config.isEmpty()) {
-			return new ResponseEntity<>(
-					ResponseWrapper.ApiFailureResponse(HttpStatus.NOT_FOUND.value(), List.of(ApiError.NOT_FOUND)),
-					HttpStatus.OK);
-		}
-		return new ResponseEntity<>(ResponseWrapper.SuccessResponse(config), HttpStatus.OK);
-	}
-
-	@RequestMapping(value = { "/output/config/list" }, method = RequestMethod.GET)
-	public ResponseEntity<ResponseWrapper<Map<String, Map<String, String>>>> listOutputTaskConfigurations(
-			@AuthenticationPrincipal UserDetailsUser user) {
-		Map<String, Map<String, String>> config = taskRegistryService.listOutputTaskConfigurations();
-
-		if (config.isEmpty()) {
-			return new ResponseEntity<>(
-					ResponseWrapper.ApiFailureResponse(HttpStatus.NOT_FOUND.value(), List.of(ApiError.NOT_FOUND)),
-					HttpStatus.OK);
-		}
-		return new ResponseEntity<>(ResponseWrapper.SuccessResponse(config), HttpStatus.OK);
-	}
 }

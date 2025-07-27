@@ -50,7 +50,7 @@ export class AssistantService {
                     this.alertService.postFailure(JSON.stringify(error));
                     return EMPTY;
                 }),
-                map((result: ApiResult) => {
+                map((_result: ApiResult) => {
                     return null;
                 })
             )

@@ -1,5 +1,7 @@
 package tom.user.service;
 
+import java.util.Optional;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
@@ -13,4 +15,6 @@ public interface UserService {
 	public EncryptedUser encrypt(User user) throws JsonProcessingException;
 
 	public String getUsernameFromId(int userId);
+
+	public Optional<User> getUserFromName(String userName);
 }

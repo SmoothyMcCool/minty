@@ -1,4 +1,4 @@
-package tom.task.model;
+package tom.model;
 
 public class AssistantQuery {
 

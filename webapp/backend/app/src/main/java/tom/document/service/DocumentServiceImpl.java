@@ -27,8 +27,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
+import tom.model.Assistant;
 import tom.ollama.service.OllamaService;
-import tom.task.model.Assistant;
 import tom.task.services.AssistantService;
 import tom.task.services.DocumentService;
 
@@ -79,7 +79,7 @@ public class DocumentServiceImpl implements DocumentService {
 	@Override
 	public void transformAndStore(File file, int userId, int assistantId) {
 		Assistant assistant = assistantService.findAssistant(userId, assistantId);
-		if (assistant.isNull()) {
+		if (assistant.Null()) {
 			logger.warn("Tried to process a file for an assistant that does not exist or user has no permission: "
 					+ file.getName());
 			return;
@@ -95,7 +95,8 @@ public class DocumentServiceImpl implements DocumentService {
 
 		VectorStore vectorStore = ollamaService.getVectorStore(model);
 		ChatModel chatModel = OllamaChatModel.builder().ollamaApi(ollamaApi)
-				.defaultOptions(OllamaOptions.builder().model(model).temperature(0.9).build()).build();
+				.defaultOptions(OllamaOptions.builder().model(model).temperature(assistant.temperature()).build())
+				.build();
 
 		FileSystemResource resource = new FileSystemResource(file);
 		List<Document> documents = read(resource);
@@ -162,7 +163,7 @@ public class DocumentServiceImpl implements DocumentService {
 	public void deleteDocumentsForAssistant(int userId, int assistantId) {
 
 		Assistant assistant = assistantService.findAssistant(userId, assistantId);
-		if (assistant.isNull()) {
+		if (assistant.Null()) {
 			logger.warn("Tried to access an assistant that does not exist or user has no permission. User " + userId
 					+ ", assistant: " + assistantId);
 			return;

@@ -7,6 +7,7 @@ import { Router, RouterModule } from '@angular/router';
 import { ConversationService } from '../../conversation.service';
 import { FilterPipe } from '../../pipe/filter-pipe';
 import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
+import { UserService } from 'src/app/user.service';
 
 @Component({
     selector: 'minty-assistants-list',
@@ -23,9 +24,11 @@ export class AssistantsListComponent {
     fileList: File[] = [];
     workingAssistant: Assistant = {
             id: 0,
+            ownerId: 0,
             name: '',
             prompt: '',
             model: '',
+            temperature: 0.9,
             numFiles: 0,
             state: AssistantState.READY,
             shared: false
@@ -42,6 +45,7 @@ export class AssistantsListComponent {
     constructor(
         private assistantService: AssistantService,
         private conversationService: ConversationService,
+        private userService: UserService,
         private router: Router) {
 
         this.assistantService.list().subscribe(assistants => {
@@ -111,5 +115,9 @@ export class AssistantsListComponent {
 
     removeFile(filename: string) {
         this.fileList = this.fileList.filter(element => element.name != filename);
+    }
+
+    isOwned(assistant: Assistant): boolean {
+        return assistant.ownerId === this.userService.getUser().id;
     }
 }

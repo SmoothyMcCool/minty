@@ -18,7 +18,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -39,6 +38,7 @@ import tom.task.TaskConfig;
 import tom.task.TaskConfigTypes;
 import tom.task.annotations.PublicTask;
 import tom.task.controller.TaskRequest;
+import tom.task.model.TaskDescription;
 import tom.task.services.TaskServices;
 
 @Service
@@ -253,7 +253,13 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 
 		Class<?> configClass = classLoader.loadClass(annotation.configClass());
 
-		// Class must implement the TaskConfig interface
+		// Task must implement default constructor.
+		if (!implementsDefaultConstructor(loadedClass.getConstructors())) {
+			logger.warn("Class " + loadedClass.getName() + " does not implement default constructor.");
+			return false;
+		}
+
+		// Config class must implement the TaskConfig interface
 		if (!TaskConfig.class.isAssignableFrom(configClass)) {
 			logger.warn("Class " + loadedClass.getName() + " annotated configClass does not implement "
 					+ TaskConfig.class.getName());
@@ -446,22 +452,12 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 	}
 
 	@Override
-	public Map<String, Map<String, String>> getTasks() {
-		Set<Entry<String, ImmutablePair<Class<?>, Map<String, TaskConfigTypes>>>> entrySet = publicTasks.entrySet();
-
-		Map<String, Map<String, String>> result = new HashMap<>();
-
-		entrySet.stream().forEach(entry -> {
-			Map<String, String> taskCfg = configMapToStringMap(entry.getValue().right);
-			result.put(entry.getKey(), taskCfg);
-		});
-
-		return result;
+	public List<TaskDescription> getTasks() {
+		return getTaskDescriptions(publicTasks);
 	}
 
 	@Override
 	public Map<String, String> getConfigForTask(String taskName) {
-		// TODO: rewrite this like the listTaskConfigurations version
 		if (!publicTasks.containsKey(taskName)) {
 			logger.warn("Task " + taskName + " does not exist.");
 			return Map.of();
@@ -483,15 +479,39 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 	}
 
 	@Override
-	public Map<String, Map<String, String>> getOutputTaskTemplates() {
-		Set<Entry<String, ImmutablePair<Class<?>, Map<String, TaskConfigTypes>>>> entrySet = publicOutputTasks
-				.entrySet();
+	public List<TaskDescription> getOutputTaskTemplates() {
+		return getTaskDescriptions(publicOutputTasks);
+	}
 
-		Map<String, Map<String, String>> result = new HashMap<>();
+	private List<TaskDescription> getTaskDescriptions(
+			Map<String, ImmutablePair<Class<?>, Map<String, TaskConfigTypes>>> taskMap) {
+		Set<Entry<String, ImmutablePair<Class<?>, Map<String, TaskConfigTypes>>>> entrySet = taskMap.entrySet();
+
+		final List<TaskDescription> result = new ArrayList<>();
 
 		entrySet.stream().forEach(entry -> {
-			Map<String, String> taskCfg = configMapToStringMap(entry.getValue().right);
-			result.put(entry.getKey(), taskCfg);
+			Class<?> clazz = entry.getValue().left;
+			try {
+				TaskDescription td = new TaskDescription();
+				td.setName(entry.getKey());
+				td.setConfiguration(configMapToStringMap(entry.getValue().right));
+
+				if (AiTask.class.isAssignableFrom(clazz)) {
+					AiTask task = (AiTask) clazz.getDeclaredConstructor().newInstance();
+
+					td.setInputs(task.expects());
+					td.setOutputs(task.produces());
+				} else {
+					td.setInputs("");
+					td.setOutputs("");
+				}
+
+				result.add(td);
+
+			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+					| InvocationTargetException | NoSuchMethodException | SecurityException e) {
+				logger.warn("Failed to instantiate " + clazz.getName() + " when generating task descriptions.");
+			}
 		});
 
 		return result;
@@ -499,7 +519,6 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 
 	@Override
 	public Map<String, String> getConfigForOutputTask(String outputName) {
-		// TODO: rewrite this like the listTaskConfigurations version
 		if (!publicOutputTasks.containsKey(outputName)) {
 			logger.warn("Output task " + outputName + " does not exist.");
 			return Map.of();
@@ -532,30 +551,6 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 		}
 
 		return taskCfg;
-	}
-
-	@Override
-	public Map<String, Map<String, String>> listTaskConfigurations() {
-		Map<String, Map<String, String>> result = new HashMap<>();
-
-		publicTasks.forEach((key, value) -> {
-			result.put(key,
-					value.right.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.toString())));
-		});
-
-		return result;
-	}
-
-	@Override
-	public Map<String, Map<String, String>> listOutputTaskConfigurations() {
-		Map<String, Map<String, String>> result = new HashMap<>();
-
-		publicOutputTasks.forEach((key, value) -> {
-			result.put(key,
-					value.right.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.toString())));
-		});
-
-		return result;
 	}
 
 }

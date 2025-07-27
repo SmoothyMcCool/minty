@@ -17,4 +17,8 @@ public interface WorkflowService {
 
 	void deleteWorkflow(int userId, int workflowId);
 
+	boolean isAllowedToExecute(int workflowId, int userId);
+
+	boolean isWorkflowOwned(int workflowId, int userId);
+
 }
