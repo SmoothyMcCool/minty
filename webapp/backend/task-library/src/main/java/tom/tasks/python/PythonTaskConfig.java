@@ -13,7 +13,7 @@ import tom.task.TaskConfigTypes;
 public class PythonTaskConfig implements TaskConfig {
 
 	private String pythonFile;
-	private Map<String, String> inputDictionary;
+	private Map<String, String> inputDictionary = new HashMap<>();
 
 	public PythonTaskConfig() {
 	}

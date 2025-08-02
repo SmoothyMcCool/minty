@@ -10,7 +10,7 @@ import { ChatMessage } from '../../model/chat-message';
     selector: 'minty-view-main',
     imports: [CommonModule, FormsModule, ConversationComponent],
     templateUrl: 'view-main.component.html',
-    styleUrls: ['../../global.css', 'view-main.component.css']
+    styleUrls: ['view-main.component.css']
 })
 export class ViewMainComponent implements AfterViewInit {
 

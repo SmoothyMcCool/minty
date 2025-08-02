@@ -66,6 +66,7 @@ export class AssistantsListComponent {
 
     confirmDeleteAssistant() {
         this.deleteInProgress = true;
+        this.confirmDeleteAssistantVisible = false;
         this.assistantService.delete(this.assistantPendingDeletion).subscribe(() => {
             this.assistantService.list().subscribe(assistants => {
                 this.assistants = assistants;
@@ -94,6 +95,7 @@ export class AssistantsListComponent {
     }
 
     confirmDeleteConversation() {
+        this.confirmDeleteConversationVisible = false;
         this.conversationService.delete(this.conversationPendingDeletionId).subscribe(() => {
             this.assistantService.list().subscribe(assistants => {
                 this.assistants = assistants;

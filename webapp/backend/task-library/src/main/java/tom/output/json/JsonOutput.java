@@ -2,8 +2,8 @@ package tom.output.json;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
 
+import tom.output.ExecutionResult;
 import tom.output.OutputTask;
 import tom.output.annotations.Output;
 import tom.task.ServiceConsumer;
@@ -25,7 +25,7 @@ public class JsonOutput implements OutputTask, ServiceConsumer {
 	}
 
 	@Override
-	public Path execute(Map<String, Object> data) throws IOException {
+	public Path execute(ExecutionResult data) throws IOException {
 		return taskServices.getRenderService().renderJson(configuration.getOutputFilename(), data);
 	}
 

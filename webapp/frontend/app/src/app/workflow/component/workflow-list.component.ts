@@ -4,7 +4,6 @@ import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { Router, RouterModule } from '@angular/router';
 import { ResultService } from 'src/app/result.service';
-import { StandaloneTask } from 'src/app/model/standalone-task';
 import { WorkflowService } from '../workflow.service';
 import { Workflow } from 'src/app/model/workflow';
 import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
@@ -14,14 +13,14 @@ import { UserService } from 'src/app/user.service';
     selector: 'minty-workflow-list',
     imports: [CommonModule, FormsModule, RouterModule, ConfirmationDialogComponent],
     templateUrl: 'workflow-list.component.html',
-    styleUrls: ['../../global.css', 'workflow.component.css']
+    styleUrls: ['workflow.component.css']
 })
 export class WorkflowListComponent implements OnInit, OnDestroy {
 
+    responseType: string;
     responseText: unknown;
     results: string[] = [];
     workflows: Workflow[] = [];
-    triggeredTasks: StandaloneTask[] = [];
     private subscription: Subscription;
 
     confirmWorkflowDeleteVisible = false;
@@ -53,9 +52,20 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 
     displayResultsFor(result: string) {
         this.responseText = '';
+        if (this.endsWithIgnoreCase(result, 'json')) {
+            this.responseType = 'JSON';
+        } else if (this.endsWithIgnoreCase(result, 'html')) {
+            this.responseType = 'HTML';
+        } else {
+            this.responseType = 'TEXT';
+        }
         this.resultService.getWorkflowResult(result).subscribe(result => {
             this.responseText = result;
         });
+    }
+
+    private endsWithIgnoreCase(str: string, ending: string) {
+        return str.toLowerCase().endsWith(ending.toLowerCase());
     }
 
     deleteWorkflow(workflow: Workflow) {
@@ -81,7 +91,7 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 
     confirmDeleteResult() {
         this.resultService.deleteWorkflowResult(this.resultPendingDeletion).subscribe();
-        this.results = this.results.filter(item => item === this.resultPendingDeletion);
+        this.results = this.results.filter(item => item != this.resultPendingDeletion);
     }
 
     copyToClipboard() {

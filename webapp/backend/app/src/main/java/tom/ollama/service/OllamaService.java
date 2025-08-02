@@ -5,21 +5,20 @@ import java.util.List;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.embedding.EmbeddingModel;
-import org.springframework.ai.ollama.api.OllamaModel;
 import org.springframework.ai.vectorstore.VectorStore;
 
 public interface OllamaService {
 
-	OllamaModel getDefaultModel();
+	MintyOllamaModel getDefaultModel();
 
-	EmbeddingModel getEmbeddingModel(OllamaModel model);
+	EmbeddingModel getEmbeddingModel(MintyOllamaModel model);
 
-	VectorStore getVectorStore(OllamaModel model);
+	VectorStore getVectorStore(MintyOllamaModel model);
 
-	ChatMemoryRepository getChatMemoryRepository(OllamaModel model);
+	ChatMemoryRepository getChatMemoryRepository(MintyOllamaModel model);
 
-	ChatMemory getChatMemory(OllamaModel model);
+	ChatMemory getChatMemory(MintyOllamaModel model);
 
-	List<OllamaModel> listModels();
+	List<MintyOllamaModel> listModels();
 
 }

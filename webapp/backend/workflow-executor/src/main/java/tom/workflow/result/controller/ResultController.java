@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import tom.config.security.UserDetailsUser;
 import tom.controller.ResponseWrapper;
-import tom.task.executor.service.TaskExecutionService;
+import tom.result.service.ResultService;
 
 @Controller
 @RequestMapping("/api/result/workflow")
@@ -25,9 +25,9 @@ public class ResultController {
 
 	private final Logger logger = LogManager.getLogger(ResultController.class);
 
-	private final TaskExecutionService taskExecutionService;
+	private final ResultService taskExecutionService;
 
-	public ResultController(TaskExecutionService taskExecutionService) {
+	public ResultController(ResultService taskExecutionService) {
 		this.taskExecutionService = taskExecutionService;
 	}
 

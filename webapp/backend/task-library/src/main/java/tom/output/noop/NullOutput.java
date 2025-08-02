@@ -1,8 +1,9 @@
 package tom.output.noop;
 
+import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
 
+import tom.output.ExecutionResult;
 import tom.output.OutputTask;
 import tom.output.annotations.Output;
 
@@ -13,7 +14,7 @@ public class NullOutput implements OutputTask {
 	}
 
 	@Override
-	public Path execute(Map<String, Object> data) {
+	public Path execute(ExecutionResult result) throws IOException {
 		return null;
 	}
 

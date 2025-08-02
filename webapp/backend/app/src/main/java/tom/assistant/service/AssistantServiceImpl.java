@@ -23,32 +23,36 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 
 import tom.assistant.repository.AssistantRepository;
+import tom.conversation.service.ConversationServiceInternal;
 import tom.model.Assistant;
 import tom.model.AssistantQuery;
 import tom.model.AssistantState;
+import tom.ollama.service.MintyOllamaModel;
 import tom.ollama.service.OllamaService;
-import tom.task.services.AssistantService;
-import tom.task.services.ConversationService;
 import tom.task.services.DocumentService;
+import tom.user.repository.User;
+import tom.user.service.UserServiceInternal;
 
 @Service
-public class AssistantServiceImpl implements AssistantService {
+public class AssistantServiceImpl implements AssistantServiceInternal {
 
 	private static final Logger logger = LogManager.getLogger(AssistantServiceImpl.class);
 
 	private final AssistantRepository assistantRepository;
 	private DocumentService documentService;
-	private ConversationService conversationService;
+	private ConversationServiceInternal conversationService;
 	private final OllamaService ollamaService;
 	private final OllamaApi ollamaApi;
+	private final UserServiceInternal userService;
 
 	private static final int MaxResults = 5;
 
 	public AssistantServiceImpl(AssistantRepository assistantRepository, OllamaService ollamaService,
-			OllamaApi ollamaApi) {
+			OllamaApi ollamaApi, UserServiceInternal userService) {
 		this.assistantRepository = assistantRepository;
 		this.ollamaService = ollamaService;
 		this.ollamaApi = ollamaApi;
+		this.userService = userService;
 	}
 
 	@Override
@@ -57,7 +61,7 @@ public class AssistantServiceImpl implements AssistantService {
 	}
 
 	@Override
-	public void setConversationService(ConversationService conversationService) {
+	public void setConversationService(ConversationServiceInternal conversationService) {
 		this.conversationService = conversationService;
 	}
 
@@ -135,13 +139,15 @@ public class AssistantServiceImpl implements AssistantService {
 
 	@Override
 	public String ask(int userId, AssistantQuery query) {
-		Optional<ChatClientRequestSpec> spec = prepare(userId, query);
+		User user = userService.getUserFromId(userId).get();
+
+		Optional<ChatClientRequestSpec> spec = prepare(user, query);
 		if (spec.isEmpty()) {
 			logger.warn("askStreaming: failed to generate chat request");
 			return "";
 		}
 
-		ChatResponse chatResponse = prepare(userId, query).get().call().chatResponse();
+		ChatResponse chatResponse = prepare(user, query).get().call().chatResponse();
 
 		if (chatResponse != null) {
 			return chatResponse.getResult().getOutput().getText();
@@ -153,14 +159,15 @@ public class AssistantServiceImpl implements AssistantService {
 
 	@Override
 	public Stream<String> askStreaming(int userId, AssistantQuery query) {
+		User user = userService.getUserFromId(userId).get();
 
-		Optional<ChatClientRequestSpec> spec = prepare(userId, query);
+		Optional<ChatClientRequestSpec> spec = prepare(user, query);
 		if (spec.isEmpty()) {
 			logger.warn("askStreaming: failed to generate chat request");
 			return Stream.empty();
 		}
 
-		Stream<String> chatResponse = prepare(userId, query).get().stream().content().toStream();
+		Stream<String> chatResponse = prepare(user, query).get().stream().content().toStream();
 
 		if (chatResponse != null) {
 			return chatResponse;
@@ -170,18 +177,18 @@ public class AssistantServiceImpl implements AssistantService {
 		return Stream.empty();
 	}
 
-	private Optional<ChatClientRequestSpec> prepare(int userId, AssistantQuery query) {
-		Assistant assistant = findAssistant(userId, query.getAssistantId());
+	private Optional<ChatClientRequestSpec> prepare(User user, AssistantQuery query) {
+		Assistant assistant = findAssistant(user.getId(), query.getAssistantId());
 		if (assistant.Null()) {
 			logger.warn(
 					"Tried to build a chat session from an assistant that doesn't exist or user cannot access. User: "
-							+ userId + ", assistant: " + query.getAssistantId());
+							+ user.getName() + ", assistant: " + query.getAssistantId());
 			return Optional.empty();
 		}
 
-		OllamaModel model;
+		MintyOllamaModel model;
 		try {
-			model = OllamaModel.valueOf(assistant.model());
+			model = MintyOllamaModel.valueOf(assistant.model());
 		} catch (Exception e) {
 			logger.warn("Invalid model: " + assistant.model() + ". Cannot continue");
 			return Optional.empty();
@@ -190,7 +197,8 @@ public class AssistantServiceImpl implements AssistantService {
 		ChatMemory chatMemory = ollamaService.getChatMemory(model);
 
 		OllamaChatModel chatModel = OllamaChatModel.builder().ollamaApi(ollamaApi)
-				.defaultOptions(OllamaOptions.builder().model(model).temperature(assistant.temperature()).build())
+				.defaultOptions(
+						OllamaOptions.builder().model(model.getName()).temperature(assistant.temperature()).build())
 				.build();
 
 		VectorStore vectorStore = ollamaService.getVectorStore(model);
@@ -200,16 +208,14 @@ public class AssistantServiceImpl implements AssistantService {
 
 		boolean defaultAssistant = false;
 		String conversationId = null;
-		String prompt = "";
+		String prompt = assistant.prompt();
 
-		if (query.getConversationId().isBlank() || query.getConversationId().compareTo("default") == 0) {
+		if (query.getConversationId() == null || query.getConversationId().isBlank()
+				|| query.getConversationId().compareTo("default") == 0) {
 			defaultAssistant = true;
-			conversationId = conversationService.getDefaultConversationId(userId);
+			conversationId = conversationService.getDefaultConversationId(user.getName());
 		} else {
-			conversationId = conversationService.newConversationId(userId, query.getAssistantId(),
-					query.getConversationId());
-
-			prompt = assistant.prompt();
+			conversationId = query.getConversationId();
 
 			if (assistant.numFiles() > 0) {
 				SearchRequest searchRequest = SearchRequest.builder().query(query.getQuery())

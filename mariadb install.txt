@@ -53,17 +53,6 @@ CREATE TABLE IF NOT EXISTS Assistant (
 	shared BOOLEAN,
 	PRIMARY KEY (id)
 );
-CREATE TABLE IF NOT EXISTS StandaloneTask (
-	id INTEGER NOT NULL AUTO_INCREMENT,
-	name TEXT,
-	ownerId INTEGER,
-	shared BOOLEAN,
-	triggered BOOLEAN,
-	watchLocation TEXT,
-	taskTemplate TEXT,
-	outputTemplate TEXT,
-	PRIMARY KEY (id)
-);
 CREATE TABLE IF NOT EXISTS Workflow (
 	id INTEGER NOT NULL AUTO_INCREMENT,
 	name VARCHAR(255),
@@ -87,8 +76,6 @@ CREATE TABLE IF NOT EXISTS UserMeta (
 	userId INTEGER,
 	totalAssistantsCreated INTEGER,
 	totalConversations INTEGER,
-	totalTasksCreated INTEGER,
-	totalTaskRuns INTEGER,
 	totalWorkflowsCreated INTEGER,
 	totalWorkflowRuns INTEGER,
 	totalLogins INTEGER,

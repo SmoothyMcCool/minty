@@ -17,7 +17,6 @@ import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryReposito
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.ollama.OllamaEmbeddingModel;
 import org.springframework.ai.ollama.api.OllamaApi;
-import org.springframework.ai.ollama.api.OllamaModel;
 import org.springframework.ai.ollama.api.OllamaOptions;
 import org.springframework.ai.ollama.management.ModelManagementOptions;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -43,8 +42,8 @@ public class OllamaServiceImpl implements OllamaService {
 	@Value("${defaultModel}")
 	private String defaultModel;
 
-	private List<OllamaModel> models;
-	private Map<OllamaModel, ModelObject> modelObjects;
+	private List<MintyOllamaModel> models;
+	private Map<MintyOllamaModel, ModelObject> modelObjects;
 	private final OllamaApi ollamaApi;
 	private final JdbcTemplate vectorJdbcTemplate;
 	private final DataSource dataSource;
@@ -58,7 +57,7 @@ public class OllamaServiceImpl implements OllamaService {
 
 	@PostConstruct
 	public void initialize() {
-		models = Arrays.asList(ollamaModels.split(",")).stream().map(model -> OllamaModel.valueOf(model)).toList();
+		models = Arrays.asList(ollamaModels.split(",")).stream().map(model -> MintyOllamaModel.valueOf(model)).toList();
 
 		if (models == null) {
 			logger.error("No models found!");
@@ -67,7 +66,7 @@ public class OllamaServiceImpl implements OllamaService {
 
 		models.forEach(model -> {
 			logger.info("Registering model " + model);
-			OllamaOptions options = OllamaOptions.builder().model(model).build();
+			OllamaOptions options = OllamaOptions.builder().model(model.getName()).build();
 
 			EmbeddingModel embeddingModel = new OllamaEmbeddingModel(ollamaApi, options, ObservationRegistry.NOOP,
 					ModelManagementOptions.defaults());
@@ -87,33 +86,33 @@ public class OllamaServiceImpl implements OllamaService {
 	}
 
 	@Override
-	public List<OllamaModel> listModels() {
+	public List<MintyOllamaModel> listModels() {
 		return models;
 	}
 
 	@Override
-	public EmbeddingModel getEmbeddingModel(OllamaModel model) {
+	public EmbeddingModel getEmbeddingModel(MintyOllamaModel model) {
 		return modelObjects.get(model).embeddingModel();
 	}
 
 	@Override
-	public VectorStore getVectorStore(OllamaModel model) {
+	public VectorStore getVectorStore(MintyOllamaModel model) {
 		return modelObjects.get(model).vectorStore();
 	}
 
 	@Override
-	public ChatMemoryRepository getChatMemoryRepository(OllamaModel model) {
+	public ChatMemoryRepository getChatMemoryRepository(MintyOllamaModel model) {
 		return modelObjects.get(model).chatMemoryRepository();
 	}
 
 	@Override
-	public ChatMemory getChatMemory(OllamaModel model) {
+	public ChatMemory getChatMemory(MintyOllamaModel model) {
 		return modelObjects.get(model).chatMemory();
 	}
 
 	@Override
-	public OllamaModel getDefaultModel() {
-		return OllamaModel.valueOf(defaultModel);
+	public MintyOllamaModel getDefaultModel() {
+		return MintyOllamaModel.valueOf(defaultModel);
 	}
 
 }

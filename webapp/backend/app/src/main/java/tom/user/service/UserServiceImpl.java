@@ -19,7 +19,7 @@ import tom.user.repository.User;
 import tom.user.repository.UserRepository;
 
 @Service
-public class UserServiceImpl implements UserService {
+public class UserServiceImpl implements UserServiceInternal {
 
 	private static final Logger logger = LogManager.getLogger(UserServiceImpl.class);
 
@@ -82,4 +82,13 @@ public class UserServiceImpl implements UserService {
 		}
 	}
 
+	@Override
+	public Optional<User> getUserFromId(int userId) {
+		try {
+			return Optional.of(decrypt(userRepository.findById(userId).get()));
+		} catch (JsonProcessingException e) {
+			logger.warn("Failed to get user for user ID " + userId);
+			return Optional.empty();
+		}
+	}
 }

@@ -13,7 +13,7 @@ import { ChatMessage } from '../../model/chat-message';
     selector: 'minty-view-conversation',
     imports: [CommonModule, FormsModule, ConversationComponent],
     templateUrl: 'view-conversation.component.html',
-    styleUrls: ['../../global.css', 'view-assistants.component.css']
+    styleUrls: ['view-assistants.component.css']
 })
 export class ViewConversationComponent implements OnInit, OnDestroy {
 

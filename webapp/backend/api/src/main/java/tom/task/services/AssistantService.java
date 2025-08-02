@@ -16,7 +16,7 @@ public interface AssistantService {
 
 	boolean deleteAssistant(int id, int assistantId);
 
-	String ask(int id, AssistantQuery query);
+	String ask(int userId, AssistantQuery query);
 
 	Stream<String> askStreaming(int userId, AssistantQuery query);
 
@@ -25,7 +25,5 @@ public interface AssistantService {
 	void setDocumentService(DocumentService documentService);
 
 	String getModelForAssistant(int userId, int assistantId);
-
-	void setConversationService(ConversationService conversationService);
 
 }

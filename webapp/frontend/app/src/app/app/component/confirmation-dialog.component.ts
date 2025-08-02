@@ -15,12 +15,12 @@ export class ConfirmationDialogComponent {
     @Output() cancel = new EventEmitter<boolean>();
 
     onConfirm() {
-        this.confirm.emit();
         this.visible = false;
+        this.confirm.emit();
     }
 
     onCancel() {
-        this.cancel.emit();
         this.visible = false;
+        this.cancel.emit();
     }
 }

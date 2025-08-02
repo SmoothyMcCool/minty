@@ -28,7 +28,7 @@ import tom.meta.service.MetadataService;
 import tom.user.repository.EncryptedUser;
 import tom.user.repository.User;
 import tom.user.repository.UserRepository;
-import tom.user.service.UserService;
+import tom.user.service.UserServiceInternal;
 
 @RestController
 @RequestMapping("/api/user")
@@ -37,10 +37,11 @@ public class UserController {
 	private static final Logger logger = LogManager.getLogger(UserController.class);
 
 	private final UserRepository userRepository;
-	private final UserService userService;
+	private final UserServiceInternal userService;
 	private final MetadataService metadataService;
 
-	public UserController(UserRepository userRepository, UserService userService, MetadataService metadataService) {
+	public UserController(UserRepository userRepository, UserServiceInternal userService,
+			MetadataService metadataService) {
 		this.userRepository = userRepository;
 		this.userService = userService;
 		this.metadataService = metadataService;
@@ -83,6 +84,9 @@ public class UserController {
 			request.login(user.getName(), user.getPassword());
 		} catch (ServletException e) {
 			logger.error("SignupController - exception while logging in a new user.");
+			ResponseWrapper<User> response = ResponseWrapper.FailureResponse(HttpStatus.FORBIDDEN.value(),
+					"Failed to log in.");
+			return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
 		}
 
 		user.setPassword("");
@@ -140,7 +144,7 @@ public class UserController {
 
 	@ExceptionHandler(ApiException.class)
 	public ResponseEntity<ResponseWrapper<String>> badUserExceptionHandler(HttpServletRequest req, ApiException e) {
-		logger.error("UserController: Caught ApiException: ", e.getMessage());
+		logger.error("UserController: Caught ApiException: ", e);
 		ResponseWrapper<String> response = ResponseWrapper.ApiFailureResponse(HttpStatus.BAD_REQUEST.value(),
 				e.getApiErrors());
 		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);

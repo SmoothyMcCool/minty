@@ -5,7 +5,7 @@ import { RouterModule } from '@angular/router';
     selector: 'minty-view-assistants',
     imports: [RouterModule],
     templateUrl: 'view-assistants.component.html',
-    styleUrls: ['../../global.css', 'view-assistants.component.css']
+    styleUrls: ['view-assistants.component.css']
 })
 export class ViewAssistantsComponent {
 

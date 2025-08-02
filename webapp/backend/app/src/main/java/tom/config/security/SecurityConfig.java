@@ -16,7 +16,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 
 import tom.user.repository.UserRepository;
-import tom.user.service.UserService;
+import tom.user.service.UserServiceInternal;
 
 @Configuration
 @EnableWebSecurity
@@ -29,7 +29,7 @@ public class SecurityConfig {
 	}
 
 	@Bean
-	UserDetailsService userDetailsService(UserRepository userRepository, UserService userService) {
+	UserDetailsService userDetailsService(UserRepository userRepository, UserServiceInternal userService) {
 		return new ExerciseTrackerUserDetailsService(userRepository, userService);
 	}
 

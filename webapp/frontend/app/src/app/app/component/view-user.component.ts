@@ -10,7 +10,7 @@ import { UserService } from '../../user.service';
     selector: 'minty-user',
     imports: [CommonModule, FormsModule],
     templateUrl: 'view-user.component.html',
-    styleUrls: ['../../global.css', './view-user.component.css']
+    styleUrls: ['./view-user.component.css']
 })
 export class ViewUserComponent {
     user: User;

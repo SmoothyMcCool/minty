@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.MessageType;
-import org.springframework.ai.ollama.api.OllamaModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,22 +20,23 @@ import tom.ApiError;
 import tom.config.security.UserDetailsUser;
 import tom.controller.ResponseWrapper;
 import tom.conversation.repository.ChatMessage;
+import tom.conversation.service.ConversationServiceInternal;
 import tom.meta.service.MetadataService;
 import tom.model.Assistant;
+import tom.ollama.service.MintyOllamaModel;
 import tom.ollama.service.OllamaService;
 import tom.task.services.AssistantService;
-import tom.task.services.ConversationService;
 
 @Controller
 @RequestMapping("/api/conversation")
 public class ConversationController {
 
-	private final ConversationService conversationService;
+	private final ConversationServiceInternal conversationService;
 	private final MetadataService metadataService;
 	private final OllamaService ollamaService;
 	private final AssistantService assistantService;
 
-	public ConversationController(ConversationService conversationService, MetadataService metadataService,
+	public ConversationController(ConversationServiceInternal conversationService, MetadataService metadataService,
 			OllamaService ollamaService, AssistantService assistantService) {
 		this.conversationService = conversationService;
 		this.metadataService = metadataService;
@@ -46,9 +46,9 @@ public class ConversationController {
 
 	@RequestMapping(value = { "new" }, method = RequestMethod.GET)
 	public ResponseEntity<ResponseWrapper<String>> startNewConversation(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("assistantId") String assistantId) {
+			@RequestParam("assistantId") Integer assistantId) {
 		ResponseWrapper<String> response = ResponseWrapper
-				.SuccessResponse(conversationService.newConversationId(user.getId(), assistantId));
+				.SuccessResponse(conversationService.newConversationId(user.getUsername(), assistantId));
 		metadataService.newConversation(user.getId());
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
@@ -59,10 +59,10 @@ public class ConversationController {
 		List<String> models = ollamaService.listModels().stream().map(model -> model.toString()).toList();
 		// No need to cycle over all models. Since the repository is common, asking the
 		// first one is enough.
-		List<String> chats = ollamaService.getChatMemoryRepository(OllamaModel.valueOf(models.getFirst()))
+		List<String> chats = ollamaService.getChatMemoryRepository(MintyOllamaModel.valueOf(models.getFirst()))
 				.findConversationIds();
 
-		chats = chats.stream().filter(item -> item.startsWith(user.getId() + ":")).toList();
+		chats = chats.stream().filter(item -> item.startsWith(user.getUsername() + ":")).toList();
 
 		ResponseWrapper<List<String>> response = ResponseWrapper.SuccessResponse(chats);
 		return new ResponseEntity<>(response, HttpStatus.OK);
@@ -77,7 +77,7 @@ public class ConversationController {
 		List<ChatMessage> result = new ArrayList<>();
 
 		if (model != null) {
-			ChatMemory chatMemory = ollamaService.getChatMemory(OllamaModel.valueOf(model));
+			ChatMemory chatMemory = ollamaService.getChatMemory(MintyOllamaModel.valueOf(model));
 
 			List<Message> messages = chatMemory.get(conversationId);
 			result = messages.stream()
@@ -105,14 +105,14 @@ public class ConversationController {
 	public ResponseEntity<ResponseWrapper<String>> deleteConversation(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestParam("conversationId") String conversationId) {
 
-		if (!conversationService.conversationOwnedBy(conversationId, user.getId())) {
+		if (!conversationService.conversationOwnedBy(conversationId, user.getUsername())) {
 			ResponseWrapper<String> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
 					List.of(ApiError.NOT_OWNED));
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
 		String model = getModelforConversation(user.getId(), conversationId);
-		ChatMemory chatMemory = ollamaService.getChatMemory(OllamaModel.valueOf(model));
+		ChatMemory chatMemory = ollamaService.getChatMemory(MintyOllamaModel.valueOf(model));
 
 		chatMemory.clear(conversationId);
 
@@ -124,10 +124,10 @@ public class ConversationController {
 	public ResponseEntity<ResponseWrapper<String>> deleteDefaultConversation(
 			@AuthenticationPrincipal UserDetailsUser user) {
 
-		OllamaModel model = ollamaService.getDefaultModel();
+		MintyOllamaModel model = ollamaService.getDefaultModel();
 		ChatMemory chatMemory = ollamaService.getChatMemory(model);
 
-		chatMemory.clear(conversationService.getDefaultConversationId(user.getId()));
+		chatMemory.clear(conversationService.getDefaultConversationId(user.getUsername()));
 
 		ResponseWrapper<String> response = ResponseWrapper.SuccessResponse("success");
 		return new ResponseEntity<>(response, HttpStatus.OK);

@@ -12,7 +12,7 @@ import { Popover } from 'bootstrap';
     imports: [CommonModule, RouterModule],
     encapsulation: ViewEncapsulation.None,
     templateUrl: 'app.component.html',
-    styleUrls: ['../../global.css', './app.component.css']
+    styleUrls: ['./app.component.css']
 })
 
 export class AppComponent implements OnInit {

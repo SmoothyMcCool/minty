@@ -14,7 +14,6 @@ import org.springframework.ai.model.transformer.SummaryMetadataEnricher;
 import org.springframework.ai.model.transformer.SummaryMetadataEnricher.SummaryType;
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.ollama.api.OllamaApi;
-import org.springframework.ai.ollama.api.OllamaModel;
 import org.springframework.ai.ollama.api.OllamaOptions;
 import org.springframework.ai.reader.tika.TikaDocumentReader;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
@@ -28,6 +27,7 @@ import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
 import tom.model.Assistant;
+import tom.ollama.service.MintyOllamaModel;
 import tom.ollama.service.OllamaService;
 import tom.task.services.AssistantService;
 import tom.task.services.DocumentService;
@@ -42,8 +42,8 @@ public class DocumentServiceImpl implements DocumentService {
 	private final OllamaService ollamaService;
 	private final OllamaApi ollamaApi;
 
-	@Value("${tempFileStore}")
-	private String tempFileStore;
+	@Value("${docFileStore}")
+	private String docFileStore;
 
 	public DocumentServiceImpl(OllamaApi ollamaApi, AssistantService assistantService,
 			@Qualifier("taskExecutor") ThreadPoolTaskExecutor fileProcessingExecutor, OllamaService ollamaService) {
@@ -56,7 +56,7 @@ public class DocumentServiceImpl implements DocumentService {
 	@PostConstruct
 	public void init() {
 		assistantService.setDocumentService(this);
-		Path docPath = Paths.get(tempFileStore);
+		Path docPath = Paths.get(docFileStore);
 
 		if (!docPath.toFile().isDirectory()) {
 			logger.error(
@@ -85,9 +85,9 @@ public class DocumentServiceImpl implements DocumentService {
 			return;
 		}
 
-		OllamaModel model;
+		MintyOllamaModel model;
 		try {
-			model = OllamaModel.valueOf(assistant.model());
+			model = MintyOllamaModel.valueOf(assistant.model());
 		} catch (Exception e) {
 			logger.warn("Invalid model: " + assistant.model() + ". Cannot continue");
 			return;
@@ -95,7 +95,8 @@ public class DocumentServiceImpl implements DocumentService {
 
 		VectorStore vectorStore = ollamaService.getVectorStore(model);
 		ChatModel chatModel = OllamaChatModel.builder().ollamaApi(ollamaApi)
-				.defaultOptions(OllamaOptions.builder().model(model).temperature(assistant.temperature()).build())
+				.defaultOptions(
+						OllamaOptions.builder().model(model.getName()).temperature(assistant.temperature()).build())
 				.build();
 
 		FileSystemResource resource = new FileSystemResource(file);
@@ -169,9 +170,9 @@ public class DocumentServiceImpl implements DocumentService {
 			return;
 		}
 
-		OllamaModel model;
+		MintyOllamaModel model;
 		try {
-			model = OllamaModel.valueOf(assistant.model());
+			model = MintyOllamaModel.valueOf(assistant.model());
 		} catch (Exception e) {
 			logger.warn("Invalid model: " + assistant.model() + ". Cannot continue");
 			return;

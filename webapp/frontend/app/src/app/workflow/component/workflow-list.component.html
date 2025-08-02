@@ -24,7 +24,21 @@
   </div>
   <div class="col-9">
     <button class="btn btn-primary" *ngIf="responseText" (click)="copyToClipboard()">Copy to clipboard</button>
-    <div [innerHtml]="responseText"></div>
+    <div *ngIf="responseText">
+      <ng-container *ngIf="responseType === 'JSON'; else notJson">
+        <pre style="white-space: pre-wrap;">{{responseText}}</pre>
+      </ng-container>
+      <ng-template #notJson>
+        <ng-container *ngIf="responseType === 'HTML'; else Text">
+          <div [innerHtml]="responseText"></div>
+        </ng-container>
+      </ng-template>
+      <ng-template #Text>
+        <ng-container *ngIf="responseType === 'TEXT'">
+          <p>{{responseText}}</p>
+        </ng-container>
+      </ng-template>
+    </div>
   </div>
 </div>
 <minty-confirmation-dialog [title]="'Delete Workflow'" [message]="'Are you sure you want to delete this Workflow?'" [visible]="confirmWorkflowDeleteVisible" (confirm)="confirmDeleteWorkflow()" (cancel)="confirmWorkflowDeleteVisible = false"></minty-confirmation-dialog>

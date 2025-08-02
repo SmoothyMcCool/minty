@@ -8,8 +8,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import tom.task.converters.TaskConverter;
-import tom.task.model.Task;
+import tom.workflow.converters.TaskConverter;
+import tom.workflow.model.Task;
 
 @Entity
 public class Workflow {

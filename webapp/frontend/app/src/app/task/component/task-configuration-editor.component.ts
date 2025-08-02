@@ -1,7 +1,6 @@
-import { Component, forwardRef, Input, OnInit } from "@angular/core";
+import { Component, forwardRef, Input } from "@angular/core";
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from "@angular/forms";
 import { CommonModule } from "@angular/common";
-import { AssistantService } from "src/app/assistant.service";
 import { Assistant } from "src/app/model/assistant";
 
 @Component({
@@ -16,15 +15,13 @@ import { Assistant } from "src/app/model/assistant";
         }
     ]
 })
-export class TaskConfigurationEditorComponent implements OnInit, ControlValueAccessor {
+export class TaskConfigurationEditorComponent implements ControlValueAccessor {
 
     config: Map<string, string> = new Map();
     onChange: any = () => {};
     onTouched: any = () => {};
-    touched = false;
-    disabled = false;
 
-    assistants: Assistant[] = [];
+    @Input() assistants: Assistant[] = [];
 
     private _taskConfiguration: Map<string, string>;
     @Input()
@@ -35,13 +32,7 @@ export class TaskConfigurationEditorComponent implements OnInit, ControlValueAcc
         return this._taskConfiguration;
     }
 
-    constructor(private assistantService: AssistantService) {
-    }
-
-    ngOnInit(): void {
-        this.assistantService.list().subscribe((assistants: Assistant[]) => {
-            this.assistants = assistants;
-        });
+    constructor() {
     }
 
     valueChanged(param: string, value: string) {

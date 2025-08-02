@@ -1,53 +1,14 @@
 <div class="pt-5">
-   <form role="form" class="container-fluid" (submit)="createWorkflow()">
-    <div class="well p-2 text-dark">
-      <h2>New Workflow</h2>
+  <div class="well p-2 text-dark container-fluid">
+    <h2>New Workflow</h2>
 
-        <div class="mb-2 row">
-          <label for="name" class="col-3 col-form-label">Name</label>
-          <div class="col-9">
-            <input id="name" name="name" type="text" size="10" maxlength="50" class="form-control" [(ngModel)]="workflow.name" autocomplete="off" required>
-          </div>
-        </div>
-
-        <div class="mb-2 row">
-          <label for="name" class="col-3 col-form-label">Description</label>
-          <div class="col-9">
-            <textarea id="name" name="name" type="text" rows="3" class="form-control" [(ngModel)]="workflow.description" autocomplete="off" required></textarea>
-          </div>
-        </div>
-
-        <div class="form-group mb-2">
-          <input type="checkbox" class="form-check-input text-light" id="isShared" name="isShared" [(ngModel)]="workflow.shared">
-          <label class="ms-1" for="isShared">Shared</label>
-        </div>
-
-        <div class="mb-2 row" *ngIf="isFileTriggered">
-          <label for="directory" class="col-3 col-form-label">Directory to monitor</label>
-          <div class="col-9">
-            <input id="directory" name="directory" type="text" size="10" maxlength="512" placeholder="Folder to monitor. Must be accessible by the server." class="form-control" [(ngModel)]="triggerDirectory">
-          </div>
-        </div>
-
-      <h3>Steps</h3>
-      <div class="mb-2 row" *ngFor="let step of workflow.workflowSteps; let last = last; let i = index">
-        <div class="col">
-          <button type="button" class="bi bi-trash3" style="font-size: 20px; color: red; float: right;" (click)="deleteStep(i)"></button>
-          <minty-task-editor name="{{step.name}}-editor" [taskTemplates]="taskTemplates" [(ngModel)]="step"></minty-task-editor>
-          <p class="bi bi-arrow-down-circle col text-center fs-2" *ngIf="!last"></p>
-        </div>
-      </div>
-
-      <button type="button" class="bi bi-plus-circle" style="font-size: 20px; color: red" (click)="addStep()"></button>
-
-      <h3>Output</h3>
-      <minty-task-editor name="outputEditor" [taskTemplates]="outputTaskTemplates" [(ngModel)]="workflow.outputStep"></minty-task-editor>
+    <form role="form" (submit)="createWorkflow()">
+      <minty-workflow-editor name="workflowEditor" [edit]="true" [taskTemplates]="taskTemplates" [outputTaskTemplates]="outputTaskTemplates" [(ngModel)]="workflow"></minty-workflow-editor>
 
       <div>
         <button type="submit" id="submitButton" class="btn btn-primary">The Work Must Flow</button>
         <button type="button" id="cancelButton" class="btn btn-primary float-end" (click)="cancel()">Shai-Hulud Forbid</button>
       </div>
-    </div>
-
-  </form>
+    </form>
+  </div>
 </div>

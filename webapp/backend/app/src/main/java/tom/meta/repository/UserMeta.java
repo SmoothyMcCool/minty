@@ -17,8 +17,6 @@ public class UserMeta {
 	private int userId;
 	private int totalAssistantsCreated;
 	private int totalConversations;
-	private int totalTasksCreated;
-	private int totalTaskRuns;
 	private int totalWorkflowsCreated;
 	private int totalWorkflowRuns;
 	private int totalLogins;
@@ -55,22 +53,6 @@ public class UserMeta {
 
 	public void setTotalConversations(int totalConversations) {
 		this.totalConversations = totalConversations;
-	}
-
-	public int getTotalTasksCreated() {
-		return totalTasksCreated;
-	}
-
-	public void setTotalTasksCreated(int totalTasksCreated) {
-		this.totalTasksCreated = totalTasksCreated;
-	}
-
-	public int getTotalTaskRuns() {
-		return totalTaskRuns;
-	}
-
-	public void setTotalTaskRuns(int totalTaskRuns) {
-		this.totalTaskRuns = totalTaskRuns;
 	}
 
 	public int getTotalWorkflowsCreated() {

@@ -10,9 +10,10 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
-import tom.task.model.Task;
+import tom.conversation.service.ConversationServiceInternal;
 import tom.task.taskregistry.TaskRegistryService;
 import tom.workflow.controller.WorkflowRequest;
+import tom.workflow.model.Task;
 import tom.workflow.model.Workflow;
 import tom.workflow.repository.WorkflowRepository;
 
@@ -23,13 +24,16 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 	private final WorkflowRepository workflowRepository;
 	private final TaskRegistryService taskRegistryService;
+	private final ConversationServiceInternal conversationService;
 	private final AsyncTaskExecutor taskExecutor;
 
 	public WorkflowServiceImpl(WorkflowRepository workflowRepository, TaskRegistryService taskRegistryService,
+			ConversationServiceInternal conversationService,
 			@Qualifier("taskExecutor") ThreadPoolTaskExecutor taskExecutor) {
 		this.workflowRepository = workflowRepository;
 		this.taskRegistryService = taskRegistryService;
 		this.taskExecutor = taskExecutor;
+		this.conversationService = conversationService;
 	}
 
 	@Override
@@ -54,7 +58,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 		}
 		workflow.getOutputStep().setConfiguration(request.getOutputConfiguration());
 
-		WorkflowTracker tracker = new WorkflowTracker(userId, workflow, taskRegistryService, taskExecutor);
+		WorkflowTracker tracker = new WorkflowTracker(userId, workflow, taskRegistryService, conversationService,
+				taskExecutor);
 		tracker.runFirstTask();
 	}
 

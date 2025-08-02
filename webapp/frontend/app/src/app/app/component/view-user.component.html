@@ -42,20 +42,6 @@
               [class.is-invalid]="passwordMismatch" [(ngModel)]="repeatPassword" (input)="passwordUpdated()" required>
           </div>
         </div>
-        <div class="mb-3 row">
-          <label for="externalAccount" class="col-sm-6 col-form-label text-light">External Username</label>
-          <div class="col-sm-6" required>
-            <input id="externalAccount" name="externalAccount" type="text" size="20" maxlength="50" placeholder="User name. I pinky swear it's encrypted in storage :)" class="form-control opacity-75"
-              [class.is-invalid]="user.externalAccount.length === 0" [(ngModel)]="user.externalAccount" required>
-          </div>
-        </div>
-        <div class="mb-3 row">
-          <label for="externalPassword" class="col-sm-6 col-form-label text-light">External Password</label>
-          <div class="col-sm-6" required>
-            <input id="externalPassword" name="externalPassword" type="password" size="20" maxlength="50" placeholder="External account password. I pinky swear it's encrypted in storage :)" class="form-control opacity-75"
-              [class.is-invalid]="user.externalPassword.length === 0" [(ngModel)]="user.externalPassword" required>
-          </div>
-        </div>
         <div class="centred space-after">
           <button type="submit" id="updateButton" class="btn btn-primary" [class.disabled]="!formValid()" [disabled]="!formValid()">Update!</button>
         </div>
