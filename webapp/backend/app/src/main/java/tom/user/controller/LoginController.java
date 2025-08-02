@@ -24,7 +24,7 @@ import tom.meta.service.MetadataService;
 import tom.user.repository.EncryptedUser;
 import tom.user.repository.User;
 import tom.user.repository.UserRepository;
-import tom.user.service.UserService;
+import tom.user.service.UserServiceInternal;
 
 @RestController
 @RequestMapping("/api/login")
@@ -33,10 +33,11 @@ public class LoginController {
 	private static final Logger logger = LogManager.getLogger(LoginController.class);
 
 	private final UserRepository userRepository;
-	private final UserService userService;
+	private final UserServiceInternal userService;
 	private final MetadataService metadataService;
 
-	public LoginController(UserRepository userRepository, UserService userService, MetadataService metadataService) {
+	public LoginController(UserRepository userRepository, UserServiceInternal userService,
+			MetadataService metadataService) {
 		this.userRepository = userRepository;
 		this.userService = userService;
 		this.metadataService = metadataService;
@@ -60,8 +61,6 @@ public class LoginController {
 		User result;
 		try {
 			result = userService.decrypt(_user);
-			result.setExternalAccount("no");
-			result.setExternalPassword("lol");
 		} catch (JsonProcessingException e) {
 			throw new ApiException(ApiError.FAILED_TO_DECRYPT_USER);
 		}

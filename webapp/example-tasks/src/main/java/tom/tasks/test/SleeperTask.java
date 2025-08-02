@@ -56,8 +56,8 @@ public class SleeperTask implements AiTask {
 
 	@Override
 	public void setInput(Map<String, String> input) {
-		if (input.containsKey("Delay")) {
-			configuration.setDelay((Integer.parseInt(input.get("Delay"))));
+		if (input.containsKey("Data")) {
+			configuration.setDelay((Integer.parseInt(input.get("Data"))));
 		}
 	}
 
@@ -74,7 +74,7 @@ public class SleeperTask implements AiTask {
 
 	@Override
 	public String expects() {
-		return "{ \"Delay\": <Integer> } to set the number of seconds this task sleeps for.";
+		return "{ \"Data\": <Integer> } to set the number of seconds this task sleeps for.";
 	}
 
 	@Override

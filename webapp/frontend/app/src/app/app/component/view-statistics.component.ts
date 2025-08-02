@@ -7,7 +7,7 @@ import { MetadataService } from '../../metadata.service';
     selector: 'minty-view-statistics',
     imports: [CommonModule, DatePipe],
     templateUrl: 'view-statistics.component.html',
-    styleUrls: ['../../global.css', './view-statistics.component.css']
+    styleUrls: ['./view-statistics.component.css']
 })
 export class ViewStatisticsComponent {
     metadata: UserMeta[];

@@ -11,8 +11,8 @@
             </ng-container>
             <ng-container *ngSwitchCase="'AssistantIdentifier'">
                 <label for="assistantList">{{item.key}}</label>
-                <select class="form-select" name="assistantList" [ngModel]="item.value" (ngModelChange) ="valueChanged(item.key, $event)">
-                    <option *ngFor="let assistant of assistants" [ngValue]="assistant.id">{{assistant.name}}</option>
+                <select class="form-select" name="assistantList" [ngModel]="getConfig(item.key)" (ngModelChange) ="valueChanged(item.key, $event)">
+                    <option *ngFor="let assistant of assistants" [value]="assistant.id">{{assistant.name}}</option>
                 </select>
             </ng-container>
             <ng-container *ngSwitchDefault>

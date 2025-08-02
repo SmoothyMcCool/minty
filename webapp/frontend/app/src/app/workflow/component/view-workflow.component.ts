@@ -7,7 +7,7 @@ import { RouterModule } from '@angular/router';
     selector: 'minty-view-workflow',
     imports: [CommonModule, FormsModule, RouterModule],
     templateUrl: 'view-workflow.component.html',
-    styleUrls: ['../../global.css', 'workflow.component.css']
+    styleUrls: ['workflow.component.css']
 })
 export class ViewWorkflowComponent {
 

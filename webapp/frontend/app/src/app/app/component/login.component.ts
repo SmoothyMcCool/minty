@@ -9,7 +9,7 @@ import { environment } from 'src/environments/environment';
     selector: 'minty-login',
     imports: [CommonModule, FormsModule],
     templateUrl: 'login.component.html',
-    styleUrls: ['../../global.css', './login.component.css']
+    styleUrls: ['./login.component.css']
 })
 
 export class LoginComponent {

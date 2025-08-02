@@ -10,16 +10,16 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import tom.user.repository.User;
 import tom.user.repository.UserRepository;
-import tom.user.service.UserService;
+import tom.user.service.UserServiceInternal;
 
 public class ExerciseTrackerUserDetailsService implements UserDetailsService {
 
 	private static final Logger logger = LogManager.getLogger(ExerciseTrackerUserDetailsService.class);
 
 	private UserRepository userRepository;
-	private UserService userService;
+	private UserServiceInternal userService;
 
-	public ExerciseTrackerUserDetailsService(UserRepository userRepository, UserService userService) {
+	public ExerciseTrackerUserDetailsService(UserRepository userRepository, UserServiceInternal userService) {
 		this.userRepository = userRepository;
 		this.userService = userService;
 	}

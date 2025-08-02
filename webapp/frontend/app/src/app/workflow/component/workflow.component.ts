@@ -8,12 +8,13 @@ import { WorkflowService } from 'src/app/workflow/workflow.service';
 import { TaskTemplateService } from 'src/app/task/task-template.service';
 import { TaskEditorComponent } from 'src/app/task/component/task-editor.component';
 import { TaskDescription } from 'src/app/model/task-description';
+import { WorkflowEditorComponent } from './workflow-editor.component';
 
 @Component({
     selector: 'minty-workflow',
-    imports: [CommonModule, FormsModule, TaskEditorComponent],
+    imports: [CommonModule, FormsModule, WorkflowEditorComponent],
     templateUrl: 'workflow.component.html',
-    styleUrls: ['../../global.css', 'workflow.component.css']
+    styleUrls: ['workflow.component.css']
 })
 export class WorkflowComponent implements OnInit {
 
@@ -30,7 +31,7 @@ export class WorkflowComponent implements OnInit {
         }
     };
     taskTemplates: TaskDescription[] = [];
-    outputTemplates: TaskDescription[] = [];
+    outputTaskTemplates: TaskDescription[] = [];
 
     constructor(
         private router: Router,
@@ -51,7 +52,7 @@ export class WorkflowComponent implements OnInit {
             });
 
             this.taskTemplateService.listOutputTemplates().subscribe(output => {
-                this.outputTemplates = output;
+                this.outputTaskTemplates = output;
             });
 
         });
@@ -62,6 +63,22 @@ export class WorkflowComponent implements OnInit {
             this.alertService.postSuccess(result);
         });
         this.router.navigateByUrl('workflow');
+    }
+
+    getInputsFor(taskName: string): string {
+        const task = this.taskTemplates.find(element => element.name === taskName);
+        if (task) {
+            return task.inputs;
+        }
+        return "";
+    }
+
+    getOutputsFor(taskName: string): string {
+        const task = this.taskTemplates.find(element => element.name === taskName);
+        if (task) {
+            return task.outputs;
+        }
+        return "";
     }
 
     navigateTo(url: string) {

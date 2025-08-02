@@ -20,17 +20,17 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import tom.task.services.HttpService;
 import tom.user.repository.User;
 import tom.user.repository.UserRepository;
-import tom.user.service.UserService;
+import tom.user.service.UserServiceInternal;
 
 @Service
 public class HttpServiceImpl implements HttpService {
 
 	private static final Logger logger = LogManager.getLogger(HttpServiceImpl.class);
 
-	private final UserService userService;
+	private final UserServiceInternal userService;
 	private final UserRepository userRepository;
 
-	public HttpServiceImpl(UserService userService, UserRepository userRepository) {
+	public HttpServiceImpl(UserServiceInternal userService, UserRepository userRepository) {
 		this.userService = userService;
 		this.userRepository = userRepository;
 	}
@@ -69,7 +69,7 @@ public class HttpServiceImpl implements HttpService {
 
 			// Get credentials and create the Basic auth header
 			User user = userService.decrypt(userRepository.findById(userId).get());
-			final String auth = user.getExternalAccount() + ":" + user.getExternalPassword();
+			final String auth = ""; // TODO construct an auth string from some credentials somewhere.
 			final byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(StandardCharsets.ISO_8859_1));
 			final String authHeader = "Basic " + new String(encodedAuth);
 
@@ -107,7 +107,7 @@ public class HttpServiceImpl implements HttpService {
 
 			// Get credentials and create the Basic auth header
 			User user = userService.decrypt(userRepository.findById(userId).get());
-			final String auth = user.getExternalAccount() + ":" + user.getExternalPassword();
+			final String auth = ""; // TODO construct an auth string from some credentials somewhere.
 			final byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(StandardCharsets.ISO_8859_1));
 			final String authHeader = "Basic " + new String(encodedAuth);
 

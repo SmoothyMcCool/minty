@@ -16,8 +16,23 @@ html(lang='en')
 		p
 			strong Start Time:
 				samp #{startTime}
-	p
-		strong End Time:
-			samp #{endTime}
+		p
+			strong End Time:
+				samp #{endTime}
 
-	pre #{result}
+		pre
+			ul
+				each valueList, index in results
+					h2 Step #{index + 1}
+					ul
+						each val in valueList
+							li #{val}
+
+		h1 All Conversations:
+		pre
+			ul
+				each messageList, index in conversations
+					h2 Conversation #{index + 1}
+					ul
+						each message in messageList
+							li #{message}

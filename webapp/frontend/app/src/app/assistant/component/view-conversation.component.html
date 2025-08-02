@@ -2,7 +2,7 @@
   <div class="container">
     <div class="row mb-2">
       <h1>{{assistant.name}}</h1>
-      <p>{{assistant.prompt}}</p>
+      <p style="white-space: pre-wrap">{{assistant.prompt}}</p>
       <div class="form-floating mb-3">
         <textarea class="form-control" id="aiQuery" name="aiQuery" [(ngModel)]="userText"></textarea>
         <label for="aiQuery" class="ms-2">Put your input here</label>

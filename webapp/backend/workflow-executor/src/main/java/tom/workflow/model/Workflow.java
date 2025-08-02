@@ -2,7 +2,7 @@ package tom.workflow.model;
 
 import java.util.List;
 
-import tom.task.model.Task;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class Workflow {
 
@@ -68,6 +68,11 @@ public class Workflow {
 
 	public void setOutputStep(Task outputStep) {
 		this.outputStep = outputStep;
+	}
+
+	@JsonIgnore
+	public int numSteps() {
+		return workflowSteps.size();
 	}
 
 }

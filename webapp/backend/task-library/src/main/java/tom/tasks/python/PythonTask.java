@@ -3,9 +3,12 @@ package tom.tasks.python;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import tom.task.AiTask;
 import tom.task.ServiceConsumer;
@@ -54,8 +57,8 @@ public class PythonTask implements AiTask, ServiceConsumer {
 
 	@Override
 	public List<Map<String, String>> runWorkflow() {
-		doTheThing();
-		return List.of();
+		Map<String, String> response = doTheThing();
+		return List.of(response);
 	}
 
 	@Override
@@ -65,22 +68,49 @@ public class PythonTask implements AiTask, ServiceConsumer {
 		configuration.getInputDictionary().putAll(input);
 	}
 
-	private void doTheThing() {
+	private Map<String, String> doTheThing() {
 		logger.info("doWork: Executing " + configuration.getPythonFile());
-		result = taskServices.getPythonService().execute(configuration.getPythonFile(),
-				configuration.getInputDictionary());
-		logger.info("doWork: " + configuration.getPythonFile() + " completed.");
+
+		if (configuration.getInputDictionary().containsKey("Data")) {
+
+			String code = configuration.getInputDictionary().get("Data");
+			result = taskServices.getPythonService().executeCodeString(code, configuration.getInputDictionary());
+
+			logger.info("doWork: completed execution of input-provided code.");
+
+		} else {
+
+			result = taskServices.getPythonService().execute(configuration.getPythonFile(),
+					configuration.getInputDictionary());
+			logger.info("doWork: " + configuration.getPythonFile() + " completed.");
+		}
+
+		if (configuration.getInputDictionary().containsKey("ConversationId")) {
+			result.put(null, configuration.getInputDictionary().get("ConversationId"));
+		}
+
+		ObjectMapper mapper = new ObjectMapper();
+		return result.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> {
+			try {
+				return mapper.writeValueAsString(e.getValue());
+			} catch (Exception except) {
+				return String.valueOf(e.getValue());
+			}
+		}));
+
 	}
 
 	@Override
 	public String expects() {
 		return "This task simply provides whatever input and configuration"
 				+ " is provided as a map to the associated Python file when it is run. "
-				+ "What is expected is entirely up to the python you write.";
+				+ "What is expected is entirely up to the python you write.\n\nThe one "
+				+ "exception is that if the input contains a key \"Data\", that will be "
+				+ "interpretted as the code to run, overriding any filename provided.";
 	}
 
 	@Override
 	public String produces() {
-		return "This task doesn't produce output so it should be the last step in your workflow.";
+		return "If the input contained a ConversationId, that is propagated out, for further AI processing fun.";
 	}
 }

@@ -1,9 +1,10 @@
 import { HttpClient, HttpHeaders, HttpResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { User } from "./model/user";
-import { finalize, map, Observable } from "rxjs";
+import { catchError, EMPTY, finalize, map, Observable } from "rxjs";
 import { ApiResult } from "./model/api-result";
 import { Router } from "@angular/router";
+import { AlertService } from "./alert.service";
 
 @Injectable({
     providedIn: 'root'
@@ -18,7 +19,7 @@ export class UserService {
 
     private user: User = null;
 
-    constructor(private http: HttpClient, private router: Router) { }
+    constructor(private alertService: AlertService, private http: HttpClient, private router: Router) { }
 
     loggedIn(): boolean {
         return this.user != null && sessionStorage.getItem('x-auth-token') != undefined;
@@ -45,9 +46,13 @@ export class UserService {
             );
     }
 
-    public signup(user: User): Observable<User> {
+    signup(user: User): Observable<User> {
         return this.http.post<ApiResult>(UserService.Signup, user)
             .pipe(
+                catchError(error => {
+                    this.alertService.postFailure(JSON.stringify(error));
+                    return EMPTY;
+                }),
                 map((result: ApiResult) => {
                     this.user = result.data as User;
                     return this.user;
@@ -55,7 +60,7 @@ export class UserService {
             );
     }
 
-    public update(user: User): Observable<User> {
+    update(user: User): Observable<User> {
         return this.http.post<ApiResult>(UserService.Update, user)
             .pipe(
                 map((result: ApiResult) => {
@@ -65,7 +70,7 @@ export class UserService {
             );
     }
 
-    public logout(): void {
+    logout(): void {
         this.http.post<ApiResult>(UserService.Logout, {})
             .pipe(
                 finalize(() => {

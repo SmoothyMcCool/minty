@@ -32,8 +32,8 @@ public class DocumentController {
 
 	private static final Logger logger = LogManager.getLogger(DocumentController.class);
 
-	@Value("${tempFileStore}")
-	private String tempFileStore;
+	@Value("${docFileStore}")
+	private String docFileStore;
 	private final AssistantService assistantService;
 	private final DocumentService documentService;
 
@@ -54,7 +54,7 @@ public class DocumentController {
 			return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
 		}
 
-		File file = new File(tempFileStore + "/"
+		File file = new File(docFileStore + "/"
 				+ documentService.constructFilename(user.getId(), assistantId, mpf.getOriginalFilename()));
 		try {
 			Files.createDirectories(file.toPath());

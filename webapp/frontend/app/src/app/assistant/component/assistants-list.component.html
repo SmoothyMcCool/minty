@@ -20,7 +20,6 @@
               <span *ngIf="assistant.state !== 'READY'" class="top-0 start-0 bi bi-exclamation-circle" style="font-size: 20px; color: red">Not Ready!</span>
               <div class="card-body">
                 <h5 class="card-title">{{assistant.name}}</h5>
-                <p class="card-text">{{assistant.prompt}}</p>
                 <button class="btn btn-primary" (click)="startConversation(assistant)">Run!</button>
               </div>
             </div>
@@ -34,7 +33,6 @@
                 <div class="card-body">
                   <button *ngIf="isOwned(assistant)" class="position-absolute top-0 end-0 bi bi-trash3" style="font-size: 20px; color: red" (click)="deleteAssistant(assistant)"></button>
                   <h5 class="card-title">{{assistant.name}}</h5>
-                  <p class="card-text">{{assistant.prompt}}</p>
                   <button class="btn btn-primary" (click)="startConversation(assistant)">Run!</button>
                 </div>
               </div>
@@ -42,7 +40,7 @@
           </ng-container>
           <ng-template #noSharedAssistants>
             <p class="font-monospace ms-4">If any assistants had been shared with you they'd be listed here.<br>
-              I guess you have no friends ðŸ˜Ÿ
+              I guess you have no friends 😢
             </p>
           </ng-template>
         </div>

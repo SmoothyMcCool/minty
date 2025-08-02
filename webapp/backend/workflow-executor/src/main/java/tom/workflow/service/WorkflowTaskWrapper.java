@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import tom.task.AiTask;
-import tom.task.controller.TaskRequest;
+import tom.workflow.model.TaskRequest;
 
 public class WorkflowTaskWrapper implements Runnable {
 

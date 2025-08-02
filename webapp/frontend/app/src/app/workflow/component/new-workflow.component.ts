@@ -6,14 +6,14 @@ import { AlertService } from "src/app/alert.service";
 import { TaskTemplateService } from "src/app/task/task-template.service";
 import { Workflow } from "src/app/model/workflow";
 import { WorkflowService } from "../workflow.service";
-import { TaskEditorComponent } from "src/app/task/component/task-editor.component";
 import { TaskDescription } from "src/app/model/task-description";
+import { WorkflowEditorComponent } from "./workflow-editor.component";
 
 @Component({
     selector: 'minty-new-workflow',
-    imports: [CommonModule, FormsModule, TaskEditorComponent],
+    imports: [CommonModule, FormsModule, WorkflowEditorComponent],
     templateUrl: 'new-workflow.component.html',
-    styleUrls: ['../../global.css', 'workflow.component.css']
+    styleUrls: ['workflow.component.css']
 })
 export class NewWorkflowComponent implements OnInit {
 
@@ -59,17 +59,6 @@ export class NewWorkflowComponent implements OnInit {
             this.alertService.postSuccess('Workflow Created!');
             this.router.navigateByUrl('workflow');
         });
-    }
-
-    addStep() {
-        this.workflow.workflowSteps.push({
-            name: '',
-            configuration: new Map()
-        })
-    }
-
-    deleteStep(index: number) {
-        this.workflow.workflowSteps.splice(index, 1);
     }
 
     cancel() {

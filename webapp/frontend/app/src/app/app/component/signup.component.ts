@@ -10,7 +10,7 @@ import { environment } from 'src/environments/environment';
     selector: 'minty-signup',
     imports: [CommonModule, FormsModule],
     templateUrl: 'signup.component.html',
-    styleUrls: ['../../global.css', './signup.component.css']
+    styleUrls: ['./signup.component.css']
 })
 export class SignupComponent {
     user: User;
@@ -25,8 +25,6 @@ export class SignupComponent {
             id: 0,
             name: '',
             password: '',
-            externalAccount: '',
-            externalPassword: ''
         };
     }
 

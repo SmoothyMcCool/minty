@@ -11,16 +11,14 @@ import { ViewMainComponent } from './app/app/component/view-main.component';
 import { ViewUserComponent } from './app/app/component/view-user.component';
 import { ViewConversationComponent } from './app/assistant/component/view-conversation.component';
 import { AssistantsListComponent } from './app/assistant/component/assistants-list.component';
-import { NewStandaloneTaskComponent } from './app/task/component/new-standalone-task.component';
-import { ViewTaskComponent } from './app/task/component/view-task.component';
-import { TaskListComponent } from './app/task/component/task-list.component';
-import { TaskComponent } from './app/task/component/task.component';
 import { NewAssistantComponent } from './app/assistant/component/new-assistant.component';
 import { ViewStatisticsComponent } from './app/app/component/view-statistics.component';
 import { ViewWorkflowComponent } from './app/workflow/component/view-workflow.component';
 import { NewWorkflowComponent } from './app/workflow/component/new-workflow.component';
 import { WorkflowComponent } from './app/workflow/component/workflow.component';
 import { WorkflowListComponent } from './app/workflow/component/workflow-list.component';
+import { importProvidersFrom } from '@angular/core';
+import { MarkdownModule } from 'ngx-markdown';
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -67,24 +65,6 @@ bootstrapApplication(AppComponent, {
                 component: ViewConversationComponent
             },
             {
-                path: 'task',
-                component: ViewTaskComponent,
-                children: [
-                    {
-                        path: 'new',
-                        component: NewStandaloneTaskComponent
-                    },
-                    {
-                        path: ':id',
-                        component: TaskComponent
-                    },
-                    {
-                        path: '',
-                        component: TaskListComponent
-                    }
-                ]
-            },
-            {
                 path: 'workflow',
                 component: ViewWorkflowComponent,
                 children: [
@@ -111,5 +91,9 @@ bootstrapApplication(AppComponent, {
                 component: ViewStatisticsComponent,
             }
         ]/*, withDebugTracing()*/),
-        provideHttpClient(withInterceptorsFromDi())
-    ] });
+        provideHttpClient(withInterceptorsFromDi()),
+        importProvidersFrom(
+            MarkdownModule.forRoot()
+        )
+    ]
+});

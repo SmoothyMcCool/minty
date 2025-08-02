@@ -52,7 +52,7 @@ public class SleeperTaskSpawnerTask implements AiTask {
 
 		for (int i = 0; i < 10; i++) {
 			int sleepTime = new Random().nextInt(3) + 1;
-			Map<String, String> cfg = Map.of("Delay", Integer.toString(sleepTime));
+			Map<String, String> cfg = Map.of("Data", Integer.toString(sleepTime));
 			output.add(cfg);
 		}
 
@@ -100,6 +100,6 @@ public class SleeperTaskSpawnerTask implements AiTask {
 
 	@Override
 	public String produces() {
-		return "Produces one or more outputs of the form { \"Delay\": <Integer> }";
+		return "Produces one or more outputs of the form { \"Data\": <Integer> }";
 	}
 }
