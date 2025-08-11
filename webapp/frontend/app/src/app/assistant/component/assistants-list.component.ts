@@ -1,125 +1,138 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Assistant, AssistantState } from '../../model/assistant';
+import { Assistant } from '../../model/assistant';
 import { AssistantService } from '../../assistant.service';
 import { Router, RouterModule } from '@angular/router';
 import { ConversationService } from '../../conversation.service';
 import { FilterPipe } from '../../pipe/filter-pipe';
 import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
 import { UserService } from 'src/app/user.service';
+import { Conversation } from 'src/app/model/conversation';
 
 @Component({
-    selector: 'minty-assistants-list',
-    imports: [CommonModule, FormsModule, RouterModule, FilterPipe, ConfirmationDialogComponent],
-    templateUrl: 'assistants-list.component.html'
+	selector: 'minty-assistants-list',
+	imports: [CommonModule, FormsModule, RouterModule, FilterPipe, ConfirmationDialogComponent],
+	templateUrl: 'assistants-list.component.html'
 })
 export class AssistantsListComponent {
 
-    conversations: string[] = [];
-    selectedChat: string = '';
+	conversations: Conversation[] = [];
+	selectedChat: string = '';
 
-    assistants: Assistant[] = [];
+	assistants: Assistant[] = [];
 
-    fileList: File[] = [];
-    workingAssistant: Assistant = {
-            id: 0,
-            ownerId: 0,
-            name: '',
-            prompt: '',
-            model: '',
-            temperature: 0.9,
-            numFiles: 0,
-            state: AssistantState.READY,
-            shared: false
-        };
+	fileList: File[] = [];
+	workingAssistant: Assistant = {
+		id: 0,
+		name: '',
+		prompt: '',
+		model: '',
+		temperature: 0,
+		numFiles: 0,
+		ownerId: 0,
+		shared: false,
+		hasMemory: false,
+		documentIds: []
+	};
 
-    deleteInProgress = false;
+	deleteInProgress = false;
 
-    confirmDeleteAssistantVisible = false;
-    assistantPendingDeletion: Assistant;
-    confirmDeleteConversationVisible = false;
-    conversationPendingDeletionId: string;
+	confirmDeleteAssistantVisible = false;
+	assistantPendingDeletion: Assistant;
+	confirmDeleteConversationVisible = false;
+	conversationPendingDeletionId: string;
 
 
-    constructor(
-        private assistantService: AssistantService,
-        private conversationService: ConversationService,
-        private userService: UserService,
-        private router: Router) {
+	constructor(
+		private assistantService: AssistantService,
+		private conversationService: ConversationService,
+		private userService: UserService,
+		private router: Router) {
 
-        this.assistantService.list().subscribe(assistants => {
-            setTimeout(() => {
-                this.assistants = assistants;
-            }, 0);
-        });
+		this.assistantService.list().subscribe(assistants => {
+			setTimeout(() => {
+				this.assistants = assistants;
+			}, 0);
+		});
 
-        this.conversationService.list().subscribe(conversations => {
-            this.conversations = conversations;
-        })
-    }
+		this.conversationService.list().subscribe(conversations => {
+			this.conversations = conversations;
+		})
+	}
 
-    deleteAssistant(assistant: Assistant) {
-        this.confirmDeleteAssistantVisible = true;
-        this.assistantPendingDeletion = assistant;
-    }
+	editAssistant(assistantId: number) {
+		this.router.navigate(['/assistants/edit', assistantId]);
+	}
 
-    confirmDeleteAssistant() {
-        this.deleteInProgress = true;
-        this.confirmDeleteAssistantVisible = false;
-        this.assistantService.delete(this.assistantPendingDeletion).subscribe(() => {
-            this.assistantService.list().subscribe(assistants => {
-                this.assistants = assistants;
-                this.deleteInProgress = false;
-            });
-            this.conversationService.list().subscribe(conversations => {
-                this.conversations = conversations;
-            });
-        });
-        this.assistants = this.assistants.filter(item => item.id === this.assistantPendingDeletion.id);
-    }
+	deleteAssistant(assistant: Assistant) {
+		this.confirmDeleteAssistantVisible = true;
+		this.assistantPendingDeletion = assistant;
+	}
 
-    startConversation(assistant: Assistant): void {
-        this.conversationService.create(assistant).subscribe( conversationId => {
-            this.router.navigate(['/conversation', conversationId]);
-        })
-    }
+	confirmDeleteAssistant() {
+		this.deleteInProgress = true;
+		this.confirmDeleteAssistantVisible = false;
+		this.assistantService.delete(this.assistantPendingDeletion).subscribe(() => {
+			this.assistantService.list().subscribe(assistants => {
+				this.assistants = assistants;
+				this.deleteInProgress = false;
+			});
+			this.conversationService.list().subscribe(conversations => {
+				this.conversations = conversations;
+			});
+		});
+		this.assistants = this.assistants.filter(item => item.id === this.assistantPendingDeletion.id);
+	}
 
-    selectConversation(conversationId: string) {
-        this.router.navigate(['/conversation', conversationId]);
-    }
+	startConversation(assistant: Assistant): void {
+		this.conversationService.create(assistant).subscribe( conversation => {
+			this.router.navigate(['/conversation', conversation.conversationId]);
+		})
+	}
 
-    deleteConversation(conversationId: string) {
-        this.confirmDeleteConversationVisible = true;
-        this.conversationPendingDeletionId = conversationId;
-    }
+	selectConversation(conversation: Conversation) {
+		this.router.navigate(['/conversation', conversation.conversationId]);
+	}
 
-    confirmDeleteConversation() {
-        this.confirmDeleteConversationVisible = false;
-        this.conversationService.delete(this.conversationPendingDeletionId).subscribe(() => {
-            this.assistantService.list().subscribe(assistants => {
-                this.assistants = assistants;
-            });
-            this.conversationService.list().subscribe(conversations => {
-                this.conversations = conversations;
-            });
-        });
-        this.conversations = this.conversations.filter(item => item === this.conversationPendingDeletionId);
-    }
+	deleteConversation(conversation: Conversation) {
+		this.confirmDeleteConversationVisible = true;
+		this.conversationPendingDeletionId = conversation.conversationId;
+	}
 
-    fileListChanged(event: Event) {
-        const newFiles = (event.target as HTMLInputElement).files;
-        if (newFiles !== null) {
-            this.fileList = Array.from(newFiles).concat(Array.from(this.fileList));
-            this.fileList = [...new Set(this.fileList)];
-        }
-    }
+	confirmDeleteConversation() {
+		this.confirmDeleteConversationVisible = false;
+		this.conversationService.delete(this.conversationPendingDeletionId).subscribe(() => {
+			this.assistantService.list().subscribe(assistants => {
+				this.assistants = assistants;
+			});
+			this.conversationService.list().subscribe(conversations => {
+				this.conversations = conversations;
+			});
+		});
+		this.conversations = this.conversations.filter(item => item.conversationId === this.conversationPendingDeletionId);
+	}
 
-    removeFile(filename: string) {
-        this.fileList = this.fileList.filter(element => element.name != filename);
-    }
+	fileListChanged(event: Event) {
+		const newFiles = (event.target as HTMLInputElement).files;
+		if (newFiles) {
+			this.fileList = Array.from(newFiles).concat(Array.from(this.fileList));
+			this.fileList = [...new Set(this.fileList)];
+		}
+	}
 
-    isOwned(assistant: Assistant): boolean {
-        return assistant.ownerId === this.userService.getUser().id;
-    }
+	removeFile(filename: string) {
+		this.fileList = this.fileList.filter(element => element.name != filename);
+	}
+
+	isOwned(assistant: Assistant): boolean {
+		return assistant.ownerId === this.userService.getUser().id;
+	}
+
+	getConversationTitle(conversation: Conversation): string {
+		if (conversation.title !== null && conversation.title.length > 0) {
+			return conversation.title;
+		}
+		return conversation.conversationId;
+	}
 }

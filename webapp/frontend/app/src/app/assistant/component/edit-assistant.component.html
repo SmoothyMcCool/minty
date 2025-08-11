@@ -1,0 +1,66 @@
+<h5 class="text-light">You're Updating Your Assistant? I'm so Proud of you!</h5>
+<form role="form" class="container-fluid" (submit)="updateAssistant()">
+	<div class="form-group mb-2">
+		<label class="text-light" for="assistantName">Name</label>
+		<input type="text" class="form-control opacity-50" id="assistantName" name="assistantName"
+			[(ngModel)]="workingAssistant.name">
+	</div>
+	<div class="d-flex flex-row">
+		<div class="form-group mb-2 me-2">
+			<input type="checkbox" class="form-check-input" id="isShared" name="isShared"
+				[(ngModel)]="workingAssistant.shared">
+			<label class=" ms-1" for="isShared">Shared</label>
+		</div>
+		<div class="form-group mb-2">
+			<input type="checkbox" class="form-check-input" id="hasMemory" name="hasMemory"
+				[(ngModel)]="workingAssistant.hasMemory">
+			<label class=" ms-1" for="hasMemory">Keep conversation history</label>
+		</div>
+	</div>
+	<div class="form-group mb-2">
+		<label class="text-light" for="model">Model</label>
+		<select class="form-select opacity-50" name="model" [ngModel]="workingAssistant.model">
+			<option *ngFor="let model of models" value="{{model}}">{{model}}</option>
+		</select>
+	</div>
+	<div class="form-group mb-2">
+		<label class="text-light" for="assistantTemperature">Temperature</label>
+		<input type="number" step="0.1" min="0" max="1" class="form-control opacity-50" id="assistantTemperature"
+			name="assistantTemperature" [(ngModel)]="workingAssistant.temperature">
+	</div>
+	<div class="form-group mb-2">
+		<label class="text-light" for="assistantPrompt">Prompt</label>
+		<textarea class="form-control opacity-50" id="assistantPrompt" name="assistantPrompt" rows="10"
+			[(ngModel)]="workingAssistant.prompt"></textarea>
+	</div>
+	<div class="form-group mb-2" *ngIf="workingAssistant">
+		<label for="ragFile" class="form-label text-light">Documents to make your assistant less dumb</label>
+		<div class="row">
+			<div class="col">
+				<strong>Available Documents</strong>
+				<ul class="list-group">
+					<li class="list-group-item"
+						*ngFor="let doc of availableDocuments"
+						(click)="addDoc(doc)">
+					{{doc.title}}
+					</li>
+				</ul>
+			</div>
+			<div class="col">
+				<strong>Added Documents</strong>
+				<div class="list-group">
+					<button type="button" class="list-group-item list-group-item-action"
+						*ngFor="let doc of assistantDocuments"
+						(click)="removeDoc(doc)">
+					Title: {{doc.title}}
+				</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div>
+		<button type="submit" id="submitButton" [disabled]="formInvalid()" class="btn btn-primary">Neural Sync</button>
+		<button type="button" id="cancelButton" class="btn btn-primary float-end"
+			(click)="navigateTo('assistants')">Jack Out</button>
+	</div>
+</form>

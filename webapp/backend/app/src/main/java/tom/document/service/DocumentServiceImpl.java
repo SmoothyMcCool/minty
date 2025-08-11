@@ -26,11 +26,12 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
-import tom.model.Assistant;
+import jakarta.transaction.Transactional;
+import tom.document.model.DocumentState;
+import tom.document.model.MintyDoc;
+import tom.document.repository.DocumentRepository;
 import tom.ollama.service.MintyOllamaModel;
 import tom.ollama.service.OllamaService;
-import tom.task.services.AssistantService;
-import tom.task.services.DocumentService;
 
 @Service
 public class DocumentServiceImpl implements DocumentService {
@@ -38,24 +39,29 @@ public class DocumentServiceImpl implements DocumentService {
 	private static final Logger logger = LogManager.getLogger(DocumentServiceImpl.class);
 
 	private final ThreadPoolTaskExecutor fileProcessingExecutor;
-	private final AssistantService assistantService;
 	private final OllamaService ollamaService;
+	private final AssistantDocumentLinkService assistantDocumentLinkService;
 	private final OllamaApi ollamaApi;
+	private final DocumentRepository documentRepository;
 
 	@Value("${docFileStore}")
 	private String docFileStore;
 
-	public DocumentServiceImpl(OllamaApi ollamaApi, AssistantService assistantService,
-			@Qualifier("taskExecutor") ThreadPoolTaskExecutor fileProcessingExecutor, OllamaService ollamaService) {
+	@Value("${ollamaSummarizingModel}")
+	private String summarizingModel;
+
+	public DocumentServiceImpl(OllamaApi ollamaApi, DocumentRepository documentRepository,
+			@Qualifier("fileProcessingExecutor") ThreadPoolTaskExecutor fileProcessingExecutor,
+			OllamaService ollamaService, AssistantDocumentLinkService assistantDocumentLinkService) {
 		this.fileProcessingExecutor = fileProcessingExecutor;
-		this.assistantService = assistantService;
 		this.ollamaService = ollamaService;
 		this.ollamaApi = ollamaApi;
+		this.documentRepository = documentRepository;
+		this.assistantDocumentLinkService = assistantDocumentLinkService;
 	}
 
 	@PostConstruct
 	public void init() {
-		assistantService.setDocumentService(this);
 		Path docPath = Paths.get(docFileStore);
 
 		if (!docPath.toFile().isDirectory()) {
@@ -66,43 +72,30 @@ public class DocumentServiceImpl implements DocumentService {
 
 		File[] newFiles = docPath.toFile().listFiles();
 		for (File newFile : newFiles) {
-			startTaskFor(newFile.toPath());
+			String documentId = newFile.getName();
+			startTaskFor(newFile.toPath(), documentId);
 		}
 
 	}
 
 	@Override
 	public void processFile(File file) {
-		startTaskFor(file.toPath());
+		String documentId = file.getName();
+		startTaskFor(file.toPath(), documentId);
 	}
 
 	@Override
-	public void transformAndStore(File file, int userId, int assistantId) {
-		Assistant assistant = assistantService.findAssistant(userId, assistantId);
-		if (assistant.Null()) {
-			logger.warn("Tried to process a file for an assistant that does not exist or user has no permission: "
-					+ file.getName());
-			return;
-		}
+	public void transformAndStore(File file, MintyDoc doc) {
+		MintyOllamaModel model = MintyOllamaModel.valueOf(summarizingModel);
 
-		MintyOllamaModel model;
-		try {
-			model = MintyOllamaModel.valueOf(assistant.model());
-		} catch (Exception e) {
-			logger.warn("Invalid model: " + assistant.model() + ". Cannot continue");
-			return;
-		}
-
-		VectorStore vectorStore = ollamaService.getVectorStore(model);
+		VectorStore vectorStore = ollamaService.getVectorStore();
 		ChatModel chatModel = OllamaChatModel.builder().ollamaApi(ollamaApi)
-				.defaultOptions(
-						OllamaOptions.builder().model(model.getName()).temperature(assistant.temperature()).build())
-				.build();
+				.defaultOptions(OllamaOptions.builder().model(model.id()).build()).build();
 
 		FileSystemResource resource = new FileSystemResource(file);
 		List<Document> documents = read(resource);
 		documents = split(documents);
-		documents = enrich(documents, assistantId, chatModel);
+		documents = enrich(doc.getDocumentId(), documents, chatModel);
 		documents = summarize(documents, chatModel);
 		vectorStore.add(documents);
 	}
@@ -119,12 +112,12 @@ public class DocumentServiceImpl implements DocumentService {
 
 	private static int NumKeywordsPerDocument = 5;
 
-	private List<Document> enrich(List<Document> documents, int assistantId, ChatModel chatModel) {
+	private List<Document> enrich(String documentId, List<Document> documents, ChatModel chatModel) {
 		KeywordMetadataEnricher keywordifier = new KeywordMetadataEnricher(chatModel, NumKeywordsPerDocument);
 		documents = keywordifier.apply(documents);
 
 		for (Document document : documents) {
-			document.getMetadata().put("assistantId", assistantId);
+			document.getMetadata().put("documentId", documentId);
 		}
 
 		return documents;
@@ -136,24 +129,17 @@ public class DocumentServiceImpl implements DocumentService {
 		return summarizer.apply(documents);
 	}
 
-	private void startTaskFor(Path file) {
+	private void startTaskFor(Path file, String documentId) {
 		String filename = file.getFileName().toString();
-		int userId = userIdFromFilePath(file);
+		MintyDoc doc = this.findByDocumentId(documentId);
 
-		if (userId == -1) {
-			logger.error("DocumentServiceImpl: Found a file with a bad filename. Cannot process: " + filename);
-			return;
-		}
-
-		int assistantId = assistantIdFromFilePath(file);
-		if (assistantId == -1) {
-			logger.error("DocumentServiceImpl: Found a file with a bad filename. Cannot process: " + filename);
+		if (doc == null) {
+			logger.warn("Attempted to start a task for a document that does not exist!");
 			return;
 		}
 
 		try {
-			DocumentProcessingTask dpt = new DocumentProcessingTask(file.toFile(), userId, assistantId, this,
-					assistantService);
+			DocumentProcessingTask dpt = new DocumentProcessingTask(file.toFile(), this);
 			fileProcessingExecutor.submit(dpt);
 		} catch (NumberFormatException e) {
 			logger.error("DocumentServiceImpl: Found a file with a bad filename. Cannot process: " + filename);
@@ -161,58 +147,59 @@ public class DocumentServiceImpl implements DocumentService {
 	}
 
 	@Override
-	public void deleteDocumentsForAssistant(int userId, int assistantId) {
+	@Transactional
+	public boolean deleteDocument(int userId, String documentId) {
 
-		Assistant assistant = assistantService.findAssistant(userId, assistantId);
-		if (assistant.Null()) {
-			logger.warn("Tried to access an assistant that does not exist or user has no permission. User " + userId
-					+ ", assistant: " + assistantId);
-			return;
+		MintyDoc document = findByDocumentId(documentId);
+		if (document.getOwnerId() != userId) {
+			logger.warn("User " + userId + " tried to delete unowned document " + documentId);
+			return false;
 		}
 
-		MintyOllamaModel model;
-		try {
-			model = MintyOllamaModel.valueOf(assistant.model());
-		} catch (Exception e) {
-			logger.warn("Invalid model: " + assistant.model() + ". Cannot continue");
-			return;
-		}
+		VectorStore vectorStore = ollamaService.getVectorStore();
+		vectorStore.delete(" documentId == \"" + documentId + "\"");
 
-		VectorStore vectorStore = ollamaService.getVectorStore(model);
+		documentRepository.deleteByDocumentId(documentId);
 
-		vectorStore.delete(" assistantId == " + assistantId);
+		return true;
 	}
 
 	@Override
-	public String constructFilename(int userId, int assistantId, String originalFilename) {
-		return userId + "-" + assistantId + "-" + originalFilename;
+	public void markDocumentComplete(MintyDoc doc) {
+		doc.setState(DocumentState.READY);
+		documentRepository.save(doc);
 	}
 
-	private int userIdFromFilePath(Path path) {
-		String filename = path.getFileName().toString();
-		String[] parts = filename.split("-");
-		if (parts.length < 3) {
-			return -1;
-		}
-		try {
-			return Integer.parseInt(parts[0]);
-		} catch (Exception e) {
-			logger.error("Could not get userId from file " + path + ". Using Null id.");
-		}
-		return -1;
+	@Override
+	public List<MintyDoc> listDocuments() {
+		List<MintyDoc> docs = documentRepository.findAll();
+		docs.forEach(doc -> {
+			doc.setAssociatedAssistants(assistantDocumentLinkService.getAssistantIdsForDocument(doc.getDocumentId()));
+		});
+		return docs;
 	}
 
-	private int assistantIdFromFilePath(Path path) {
-		String filename = path.getFileName().toString();
-		String[] parts = filename.split("-");
-		if (parts.length < 3) {
-			return -1;
-		}
-		try {
-			return Integer.parseInt(parts[1]);
-		} catch (Exception e) {
-			logger.error("Could not get assistantId from file " + path + ". Using Null id.");
-		}
-		return -1;
+	@Override
+	public boolean documentExists(String documentId) {
+		return documentRepository.existsByDocumentId(documentId);
 	}
+
+	@Override
+	public MintyDoc addDocument(int userId, MintyDoc document) {
+		document.setOwnerId(userId);
+		document.setState(DocumentState.NO_CONTENT);
+		return documentRepository.save(document);
+	}
+
+	@Override
+	public boolean documentOwnedBy(int userId, String documentId) {
+		MintyDoc doc = documentRepository.findByDocumentId(documentId);
+		return userId == doc.getOwnerId();
+	}
+
+	@Override
+	public MintyDoc findByDocumentId(String documentId) {
+		return documentRepository.findByDocumentId(documentId);
+	}
+
 }

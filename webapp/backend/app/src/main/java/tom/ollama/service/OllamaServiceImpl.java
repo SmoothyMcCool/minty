@@ -1,9 +1,7 @@
 package tom.ollama.service;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.sql.DataSource;
 
@@ -33,8 +31,11 @@ public class OllamaServiceImpl implements OllamaService {
 
 	private static final Logger logger = LogManager.getLogger(OllamaServiceImpl.class);
 
-	@Value("${ollamaModels}")
-	private String ollamaModels;
+	@Value("${ollamaChatModels}")
+	private String ollamaChatModels;
+
+	@Value("${ollamaEmbeddingModel}")
+	private String embeddingModelName;
 
 	@Value("${chatMemoryDepth}")
 	private int chatMemoryDepth;
@@ -43,7 +44,7 @@ public class OllamaServiceImpl implements OllamaService {
 	private String defaultModel;
 
 	private List<MintyOllamaModel> models;
-	private Map<MintyOllamaModel, ModelObject> modelObjects;
+	ModelObject modelObject;
 	private final OllamaApi ollamaApi;
 	private final JdbcTemplate vectorJdbcTemplate;
 	private final DataSource dataSource;
@@ -52,37 +53,36 @@ public class OllamaServiceImpl implements OllamaService {
 		this.ollamaApi = ollamaApi;
 		this.vectorJdbcTemplate = vectorJdbcTemplate;
 		this.dataSource = dataSource;
-		modelObjects = new HashMap<>();
+		modelObject = null;
 	}
 
 	@PostConstruct
 	public void initialize() {
-		models = Arrays.asList(ollamaModels.split(",")).stream().map(model -> MintyOllamaModel.valueOf(model)).toList();
+		models = Arrays.asList(ollamaChatModels.split(",")).stream().map(model -> MintyOllamaModel.valueOf(model))
+				.toList();
 
 		if (models == null) {
 			logger.error("No models found!");
 			return;
 		}
 
-		models.forEach(model -> {
-			logger.info("Registering model " + model);
-			OllamaOptions options = OllamaOptions.builder().model(model.getName()).build();
+		MintyOllamaModel embeddingModelEnum = MintyOllamaModel.valueOf(embeddingModelName);
+		OllamaOptions embeddingOptions = OllamaOptions.builder().model(embeddingModelEnum.getName()).build();
+		EmbeddingModel embeddingModel = new OllamaEmbeddingModel(ollamaApi, embeddingOptions, ObservationRegistry.NOOP,
+				ModelManagementOptions.defaults());
 
-			EmbeddingModel embeddingModel = new OllamaEmbeddingModel(ollamaApi, options, ObservationRegistry.NOOP,
-					ModelManagementOptions.defaults());
+		MariaDBVectorStore vectorStore = MariaDBVectorStore.builder(vectorJdbcTemplate, embeddingModel)
+				.schemaName("Minty").vectorTableName("vector_store").idFieldName("doc_id").contentFieldName("text")
+				.metadataFieldName("meta").embeddingFieldName("embedding").initializeSchema(true).build();
 
-			VectorStore vectorStore = MariaDBVectorStore.builder(vectorJdbcTemplate, embeddingModel)
-					.initializeSchema(true).build();
+		ChatMemoryRepository chatMemoryRepository = JdbcChatMemoryRepository.builder().jdbcTemplate(vectorJdbcTemplate)
+				.dialect(JdbcChatMemoryRepositoryDialect.from(dataSource)).build();
 
-			ChatMemoryRepository chatMemoryRepository = JdbcChatMemoryRepository.builder()
-					.jdbcTemplate(vectorJdbcTemplate).dialect(JdbcChatMemoryRepositoryDialect.from(dataSource)).build();
+		ChatMemory chatMemory = MessageWindowChatMemory.builder().maxMessages(chatMemoryDepth)
+				.chatMemoryRepository(chatMemoryRepository).build();
 
-			ChatMemory chatMemory = MessageWindowChatMemory.builder().maxMessages(chatMemoryDepth)
-					.chatMemoryRepository(chatMemoryRepository).build();
+		modelObject = new ModelObject(embeddingModel, vectorStore, chatMemory, chatMemoryRepository);
 
-			modelObjects.put(model, new ModelObject(embeddingModel, vectorStore, chatMemory, chatMemoryRepository));
-
-		});
 	}
 
 	@Override
@@ -91,23 +91,23 @@ public class OllamaServiceImpl implements OllamaService {
 	}
 
 	@Override
-	public EmbeddingModel getEmbeddingModel(MintyOllamaModel model) {
-		return modelObjects.get(model).embeddingModel();
+	public EmbeddingModel getEmbeddingModel() {
+		return modelObject.embeddingModel();
 	}
 
 	@Override
-	public VectorStore getVectorStore(MintyOllamaModel model) {
-		return modelObjects.get(model).vectorStore();
+	public VectorStore getVectorStore() {
+		return modelObject.vectorStore();
 	}
 
 	@Override
-	public ChatMemoryRepository getChatMemoryRepository(MintyOllamaModel model) {
-		return modelObjects.get(model).chatMemoryRepository();
+	public ChatMemoryRepository getChatMemoryRepository() {
+		return modelObject.chatMemoryRepository();
 	}
 
 	@Override
-	public ChatMemory getChatMemory(MintyOllamaModel model) {
-		return modelObjects.get(model).chatMemory();
+	public ChatMemory getChatMemory() {
+		return modelObject.chatMemory();
 	}
 
 	@Override

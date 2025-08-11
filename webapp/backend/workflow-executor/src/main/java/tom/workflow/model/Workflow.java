@@ -6,13 +6,15 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class Workflow {
 
-	private int id;
-	private String name;
-	private String description;
-	private int ownerId;
-	private boolean shared;
-	private List<Task> workflowSteps;
-	private Task outputStep;
+	private int id = 0;
+	private String name = "";
+	private String description = "";
+	private int ownerId = 0;
+	private boolean shared = false;
+	private List<Task> workflowSteps = null;
+	private Task outputStep = null;
+	private boolean triggered = false;
+	private String watchLocation = "";
 
 	public int getId() {
 		return id;
@@ -75,4 +77,19 @@ public class Workflow {
 		return workflowSteps.size();
 	}
 
+	public String getWatchLocation() {
+		return watchLocation;
+	}
+
+	public void setWatchLocation(String watchLocation) {
+		this.watchLocation = watchLocation;
+	}
+
+	public boolean isTriggered() {
+		return triggered;
+	}
+
+	public void setTriggered(boolean triggered) {
+		this.triggered = triggered;
+	}
 }

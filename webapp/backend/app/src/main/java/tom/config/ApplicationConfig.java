@@ -19,13 +19,17 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.http.converter.xml.MappingJackson2XmlHttpMessageConverter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.lang.NonNull;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.session.jdbc.config.annotation.web.http.EnableJdbcHttpSession;
 import org.springframework.session.web.http.HeaderHttpSessionIdResolver;
 import org.springframework.session.web.http.HttpSessionIdResolver;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.multipart.MultipartResolver;
 import org.springframework.web.multipart.support.StandardServletMultipartResolver;
+import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
@@ -44,12 +48,16 @@ import de.neuland.pug4j.template.FileTemplateLoader;
 @EnableJdbcHttpSession
 @PropertySource("classpath:application.properties")
 @EnableTransactionManagement
+@EnableScheduling
 public class ApplicationConfig implements WebMvcConfigurer {
 
 	private static final Logger logger = LogManager.getLogger(ApplicationConfig.class);
 
 	@Value("${ollamaUri}")
 	private String ollamaUri;
+
+	@Value("${asyncResponseTimeout}")
+	private String asyncResponseTimeout;
 
 	@Bean
 	public HttpSessionIdResolver httpSessionIdResolver() {
@@ -61,7 +69,7 @@ public class ApplicationConfig implements WebMvcConfigurer {
 	ThreadPoolTaskExecutor taskExecutor() {
 		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
 		taskExecutor.setCorePoolSize(5);
-		taskExecutor.setMaxPoolSize(10);
+		taskExecutor.setMaxPoolSize(20);
 		return taskExecutor;
 	}
 
@@ -79,6 +87,16 @@ public class ApplicationConfig implements WebMvcConfigurer {
 	SimpleAsyncTaskExecutor simpleExecutor() {
 		SimpleAsyncTaskExecutor simpleExecutor = new SimpleAsyncTaskExecutor();
 		return simpleExecutor;
+	}
+
+	// For use by @Scheduled
+	@Bean
+	public TaskScheduler taskScheduler() {
+		ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+		scheduler.setPoolSize(2);
+		scheduler.setThreadNamePrefix("spring-scheduler-");
+		scheduler.initialize();
+		return scheduler;
 	}
 
 	@Bean
@@ -142,5 +160,10 @@ public class ApplicationConfig implements WebMvcConfigurer {
 	@Override
 	public void addViewControllers(@NonNull ViewControllerRegistry registry) {
 		registry.addViewController("/").setViewName("forward:/index.html");
+	}
+
+	@Override
+	public void configureAsyncSupport(@NonNull AsyncSupportConfigurer configurer) {
+		configurer.setDefaultTimeout(Integer.parseInt(asyncResponseTimeout));
 	}
 }

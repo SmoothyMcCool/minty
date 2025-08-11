@@ -1,4 +1,4 @@
 export interface ChatMessage {
-    user: boolean;
-    message: string;
+	user: boolean;
+	message: string;
 };

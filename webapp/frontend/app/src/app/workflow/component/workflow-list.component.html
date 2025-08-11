@@ -1,45 +1,61 @@
 <h2 class="text-secondary">Runnable Workflows</h2>
 <div class="row">
-  <div class="col-4" *ngFor="let workflow of workflows">
-    <div class="card">
-      <div class="card-body">
-        <button *ngIf="isOwned(workflow)" type="button" class="bi bi-trash3" style="font-size: 20px; color: red; float: right;" (click)="deleteWorkflow(workflow)"></button>
-        <h5 class="card-title">{{workflow.name}}</h5>
-        <p class="card-text">{{workflow.description}}</p>
-        <button class="btn btn-primary" (click)="navigateToWorkflow(workflow.id)">Low-key stoked!</button>
-      </div>
-    </div>
-  </div>
+	<div class="col-4" *ngFor="let workflow of workflows">
+		<div class="card">
+			<div class="card-body">
+				<button
+					*ngIf="isOwned(workflow)"
+					class="bi bi-pencil-square me-2"
+					style="font-size: 20px;"
+					(click)="editWorkflow(workflow.id)">
+				</button>
+				<button *ngIf="isOwned(workflow)"
+					type="button"
+					class="bi bi-trash3"
+					style="font-size: 20px; color: red; float: right;"
+					(click)="deleteWorkflow(workflow)">
+				</button>
+				<h5 class="card-title">{{workflow.name}}</h5>
+				<p class="card-text">{{workflow.description}}</p>
+				<button class="btn btn-primary" (click)="navigateToWorkflow(workflow.id)">Low-key stoked!</button>
+			</div>
+		</div>
+	</div>
 </div>
 
 <div class="row well p-2 mx-1 my-2">
-  <div class="col-3">
-    This list refreshes every five seconds.
-    <div class="d-grid gap-3" *ngFor="let result of results">
-      <div class="p-2 bg-light border btn text-start" (click)="displayResultsFor(result)">
-        <button type="button" class="bi bi-trash3" style="font-size: 20px; color: red; float: right;" (click)="deleteResult($event, result)"></button>
-        {{result}}
-      </div>
-    </div>
-  </div>
-  <div class="col-9">
-    <button class="btn btn-primary" *ngIf="responseText" (click)="copyToClipboard()">Copy to clipboard</button>
-    <div *ngIf="responseText">
-      <ng-container *ngIf="responseType === 'JSON'; else notJson">
-        <pre style="white-space: pre-wrap;">{{responseText}}</pre>
-      </ng-container>
-      <ng-template #notJson>
-        <ng-container *ngIf="responseType === 'HTML'; else Text">
-          <div [innerHtml]="responseText"></div>
-        </ng-container>
-      </ng-template>
-      <ng-template #Text>
-        <ng-container *ngIf="responseType === 'TEXT'">
-          <p>{{responseText}}</p>
-        </ng-container>
-      </ng-template>
-    </div>
-  </div>
+	<div class="col-3">
+		This list refreshes every five seconds.
+		<div class="d-grid gap-3" *ngFor="let result of results">
+			<div class="p-2 bg-light border btn text-start" (click)="displayResultsFor(result)">
+				<button type="button" class="bi bi-trash3" style="font-size: 20px; color: red; float: right;"
+					(click)="deleteResult($event, result)"></button>
+				{{result}}
+			</div>
+		</div>
+	</div>
+	<div class="col-9">
+		<button class="btn btn-primary" *ngIf="responseText" (click)="copyToClipboard()">Copy to clipboard</button>
+		<div *ngIf="responseText">
+			<ng-container *ngIf="responseType === 'JSON'; else notJson">
+				<pre style="white-space: pre-wrap;">{{responseText}}</pre>
+			</ng-container>
+			<ng-template #notJson>
+				<ng-container *ngIf="responseType === 'HTML'; else Text">
+					<div [innerHtml]="responseText"></div>
+				</ng-container>
+			</ng-template>
+			<ng-template #Text>
+				<ng-container *ngIf="responseType === 'TEXT'">
+					<p>{{responseText}}</p>
+				</ng-container>
+			</ng-template>
+		</div>
+	</div>
 </div>
-<minty-confirmation-dialog [title]="'Delete Workflow'" [message]="'Are you sure you want to delete this Workflow?'" [visible]="confirmWorkflowDeleteVisible" (confirm)="confirmDeleteWorkflow()" (cancel)="confirmWorkflowDeleteVisible = false"></minty-confirmation-dialog>
-<minty-confirmation-dialog [title]="'Delete Result'" [message]="'Are you sure you want to delete this result?'" [visible]="confirmResultDeleteVisible" (confirm)="confirmDeleteResult()" (cancel)="confirmResultDeleteVisible = false"></minty-confirmation-dialog>
+<minty-confirmation-dialog [title]="'Delete Workflow'" [message]="'Are you sure you want to delete this Workflow?'"
+	[visible]="confirmWorkflowDeleteVisible" (confirm)="confirmDeleteWorkflow()"
+	(cancel)="confirmWorkflowDeleteVisible = false"></minty-confirmation-dialog>
+<minty-confirmation-dialog [title]="'Delete Result'" [message]="'Are you sure you want to delete this result?'"
+	[visible]="confirmResultDeleteVisible" (confirm)="confirmDeleteResult()"
+	(cancel)="confirmResultDeleteVisible = false"></minty-confirmation-dialog>

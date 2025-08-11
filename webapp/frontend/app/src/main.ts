@@ -7,7 +7,6 @@ import { ViewAssistantsComponent } from './app/assistant/component/view-assistan
 import { AuthorizedInterceptor } from './app/auth.interceptor';
 import { LoginComponent } from './app/app/component/login.component';
 import { SignupComponent } from './app/app/component/signup.component';
-import { ViewMainComponent } from './app/app/component/view-main.component';
 import { ViewUserComponent } from './app/app/component/view-user.component';
 import { ViewConversationComponent } from './app/assistant/component/view-conversation.component';
 import { AssistantsListComponent } from './app/assistant/component/assistants-list.component';
@@ -19,81 +18,90 @@ import { WorkflowComponent } from './app/workflow/component/workflow.component';
 import { WorkflowListComponent } from './app/workflow/component/workflow-list.component';
 import { importProvidersFrom } from '@angular/core';
 import { MarkdownModule } from 'ngx-markdown';
+import { EditAssistantComponent } from './app/assistant/component/edit-assistant.component';
+import { EditWorkflowComponent } from './app/workflow/component/edit-workflow.component';
+import { ViewDocumentsComponent } from './app/document/view-documents.component';
+import { ResponseInterceptor } from './app/response-interceptor';
 
 bootstrapApplication(AppComponent, {
   providers: [
-        { provide: HTTP_INTERCEPTORS, useClass: AuthorizedInterceptor, multi: true },
-        { provide: HTTP_INTERCEPTORS, useClass: XhrInterceptor, multi: true },
-        provideRouter([
-            {
-                path: '',
-                redirectTo: 'home',
-                pathMatch: 'full'
-            },
-            {
-                path: 'login',
-                component: LoginComponent,
-            },
-            {
-                path: 'signup',
-                component: SignupComponent,
-            },
-            {
-                path: 'home',
-                component: ViewMainComponent,
-            },
-            {
-                path: 'home/**',
-                redirectTo: 'home'
-            },
-            {
-                path: 'assistants',
-                component: ViewAssistantsComponent,
-                children: [
-                    {
-                        path: 'new',
-                        component: NewAssistantComponent
-                    },
-                    {
-                        path: '',
-                        component: AssistantsListComponent
-                    }
-                ]
-            },
-            {
-                path: 'conversation/:id',
-                component: ViewConversationComponent
-            },
-            {
-                path: 'workflow',
-                component: ViewWorkflowComponent,
-                children: [
-                    {
-                        path: 'new',
-                        component: NewWorkflowComponent
-                    },
-                    {
-                        path: ':id',
-                        component: WorkflowComponent
-                    },
-                    {
-                        path: '',
-                        component: WorkflowListComponent
-                    }
-                ]
-            },
-            {
-                path: 'user',
-                component: ViewUserComponent,
-            },
-            {
-                path: 'statistics',
-                component: ViewStatisticsComponent,
-            }
-        ]/*, withDebugTracing()*/),
-        provideHttpClient(withInterceptorsFromDi()),
-        importProvidersFrom(
-            MarkdownModule.forRoot()
-        )
-    ]
+		{ provide: HTTP_INTERCEPTORS, useClass: AuthorizedInterceptor, multi: true },
+		{ provide: HTTP_INTERCEPTORS, useClass: XhrInterceptor, multi: true },
+		{ provide: HTTP_INTERCEPTORS, useClass: ResponseInterceptor, multi: true },
+		provideRouter([
+			{
+				path: '',
+				redirectTo: 'assistants',
+				pathMatch: 'full'
+			},
+			{
+				path: 'login',
+				component: LoginComponent,
+			},
+			{
+				path: 'signup',
+				component: SignupComponent,
+			},
+			{
+				path: 'assistants',
+				component: ViewAssistantsComponent,
+				children: [
+					{
+						path: 'new',
+						component: NewAssistantComponent
+					},
+					{
+						path: 'edit/:id',
+						component: EditAssistantComponent
+					},
+					{
+						path: '',
+						component: AssistantsListComponent
+					}
+				]
+			},
+			{
+				path: 'conversation/:id',
+				component: ViewConversationComponent
+			},
+			{
+				path: 'workflow',
+				component: ViewWorkflowComponent,
+				children: [
+					{
+						path: 'new',
+						component: NewWorkflowComponent
+					},
+					{
+						path: 'edit/:id',
+						component: EditWorkflowComponent
+					},
+					{
+						path: ':id',
+						component: WorkflowComponent
+					},
+					{
+						path: '',
+						component: WorkflowListComponent
+					}
+				]
+			},
+			{
+				path: 'documents',
+				component: ViewDocumentsComponent
+			},
+			{
+				path: 'user',
+				component: ViewUserComponent
+			},
+			{
+				path: 'statistics',
+				component: ViewStatisticsComponent
+			}
+		]/*, withDebugTracing()*/),
+		provideHttpClient(withInterceptorsFromDi()),
+		importProvidersFrom(
+			MarkdownModule.forRoot()
+		)
+	]
 });

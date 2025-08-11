@@ -1,33 +1,33 @@
 <div class="bg-image img-stats text-dark">
-  <div class="container">
-    <h1>Statistics</h1>
+	<div class="container">
+		<h1>Statistics</h1>
 
-    <div class="well p-2">
-      <table class="table">
-        <thead>
-          <tr>
-            <th scope="col">User ID</th>
-            <th scope="col">Assistants Created</th>
-            <th scope="col">Total Conversations</th>
-            <th scope="col">Workflows Created</th>
-            <th scope="col">Workflows Run</th>
-            <th scope="col">Total Logins</th>
-            <th scope="col">Last Login</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let user of metadata">
-            <th scope="row">{{user.userId}}</th>
-            <td>{{user.totalAssistantsCreated}}</td>
-            <td>{{user.totalConversations}}</td>
-            <td>{{user.totalWorkflowsCreated}}</td>
-            <td>{{user.totalWorkflowRuns}}</td>
-            <td>{{user.totalLogins}}</td>
-            <td>{{user.lastLogin | date}}</td>
-          </tr>
-        </tbody>
-      </table>
+		<div class="well p-2">
+			<table class="table">
+				<thead>
+					<tr>
+						<th scope="col">User ID</th>
+						<th scope="col">Assistants Created</th>
+						<th scope="col">Total Conversations</th>
+						<th scope="col">Workflows Created</th>
+						<th scope="col">Workflows Run</th>
+						<th scope="col">Total Logins</th>
+						<th scope="col">Last Login</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr *ngFor="let user of metadata">
+						<th scope="row">{{user.userId}}</th>
+						<td>{{user.totalAssistantsCreated}}</td>
+						<td>{{user.totalConversations}}</td>
+						<td>{{user.totalWorkflowsCreated}}</td>
+						<td>{{user.totalWorkflowRuns}}</td>
+						<td>{{user.totalLogins}}</td>
+						<td>{{user.lastLogin | date}}</td>
+					</tr>
+				</tbody>
+			</table>
 
-    </div>
-  </div>
+		</div>
+	</div>
 </div>

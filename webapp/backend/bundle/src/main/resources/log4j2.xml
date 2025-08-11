@@ -20,7 +20,12 @@
 		<Logger name="org.hibernate" level="info" />
 		<Logger name="org.hibernate.SQL" level="info" />
 		<Logger name="org.hibernate.type" level="info" />
+		<Logger name="org.hibernate.mapping" level="info" />
 		<Logger name="org.springframework" level="info" />
+		<Logger name="org.springframework.ai.ollama" level="debug" />
+		<Logger name="org.springframework.web.client.RestTemplate" level="debug" />
+		<!--Logger name="org.springframework.jdbc.core.JdbcTemplate" level="debug" />
+		<Logger name="org.springframework.ai" level="debug" /-->
 		<Logger name="tom" level="info" />
 		<Logger name="org.springframework.security" level="info" />
 	</Loggers>

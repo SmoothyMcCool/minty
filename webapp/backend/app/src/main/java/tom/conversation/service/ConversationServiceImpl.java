@@ -1,18 +1,28 @@
 package tom.conversation.service;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
+import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.MessageType;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
-import tom.assistant.service.AssistantServiceInternal;
+import jakarta.transaction.Transactional;
+import tom.assistant.service.management.AssistantManagementServiceInternal;
+import tom.conversation.model.Conversation;
+import tom.conversation.repository.ConversationRepository;
 import tom.model.Assistant;
-import tom.ollama.service.MintyOllamaModel;
+import tom.model.ChatMessage;
 import tom.ollama.service.OllamaService;
+import tom.task.services.assistant.AssistantManagementService;
 import tom.user.service.UserServiceInternal;
 
 @Service
@@ -20,88 +30,84 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 
 	private static final Logger logger = LogManager.getLogger(ConversationServiceImpl.class);
 
-	private final AssistantServiceInternal assistantService;
+	private final AssistantManagementServiceInternal assistantManagementService;
 	private final UserServiceInternal userService;
 	private final OllamaService ollamaService;
+	private final ConversationRepository conversationRepository;
 
-	public ConversationServiceImpl(UserServiceInternal userService, AssistantServiceInternal assistantService,
-			OllamaService ollamaService) {
+	public ConversationServiceImpl(ConversationRepository conversationRepository, UserServiceInternal userService,
+			AssistantManagementServiceInternal assistantManagementService, OllamaService ollamaService) {
 		this.userService = userService;
-		this.assistantService = assistantService;
+		this.assistantManagementService = assistantManagementService;
 		this.ollamaService = ollamaService;
+		this.conversationRepository = conversationRepository;
 	}
 
 	@PostConstruct
 	public void initialize() {
-		assistantService.setConversationService(this);
+		assistantManagementService.setConversationService(this);
 	}
 
 	@Override
 	public void deleteConversationsForAssistant(int userId, int assistantId) {
-		Assistant assistant = assistantService.findAssistant(userId, assistantId);
+		List<Conversation> conversations = conversationRepository.findAllByOwnerIdAndAssociatedAssistantId(userId,
+				assistantId);
+		ChatMemoryRepository chatMemoryRepository = ollamaService.getChatMemoryRepository();
 
-		MintyOllamaModel model;
-		try {
-			model = MintyOllamaModel.valueOf(assistant.model());
-		} catch (Exception e) {
-			logger.warn("Invalid model: " + assistant.model() + ". Cannot continue");
-			return;
-		}
-
-		ChatMemoryRepository chatMemoryRepository = ollamaService.getChatMemoryRepository(model);
-
-		List<String> chats = chatMemoryRepository.findConversationIds();
-		chats.stream().filter(chat -> {
-			String[] split = chat.split(":");
-			if (split.length > 2) {
-				int convoAssistantId = getAssistantIdFromConversationId(chat);
-				String convoUserName = getUserNameFromConversationId(chat);
-				String userName = userService.getUsernameFromId(userId);
-				return assistantId == convoAssistantId && userName == convoUserName;
-			}
-			return false;
-		}).forEach(chat -> chatMemoryRepository.deleteByConversationId(chat));
+		conversations.forEach(conversation -> {
+			chatMemoryRepository.deleteByConversationId(conversation.getConversationId());
+		});
 
 	}
 
 	@Override
 	public String getUserNameFromConversationId(String conversationId) {
-		return conversationId.split(":")[0];
+		Conversation conversation = conversationRepository.findByConversationId(conversationId);
+		return userService.getUsernameFromId(conversation.getOwnerId());
 	}
 
 	@Override
 	public int getAssistantIdFromConversationId(String conversationId) {
-		return Integer.parseInt(conversationId.split(":")[1]);
+		Conversation conversation = conversationRepository.findByConversationId(conversationId);
+		Integer assistantId = conversation.getAssociatedAssistantId();
+		if (assistantId == null) {
+			return AssistantManagementService.DefaultAssistantId;
+		}
+		return assistantId;
 	}
 
 	@Override
-	public String getDefaultConversationId(String username) {
-		return username + ":0:default";
-	}
+	public List<ChatMessage> getChatMessages(int userId, String conversationId) {
+		String model = getModelforConversation(userId, conversationId);
 
-	@Override
-	public List<List<String>> getConversationsForWorkflow(String workflowName) {
-		ChatMemoryRepository chatMemoryRepository = ollamaService
-				.getChatMemoryRepository(ollamaService.getDefaultModel());
+		List<ChatMessage> result = new ArrayList<>();
 
-		List<String> chats = chatMemoryRepository.findConversationIds();
+		if (model != null) {
+			ChatMemory chatMemory = ollamaService.getChatMemory();
 
-		if (chats.isEmpty()) {
-			return List.of();
+			List<Message> messages = chatMemory.get(conversationId);
+			result = messages.stream()
+					.map(message -> new ChatMessage(message.getMessageType() == MessageType.USER, message.getText()))
+					.collect(Collectors.toList());
+			Collections.reverse(result);
 		}
 
-		chats = chats.stream().filter(chat -> {
-			String[] split = chat.split(":");
-			if (split.length > 2) {
-				String convoWorkflowName = getWorkflowFromConversationId(chat);
-				return workflowName.compareTo(convoWorkflowName) == 0;
-			}
-			return false;
-		}).toList();
+		return result;
+	}
 
-		List<List<String>> chatMessages = chats.stream().map(chat -> {
-			List<String> msgs = chatMemoryRepository.findByConversationId(chat).stream()
-					.map(message -> message.getText()).toList();
+	@Override
+	public List<List<ChatMessage>> getChatMessagesForWorkflow(String workflowName) {
+
+		List<Conversation> conversations = conversationRepository.findAllByAssociatedWorkflow(workflowName);
+
+		ChatMemoryRepository chatMemoryRepository = ollamaService.getChatMemoryRepository();
+
+		List<List<ChatMessage>> chatMessages = conversations.stream().map(conversation -> {
+			List<ChatMessage> msgs = chatMemoryRepository.findByConversationId(conversation.getConversationId())
+					.stream().map(message -> {
+						return new ChatMessage(message.getMessageType().compareTo(MessageType.USER) == 0,
+								message.getText());
+					}).toList();
 			return msgs;
 		}).toList();
 
@@ -110,41 +116,83 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 
 	@Override
 	public void deleteConversationsForWorkflow(int userId, String workflowName) {
-		ChatMemoryRepository chatMemoryRepository = ollamaService
-				.getChatMemoryRepository(ollamaService.getDefaultModel());
 
-		List<String> chats = chatMemoryRepository.findConversationIds();
-		chats.stream().filter(chat -> {
-			String[] split = chat.split(":");
-			if (split.length > 2) {
-				String convoWorkflowName = getWorkflowFromConversationId(chat);
-				return workflowName.compareTo(convoWorkflowName) == 0;
-			}
-			return false;
-		}).forEach(chat -> {
-			logger.info("Deleting workflow conversation " + chat);
-			chatMemoryRepository.deleteByConversationId(chat);
+		List<Conversation> conversations = conversationRepository.findAllByAssociatedWorkflow(workflowName);
+
+		ChatMemoryRepository chatMemoryRepository = ollamaService.getChatMemoryRepository();
+
+		conversations.forEach(conversation -> {
+			logger.info("Deleting workflow conversation " + conversation.getConversationId());
+			chatMemoryRepository.deleteByConversationId(conversation.getConversationId());
 		});
+		return;
 	}
 
 	@Override
-	public boolean conversationOwnedBy(String conversationId, String username) {
-		String convoUserId = getUserNameFromConversationId(conversationId);
-		return username.equals(convoUserId);
+	@Transactional
+	public boolean deleteConversation(int userId, String conversationId) {
+		Conversation conversation = conversationRepository.findByConversationId(conversationId);
+		if (conversation.getOwnerId() != userId) {
+			logger.warn("Conversation " + conversationId + " not owned by " + userId);
+			return false;
+		}
+
+		ChatMemory chatMemory = ollamaService.getChatMemory();
+
+		chatMemory.clear(conversationId);
+		conversationRepository.deleteByConversationId(conversationId);
+
+		return true;
 	}
 
 	@Override
-	public String newConversationId(String username, int assistantId) {
-		return username + ":" + assistantId + ":" + UUID.randomUUID().toString();
+	public boolean conversationOwnedBy(String conversationId, int userId) {
+		Conversation conversation = conversationRepository.findByConversationId(conversationId);
+		if (conversation == null) {
+			return false;
+		}
+		return userId == conversation.getOwnerId();
 	}
 
 	@Override
-	public String newConversationId(int userId, int assistantId, String workflowName) {
-		String username = userService.getUsernameFromId(userId);
-		return username + ":" + assistantId + ":" + workflowName;
+	public Conversation newConversation(int userId, int assistantId) {
+		Conversation conversation = new Conversation();
+		conversation.setAssociatedAssistantId(assistantId);
+		conversation.setAssociatedWorkflow(null);
+		conversation.setConversationId(UUID.randomUUID().toString());
+		conversation.setId(null);
+		conversation.setOwnerId(userId);
+		conversation.setTitle(null);
+
+		return conversationRepository.save(conversation);
 	}
 
-	private String getWorkflowFromConversationId(String conversationId) {
-		return conversationId.split(":")[2];
+	@Override
+	public Conversation newConversationForWorkflow(int userId, int assistantId, String workflowName) {
+		Conversation conversation = new Conversation();
+		conversation.setAssociatedAssistantId(assistantId);
+		conversation.setAssociatedWorkflow(workflowName);
+		conversation.setConversationId(UUID.randomUUID().toString());
+		conversation.setId(null);
+		conversation.setOwnerId(userId);
+		conversation.setTitle(null);
+
+		return conversationRepository.save(conversation);
+	}
+
+	@Override
+	public List<Conversation> listConversationsForUser(int userId) {
+		return conversationRepository.findAllByOwnerId(userId);
+	}
+
+	private String getModelforConversation(int userId, String conversationId) {
+		int assistantId = getAssistantIdFromConversationId(conversationId);
+
+		Assistant assistant = assistantManagementService.findAssistant(userId, assistantId);
+		if (assistant == null) {
+			return "";
+		}
+
+		return assistant.model();
 	}
 }

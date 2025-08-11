@@ -6,12 +6,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import tom.model.ChatMessage;
+
 public class ExecutionResult {
 
 	private Instant startTime;
 	private Instant endTime;
 	private List<List<Map<String, Object>>> results;
-	private List<List<String>> chats = List.of();
+	private List<List<ChatMessage>> chats = List.of();
 
 	public ExecutionResult(int numSteps) {
 		results = new ArrayList<>();
@@ -45,7 +47,7 @@ public class ExecutionResult {
 		endTime = Instant.now();
 	}
 
-	public void setChats(List<List<String>> chats) {
+	public void setChats(List<List<ChatMessage>> chats) {
 		this.chats = chats;
 	}
 }

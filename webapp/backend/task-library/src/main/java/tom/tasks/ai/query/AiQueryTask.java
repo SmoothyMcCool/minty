@@ -58,9 +58,6 @@ public class AiQueryTask implements AiTask, ServiceConsumer {
 		String response = doTheThing();
 		Map<String, String> responseAsMap = parseResponse(response);
 
-		if (responseAsMap.isEmpty()) {
-			responseAsMap.put("Data", response);
-		}
 		if (config.getConversationId() != null && !config.getConversationId().isBlank()) {
 			responseAsMap.put("ConversationId", config.getConversationId());
 		}
@@ -119,7 +116,7 @@ public class AiQueryTask implements AiTask, ServiceConsumer {
 			query.setConversationId(config.getConversationId());
 		}
 
-		return taskServices.getAssistantService().ask(userId, query);
+		return taskServices.getAssistantQueryService().ask(userId, query);
 	}
 
 	@Override

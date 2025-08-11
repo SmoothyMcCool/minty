@@ -1,14 +1,16 @@
 <div class="pt-5">
-  <div class="well p-2 text-dark container-fluid">
-    <h2>New Workflow</h2>
+	<div class="well p-2 text-dark container-fluid">
+		<h2>New Workflow</h2>
 
-    <form role="form" (submit)="createWorkflow()">
-      <minty-workflow-editor name="workflowEditor" [edit]="true" [taskTemplates]="taskTemplates" [outputTaskTemplates]="outputTaskTemplates" [(ngModel)]="workflow"></minty-workflow-editor>
+		<form role="form" (submit)="createWorkflow()">
+			<minty-workflow-editor name="workflowEditor" [edit]="true" [taskTemplates]="taskTemplates"
+				[outputTaskTemplates]="outputTaskTemplates" [(ngModel)]="workflow"></minty-workflow-editor>
 
-      <div>
-        <button type="submit" id="submitButton" class="btn btn-primary">The Work Must Flow</button>
-        <button type="button" id="cancelButton" class="btn btn-primary float-end" (click)="cancel()">Shai-Hulud Forbid</button>
-      </div>
-    </form>
-  </div>
+			<div>
+				<button type="submit" id="submitButton" class="btn btn-primary">The Work Must Flow</button>
+				<button type="button" id="cancelButton" class="btn btn-primary float-end" (click)="cancel()">Shai-Hulud
+					Forbid</button>
+			</div>
+		</form>
+	</div>
 </div>

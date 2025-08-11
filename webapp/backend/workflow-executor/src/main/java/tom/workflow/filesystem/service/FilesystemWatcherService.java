@@ -3,43 +3,48 @@ package tom.workflow.filesystem.service;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.stereotype.Service;
+
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import tom.result.service.ResultService;
-import tom.task.taskregistry.TaskRegistryService;
+import tom.workflow.controller.WorkflowRequest;
 import tom.workflow.model.Workflow;
 import tom.workflow.repository.WorkflowRepository;
+import tom.workflow.service.WorkflowService;
 
-//@Service
+@Service
 public class FilesystemWatcherService {
 
-	//private final TaskExecutor taskExecutor;
-	//private final TaskRegistryService taskRegistryService;
-	//private final ResultService taskExecutionService;
+	private final TaskExecutor taskExecutor;
+	private final WorkflowService workflowService;
 	private final List<FilesystemMonitor> monitorTasks;
-	//private final WorkflowRepository workflowRepository;
+	private final WorkflowRepository workflowRepository;
 
 	public FilesystemWatcherService(@Qualifier("simpleExecutor") SimpleAsyncTaskExecutor taskExecutor,
-			TaskRegistryService taskRegistryService, ResultService taskExecutionService,
-			WorkflowRepository workflowRepository) {
-		//this.taskExecutor = taskExecutor;
-		//this.taskRegistryService = taskRegistryService;
-		//this.taskExecutionService = taskExecutionService;
-		//this.workflowRepository = workflowRepository;
+			WorkflowService workflowService, WorkflowRepository workflowRepository) {
+		this.taskExecutor = taskExecutor;
+		this.workflowService = workflowService;
+		this.workflowRepository = workflowRepository;
 		monitorTasks = new ArrayList<>();
 	}
 
 	@PostConstruct
 	private void startWatching() {
 
-		// Iterable<Workflow> fsWatchers = workflowRepository.findAllByTriggeredTrue();
+		List<tom.workflow.repository.Workflow> wfList = workflowRepository.findAllByTriggeredTrue();
 
-		// FilesystemMonitor monitor = new FilesystemMonitor(fsWatchers, this);
-		// monitorTasks.add(monitor);
-		// taskExecutor.execute(monitor);
+		List<Workflow> fsWatchers = wfList.stream().map(workflow -> {
+			return workflow.toModelWorkflow();
+		}).toList();
+
+		FilesystemMonitor monitor = new FilesystemMonitor(fsWatchers, this);
+		monitorTasks.add(monitor);
+		taskExecutor.execute(monitor);
 	}
 
 	@PreDestroy
@@ -49,20 +54,16 @@ public class FilesystemWatcherService {
 		});
 	}
 
-	public void startTaskFor(Workflow triggeredWorkflow, Path filename) {
-		/*WorkflowRequest request = new WorkflowRequest();
-		request.setConfiguration(triggeredWorkflow.getTaskTemplate().getConfiguration());
-		request.setName(triggeredWorkflow.getTaskTemplate().getName());
-		request.getConfiguration().put("File", filename.toString());
+	public void startWorkflowFor(Workflow triggeredWorkflow, Path filename) {
+		WorkflowRequest request = new WorkflowRequest();
 
-		AiTask task = taskRegistryService.newTask(0, request);
+		List<Map<String, String>> configs = triggeredWorkflow.getWorkflowSteps().stream().map(step -> step.getConfiguration()).toList();
+		request.setTaskConfigurationList(configs);
+		request.setOutputConfiguration(triggeredWorkflow.getOutputStep().getConfiguration());
 
-		TaskRequest outputRequest = new TaskRequest();
-		request.setConfiguration(triggeredTask.getOutputTemplate().getConfiguration());
-		request.setName(triggeredTask.getOutputTemplate().getName());
-		OutputTask outputTask = taskRegistryService.newOutputTask(0, outputRequest);
+		request.getTaskConfigurationList().getFirst().put("File", filename.toString());
 
-		taskExecutionService.executeTask(task, outputTask);*/
+		workflowService.executeWorkflow(0, request);
 	}
 
 }

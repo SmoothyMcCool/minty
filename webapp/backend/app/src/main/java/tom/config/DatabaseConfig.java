@@ -38,7 +38,7 @@ public class DatabaseConfig {
 		config.setUsername(applicationDbUser);
 		config.setPassword(applicationDbPassword);
 		config.setDriverClassName("org.mariadb.jdbc.Driver");
-		config.setMaximumPoolSize(10);
+		config.setMaximumPoolSize(20);
 
 		return new HikariDataSource(config);
 	}

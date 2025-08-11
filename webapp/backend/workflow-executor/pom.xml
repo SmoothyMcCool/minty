@@ -28,12 +28,12 @@
 		</dependency>
 		<dependency>
 			<groupId>tom.minty</groupId>
-			<artifactId>api</artifactId>
+			<artifactId>task-library</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>tom.minty</groupId>
-			<artifactId>task-executor</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<artifactId>api</artifactId>
 		</dependency>
 
 		<dependency>

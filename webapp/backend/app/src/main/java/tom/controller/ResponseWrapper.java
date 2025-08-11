@@ -7,10 +7,10 @@ import tom.ApiError;
 
 public class ResponseWrapper<T> {
 
-	private boolean ok;
-	private int code;
-	private List<String> messages;
-	private T data;
+	private final boolean ok;
+	private final int code;
+	private final List<String> messages;
+	private final T data;
 
 	public static <T> ResponseWrapper<T> SuccessResponse(T data) {
 		return new ResponseWrapper<>(true, 200, null, data);
@@ -37,7 +37,7 @@ public class ResponseWrapper<T> {
 	private ResponseWrapper() {
 		this.ok = true;
 		this.code = 200;
-		this.messages = null;
+		this.messages = List.of();
 		this.data = null;
 	}
 
@@ -52,28 +52,12 @@ public class ResponseWrapper<T> {
 		return ok;
 	}
 
-	public void setOk(boolean ok) {
-		this.ok = ok;
-	}
-
 	public int getCode() {
 		return code;
 	}
 
-	public void setCode(int code) {
-		this.code = code;
-	}
-
-	public void setData(T data) {
-		this.data = data;
-	}
-
 	public T getData() {
 		return data;
-	}
-
-	public void setMessages(List<String> messages) {
-		this.messages = messages;
 	}
 
 	public List<String> getMessages() {

@@ -9,5 +9,7 @@ import org.springframework.stereotype.Service;
 public interface WorkflowRepository extends JpaRepository<Workflow, Integer> {
 
 	// All assistants owned by Owner ID or shared = true
-	public List<Workflow> findAllByOwnerIdOrSharedTrue(Integer ownerId);
+	List<Workflow> findAllByOwnerIdOrSharedTrue(Integer ownerId);
+
+	List<Workflow> findAllByTriggeredTrue();
 }

@@ -89,6 +89,22 @@ public class WorkflowController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
+	@RequestMapping(value = { "/update" }, method = RequestMethod.POST)
+	public ResponseEntity<ResponseWrapper<Workflow>> updateWorkflow(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestBody Workflow workflow) {
+
+		if (!workflowService.isWorkflowOwned(workflow.getId(), user.getId())) {
+			ResponseWrapper<Workflow> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
+					List.of(ApiError.NOT_OWNED));
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
+		Workflow updatedWorkflow = workflowService.updateWorkflow(user.getId(), workflow);
+
+		ResponseWrapper<Workflow> response = ResponseWrapper.SuccessResponse(updatedWorkflow);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
 	@RequestMapping(value = { "/list" }, method = RequestMethod.GET)
 	public ResponseEntity<ResponseWrapper<List<Workflow>>> listWorkflows(
 			@AuthenticationPrincipal UserDetailsUser user) {

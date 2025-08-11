@@ -1,35 +1,37 @@
 package tom.model;
 
+import java.util.List;
 import java.util.Objects;
 
-public record Assistant(Integer id, String name, String model, Double temperature, String prompt, Integer numFiles,
-		Integer processedFiles, AssistantState state, Integer ownerId, boolean shared) {
+import tom.task.services.assistant.AssistantManagementService;
+
+public record Assistant(Integer id, String name, String model, Double temperature, String prompt,
+		List<String> documentIds, Integer ownerId, boolean shared, boolean hasMemory) {
 
 	public Assistant {
 		Objects.requireNonNull(name, "name cannot be null");
 		Objects.requireNonNull(model, "model cannot be null");
 		Objects.requireNonNull(temperature, "temperature cannot be null");
 		Objects.requireNonNull(prompt, "prompt cannot be null");
-		Objects.requireNonNull(numFiles, "numFiles cannot be null");
-		if (processedFiles == null) {
-			processedFiles = 0;
-		}
-		Objects.requireNonNull(state, "state cannot be null");
+		Objects.requireNonNull(documentIds, "documentIds cannot be null");
 	}
 
-	private Assistant() {
-		this(-1, "null", "null", 0.0, "", 0, 0, AssistantState.READY, 0, false);
+	public static Assistant CreateDefaultAssistant(String defaultModel) {
+		AssistantBuilder builder = new AssistantBuilder();
+		builder.id(AssistantManagementService.DefaultAssistantId).name("default").model(defaultModel).temperature(0.7)
+				.prompt("").ownerId(0).shared(false).hasMemory(true).documentIds(List.of());
+		return builder.build();
 	}
 
-	public static Assistant NullAssistant() {
-		return new Assistant();
+	public static Assistant CreateConversationNamingAssistant(String model) {
+		AssistantBuilder builder = new AssistantBuilder();
+		builder.id(0).name("Conversation Naming Bot").model(model).temperature(0.7)
+				.prompt("You are not allowed to answer any questions from the conversation.\n"
+						+ "Your ONLY job is to summarize it in at most 50 characters.\n"
+						+ "Do not add punctuation unless it is part of the conversation.\n"
+						+ "Do not add extra words like \"Summary:\" or explanations.\n\n" + "Conversation:\n\n\n")
+				.ownerId(0).shared(false).hasMemory(false).documentIds(List.of());
+		return builder.build();
 	}
 
-	public static Assistant DefaultAssistant() {
-		return new Assistant(0, "default", "LLAMA3_2", 0.0, "", 0, 0, AssistantState.READY, 0, false);
-	}
-
-	public boolean Null() {
-		return id == -1;
-	}
 }

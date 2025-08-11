@@ -27,7 +27,7 @@ public class RenderServiceImpl implements RenderService {
 	@Value("${pugTemplates}")
 	private String pugFileLocation;
 
-	@Value("${taskResultsLocation}")
+	@Value("${workflowResultsLocation}")
 	private String resultsDir;
 
 	private final PugConfiguration pugConfiguration;
@@ -39,7 +39,11 @@ public class RenderServiceImpl implements RenderService {
 	@Override
 	public Path renderPug(String template, String outfileName, ExecutionResult data) throws IOException {
 
-		Path location = Path.of(resultsDir + "/" + outfileName);
+		if (template == null || outfileName == null || data == null || pugFileLocation == null || resultsDir == null) {
+			throw new IllegalArgumentException("A Required parameter is null");
+		}
+
+		Path location = Path.of(resultsDir, outfileName);
 
 		try (FileWriter writer = new FileWriter(location.toString())) {
 			PugTemplate pugTemplate = pugConfiguration.getTemplate(pugFileLocation + "/" + template);
@@ -58,7 +62,12 @@ public class RenderServiceImpl implements RenderService {
 
 	@Override
 	public Path renderJson(String outfileName, ExecutionResult data) throws IOException {
-		Path location = Path.of(resultsDir + "/" + outfileName);
+
+		if (outfileName == null || data == null || resultsDir == null) {
+			throw new IllegalArgumentException("A Required parameter is null");
+		}
+
+		Path location = Path.of(resultsDir, outfileName);
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.registerModule(new JavaTimeModule());
 		mapper.writerWithDefaultPrettyPrinter().writeValue(location.toFile(), data);

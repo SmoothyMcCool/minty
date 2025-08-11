@@ -1,14 +1,21 @@
 <div class="mb-2 row">
-  <ng-container *ngIf="edit">
-    <label for="task" class="col-3 col-form-label">Task</label>
-    <div class="col-9" *ngIf="task && taskTemplates">
-      <select class="form-select" id="task" name="task" [(ngModel)]="task.name" (ngModelChange)="taskChanged($event)">
-        <option *ngFor="let template of taskTemplates" [ngValue]="template.name">{{template.name}}</option>
-      </select>
-    </div>
-  </ng-container>
-  <h3 *ngIf="task && !edit">{{task.name}}</h3>
+	<ng-container *ngIf="edit">
+		<label for="task" class="col-3 col-form-label">Task</label>
+		<button class="col-1 btn btn-outline"
+			type="button"
+			#popoverButton>
+			<i class="bi bi-question-circle"></i>
+		</button>
+		<div class="col-8" *ngIf="task && taskTemplates">
+			<select class="form-select" id="task" name="task" [(ngModel)]="task.name"
+				(ngModelChange)="taskChanged($event)">
+				<option *ngFor="let template of taskTemplates" [ngValue]="template.name">{{template.name}}</option>
+			</select>
+		</div>
+	</ng-container>
+	<h3 *ngIf="task && !edit">{{task.name}}</h3>
 </div>
 <ng-container *ngIf="task && taskDescription">
-  <minty-task-config-editor [assistants]="assistants" [taskConfiguration]="taskDescription.configuration" [(ngModel)]="task.configuration" name="{{name}}-taskConfig"></minty-task-config-editor>
+	<minty-task-config-editor [assistants]="assistants" [taskConfiguration]="taskDescription.configuration"
+		[(ngModel)]="task.configuration" name="{{name}}-taskConfig"></minty-task-config-editor>
 </ng-container>

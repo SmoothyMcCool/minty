@@ -5,32 +5,42 @@ import java.io.File;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import tom.task.services.AssistantService;
-import tom.task.services.DocumentService;
+import tom.document.model.MintyDoc;
+import tom.document.model.DocumentState;
 
 public class DocumentProcessingTask implements Runnable {
 
 	private static final Logger logger = LogManager.getLogger(DocumentProcessingTask.class);
 	private final File file;
-	private final int userId;
-	private final int assistantId;
 	private final DocumentService documentService;
-	private final AssistantService assistantService;
 
-	public DocumentProcessingTask(File file, int userId, int assistantId, DocumentService documentService,
-			AssistantService assistantService) {
+	public DocumentProcessingTask(File file, DocumentService documentService) {
 		this.file = file;
-		this.userId = userId;
-		this.assistantId = assistantId;
 		this.documentService = documentService;
-		this.assistantService = assistantService;
 	}
 
 	@Override
 	public void run() {
 		try {
-			logger.info("Started processing " + file.getName());
-			documentService.transformAndStore(file, userId, assistantId);
+			String filename = file.getName();
+			logger.info("Started processing " + filename);
+
+			MintyDoc doc = documentService.findByDocumentId(filename);
+			if (doc != null) {
+				if (doc.getState() == DocumentState.READY) {
+					// No good, this document is already processed. Log a warning and delete this file.
+					logger.warn("Attempt to reprocess already processed document " + doc.getTitle() + ". Deleting file.");
+					file.delete();
+					return;
+				}
+			}
+			else {
+				logger.warn("Found file " + filename + " for processing but no associated document record was found. Deleting file.");
+				file.delete();
+				return;
+			}
+	
+			documentService.transformAndStore(file, doc);
 			file.delete();
 
 			synchronized (DocumentProcessingTask.class) {
@@ -48,14 +58,13 @@ public class DocumentProcessingTask implements Runnable {
 
 			// Transformation might take a long time and there could be many threads, so we
 			// have to update the assistant in a synchronized manner.
-			markFileComplete(assistantId);
+			documentService.markDocumentComplete(doc);
+
 			logger.info("Processing complete for " + file.getName());
+
 		} catch (Exception e) {
 			logger.error("File processing failed: ", e);
 		}
 	}
 
-	private synchronized void markFileComplete(int assistantId) {
-		assistantService.fileCompleteFor(assistantId);
-	}
 }

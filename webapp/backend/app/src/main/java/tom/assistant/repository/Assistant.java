@@ -1,12 +1,13 @@
 package tom.assistant.repository;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.ArrayList;
+import java.util.List;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import tom.model.AssistantState;
+import jakarta.persistence.Transient;
 
 @Entity
 public class Assistant {
@@ -18,12 +19,11 @@ public class Assistant {
 	private String prompt;
 	private String model;
 	private Double temperature;
-	private Integer numFiles;
-	private Integer processedFiles;
-	private AssistantState state;
-	@JsonIgnore
 	private Integer ownerId;
 	private boolean shared;
+	private boolean hasMemory;
+	@Transient
+	private List<String> associatedDocumentIds;
 
 	public Assistant() {
 	}
@@ -34,16 +34,26 @@ public class Assistant {
 		this.prompt = assistant.prompt();
 		this.model = assistant.model();
 		this.temperature = assistant.temperature();
-		this.numFiles = assistant.numFiles();
-		this.processedFiles = assistant.processedFiles();
 		this.ownerId = assistant.ownerId();
-		this.state = assistant.state();
 		this.shared = assistant.shared();
+		this.hasMemory = assistant.hasMemory();
+		this.associatedDocumentIds = new ArrayList<>();
 	}
 
 	public tom.model.Assistant toTaskAssistant() {
-		return new tom.model.Assistant(id, name, model.toString(), temperature, prompt, numFiles, processedFiles, state,
-				ownerId, shared);
+		return new tom.model.Assistant(id, name, model.toString(), temperature, prompt, associatedDocumentIds,
+				ownerId, shared, hasMemory);
+	}
+
+	public Assistant updateWith(tom.model.Assistant assistant) {
+		setName(assistant.name());
+		setPrompt(assistant.prompt());
+		setModel(assistant.model());
+		setTemperature(assistant.temperature());
+		setShared(assistant.shared());
+		setHasMemory(assistant.hasMemory());
+		setAssociatedDocuments(assistant.documentIds());
+		return this;
 	}
 
 	public Integer getId() {
@@ -86,31 +96,6 @@ public class Assistant {
 		this.temperature = temperature;
 	}
 
-	public Integer getNumFiles() {
-		return numFiles;
-	}
-
-	public void setNumFiles(Integer numFiles) {
-		this.numFiles = numFiles;
-	}
-
-	@JsonIgnore
-	public Integer getProcessedFiles() {
-		return processedFiles;
-	}
-
-	public void setProcessedFiles(Integer processedFiles) {
-		this.processedFiles = processedFiles;
-	}
-
-	public AssistantState getState() {
-		return state;
-	}
-
-	public void setState(AssistantState state) {
-		this.state = state;
-	}
-
 	public Integer getOwnerId() {
 		return ownerId;
 	}
@@ -127,10 +112,21 @@ public class Assistant {
 		this.shared = shared;
 	}
 
-	public void fileComplete() {
-		processedFiles++;
-		if (numFiles == processedFiles) {
-			state = AssistantState.READY;
-		}
+	public boolean isHasMemory() {
+		return hasMemory;
 	}
+
+	public void setHasMemory(boolean hasMemory) {
+		this.hasMemory = hasMemory;
+	}
+
+	@Transient
+	public List<String> getAssociatedDocumentIds() {
+		return associatedDocumentIds;
+	}
+
+	public void setAssociatedDocuments(List<String> associatedDocumentIds) {
+		this.associatedDocumentIds = associatedDocumentIds;
+	}
+
 }

@@ -10,58 +10,58 @@ import { TaskDescription } from "src/app/model/task-description";
 import { WorkflowEditorComponent } from "./workflow-editor.component";
 
 @Component({
-    selector: 'minty-new-workflow',
-    imports: [CommonModule, FormsModule, WorkflowEditorComponent],
-    templateUrl: 'new-workflow.component.html',
-    styleUrls: ['workflow.component.css']
+	selector: 'minty-new-workflow',
+	imports: [CommonModule, FormsModule, WorkflowEditorComponent],
+	templateUrl: 'new-workflow.component.html',
+	styleUrls: ['workflow.component.css']
 })
 export class NewWorkflowComponent implements OnInit {
 
-    taskTemplates: TaskDescription[] = [];
-    outputTaskTemplates: TaskDescription[] = [];
+	taskTemplates: TaskDescription[] = [];
+	outputTaskTemplates: TaskDescription[] = [];
 
-    workflow: Workflow = {
-        name: '',
-        description: '',
-        id: 0,
-        ownerId: 0,
-        shared: false,
-        workflowSteps: [],
-        outputStep: {
-            name: '',
-            configuration: new Map()
-        }
-    };
+	workflow: Workflow = {
+		name: '',
+		description: '',
+		id: 0,
+		ownerId: 0,
+		shared: false,
+		workflowSteps: [],
+		outputStep: {
+			name: '',
+			configuration: new Map()
+		}
+	};
 
-    isFileTriggered: boolean = false;
-    triggerDirectory: string = '';
+	isFileTriggered: boolean = false;
+	triggerDirectory: string = '';
 
-    configParams = new Map<string, string>();
-    outputTaskConfigParams = new Map<string, string>();
+	configParams = new Map<string, string>();
+	outputTaskConfigParams = new Map<string, string>();
 
-    constructor(private alertService: AlertService,
-        private router: Router,
-        private workflowService: WorkflowService,
-        private taskTemplateService: TaskTemplateService) {
-    }
+	constructor(private alertService: AlertService,
+		private router: Router,
+		private workflowService: WorkflowService,
+		private taskTemplateService: TaskTemplateService) {
+	}
 
-    ngOnInit() {
-        this.taskTemplateService.listTemplates().subscribe((taskTemplates: TaskDescription[]) => {
-            this.taskTemplates = taskTemplates;
-        });
-        this.taskTemplateService.listOutputTemplates().subscribe((outputTaskTemplates: TaskDescription[]) => {
-            this.outputTaskTemplates = outputTaskTemplates;
-        });
-    }
+	ngOnInit() {
+		this.taskTemplateService.listTemplates().subscribe((taskTemplates: TaskDescription[]) => {
+			this.taskTemplates = taskTemplates;
+		});
+		this.taskTemplateService.listOutputTemplates().subscribe((outputTaskTemplates: TaskDescription[]) => {
+			this.outputTaskTemplates = outputTaskTemplates;
+		});
+	}
 
-    createWorkflow() {
-        this.workflowService.newWorkflow(this.workflow).subscribe(() => {
-            this.alertService.postSuccess('Workflow Created!');
-            this.router.navigateByUrl('workflow');
-        });
-    }
+	createWorkflow() {
+		this.workflowService.newWorkflow(this.workflow).subscribe(() => {
+			this.alertService.postSuccess('Workflow Created!');
+			this.router.navigateByUrl('workflow');
+		});
+	}
 
-    cancel() {
-        this.router.navigateByUrl('workflow');
-    }
+	cancel() {
+		this.router.navigateByUrl('workflow');
+	}
 }
