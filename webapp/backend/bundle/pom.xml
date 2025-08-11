@@ -27,11 +27,6 @@
 		</dependency>
 		<dependency>
 			<groupId>tom.minty</groupId>
-			<artifactId>task-executor</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>tom.minty</groupId>
 			<artifactId>workflow-executor</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
@@ -64,7 +59,7 @@
 				<configuration>
 					<warSourceDirectory>src/main/resources</warSourceDirectory>
 					<warName>Minty</warName>
-					<outputDirectory>D:/projects/tomcat/webapps</outputDirectory>
+					<outputDirectory>d:/projects/tomcat/webapps</outputDirectory>
 					<failOnMissingWebXml>false</failOnMissingWebXml>
 					<webResources>
 						<resource>

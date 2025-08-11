@@ -71,6 +71,13 @@ public class WorkflowServiceImpl implements WorkflowService {
 	}
 
 	@Override
+	public Workflow updateWorkflow(int userId, Workflow workflow) {
+		tom.workflow.repository.Workflow dbWorkflow = new tom.workflow.repository.Workflow(workflow);
+		dbWorkflow.setOwnerId(userId);
+		return workflowRepository.save(dbWorkflow).toModelWorkflow();
+	}
+
+	@Override
 	public List<Workflow> listWorkflows(int userId) {
 		return workflowRepository.findAllByOwnerIdOrSharedTrue(userId).stream()
 				.map(workflow -> workflow.toModelWorkflow()).toList();

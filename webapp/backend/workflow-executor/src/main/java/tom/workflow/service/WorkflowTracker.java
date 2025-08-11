@@ -10,7 +10,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.core.task.AsyncTaskExecutor;
 
+import tom.conversation.model.Conversation;
 import tom.conversation.service.ConversationServiceInternal;
+import tom.model.ChatMessage;
 import tom.output.ExecutionResult;
 import tom.output.OutputTask;
 import tom.task.AiTask;
@@ -34,7 +36,7 @@ public class WorkflowTracker {
 	private ExecutionResult results;
 	private int stepTaskCount = 0;
 	private Map<Integer, WorkflowTaskWrapper> pendingTasks = new HashMap<>();
-	private String workflowConversationId;
+	private Conversation workflowConversation;
 
 	public WorkflowTracker(int userId, Workflow workflow, TaskRegistryService taskRegistryService,
 			ConversationServiceInternal conversationService, AsyncTaskExecutor taskExecutor) {
@@ -46,7 +48,7 @@ public class WorkflowTracker {
 		this.taskExecutor = taskExecutor;
 		results = new ExecutionResult(workflow.numSteps());
 
-		workflowConversationId = conversationService.newConversationId(userId, 999, getWorkflowName());
+		workflowConversation = conversationService.newConversationForWorkflow(userId, 999, getWorkflowName());
 	}
 
 	public synchronized void workflowComplete() {
@@ -63,7 +65,7 @@ public class WorkflowTracker {
 
 		// Get all conversations used in this task and append them to results, then
 		// delete them.
-		List<List<String>> chats = conversationService.getConversationsForWorkflow(getWorkflowName());
+		List<List<ChatMessage>> chats = conversationService.getChatMessagesForWorkflow(getWorkflowName());
 		if (!chats.isEmpty()) {
 			results.setChats(chats);
 		}
@@ -108,10 +110,10 @@ public class WorkflowTracker {
 				// No conversation ID specified, so we create one that we can control and clean
 				// up at the end of the workflow.
 				// In this instance, assistant ID doesn't matter
-				workflowConversationId = conversationService.newConversationId(userId, 99999, getWorkflowName());
-				logger.info("Created workflow-specific conversation " + workflowConversationId);
+				workflowConversation = conversationService.newConversationForWorkflow(userId, 99999, getWorkflowName());
+				logger.info("Created workflow-specific conversation " + workflowConversation.getConversationId());
 				Map<String, String> input = new HashMap<>();
-				input.put("Conversation ID", workflowConversationId);
+				input.put("Conversation ID", workflowConversation.getConversationId());
 				aqt.setInput(input);
 			}
 		}
@@ -159,16 +161,12 @@ public class WorkflowTracker {
 
 			Map<String, String> taskInput = prevOut;
 
-			// Nearly same hack as above but re-use the conversation ID we generated before.
-			if (task instanceof AiQueryTask) {
-				AiQueryTask aqt = (AiQueryTask) task;
-				if (!taskRequest.getConfiguration().containsKey("Conversation ID")) {
-					if (!prevOut.containsKey("Conversation ID")) {
-						// There is no conversation ID specified anywhere. Add it to the input.
-						// The input may be read-only so we have to clone it first.
-						taskInput = new HashMap<>(prevOut);
-						taskInput.put("Conversation ID", workflowConversationId);
-					}
+			if (!taskRequest.getConfiguration().containsKey("Conversation ID")) {
+				if (!prevOut.containsKey("Conversation ID")) {
+					// There is no conversation ID specified anywhere. Add it to the input.
+					// The input may be read-only so we have to clone it first.
+					taskInput = new HashMap<>(prevOut);
+					taskInput.put("Conversation ID", workflowConversation.getConversationId());
 				}
 			}
 

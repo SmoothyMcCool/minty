@@ -1,0 +1,60 @@
+<div class="bg-image img-document text-dark">
+	<div class="container">
+		<h1>Documents</h1>
+
+		<ng-container *ngIf="!addingDocument; else addNewDoc">
+			<button class="btn btn-primary mb-3" (click)="addNewDocument()">Add Document</button>
+		</ng-container>
+		<ng-template #addNewDoc>
+			<form role="form" (submit)="submitNewDocument()" class="well m-2 p-2">
+				<minty-document-editor
+					name="document-editor"
+					[models]="models"
+					[(ngModel)]="docProperties"></minty-document-editor>
+
+				<div>
+					<button type="submit" class="btn btn-primary">Engage</button>
+					<button type="button" id="submitButton" class="btn btn-primary float-end"
+						(click)="cancelNewDocument()">Negative</button>
+				</div>
+			</form>
+		</ng-template>
+
+		<form>
+			<div class="form-group well mb-2 p-2">
+				<label class="" for="docFilter">Filter</label>
+				<input type="text" class="form-control" id="docFilter" name="docFilter"
+					[ngModel]="filterString" (ngModelChange)="filterChanged($event)">
+			</div>
+		</form>
+		<div class="d-flex flex-column bd-highlight">
+			<div *ngFor="let document of displayDocuments" class="card p-2 bd-highlight opacity-75">
+				<div class="d-flex align-items-center">
+					<div class="p-1" *ngIf="document.state === 'NO_CONTENT'"><strong class="text-danger">Processing...</strong></div>
+					<div class="p-1"><strong>Title: </strong>{{document.title}}</div>
+					<div class="p-1 ms-2"><strong>Model: </strong>{{document.model}}</div>
+					<ng-container *ngIf="document.associatedAssistantIds && document.associatedAssistantIds.length > 0">
+						<div class="p-1 ms-2"><strong>Used in Assistants: </strong></div>
+						<span class="badge bg-secondary rounded p-1 me-2" *ngFor="let assistant of document.associatedAssistantIds">{{findAssistant(assistant)?.name}}</span>
+					</ng-container>
+
+					<button
+						*ngIf="isOwned(document.ownerId)"
+						type="button"
+						class="position-absolute end-0 top-0 z-1 m-1"
+						style="font-size: 20px; color: red"
+						[disabled]="deleteInProgress"
+						(click)="deleteDocument(document)">
+						<i class="bi bi-trash3"></i>
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<minty-confirmation-dialog [title]="'Delete Document'"
+	[message]="'Are you sure you want to delete this Document?'"
+	[visible]="confirmDeleteDocumentDialogVisible"
+	(confirm)="confirmDeleteDocument()"
+	(cancel)="confirmDeleteDocumentDialogVisible = false"></minty-confirmation-dialog>

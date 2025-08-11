@@ -312,6 +312,11 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 
 	@Override
 	public AiTask newTask(int userId, TaskRequest request) {
+
+		if (request == null) {
+			throw new IllegalArgumentException("request cannot be null.");
+		}
+
 		AiTask task = new NullTask();
 
 		if (!publicTasks.containsKey(request.getName())) {
@@ -384,6 +389,11 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 
 	@Override
 	public OutputTask newOutputTask(int userId, TaskRequest request) {
+
+		if (request == null) {
+			throw new IllegalArgumentException("request cannot be null.");
+		}
+
 		OutputTask task = new NullOutput();
 
 		if (!publicOutputTasks.containsKey(request.getName())) {

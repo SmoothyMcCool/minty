@@ -1,23 +1,26 @@
 <div class="bg-image img-assistant">
-  <div class="container">
-    <div class="row mb-2">
-      <h1>{{assistant.name}}</h1>
-      <p style="white-space: pre-wrap">{{assistant.prompt}}</p>
-      <div class="form-floating mb-3">
-        <textarea class="form-control" id="aiQuery" name="aiQuery" [(ngModel)]="userText"></textarea>
-        <label for="aiQuery" class="ms-2">Put your input here</label>
-      </div>
-    </div>
-    <div class="row mb-3">
-      <div class="col me-auto">
-        <button class="btn btn-primary mb-2" (click)="submit(userText)">Okey Dokey</button>
-      </div>
-      <div class="col-auto">
-        <button class="btn btn-primary" (click)="restart()">Start over</button>
-      </div>
-    </div>
-    <div class="overflow-auto">
-    <minty-conversation [messages]="chatHistory"></minty-conversation>
-    </div>
-  </div>
+	<div class="container">
+		<div class="row mb-2">
+			<h1>{{assistant.name}}</h1>
+			<div class="row mb-3">
+				<div class="col-2"><h2>Prompt</h2></div>
+				<div class="card-body col-10" style="white-space: pre-wrap">{{assistant.prompt}}</div>
+			</div>
+			<div class="form-floating mb-3">
+				<textarea rows="5" class="form-control" id="aiQuery" name="aiQuery" [(ngModel)]="userText"></textarea>
+				<label class="ms-3" for="aiQuery">Put your input here</label>
+			</div>
+		</div>
+		<div class="row mb-3">
+			<div class="col me-auto">
+				<button class="btn btn-primary mb-2" (click)="submit(userText)">Okey Dokey</button>
+			</div>
+			<div class="col-auto">
+				<button class="btn btn-primary" (click)="restart()">Start over</button>
+			</div>
+		</div>
+		<div class="overflow-auto">
+			<minty-conversation [messages]="chatHistory"></minty-conversation>
+		</div>
+	</div>
 </div>

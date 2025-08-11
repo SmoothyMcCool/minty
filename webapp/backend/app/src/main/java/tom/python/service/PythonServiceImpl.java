@@ -49,8 +49,8 @@ public class PythonServiceImpl implements PythonService {
 
 			outputFilePath = Files.createTempFile(Paths.get(tempFileDir), "py-out-", ".tom");
 
-			ProcessBuilder processBuilder = new ProcessBuilder("python", pythonFile, inputFilePath.toString(),
-					outputFilePath.toString());
+			ProcessBuilder processBuilder = new ProcessBuilder("python", pythonScripts + "/" + pythonFile,
+					inputFilePath.toString(), outputFilePath.toString());
 			processBuilder.redirectErrorStream(true); // Merge error stream with standard output stream. Not that it
 														// matters because we are throwing the output on the floor.
 

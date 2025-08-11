@@ -26,6 +26,8 @@ public class Workflow {
 	private List<Task> workflowSteps;
 	@Convert(converter = TaskConverter.class)
 	private Task outputStep;
+	private boolean triggered;
+	private String watchLocation;
 
 	public Workflow() {
 	}
@@ -38,6 +40,8 @@ public class Workflow {
 		this.shared = workflow.isShared();
 		this.workflowSteps = workflow.getWorkflowSteps();
 		this.outputStep = workflow.getOutputStep();
+		this.triggered = workflow.isTriggered();
+		this.watchLocation = workflow.getWatchLocation();
 	}
 
 	public Integer getId() {
@@ -96,6 +100,22 @@ public class Workflow {
 		this.outputStep = outputStep;
 	}
 
+	public boolean isTriggered() {
+		return triggered;
+	}
+
+	public void setTriggered(boolean triggered) {
+		this.triggered = triggered;
+	}
+
+	public String getWatchLocation() {
+		return watchLocation;
+	}
+
+	public void setWatchLocation(String watchLocation) {
+		this.watchLocation = watchLocation;
+	}
+
 	public tom.workflow.model.Workflow toModelWorkflow() {
 		tom.workflow.model.Workflow workflow = new tom.workflow.model.Workflow();
 		workflow.setDescription(getDescription());
@@ -105,6 +125,8 @@ public class Workflow {
 		workflow.setShared(isShared());
 		workflow.setWorkflowSteps(getWorkflowSteps());
 		workflow.setOutputStep(getOutputStep());
+		workflow.setTriggered(isTriggered());
+		workflow.setWatchLocation(getWatchLocation());
 		return workflow;
 	}
 

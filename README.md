@@ -72,7 +72,7 @@ Make a new project that includes the parent and task JARs. Here is a sample POM:
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-    <groupId>tvm.tasks</groupId>
+	<groupId>tvm.tasks</groupId>
 	<artifactId>tasklib</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 
@@ -96,7 +96,7 @@ Make a new project that includes the parent and task JARs. Here is a sample POM:
 		</dependency>
 	</dependencies>
 
-    <build>
+	<build>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

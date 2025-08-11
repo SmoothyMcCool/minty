@@ -11,77 +11,77 @@ import { TaskDescription } from 'src/app/model/task-description';
 import { WorkflowEditorComponent } from './workflow-editor.component';
 
 @Component({
-    selector: 'minty-workflow',
-    imports: [CommonModule, FormsModule, WorkflowEditorComponent],
-    templateUrl: 'workflow.component.html',
-    styleUrls: ['workflow.component.css']
+	selector: 'minty-workflow',
+	imports: [CommonModule, FormsModule, WorkflowEditorComponent],
+	templateUrl: 'workflow.component.html',
+	styleUrls: ['workflow.component.css']
 })
 export class WorkflowComponent implements OnInit {
 
-    workflow: Workflow = {
-        id: 0,
-        ownerId: 0,
-        name: '',
-        description: '',
-        shared: false,
-        workflowSteps: [],
-        outputStep: {
-            name: '',
-            configuration: new Map()
-        }
-    };
-    taskTemplates: TaskDescription[] = [];
-    outputTaskTemplates: TaskDescription[] = [];
+	workflow: Workflow = {
+		id: 0,
+		ownerId: 0,
+		name: '',
+		description: '',
+		shared: false,
+		workflowSteps: [],
+		outputStep: {
+			name: '',
+			configuration: new Map()
+		}
+	};
+	taskTemplates: TaskDescription[] = [];
+	outputTaskTemplates: TaskDescription[] = [];
 
-    constructor(
-        private router: Router,
-        private route: ActivatedRoute,
-        private workflowService: WorkflowService,
-        private taskTemplateService: TaskTemplateService,
-        private alertService: AlertService) {
-    }
+	constructor(
+		private router: Router,
+		private route: ActivatedRoute,
+		private workflowService: WorkflowService,
+		private taskTemplateService: TaskTemplateService,
+		private alertService: AlertService) {
+	}
 
-    ngOnInit(): void {
-        const workflowId = Number(this.route.snapshot.paramMap.get('id'));
+	ngOnInit(): void {
+		const workflowId = Number(this.route.snapshot.paramMap.get('id'));
 
-        this.workflowService.getWorkflow(workflowId).subscribe((workflow: Workflow) => {
-            this.workflow = workflow;
+		this.workflowService.getWorkflow(workflowId).subscribe((workflow: Workflow) => {
+			this.workflow = workflow;
 
-            this.taskTemplateService.listTemplates().subscribe(templates => {
-                this.taskTemplates = templates;
-            });
+			this.taskTemplateService.listTemplates().subscribe(templates => {
+				this.taskTemplates = templates;
+			});
 
-            this.taskTemplateService.listOutputTemplates().subscribe(output => {
-                this.outputTaskTemplates = output;
-            });
+			this.taskTemplateService.listOutputTemplates().subscribe(output => {
+				this.outputTaskTemplates = output;
+			});
 
-        });
-    }
+		});
+	}
 
-    submit() {
-        this.workflowService.execute(this.workflow).subscribe((result: string) => {
-            this.alertService.postSuccess(result);
-        });
-        this.router.navigateByUrl('workflow');
-    }
+	submit() {
+		this.workflowService.execute(this.workflow).subscribe((result: string) => {
+			this.alertService.postSuccess(result);
+		});
+		this.router.navigateByUrl('workflow');
+	}
 
-    getInputsFor(taskName: string): string {
-        const task = this.taskTemplates.find(element => element.name === taskName);
-        if (task) {
-            return task.inputs;
-        }
-        return "";
-    }
+	getInputsFor(taskName: string): string {
+		const task = this.taskTemplates.find(element => element.name === taskName);
+		if (task) {
+			return task.inputs;
+		}
+		return "";
+	}
 
-    getOutputsFor(taskName: string): string {
-        const task = this.taskTemplates.find(element => element.name === taskName);
-        if (task) {
-            return task.outputs;
-        }
-        return "";
-    }
+	getOutputsFor(taskName: string): string {
+		const task = this.taskTemplates.find(element => element.name === taskName);
+		if (task) {
+			return task.outputs;
+		}
+		return "";
+	}
 
-    navigateTo(url: string) {
-        this.router.navigateByUrl(url);
-    }
+	navigateTo(url: string) {
+		this.router.navigateByUrl(url);
+	}
 }

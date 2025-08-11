@@ -1,4 +1,4 @@
 export const environment = {
-    production: true,
-    applicationName: "Minty"
+	production: true,
+	applicationName: "Minty"
 };

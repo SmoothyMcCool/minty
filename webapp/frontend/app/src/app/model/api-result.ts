@@ -1,6 +1,6 @@
 export interface ApiResult {
-    ok: boolean;
-    code: number;
-    messages: string[];
-    data: unknown;
+	ok: boolean;
+	code: number;
+	messages: string[];
+	data: unknown;
 }

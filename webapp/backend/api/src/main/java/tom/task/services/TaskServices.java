@@ -1,12 +1,15 @@
 package tom.task.services;
 
+import tom.task.services.assistant.AssistantManagementService;
+import tom.task.services.assistant.AssistantQueryService;
+
 public interface TaskServices {
 
-	AssistantService getAssistantService();
+	AssistantManagementService getAssistantManagementService();
+
+	AssistantQueryService getAssistantQueryService();
 
 	ConversationService getConversationService();
-
-	DocumentService getDocumentService();
 
 	HttpService getHttpService();
 

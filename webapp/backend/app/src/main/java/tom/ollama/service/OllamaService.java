@@ -11,13 +11,13 @@ public interface OllamaService {
 
 	MintyOllamaModel getDefaultModel();
 
-	EmbeddingModel getEmbeddingModel(MintyOllamaModel model);
+	EmbeddingModel getEmbeddingModel();
 
-	VectorStore getVectorStore(MintyOllamaModel model);
+	VectorStore getVectorStore();
 
-	ChatMemoryRepository getChatMemoryRepository(MintyOllamaModel model);
+	ChatMemoryRepository getChatMemoryRepository();
 
-	ChatMemory getChatMemory(MintyOllamaModel model);
+	ChatMemory getChatMemory();
 
 	List<MintyOllamaModel> listModels();
 

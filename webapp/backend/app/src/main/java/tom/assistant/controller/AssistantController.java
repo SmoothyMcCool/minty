@@ -5,6 +5,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Stream;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -23,29 +25,48 @@ import tom.meta.service.MetadataService;
 import tom.model.Assistant;
 import tom.model.AssistantQuery;
 import tom.ollama.service.OllamaService;
-import tom.task.services.AssistantService;
+import tom.task.services.ConversationService;
+import tom.task.services.assistant.AssistantManagementService;
+import tom.task.services.assistant.AssistantQueryService;
 
 @Controller
 @RequestMapping("/api/assistant")
 public class AssistantController {
 
-	private final MetadataService metadataService;
-	private final AssistantService assistantService;
-	private final OllamaService ollamaService;
+	private static final Logger logger = LogManager.getLogger(AssistantController.class);
 
-	public AssistantController(AssistantService assistantService, MetadataService metadataService,
-			OllamaService ollamaService) {
-		this.assistantService = assistantService;
+	private final MetadataService metadataService;
+	private final AssistantManagementService assistantManagementService;
+	private final OllamaService ollamaService;
+	private final ConversationService conversationService;
+	private final AssistantQueryService assistantQueryService;
+
+	public AssistantController(AssistantManagementService assistantManagementService,
+			AssistantQueryService assistantQueryService, MetadataService metadataService, OllamaService ollamaService,
+			ConversationService conversationService) {
+		this.assistantManagementService = assistantManagementService;
 		this.metadataService = metadataService;
 		this.ollamaService = ollamaService;
+		this.conversationService = conversationService;
+		this.assistantQueryService = assistantQueryService;
 	}
 
 	@RequestMapping(value = { "/new" }, method = RequestMethod.POST)
 	public ResponseEntity<ResponseWrapper<Assistant>> addAssistant(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestBody Assistant assistant) {
 
-		assistant = assistantService.createAssistant(user.getId(), assistant);
+		assistant = assistantManagementService.createAssistant(user.getId(), assistant);
 		metadataService.newAssistant(user.getId());
+
+		ResponseWrapper<Assistant> response = ResponseWrapper.SuccessResponse(assistant);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@RequestMapping(value = { "/edit" }, method = RequestMethod.POST)
+	public ResponseEntity<ResponseWrapper<Assistant>> editAssistant(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestBody Assistant assistant) {
+
+		assistant = assistantManagementService.updateAssistant(user.getId(), assistant);
 
 		ResponseWrapper<Assistant> response = ResponseWrapper.SuccessResponse(assistant);
 		return new ResponseEntity<>(response, HttpStatus.OK);
@@ -54,7 +75,7 @@ public class AssistantController {
 	@RequestMapping(value = { "/list" }, method = RequestMethod.GET)
 	public ResponseEntity<ResponseWrapper<List<Assistant>>> listAssistants(
 			@AuthenticationPrincipal UserDetailsUser user) {
-		List<Assistant> assistants = assistantService.listAssistants(user.getId());
+		List<Assistant> assistants = assistantManagementService.listAssistants(user.getId());
 		ResponseWrapper<List<Assistant>> response = ResponseWrapper.SuccessResponse(assistants);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
@@ -69,9 +90,9 @@ public class AssistantController {
 	@RequestMapping(value = { "/get" }, method = RequestMethod.GET)
 	public ResponseEntity<ResponseWrapper<Assistant>> getAssistant(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestParam("id") int assistantId) {
-		Assistant assistant = assistantService.findAssistant(user.getId(), assistantId);
+		Assistant assistant = assistantManagementService.findAssistant(user.getId(), assistantId);
 
-		if (assistant.Null()) {
+		if (assistant == null) {
 			ResponseWrapper<Assistant> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
 					List.of(ApiError.NOT_OWNED));
 			return new ResponseEntity<>(response, HttpStatus.OK);
@@ -84,7 +105,7 @@ public class AssistantController {
 	@RequestMapping(value = { "/conversation" }, method = RequestMethod.GET)
 	public ResponseEntity<ResponseWrapper<Assistant>> getAssistantForChat(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestParam("conversationId") String conversationId) {
-		int assistantId = Integer.parseInt(conversationId.split(":")[1]);
+		int assistantId = conversationService.getAssistantIdFromConversationId(conversationId);
 		return getAssistant(user, assistantId);
 	}
 
@@ -92,7 +113,7 @@ public class AssistantController {
 	public ResponseEntity<ResponseWrapper<Boolean>> deleteAssistant(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestParam("id") int assistantId) {
 
-		boolean success = assistantService.deleteAssistant(user.getId(), assistantId);
+		boolean success = assistantManagementService.deleteAssistant(user.getId(), assistantId);
 
 		if (!success) {
 			ResponseWrapper<Boolean> response = ResponseWrapper.ApiFailureResponse(HttpStatus.BAD_REQUEST.value(),
@@ -106,18 +127,19 @@ public class AssistantController {
 
 	@RequestMapping(value = { "/ask" }, method = RequestMethod.POST, produces = MediaType.TEXT_PLAIN_VALUE)
 	public StreamingResponseBody ask(@AuthenticationPrincipal UserDetailsUser user, @RequestBody AssistantQuery query) {
-		Assistant assistant = assistantService.findAssistant(user.getId(), query.getAssistantId());
-		if (assistant.Null()) {
+		Assistant assistant = assistantManagementService.findAssistant(user.getId(), query.getAssistantId());
+		if (assistant == null) {
 			return null;
 		}
 
-		Stream<String> responseStream = assistantService.askStreaming(user.getId(), query);
+		Stream<String> responseStream = assistantQueryService.askStreaming(user.getId(), query);
 		return outputStream -> {
 			responseStream.forEach(item -> {
 				try {
 					outputStream.write((item).getBytes(StandardCharsets.UTF_8));
 					outputStream.flush();
 				} catch (IOException e) {
+					logger.error("Caught exception while streaming assistant response: ", e);
 					throw new RuntimeException("Error writing to stream", e);
 				}
 			});

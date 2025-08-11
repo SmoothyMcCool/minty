@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -13,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -22,9 +24,8 @@ import org.springframework.web.multipart.MultipartFile;
 import tom.ApiError;
 import tom.config.security.UserDetailsUser;
 import tom.controller.ResponseWrapper;
-import tom.model.Assistant;
-import tom.task.services.AssistantService;
-import tom.task.services.DocumentService;
+import tom.document.model.MintyDoc;
+import tom.document.service.DocumentService;
 
 @Controller
 @RequestMapping("/api/document")
@@ -34,28 +35,35 @@ public class DocumentController {
 
 	@Value("${docFileStore}")
 	private String docFileStore;
-	private final AssistantService assistantService;
 	private final DocumentService documentService;
 
-	public DocumentController(DocumentService documentService, AssistantService assistantService) {
-		this.assistantService = assistantService;
+	public DocumentController(DocumentService documentService) {
 		this.documentService = documentService;
 	}
 
-	@RequestMapping(value = { "/add" }, method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<ResponseWrapper<String>> addDocument(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("assistantId") int assistantId, @RequestPart("file") MultipartFile mpf) {
+	@RequestMapping(value = { "/add" }, method = RequestMethod.POST)
+	public ResponseEntity<ResponseWrapper<MintyDoc>> addDocument(@AuthenticationPrincipal UserDetailsUser user,
+		@RequestBody MintyDoc document) {
 
-		Assistant assistant = assistantService.findAssistant(user.getId(), assistantId);
+		boolean exists = documentService.documentExists(document.getTitle());
 
-		if (assistant.Null()) {
-			ResponseWrapper<String> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
-					List.of(ApiError.NOT_OWNED));
-			return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+		document.setDocumentId(UUID.randomUUID().toString());
+		if (exists) {
+			ResponseWrapper<MintyDoc> response = ResponseWrapper
+					.ApiFailureResponse(HttpStatus.CONFLICT.value(), List.of(ApiError.DOCUMENT_ALREADY_EXISTS));
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
-		File file = new File(docFileStore + "/"
-				+ documentService.constructFilename(user.getId(), assistantId, mpf.getOriginalFilename()));
+		MintyDoc addedDoc = documentService.addDocument(user.getId(), document);
+		ResponseWrapper<MintyDoc> response = ResponseWrapper.SuccessResponse(addedDoc);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@RequestMapping(value = { "/upload" }, method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<ResponseWrapper<String>> uploadDocument(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("documentId") String documentId, @RequestPart("file") MultipartFile mpf) {
+
+		File file = new File(docFileStore + "/" + documentId);
 		try {
 			Files.createDirectories(file.toPath());
 			mpf.transferTo(file);
@@ -71,6 +79,25 @@ public class DocumentController {
 
 		ResponseWrapper<String> response = ResponseWrapper.SuccessResponse("ok");
 		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@RequestMapping(value = { "/list" }, method = RequestMethod.GET)
+	public ResponseEntity<ResponseWrapper<List<MintyDoc>>> listDocuments(@AuthenticationPrincipal UserDetailsUser user) {
+		List<MintyDoc> documents = documentService.listDocuments();
+	
+		ResponseWrapper<List<MintyDoc>> response = ResponseWrapper.SuccessResponse(documents);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@RequestMapping(value = { "/delete" }, method = RequestMethod.DELETE)
+	public ResponseEntity<ResponseWrapper<Boolean>> deleteDocument(@AuthenticationPrincipal UserDetailsUser user,
+		@RequestParam("documentId") String documentId) {
+
+		if (!documentService.deleteDocument(user.getId(), documentId)) {
+			return new ResponseEntity<>(ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(), List.of(ApiError.NOT_OWNED)), HttpStatus.OK);
+		}
+
+		return new ResponseEntity<>(ResponseWrapper.SuccessResponse(true), HttpStatus.OK);
 	}
 
 }

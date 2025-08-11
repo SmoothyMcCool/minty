@@ -4,75 +4,76 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AssistantService } from '../../assistant.service';
-import { Assistant, AssistantState } from '../../model/assistant';
+import { Assistant } from '../../model/assistant';
 import { ConversationService } from '../../conversation.service';
 import { ConversationComponent } from './conversation.component';
 import { ChatMessage } from '../../model/chat-message';
 
 @Component({
-    selector: 'minty-view-conversation',
-    imports: [CommonModule, FormsModule, ConversationComponent],
-    templateUrl: 'view-conversation.component.html',
-    styleUrls: ['view-assistants.component.css']
+	selector: 'minty-view-conversation',
+	imports: [CommonModule, FormsModule, ConversationComponent],
+	templateUrl: 'view-conversation.component.html',
+	styleUrls: ['view-assistants.component.css']
 })
 export class ViewConversationComponent implements OnInit, OnDestroy {
 
-    userText: string = '';
-    chatHistory: ChatMessage[] = [];
+	userText: string = '';
+	chatHistory: ChatMessage[] = [];
 
-    private routerSubscription: Subscription;
-    private assistant: Assistant = {
-        id: 0,
-        ownerId: 0,
-        name: '',
-        prompt: '',
-        model: '',
-        temperature: 0.9,
-        numFiles: 0,
-        state: AssistantState.READY,
-        shared: false
-    };
-    private conversationId: string = '';
+	private routerSubscription: Subscription;
+	private assistant: Assistant = {
+		id: 0,
+		name: '',
+		prompt: '',
+		model: '',
+		temperature: 0,
+		numFiles: 0,
+		ownerId: 0,
+		shared: false,
+		hasMemory: false,
+		documentIds: []
+	};
+	private conversationId: string = '';
 
-    constructor(private route: ActivatedRoute,
-        private conversationService: ConversationService,
-        private assistantService: AssistantService) {
-        
-    }
+	constructor(private route: ActivatedRoute,
+		private conversationService: ConversationService,
+		private assistantService: AssistantService) {
 
-    ngOnInit(): void {
-        this.route.params.subscribe(params => {
-            this.conversationId = params['id'];
+	}
 
-            this.assistantService.getAssistantForConversation(this.conversationId).subscribe((assistant: Assistant) => {
-                this.assistant = assistant;
-                this.conversationService.history(this.conversationId).subscribe((chatHistory: ChatMessage[]) => {
-                    this.chatHistory = chatHistory;
-                });
-            });
-        });
+	ngOnInit(): void {
+		this.route.params.subscribe(params => {
+			this.conversationId = params['id'];
 
-    }
-    ngOnDestroy(): void {
-        if (this.routerSubscription) {
-            this.routerSubscription.unsubscribe();
-        }
-    }
+			this.assistantService.getAssistantForConversation(this.conversationId).subscribe((assistant: Assistant) => {
+				this.assistant = assistant;
+				this.conversationService.history(this.conversationId).subscribe((chatHistory: ChatMessage[]) => {
+					this.chatHistory = chatHistory;
+				});
+			});
+		});
 
-    submit(text: string) {
-        this.chatHistory.unshift({ user: true, message: text });
-        let response = '';
-        this.chatHistory.unshift({ user: false, message: response });
-        this.assistantService.ask(this.conversationId, this.assistant.id, text).subscribe(responseChunk => {
-            response += responseChunk;
-            this.chatHistory[0] = { user: false, message: response };
-        });
-        this.userText = '';
-    }
+	}
+	ngOnDestroy(): void {
+		if (this.routerSubscription) {
+			this.routerSubscription.unsubscribe();
+		}
+	}
 
-    restart() {
-        this.conversationService.delete(this.conversationId).subscribe(() => {
-            this.chatHistory = [];
-        })
-    }
+	submit(text: string) {
+		this.chatHistory.unshift({ user: true, message: text });
+		let response = '';
+		this.chatHistory.unshift({ user: false, message: response });
+		this.assistantService.ask(this.conversationId, this.assistant.id, text).subscribe(responseChunk => {
+			response += responseChunk;
+			this.chatHistory[0] = { user: false, message: response };
+		});
+		this.userText = '';
+	}
+
+	restart() {
+		this.conversationService.delete(this.conversationId).subscribe(() => {
+			this.chatHistory = [];
+		})
+	}
 }

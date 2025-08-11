@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class ResultServiceImpl implements ResultService {
 
-	@Value("${taskResultsLocation}")
+	@Value("${workflowResultsLocation}")
 	private String resultsDir;
 
 	public ResultServiceImpl() {

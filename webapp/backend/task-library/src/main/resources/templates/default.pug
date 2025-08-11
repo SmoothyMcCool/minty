@@ -35,4 +35,9 @@ html(lang='en')
 					h2 Conversation #{index + 1}
 					ul
 						each message in messageList
-							li #{message}
+							li
+								if message.user
+									strong User:
+								else
+									strong Assistant:
+								| #{message.message || ''}

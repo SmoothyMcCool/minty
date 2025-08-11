@@ -1,62 +1,69 @@
 <ng-container *ngIf="edit; else ViewOnly">
-  <div class="mb-2 row">
-    <label for="name" class="col-3 col-form-label">Name</label>
-    <div class="col-9">
-      <input id="name" name="name" type="text" size="10" maxlength="50" class="form-control" [(ngModel)]="workflow.name" autocomplete="off" required>
-    </div>
-  </div>
+	<div class="mb-2 row">
+		<label for="name" class="col-3 col-form-label">Name</label>
+		<div class="col-9">
+			<input id="name" name="name" type="text" size="10" maxlength="50" class="form-control"
+				[(ngModel)]="workflow.name" autocomplete="off" required>
+		</div>
+	</div>
 
-  <div class="mb-2 row">
-    <label for="name" class="col-3 col-form-label">Description</label>
-    <div class="col-9">
-      <textarea id="name" name="name" type="text" rows="3" class="form-control" [(ngModel)]="workflow.description" autocomplete="off" required></textarea>
-    </div>
-  </div>
+	<div class="mb-2 row">
+		<label for="name" class="col-3 col-form-label">Description</label>
+		<div class="col-9">
+			<textarea id="name" name="name" type="text" rows="3" class="form-control" [(ngModel)]="workflow.description"
+				autocomplete="off" required></textarea>
+		</div>
+	</div>
 
-  <div class="form-group mb-2">
-    <input type="checkbox" class="form-check-input text-light" id="isShared" name="isShared" [(ngModel)]="workflow.shared">
-    <label class="ms-1" for="isShared">Shared</label>
-  </div>
+	<div class="form-group mb-2">
+		<input type="checkbox" class="form-check-input text-light" id="isShared" name="isShared"
+			[(ngModel)]="workflow.shared">
+		<label class="ms-1" for="isShared">Shared</label>
+	</div>
 
-  <div class="mb-2 row" *ngIf="isFileTriggered">
-    <label for="directory" class="col-3 col-form-label">Directory to monitor</label>
-    <div class="col-9">
-      <input id="directory" name="directory" type="text" size="10" maxlength="512" placeholder="Folder to monitor. Must be accessible by the server." class="form-control" [(ngModel)]="triggerDirectory">
-    </div>
-  </div>
+	<div class="mb-2 row" *ngIf="isFileTriggered">
+		<label for="directory" class="col-3 col-form-label">Directory to monitor</label>
+		<div class="col-9">
+			<input id="directory" name="directory" type="text" size="10" maxlength="512"
+				placeholder="Folder to monitor. Must be accessible by the server." class="form-control"
+				[(ngModel)]="triggerDirectory">
+		</div>
+	</div>
 </ng-container>
 <ng-template #ViewOnly>
-  <h1>{{workflow.name}}</h1>
-  <p>{{workflow.description}}</p>
+	<h1>{{workflow.name}}</h1>
+	<p>{{workflow.description}}</p>
 </ng-template>
 
 
 <h3>Steps</h3>
 <ng-container *ngFor="let step of workflow.workflowSteps; let first = first; let last = last; let i = index">
-  <div>
-    <div class="m-2 p-2 row task-well" >
-      <div class="col">
-        <button *ngIf="edit" type="button" class="bi bi-trash3" style="font-size: 20px; color: red; float: right;" (click)="deleteStep(i)"></button>
-        <p *ngIf="!first && edit" >{{getInputsFor(step.name)}}</p>
-        <minty-task-editor name="{{step.name}}-editor-{{i}}" [edit]="edit" [taskTemplates]="taskTemplates" [(ngModel)]="step"></minty-task-editor>
-        <p *ngIf="!last && edit">{{getOutputsFor(step.name)}}</p>
-      </div>
-    </div>
-    <div class="row" *ngIf="!last">
-      <div class="col-auto ms-3" *ngIf="edit">
-        <button type="button" class="bi bi-plus-circle" style="font-size: 20px; color: red; float: left" (click)="addStep(i)"></button>
-      </div>
-      <div class="col fs-2 text-center">
-        <i class="bi bi-arrow-down-circle"></i>
-      </div>
-    </div>
-  </div>
+	<div>
+		<div class="m-2 p-2 row task-well">
+			<div class="col">
+				<button *ngIf="edit" type="button" class="bi bi-trash3"
+					style="font-size: 20px; color: red; float: right;" (click)="deleteStep(i)"></button>
+				<minty-task-editor name="{{step.name}}-editor-{{i}}" [edit]="edit" [taskTemplates]="taskTemplates"
+					[(ngModel)]="step"></minty-task-editor>
+			</div>
+		</div>
+		<div class="row" *ngIf="!last">
+			<div class="col-auto ms-3" *ngIf="edit">
+				<button type="button" class="bi bi-plus-circle" style="font-size: 20px; color: red; float: left"
+					(click)="addStep(i)"></button>
+			</div>
+			<div class="col fs-2 text-center">
+				<i class="bi bi-arrow-down-circle"></i>
+			</div>
+		</div>
+	</div>
 </ng-container>
 <div class="row" *ngIf="edit">
-  <button type="button" class="col-auto ms-3 bi bi-plus-circle" style="font-size: 20px; color: red; float: left" (click)="addStepAtEnd()"></button>
+	<button type="button" class="col-auto ms-3 bi bi-plus-circle" style="font-size: 20px; color: red; float: left"
+		(click)="addStepAtEnd()"></button>
 </div>
 
 
 <h3>Output</h3>
-<minty-task-editor name="outputEditor" [edit]="edit" [taskTemplates]="outputTaskTemplates" [(ngModel)]="workflow.outputStep"></minty-task-editor>
-
+<minty-task-editor name="outputEditor" [edit]="edit" [taskTemplates]="outputTaskTemplates"
+	[(ngModel)]="workflow.outputStep"></minty-task-editor>

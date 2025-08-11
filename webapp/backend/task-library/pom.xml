@@ -41,7 +41,7 @@
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>3.4.2</version>
 				<configuration>
-					<outputDirectory>D:/projects/Minty/working/taskLib</outputDirectory>
+					<outputDirectory>d:/projects/Minty/working/taskLib</outputDirectory>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -56,7 +56,7 @@
 							<goal>copy-resources</goal>
 						</goals>
 						<configuration>
-							<outputDirectory>D:/projects/Minty/working/pug</outputDirectory>
+							<outputDirectory>d:/projects/Minty/working/pug</outputDirectory>
 							<resources>
 								<resource>
 									<directory>/src/main/resources/templates</directory>
@@ -74,7 +74,7 @@
 							<goal>copy-resources</goal>
 						</goals>
 						<configuration>
-							<outputDirectory>D:/projects/Minty/working/python</outputDirectory>
+							<outputDirectory>d:/projects/Minty/working/python</outputDirectory>
 							<resources>
 								<resource>
 									<directory>/src/main/resources/python</directory>

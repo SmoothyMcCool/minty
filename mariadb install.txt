@@ -51,7 +51,32 @@ CREATE TABLE IF NOT EXISTS Assistant (
 	temperature DOUBLE,
 	ownerId INTEGER,
 	shared BOOLEAN,
+	hasMemory BOOLEAN,
 	PRIMARY KEY (id)
+);
+CREATE TABLE IF NOT EXISTS Conversation (
+	id INTEGER NOT NULL AUTO_INCREMENT,
+	title TEXT,
+	conversationId TEXT,
+	ownerId INTEGER,
+	associatedAssistantId INTEGER,
+	associatedWorkflow TEXT,
+	PRIMARY KEY (id)
+);
+CREATE TABLE IF NOT EXISTS Document (
+    documentId VARCHAR(255) NOT NULL,
+	title TEXT,
+	state INTEGER,
+	model TEXT,
+	ownerId INTEGER,
+	PRIMARY KEY (documentId)
+);
+CREATE TABLE IF NOT EXISTS DocumentAssistantLinks (
+	assistantId INTEGER NOT NULL,
+	documentId VARCHAR(255) NOT NULL,
+	PRIMARY KEY (assistantId, documentId),
+	FOREIGN KEY (assistantId) REFERENCES Assistant(id),
+	FOREIGN KEY (documentId) REFERENCES Document(documentId)
 );
 CREATE TABLE IF NOT EXISTS Workflow (
 	id INTEGER NOT NULL AUTO_INCREMENT,
@@ -61,6 +86,8 @@ CREATE TABLE IF NOT EXISTS Workflow (
 	shared BOOLEAN,
 	workflowSteps JSON NOT NULL,
 	outputStep JSON NOT NULL,
+	triggered BOOLEAN,
+	watchLocation TEXT,
 	PRIMARY KEY (id)
 );
 CREATE TABLE IF NOT EXISTS User (
@@ -87,6 +114,12 @@ CREATE TABLE IF NOT EXISTS SPRING_AI_CHAT_MEMORY (
 	content TEXT,
 	type TEXT,
 	timestamp TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS vector_store (
+	doc_id VARCHAR(255) PRIMARY KEY,
+	text TEXT,
+	embedding VECTOR(768),
+	meta JSON
 );
 
 

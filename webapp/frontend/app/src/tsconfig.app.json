@@ -1,19 +1,19 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
-    "outDir": "../out-tsc/app",
-    "types": [ "node", "jquery", "bootstrap" ]
+	"outDir": "../out-tsc/app",
+	"types": [ "node", "jquery", "bootstrap" ]
   },
   "files": [
-    "main.ts",
-    "polyfills.ts"
+	"main.ts",
+	"polyfills.ts"
   ],
   "include": [
-    "**/*.d.ts"
+	"**/*.d.ts"
   ],
   "exclude": [
-    "test.ts",
-    "**/*.spec.ts",
-    "unused/**"
+	"test.ts",
+	"**/*.spec.ts",
+	"unused/**"
   ]
 }

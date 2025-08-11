@@ -1,87 +1,88 @@
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Assistant, AssistantState } from '../../model/assistant';
+import { Assistant } from '../../model/assistant';
 import { AssistantService } from '../../assistant.service';
 import { Router, RouterModule } from '@angular/router';
-import { concatAll, mergeMap, of } from 'rxjs';
 import { DocumentService } from '../../document.service';
 import { FilterPipe } from '../../pipe/filter-pipe';
+import { MintyDoc } from 'src/app/model/minty-doc';
 
 @Component({
-    selector: 'minty-new-assistant',
-    imports: [CommonModule, FormsModule, RouterModule, FilterPipe],
-    templateUrl: 'new-assistant.component.html'
+	selector: 'minty-new-assistant',
+	imports: [CommonModule, FormsModule, RouterModule, FilterPipe],
+	templateUrl: 'new-assistant.component.html',
+	styleUrls: ['new-assistant.component.css']
 })
 export class NewAssistantComponent implements OnInit {
 
-    fileList: File[] = [];
-    models: string[] = [];
-    workingAssistant: Assistant = {
-            id: 0,
-            ownerId: 0,
-            name: '',
-            prompt: '',
-            numFiles: 0,
-            model: '',
-            temperature: 0,
-            state: AssistantState.READY,
-            shared: false
-        };
+	availableDocuments: MintyDoc[] = [];
+	models: string[] = [];
+	workingAssistant: Assistant = {
+		id: 0,
+		name: '',
+		prompt: '',
+		model: '',
+		temperature: 0,
+		numFiles: 0,
+		ownerId: 0,
+		shared: false,
+		hasMemory: false,
+		documentIds: []
+	};
+	assistantDocuments: MintyDoc[] = [];
 
-    constructor(
-        private assistantService: AssistantService,
-        private documentService: DocumentService,
-        private router: Router) {
-    }
+	constructor(
+		private assistantService: AssistantService,
+		private documentService: DocumentService,
+		private router: Router) {
+	}
 
-    ngOnInit(): void {
-        this.assistantService.models().subscribe((models: string[]) => {
-            this.models = models;
-        });
-    }
+	ngOnInit(): void {
+		this.assistantService.models().subscribe((models: string[]) => {
+			this.models = models;
+		});
+		this.documentService.list().subscribe(docs => {
+			this.availableDocuments = docs;
+		});
+	}
 
-    formInvalid(): boolean {
-        return this.workingAssistant.name.length === 0 || this.workingAssistant.model.length === 0;
-    }
+	formInvalid(): boolean {
+		return this.workingAssistant.name?.length === 0 || this.workingAssistant.model?.length === 0;
+	}
 
-    createAssistant() {
-        if (this.fileList !== null && this.fileList.length > 0) {
-            this.workingAssistant.numFiles = this.fileList.length;
-        }
-        this.assistantService.create(this.workingAssistant).subscribe((assistant: Assistant) => {
+	modelChanged(model: string) {
+		this.workingAssistant.model = model;
+		this.workingAssistant.documentIds = [];
+	}
 
-            // Upload each file and attach it to the assistant we just made.
+	createAssistant() {
+		this.assistantService.create(this.workingAssistant).subscribe((assistant: Assistant) => {
+			this.navigateTo('assistants');
+		});
+	}
 
-            if (this.fileList !== null && this.fileList.length > 0) {
-                of(this.fileList).pipe(
-                    concatAll(),
-                    mergeMap((file: File) => {
-                        return this.documentService.upload(assistant.id, file);
-                    })
-                ).subscribe(() => {
-                    this.navigateTo('assistants');
-                });
-            }
-            else {
-                this.navigateTo('assistants');
-            }
-        });
-    }
+	navigateTo(url: string): void {
+		this.router.navigateByUrl(url);
+	}
 
-    fileListChanged(event: Event) {
-        const newFiles = (event.target as HTMLInputElement).files;
-        if (newFiles !== null) {
-            this.fileList = Array.from(newFiles).concat(Array.from(this.fileList));
-            this.fileList = [...new Set(this.fileList)];
-        }
-    }
+	addDoc(doc: MintyDoc) {
+		if (this.workingAssistant.documentIds.find(el => el === doc.documentId)) {
+			return;
+		}
+		this.workingAssistant.documentIds.push(doc.documentId);
+		this.assistantDocuments.push(doc);
+		// New object for better chances at sane change detection.
+		this.workingAssistant.documentIds = [...this.workingAssistant.documentIds];
+	}
 
-    removeFile(filename: string) {
-        this.fileList = this.fileList.filter(element => element.name != filename);
-    }
+	removeDoc(doc: MintyDoc) {
+		this.workingAssistant.documentIds =
+			this.workingAssistant.documentIds.filter(el => el !== doc.documentId);
+		this.assistantDocuments =
+			this.availableDocuments.filter(doc =>
+				this.workingAssistant.documentIds.find(id =>
+					id === doc.documentId) != undefined);
+	}
 
-    navigateTo(url: string): void {
-        this.router.navigateByUrl(url);
-    }
 }

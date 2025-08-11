@@ -11,6 +11,8 @@ public interface WorkflowService {
 
 	Workflow createWorkflow(int userId, Workflow workflow);
 
+	Workflow updateWorkflow(int id, Workflow workflow);
+
 	List<Workflow> listWorkflows(int userId);
 
 	Workflow getWorkflow(int userId, int workflowId);
