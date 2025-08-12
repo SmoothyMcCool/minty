@@ -4,12 +4,6 @@
 		(ngModelChange)="onTitleChanged($event)">
 </div>
 <div class="form-group mb-2">
-	<label for="docModel">Model</label>
-	<select class="form-select" name="docModel" [ngModel]="document.model" (ngModelChange)="onModelChanged($event)">
-		<option *ngFor="let model of models" [value]="model">{{model}}</option>
-	</select>
-</div>
-<div class="form-group mb-2">
 	<label for="docFile" class="form-label">File</label>
 	<input class="form-control" type="file" id="docFile" (change)="fileListChanged($event)">
 </div>

@@ -42,8 +42,3 @@ button:disabled {
 	background-attachment: fixed;
 	image-orientation: from-image;
 }
-
-.wrap-text {
-	white-space: pre-wrap;
-	margin: 0
-}

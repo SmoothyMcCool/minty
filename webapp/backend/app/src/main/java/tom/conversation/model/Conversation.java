@@ -15,7 +15,6 @@ public class Conversation {
 	private String conversationId;
 	private Integer ownerId;
 	private Integer associatedAssistantId;
-	private String associatedWorkflow;
 
 	public Conversation() {
 
@@ -61,13 +60,4 @@ public class Conversation {
 		this.associatedAssistantId = associatedAssistantId;
 	}
 
-	public String getAssociatedWorkflow() {
-		return associatedWorkflow;
-	}
-
-	public void setAssociatedWorkflow(String associatedWorkflow) {
-		this.associatedWorkflow = associatedWorkflow;
-	}
-
-	
 }

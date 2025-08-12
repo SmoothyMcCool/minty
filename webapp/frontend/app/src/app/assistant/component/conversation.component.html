@@ -2,14 +2,14 @@
 	<ng-container *ngIf="message.user; else botMessage">
 		<div class="row flex-row-reverse m-2">
 			<div class="col-10 well-user p-2">
-				<markdown class="text-body wrap-text" [data]="message.message"></markdown>
+				<markdown class="text-body" [data]="message.message"></markdown>
 			</div>
 		</div>
 	</ng-container>
 	<ng-template #botMessage>
 		<div class="row m-2">
 			<div class="col-10 well-bot p-2">
-				<markdown class="text-body wrap-text" [data]="message.message"></markdown>
+				<markdown class="text-body" [data]="message.message"></markdown>
 			</div>
 		</div>
 	</ng-template>

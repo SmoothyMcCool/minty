@@ -13,12 +13,12 @@ public class MintyDoc {
 	private String documentId;
 	private String title;
 	private DocumentState state = DocumentState.NO_CONTENT;
-	private String model;
 	private int ownerId;
 	@Transient
 	private List<Integer> associatedAssistantIds;
 
-	public MintyDoc() {}
+	public MintyDoc() {
+	}
 
 	public String getTitle() {
 		return title;
@@ -42,14 +42,6 @@ public class MintyDoc {
 
 	public void setDocumentId(String documentId) {
 		this.documentId = documentId;
-	}
-
-	public String getModel() {
-		return model;
-	}
-
-	public void setModel(String model) {
-		this.model = model;
 	}
 
 	public int getOwnerId() {
