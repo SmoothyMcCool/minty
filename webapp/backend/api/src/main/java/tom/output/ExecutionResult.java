@@ -13,7 +13,7 @@ public class ExecutionResult {
 	private Instant startTime;
 	private Instant endTime;
 	private List<List<Map<String, Object>>> results;
-	private List<List<ChatMessage>> chats = List.of();
+	private List<ChatMessage> chatMessages = List.of();
 
 	public ExecutionResult(int numSteps) {
 		results = new ArrayList<>();
@@ -32,8 +32,8 @@ public class ExecutionResult {
 		res.put("endTime", endTime);
 		res.put("results", results);
 
-		if (!chats.isEmpty()) {
-			res.put("conversations", chats);
+		if (!chatMessages.isEmpty()) {
+			res.put("conversation", chatMessages);
 		}
 
 		return res;
@@ -47,7 +47,8 @@ public class ExecutionResult {
 		endTime = Instant.now();
 	}
 
-	public void setChats(List<List<ChatMessage>> chats) {
-		this.chats = chats;
+	public void setChatMessages(List<ChatMessage> chatMessages) {
+		this.chatMessages = chatMessages;
 	}
+
 }

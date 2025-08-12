@@ -140,7 +140,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 
 		List<Advisor> advisors = new ArrayList<>();
 
-		if (assistant.hasMemory()) {
+		if (assistant.hasMemory() && conversationId != null) {
 			ChatMemory chatMemory = ollamaService.getChatMemory();
 			advisors.add(MessageChatMemoryAdvisor.builder(chatMemory).build());
 		}
@@ -165,7 +165,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 
 		ChatClientRequestSpec spec;
 
-		if (assistant.hasMemory()) {
+		if (assistant.hasMemory() && conversationId != null) {
 			spec = chatClient.prompt();
 			if (!assistant.prompt().isBlank()) {
 				spec = spec.system(assistant.prompt());

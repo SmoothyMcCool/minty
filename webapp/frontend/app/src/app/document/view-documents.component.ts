@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { DocumentService } from '../document.service';
 import { ConfirmationDialogComponent } from '../app/component/confirmation-dialog.component';
 import { MintyDoc } from '../model/minty-doc';
 import { UserService } from '../user.service';
 import { AssistantService } from '../assistant.service';
-import { Alert, AlertService } from '../alert.service';
+import { AlertService } from '../alert.service';
 import { CommonModule } from '@angular/common';
 import { DocProperties, DocumentEditorComponent } from './document-editor.component';
 import { FormsModule } from '@angular/forms';
@@ -33,13 +33,11 @@ export class ViewDocumentsComponent implements OnInit {
 		title: '',
 		state: '',
 		documentId: '',
-		model: '',
 		ownerId: '',
 		associatedAssistantIds: []
 	};
 	docProperties: DocProperties = {
 		title: '',
-		model: '',
 		file: undefined
 	};
 
@@ -73,23 +71,20 @@ export class ViewDocumentsComponent implements OnInit {
 			title: '',
 			state: '',
 			documentId: '',
-			model: '',
 			ownerId: '',
 			associatedAssistantIds: []
 		};
 		this.docProperties = {
 			title: '',
-			model: '',
 			file: undefined
 		};
 	}
 
 	submitNewDocument() {
 		this.newDocument.title = this.docProperties.title;
-		this.newDocument.model = this.docProperties.model;
 		this.newDocument.state = 'NO_CONTENT';
-		if (!this.docProperties.file || !this.newDocument.model || !this.newDocument.title) {
-			this.alertService.postFailure("You have to give a title, model, and actual file, k?");
+		if (!this.docProperties.file || !this.newDocument.title) {
+			this.alertService.postFailure("You have to give a title and actual file, k?");
 			return;
 		}
 

@@ -17,7 +17,6 @@ import tom.output.ExecutionResult;
 import tom.output.OutputTask;
 import tom.task.AiTask;
 import tom.task.taskregistry.TaskRegistryService;
-import tom.tasks.ai.query.AiQueryTask;
 import tom.workflow.model.Task;
 import tom.workflow.model.TaskRequest;
 import tom.workflow.model.Workflow;
@@ -47,8 +46,7 @@ public class WorkflowTracker {
 		this.conversationService = conversationService;
 		this.taskExecutor = taskExecutor;
 		results = new ExecutionResult(workflow.numSteps());
-
-		workflowConversation = conversationService.newConversationForWorkflow(userId, 999, getWorkflowName());
+		workflowConversation = conversationService.newConversation(userId, -1); // Assistant ID doesn't matter.
 	}
 
 	public synchronized void workflowComplete() {
@@ -65,11 +63,11 @@ public class WorkflowTracker {
 
 		// Get all conversations used in this task and append them to results, then
 		// delete them.
-		List<List<ChatMessage>> chats = conversationService.getChatMessagesForWorkflow(getWorkflowName());
+		List<ChatMessage> chats = conversationService.getChatMessages(userId, workflowConversation.getConversationId());
 		if (!chats.isEmpty()) {
-			results.setChats(chats);
+			results.setChatMessages(chats);
 		}
-		conversationService.deleteConversationsForWorkflow(userId, getWorkflowName());
+		conversationService.deleteConversation(userId, workflowConversation.getConversationId());
 
 		TaskRequest outputTaskRequest = new TaskRequest();
 		outputTaskRequest.setName(workflow.getOutputStep().getName());
@@ -101,22 +99,12 @@ public class WorkflowTracker {
 		TaskRequest taskRequest = new TaskRequest(step.getName(), step.getConfiguration());
 		AiTask currentTask = taskRegistryService.newTask(userId, taskRequest);
 
-		// A little bit of a hack, but we have to check for AiQueryTasks, and if they
-		// have no ConversationId set, we have to set one to ensure we can correctly
-		// track and dispose of as necessary.
-		if (currentTask instanceof AiQueryTask) {
-			AiQueryTask aqt = (AiQueryTask) currentTask;
-			if (!taskRequest.getConfiguration().containsKey("Conversation ID")) {
-				// No conversation ID specified, so we create one that we can control and clean
-				// up at the end of the workflow.
-				// In this instance, assistant ID doesn't matter
-				workflowConversation = conversationService.newConversationForWorkflow(userId, 99999, getWorkflowName());
-				logger.info("Created workflow-specific conversation " + workflowConversation.getConversationId());
-				Map<String, String> input = new HashMap<>();
-				input.put("Conversation ID", workflowConversation.getConversationId());
-				aqt.setInput(input);
-			}
-		}
+		// Start the processing chain with a new conversation. Every task gets the
+		// conversation ID. They have to be careful in how its used. Best not use it in
+		// parallelized tasks...
+		Map<String, String> input = new HashMap<>();
+		input.put("Conversation ID", workflowConversation.getConversationId());
+		currentTask.setInput(input);
 
 		int stepNumber = 0;
 		WorkflowTaskWrapper wrapper = new WorkflowTaskWrapper(++stepTaskCount, stepNumber, currentTask, this,
@@ -161,14 +149,8 @@ public class WorkflowTracker {
 
 			Map<String, String> taskInput = prevOut;
 
-			if (!taskRequest.getConfiguration().containsKey("Conversation ID")) {
-				if (!prevOut.containsKey("Conversation ID")) {
-					// There is no conversation ID specified anywhere. Add it to the input.
-					// The input may be read-only so we have to clone it first.
-					taskInput = new HashMap<>(prevOut);
-					taskInput.put("Conversation ID", workflowConversation.getConversationId());
-				}
-			}
+			taskInput = new HashMap<>(prevOut);
+			taskInput.put("Conversation ID", workflowConversation.getConversationId());
 
 			task.setInput(taskInput);
 

@@ -14,21 +14,21 @@ import tom.task.ServiceConsumer;
 import tom.task.annotations.PublicTask;
 import tom.task.services.TaskServices;
 
-@PublicTask(name = "Ask Assistant", configClass = "tom.tasks.ai.query.AiQueryTaskConfig")
-public class AiQueryTask implements AiTask, ServiceConsumer {
+@PublicTask(name = "Query the Robot", configClass = "tom.tasks.ai.query.AiQueryConfig")
+public class AiQuery implements AiTask, ServiceConsumer {
 
 	private TaskServices taskServices;
 	private UUID uuid = UUID.randomUUID();
-	private AiQueryTaskConfig config = new AiQueryTaskConfig();
+	private AiQueryConfig config = new AiQueryConfig();
 	private int userId = 0;
 	private Map<String, Object> result = new HashMap<>();
 	private Map<String, String> input = Map.of();
 
-	public AiQueryTask() {
+	public AiQuery() {
 
 	}
 
-	public AiQueryTask(AiQueryTaskConfig data) {
+	public AiQuery(AiQueryConfig data) {
 		config = data;
 	}
 
@@ -58,8 +58,8 @@ public class AiQueryTask implements AiTask, ServiceConsumer {
 		String response = doTheThing();
 		Map<String, String> responseAsMap = parseResponse(response);
 
-		if (config.getConversationId() != null && !config.getConversationId().isBlank()) {
-			responseAsMap.put("ConversationId", config.getConversationId());
+		if (input.containsKey("Conversation ID")) {
+			result.put("Conversation ID", input.get("Conversation ID"));
 		}
 
 		if (!responseAsMap.isEmpty()) {
@@ -111,9 +111,7 @@ public class AiQueryTask implements AiTask, ServiceConsumer {
 		}
 
 		if (input.containsKey("Conversation ID")) {
-			query.setConversationId(input.get("Conversation ID"));
-		} else {
-			query.setConversationId(config.getConversationId());
+			query.setConversationId(null);
 		}
 
 		return taskServices.getAssistantQueryService().ask(userId, query);
@@ -121,17 +119,13 @@ public class AiQueryTask implements AiTask, ServiceConsumer {
 
 	@Override
 	public String expects() {
-		return "This task appends the contents of \"data\" to the provided prompt. If the input contains a \"Conversation ID\" "
-				+ "that is used to continue an AI conversation. If none is provided as input or configuration, a new "
-				+ "conversation is started. This conversation is emitted as output via \"Conversation ID\", but will be "
-				+ "destroyed when the Workflow ends. Conversations set via configuration are not destroyed.";
+		return "This task appends the contents of \"data\" to the provided query. It will not make use of any conversations.";
 	}
 
 	@Override
 	public String produces() {
 		return "This task produces the response from the AI as an output to the next task, "
-				+ "in the form defined by the AI assistant. It will always emit \"ConversationId\" "
-				+ "in its output. If the task fails to create an output as a Map from the Assistants "
-				+ "response, it will return a Map containing the keys \"ConversationID\" and \"Data\".";
+				+ "in the form defined by the AI assistant.  If the task fails to create an output as a Map from the AI "
+				+ "response, it will return a Map containing the key \"Data\", which holds the output from the AI as a string.";
 	}
 }

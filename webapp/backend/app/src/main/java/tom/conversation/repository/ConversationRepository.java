@@ -14,8 +14,6 @@ public interface ConversationRepository extends JpaRepository<Conversation, Inte
 
 	List<Conversation> findAllByOwnerIdAndAssociatedAssistantId(int userId, Integer assistantId);
 
-	List<Conversation> findAllByAssociatedWorkflow(String workflowName);
-
 	List<Conversation> findAllByOwnerId(int userId);
 
 	void deleteByConversationId(String conversationId);

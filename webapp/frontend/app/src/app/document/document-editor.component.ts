@@ -1,11 +1,9 @@
-import { Component, EventEmitter, forwardRef, Input, Output } from '@angular/core';
-import { MintyDoc } from '../model/minty-doc';
+import { Component, forwardRef } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
 export interface DocProperties {
 	title: string,
-	model: string,
 	file: File
 }
 
@@ -23,10 +21,8 @@ export interface DocProperties {
 })
 export class DocumentEditorComponent implements ControlValueAccessor {
 
-	@Input() models: string[] = [];
 	document: DocProperties = {
 		title: '',
-		model: '',
 		file: undefined
 	};
 
@@ -38,11 +34,6 @@ export class DocumentEditorComponent implements ControlValueAccessor {
 
 	onTitleChanged(title: string) {
 		this.document = { ...this.document, title: title};
-		this.onChange(this.document);
-	}
-
-	onModelChanged(model: string) {
-		this.document = { ...this.document, model: model};
 		this.onChange(this.document);
 	}
 

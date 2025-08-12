@@ -8,36 +8,54 @@ html(lang='en')
 			name='viewport'
 			content='width=device-width, initial-scale=1'
 		)
-		style(type="text/css").
-				pre {white-space: pre-wrap}
+		style.
+			pre {
+				white-space: pre-wrap;
+				margin: 0;
+			}
+
+			code {
+				font-family: monospace;
+			}
 
 	body
 		h1 Results
-		p
-			strong Start Time:
-				samp #{startTime}
-		p
-			strong End Time:
-				samp #{endTime}
+		if startTime
+			p
+				strong Start Time:
+					samp #{startTime}
+		else
+			p
+				strong Start Time:
+					Not Available
 
-		pre
+		if startTime
+			p
+				strong End Time:
+					samp #{endTime}
+		else
+			p
+				strong End Time:
+					Not Available
+
+		each valueList, index in results
+			h2 Step #{index + 1}
 			ul
-				each valueList, index in results
-					h2 Step #{index + 1}
-					ul
-						each val in valueList
-							li #{val}
+				each val in valueList
+					li
+						each item in val
+							pre
+								code
+									| #{item}
 
 		h1 All Conversations:
-		pre
-			ul
-				each messageList, index in conversations
-					h2 Conversation #{index + 1}
-					ul
-						each message in messageList
-							li
-								if message.user
-									strong User:
-								else
-									strong Assistant:
-								| #{message.message || ''}
+			h2 Conversation
+			pre
+				ul
+					each message in conversation
+						li
+							if message.user
+								strong User:
+							else
+								strong Assistant:
+							| #{message.message}

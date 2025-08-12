@@ -4,5 +4,4 @@ export interface Conversation {
 	conversationId: string;
 	ownerId: number;
 	associatedAssistantId: number;
-	associatedWorkflow: string;
 }
