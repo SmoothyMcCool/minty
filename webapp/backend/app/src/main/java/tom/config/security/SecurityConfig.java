@@ -1,5 +1,7 @@
 package tom.config.security;
 
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -48,7 +50,17 @@ public class SecurityConfig {
 				// .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
 				.sessionManagement(configurer -> {
 					configurer.sessionCreationPolicy(SessionCreationPolicy.ALWAYS);
-				})
+				}).authorizeHttpRequests(authorizeRequests -> authorizeRequests.requestMatchers(r -> {
+					String path = r.getServletPath();
+					List<String> extensions = List.of(".js", ".css", ".html", ".map", "ttf", ".woff", ".woff2", ".jpg",
+							".png");
+					for (String extension : extensions) {
+						if (path.endsWith(extension)) {
+							return true;
+						}
+					}
+					return false;
+				}).permitAll())
 				.authorizeHttpRequests(authorizeRequests -> authorizeRequests
 						.requestMatchers("/api/user/new", "/api/login").permitAll().anyRequest().authenticated())
 				.requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()))
@@ -56,5 +68,6 @@ public class SecurityConfig {
 				}).logout(logout -> logout.logoutUrl("/api/logout").logoutSuccessUrl("/login"));
 
 		return http.build();
+
 	}
 }

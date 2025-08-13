@@ -2,11 +2,12 @@ import { Component, forwardRef, Input } from "@angular/core";
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from "@angular/forms";
 import { CommonModule } from "@angular/common";
 import { Assistant } from "src/app/model/assistant";
+import { MapEditorComponent } from "./map-editor.component";
 
 @Component({
 	selector: 'minty-task-config-editor',
 	templateUrl: 'task-configuration-editor.component.html',
-	imports: [CommonModule, FormsModule],
+	imports: [CommonModule, FormsModule, MapEditorComponent],
 	providers: [
 		{
 			provide: NG_VALUE_ACCESSOR,
@@ -59,5 +60,13 @@ export class TaskConfigurationEditorComponent implements ControlValueAccessor {
 	}
 	setDisabledState(isDisabled: boolean): void {
 		// Nah.
+	}
+
+	addEntry() {
+		this.config.set('','');
+	}
+
+	removeEntry(key: string) {
+		this.config.delete(key);
 	}
 }

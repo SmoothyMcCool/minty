@@ -21,12 +21,7 @@ public class NullTask implements AiTask {
 	}
 
 	@Override
-	public List<Map<String, String>> runWorkflow() {
-		return List.of();
-	}
-
-	@Override
-	public List<AiTask> runTask() {
+	public List<Map<String, String>> runTask() {
 		return List.of();
 	}
 

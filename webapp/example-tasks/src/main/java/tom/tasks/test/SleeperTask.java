@@ -43,13 +43,7 @@ public class SleeperTask implements AiTask {
 	}
 
 	@Override
-	public List<Map<String, String>> runWorkflow() {
-		doTheThing();
-		return List.of();
-	}
-
-	@Override
-	public List<AiTask> runTask() {
+	public List<Map<String, String>> runTask() {
 		doTheThing();
 		return List.of();
 	}

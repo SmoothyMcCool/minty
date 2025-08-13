@@ -7,8 +7,8 @@
 						<label for="numberInput{{item.key}}">{{item.key}}</label>
 					</div>
 					<div class="col-8">
-						<input type="number" step="1" class="form-control form-control-sm" id="numberInput{{item.key}}"
-							name="numberInput{{item.key}}" [ngModel]="getConfig(item.key)"
+						<input type="number" step="1" class="form-control form-control-sm" id="numberInput-{{item.key}}"
+							name="numberInput-{{item.key}}" [ngModel]="getConfig(item.key)"
 							(ngModelChange)="valueChanged(item.key, $event)">
 					</div>
 				</div>
@@ -16,21 +16,26 @@
 			<ng-container *ngSwitchCase="'String'">
 				<div class="row g-1">
 					<div class="col-4">
-						<label for="stringInput{{item.key}}">{{item.key}}</label>
+						<label for="stringInput-{{item.key}}">{{item.key}}</label>
 					</div>
 					<div class="col-8">
-						<input type="text" class="form-control form-control-sm" id="stringInput{{item.key}}" name="stringInput{{item.key}}"
+						<input type="text" class="form-control form-control-sm" id="stringInput{{item.key}}" name="stringInput-{{item.key}}"
 							[ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)">
 					</div>
+				</div>
+			</ng-container>
+			<ng-container *ngSwitchCase="'Map'">
+				<div class="row g-1">
+					<minty-map-editor name="mapInput" [ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)"></minty-map-editor>
 				</div>
 			</ng-container>
 			<ng-container *ngSwitchCase="'AssistantIdentifier'">
 				<div class="row g-1">
 					<div class="col-4">
-						<label for="assistantList">{{item.key}}</label>
+						<label for="assistantList-{{item.key}}">{{item.key}}</label>
 					</div>
 					<div class="col-8">
-						<select class="form-select" name="assistantList" [ngModel]="getConfig(item.key)"
+						<select class="form-select" name="assistantList-{{item.key}}" [ngModel]="getConfig(item.key)"
 							(ngModelChange)="valueChanged(item.key, $event)">
 							<option *ngFor="let assistant of assistants" [value]="assistant.id">{{assistant.name}}</option>
 						</select>

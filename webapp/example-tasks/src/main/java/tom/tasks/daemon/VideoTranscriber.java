@@ -39,19 +39,11 @@ public class VideoTranscriber implements AiTask {
 	}
 
 	@Override
-	public List<Map<String, String>> runWorkflow() {
+	public List<Map<String, String>> runTask() {
 		logger.info("Running transcription on " + configuration.getFile());
 		Path file = Path.of(configuration.getFile());
 		file.toFile().delete();
 		return List.of(Map.of("File", configuration.getFile()));
-	}
-
-	@Override
-	public List<AiTask> runTask() {
-		logger.info("Running transcription on " + configuration.getFile());
-		Path file = Path.of(configuration.getFile());
-		file.toFile().delete();
-		return List.of();
 	}
 
 	@Override

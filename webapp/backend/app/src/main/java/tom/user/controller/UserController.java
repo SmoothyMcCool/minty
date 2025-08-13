@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import tom.ApiError;
 import tom.ApiException;
@@ -77,16 +76,6 @@ public class UserController {
 		} catch (JsonProcessingException e) {
 			errors.add(ApiError.FAILED_TO_DECRYPT_USER);
 			throw new ApiException(errors);
-		}
-
-		// Automatically try to log in.
-		try {
-			request.login(user.getName(), user.getPassword());
-		} catch (ServletException e) {
-			logger.error("SignupController - exception while logging in a new user.");
-			ResponseWrapper<User> response = ResponseWrapper.FailureResponse(HttpStatus.FORBIDDEN.value(),
-					"Failed to log in.");
-			return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
 		}
 
 		user.setPassword("");
