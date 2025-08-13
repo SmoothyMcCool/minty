@@ -61,7 +61,7 @@
 				  "with": "src/environments/environment.prod.ts"
 				}
 			  ],
-			  "baseHref": "/app/",
+			  "baseHref": "/Minty/",
 			  "optimization": true,
 			  "outputHashing": "all",
 			  "sourceMap": false,

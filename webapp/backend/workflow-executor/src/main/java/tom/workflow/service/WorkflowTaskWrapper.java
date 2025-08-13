@@ -26,7 +26,7 @@ public class WorkflowTaskWrapper implements Runnable {
 
 	@Override
 	public void run() {
-		output = task.runWorkflow();
+		output = task.runTask();
 		workflowTracker.taskComplete(this);
 	}
 

@@ -65,7 +65,18 @@
 						<resource>
 							<directory>../../frontend/deploy</directory>
 							<targetPath>static</targetPath>
+							<filtering>false</filtering>
+						</resource>
+						<resource>
+							<directory>../../frontend/deploy</directory>
+							<targetPath>static</targetPath>
 							<filtering>true</filtering>
+							<includes>
+								<include>**/*.html</include>
+								<include>**/*.js</include>
+								<include>**/*.css</include>
+								<include>**/*.map</include>
+							</includes>
 						</resource>
 					</webResources>
 				</configuration>

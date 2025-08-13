@@ -45,18 +45,12 @@ public class PythonTask implements AiTask, ServiceConsumer {
 	}
 
 	@Override
-	public List<AiTask> runTask() {
-		doTheThing();
-		return List.of();
-	}
-
-	@Override
 	public void setTaskServices(TaskServices taskServices) {
 		this.taskServices = taskServices;
 	}
 
 	@Override
-	public List<Map<String, String>> runWorkflow() {
+	public List<Map<String, String>> runTask() {
 		Map<String, String> response = doTheThing();
 		return List.of(response);
 	}

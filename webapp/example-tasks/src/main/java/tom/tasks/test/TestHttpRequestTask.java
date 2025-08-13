@@ -45,14 +45,7 @@ public class TestHttpRequestTask implements AiTask, ServiceConsumer {
 	}
 
 	@Override
-	public List<Map<String, String>> runWorkflow() {
-		user = taskServices.getHttpService().getBasicAuth(userId, "http://localhost:8080/Minty/api/login", null,
-				new TestUser());
-		return List.of(Map.of("User Name", user.getName()));
-	}
-
-	@Override
-	public List<AiTask> runTask() {
+	public List<Map<String, String>> runTask() {
 		user = taskServices.getHttpService().getBasicAuth(userId, "http://localhost:8080/Minty/api/login", null,
 				new TestUser());
 		return List.of();

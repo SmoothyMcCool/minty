@@ -54,7 +54,7 @@ public class AiQuery implements AiTask, ServiceConsumer {
 	}
 
 	@Override
-	public List<Map<String, String>> runWorkflow() {
+	public List<Map<String, String>> runTask() {
 		String response = doTheThing();
 		Map<String, String> responseAsMap = parseResponse(response);
 
@@ -86,12 +86,6 @@ public class AiQuery implements AiTask, ServiceConsumer {
 		} catch (Exception e) {
 			return new HashMap<>();
 		}
-	}
-
-	@Override
-	public List<AiTask> runTask() {
-		doTheThing();
-		return null;
 	}
 
 	@Override

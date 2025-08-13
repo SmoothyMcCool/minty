@@ -54,7 +54,7 @@ public class ConversationalAiQuery implements AiTask, ServiceConsumer {
 	}
 
 	@Override
-	public List<Map<String, String>> runWorkflow() {
+	public List<Map<String, String>> runTask() {
 
 		Map<String, String> response = new HashMap<>();
 		response.put("Data", doTheThing());
@@ -86,12 +86,6 @@ public class ConversationalAiQuery implements AiTask, ServiceConsumer {
 		} catch (Exception e) {
 			return result;
 		}
-	}
-
-	@Override
-	public List<AiTask> runTask() {
-		doTheThing();
-		return null;
 	}
 
 	@Override

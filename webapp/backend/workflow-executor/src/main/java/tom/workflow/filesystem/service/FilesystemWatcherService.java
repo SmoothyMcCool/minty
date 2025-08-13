@@ -8,16 +8,13 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
-import org.springframework.stereotype.Service;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 import tom.workflow.controller.WorkflowRequest;
 import tom.workflow.model.Workflow;
 import tom.workflow.repository.WorkflowRepository;
 import tom.workflow.service.WorkflowService;
 
-@Service
+//@Service
 public class FilesystemWatcherService {
 
 	private final TaskExecutor taskExecutor;
@@ -33,21 +30,19 @@ public class FilesystemWatcherService {
 		monitorTasks = new ArrayList<>();
 	}
 
-	@PostConstruct
+	// @PostConstruct
 	private void startWatching() {
 
 		List<tom.workflow.repository.Workflow> wfList = workflowRepository.findAllByTriggeredTrue();
 
-		List<Workflow> fsWatchers = wfList.stream().map(workflow -> {
-			return workflow.toModelWorkflow();
-		}).toList();
+		List<Workflow> fsWatchers = wfList.stream().map(workflow -> workflow.toModelWorkflow()).toList();
 
 		FilesystemMonitor monitor = new FilesystemMonitor(fsWatchers, this);
 		monitorTasks.add(monitor);
 		taskExecutor.execute(monitor);
 	}
 
-	@PreDestroy
+	// @PreDestroy
 	public void shutdown() {
 		monitorTasks.forEach(task -> {
 			task.stop();
@@ -57,7 +52,8 @@ public class FilesystemWatcherService {
 	public void startWorkflowFor(Workflow triggeredWorkflow, Path filename) {
 		WorkflowRequest request = new WorkflowRequest();
 
-		List<Map<String, String>> configs = triggeredWorkflow.getWorkflowSteps().stream().map(step -> step.getConfiguration()).toList();
+		List<Map<String, String>> configs = triggeredWorkflow.getWorkflowSteps().stream()
+				.map(step -> step.getConfiguration()).toList();
 		request.setTaskConfigurationList(configs);
 		request.setOutputConfiguration(triggeredWorkflow.getOutputStep().getConfiguration());
 

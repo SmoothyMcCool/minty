@@ -7,3 +7,4 @@ _test-output
 _temp
 **/.angular/**
 **/package-lock.json
+deploy

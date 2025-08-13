@@ -18,7 +18,7 @@ export class AssistantService {
 	private static readonly AskAssistant = 'api/assistant/ask';
 	private static readonly GetAssistant = 'api/assistant/get';
 	private static readonly DeleteAssistant = 'api/assistant/delete';
-	private static readonly GetAssistantForConversation = '/api/assistant/conversation';
+	private static readonly GetAssistantForConversation = 'api/assistant/conversation';
 	private static readonly ListModels = 'api/assistant/models';
 
 	constructor(private http: HttpClient, private alertService: AlertService) {

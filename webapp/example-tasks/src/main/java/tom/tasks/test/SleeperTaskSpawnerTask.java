@@ -45,7 +45,7 @@ public class SleeperTaskSpawnerTask implements AiTask {
 	}
 
 	@Override
-	public List<Map<String, String>> runWorkflow() {
+	public List<Map<String, String>> runTask() {
 		doTheThing();
 
 		List<Map<String, String>> output = new ArrayList<>();
@@ -57,22 +57,6 @@ public class SleeperTaskSpawnerTask implements AiTask {
 		}
 
 		return output;
-	}
-
-	@Override
-	public List<AiTask> runTask() {
-		doTheThing();
-
-		List<AiTask> childTasks = new ArrayList<>();
-
-		for (int i = 0; i < 10; i++) {
-			int sleepTime = new Random().nextInt(3) + 1;
-			SleeperTaskConfig sleeperConfig = new SleeperTaskConfig();
-			sleeperConfig.setDelay(sleepTime);
-			childTasks.add(new SleeperTask(sleeperConfig));
-		}
-
-		return childTasks;
 	}
 
 	@Override
