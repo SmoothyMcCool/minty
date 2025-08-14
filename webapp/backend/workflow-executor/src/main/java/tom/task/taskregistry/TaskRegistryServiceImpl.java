@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
+import tom.api.services.TaskServices;
 import tom.output.OutputTask;
 import tom.output.annotations.Output;
 import tom.output.noop.NullOutput;
@@ -37,7 +38,6 @@ import tom.task.ServiceConsumer;
 import tom.task.TaskConfig;
 import tom.task.TaskConfigTypes;
 import tom.task.annotations.PublicTask;
-import tom.task.services.TaskServices;
 import tom.workflow.model.TaskDescription;
 import tom.workflow.model.TaskRequest;
 

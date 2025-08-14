@@ -10,11 +10,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
+import tom.api.services.assistant.AssistantQueryService;
 import tom.conversation.model.Conversation;
 import tom.conversation.repository.ConversationRepository;
 import tom.model.Assistant;
 import tom.ollama.service.OllamaService;
-import tom.task.services.assistant.AssistantQueryService;
 
 @Service
 public class ConversationNamingService {

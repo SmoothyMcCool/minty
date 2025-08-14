@@ -23,12 +23,12 @@ import org.springframework.ai.vectorstore.SearchRequest.Builder;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 
+import tom.api.services.assistant.AssistantManagementService;
+import tom.api.services.assistant.AssistantQueryService;
 import tom.model.Assistant;
 import tom.model.AssistantQuery;
 import tom.ollama.service.MintyOllamaModel;
 import tom.ollama.service.OllamaService;
-import tom.task.services.assistant.AssistantManagementService;
-import tom.task.services.assistant.AssistantQueryService;
 import tom.user.repository.User;
 import tom.user.service.UserServiceInternal;
 

@@ -16,8 +16,8 @@ import de.neuland.pug4j.PugConfiguration;
 import de.neuland.pug4j.exceptions.PugException;
 import de.neuland.pug4j.model.PugModel;
 import de.neuland.pug4j.template.PugTemplate;
+import tom.api.services.RenderService;
 import tom.output.ExecutionResult;
-import tom.task.services.RenderService;
 
 @Service
 public class RenderServiceImpl implements RenderService {

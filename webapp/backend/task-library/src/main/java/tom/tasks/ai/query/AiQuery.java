@@ -8,11 +8,11 @@ import java.util.UUID;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import tom.api.services.TaskServices;
 import tom.model.AssistantQuery;
 import tom.task.AiTask;
 import tom.task.ServiceConsumer;
 import tom.task.annotations.PublicTask;
-import tom.task.services.TaskServices;
 
 @PublicTask(name = "Query the Robot", configClass = "tom.tasks.ai.query.AiQueryConfig")
 public class AiQuery implements AiTask, ServiceConsumer {

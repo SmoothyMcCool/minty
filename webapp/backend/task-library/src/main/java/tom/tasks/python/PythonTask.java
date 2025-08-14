@@ -10,10 +10,10 @@ import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import tom.api.services.TaskServices;
 import tom.task.AiTask;
 import tom.task.ServiceConsumer;
 import tom.task.annotations.PublicTask;
-import tom.task.services.TaskServices;
 
 @PublicTask(name = "Execute Python", configClass = "tom.tasks.python.PythonTaskConfig")
 public class PythonTask implements AiTask, ServiceConsumer {

@@ -1,7 +1,8 @@
-package tom.task.services;
+package tom.api.services;
 
-import tom.task.services.assistant.AssistantManagementService;
-import tom.task.services.assistant.AssistantQueryService;
+import tom.api.services.assistant.AssistantManagementService;
+import tom.api.services.assistant.AssistantQueryService;
+import tom.api.services.ewm.EwmOslcQueryService;
 
 public interface TaskServices {
 
@@ -18,4 +19,6 @@ public interface TaskServices {
 	RenderService getRenderService();
 
 	UserService getUserService();
+
+	EwmOslcQueryService getEwmOslcQueryService();
 }
