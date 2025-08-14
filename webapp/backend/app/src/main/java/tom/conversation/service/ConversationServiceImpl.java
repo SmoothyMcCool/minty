@@ -16,12 +16,12 @@ import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
+import tom.api.services.assistant.AssistantManagementService;
 import tom.assistant.service.management.AssistantManagementServiceInternal;
 import tom.conversation.model.Conversation;
 import tom.conversation.repository.ConversationRepository;
 import tom.model.ChatMessage;
 import tom.ollama.service.OllamaService;
-import tom.task.services.assistant.AssistantManagementService;
 
 @Service
 public class ConversationServiceImpl implements ConversationServiceInternal {

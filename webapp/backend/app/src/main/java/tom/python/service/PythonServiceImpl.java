@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import tom.task.services.PythonService;
+import tom.api.services.PythonService;
 
 @Service
 public class PythonServiceImpl implements PythonService {

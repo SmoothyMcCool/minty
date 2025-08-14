@@ -3,11 +3,11 @@ package tom.output.json;
 import java.io.IOException;
 import java.nio.file.Path;
 
+import tom.api.services.TaskServices;
 import tom.output.ExecutionResult;
 import tom.output.OutputTask;
 import tom.output.annotations.Output;
 import tom.task.ServiceConsumer;
-import tom.task.services.TaskServices;
 
 @Output(name = "JSON Output", configClass = "tom.output.json.JsonOutputConfig")
 public class JsonOutput implements OutputTask, ServiceConsumer {

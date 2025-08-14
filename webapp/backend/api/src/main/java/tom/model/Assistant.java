@@ -3,7 +3,7 @@ package tom.model;
 import java.util.List;
 import java.util.Objects;
 
-import tom.task.services.assistant.AssistantManagementService;
+import tom.api.services.assistant.AssistantManagementService;
 
 public record Assistant(Integer id, String name, String model, Double temperature, String prompt,
 		List<String> documentIds, Integer ownerId, boolean shared, boolean hasMemory) {

@@ -1,6 +1,6 @@
 package tom.task;
 
-import tom.task.services.TaskServices;
+import tom.api.services.TaskServices;
 
 public interface ServiceConsumer {
 

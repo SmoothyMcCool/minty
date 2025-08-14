@@ -2,8 +2,8 @@ package tom.conversation.service;
 
 import java.util.List;
 
+import tom.api.services.ConversationService;
 import tom.conversation.model.Conversation;
-import tom.task.services.ConversationService;
 
 public interface ConversationServiceInternal extends ConversationService {
 

@@ -1,4 +1,4 @@
-package tom.task.services;
+package tom.api.services;
 
 public interface UserService {
 

@@ -1,8 +1,8 @@
 package tom.assistant.service.management;
 
+import tom.api.services.assistant.AssistantManagementService;
 import tom.conversation.service.ConversationServiceInternal;
 import tom.model.Assistant;
-import tom.task.services.assistant.AssistantManagementService;
 
 public interface AssistantManagementServiceInternal extends AssistantManagementService {
 

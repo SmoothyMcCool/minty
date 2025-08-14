@@ -19,15 +19,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import tom.ApiError;
+import tom.api.services.ConversationService;
+import tom.api.services.assistant.AssistantManagementService;
+import tom.api.services.assistant.AssistantQueryService;
 import tom.config.security.UserDetailsUser;
 import tom.controller.ResponseWrapper;
 import tom.meta.service.MetadataService;
 import tom.model.Assistant;
 import tom.model.AssistantQuery;
 import tom.ollama.service.OllamaService;
-import tom.task.services.ConversationService;
-import tom.task.services.assistant.AssistantManagementService;
-import tom.task.services.assistant.AssistantQueryService;
 
 @Controller
 @RequestMapping("/api/assistant")

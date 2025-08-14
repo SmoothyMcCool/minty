@@ -10,12 +10,12 @@ import org.springframework.ai.ollama.api.OllamaModel;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
+import tom.api.services.assistant.AssistantManagementService;
 import tom.assistant.repository.AssistantRepository;
 import tom.conversation.service.ConversationServiceInternal;
 import tom.document.service.AssistantDocumentLinkService;
 import tom.model.Assistant;
 import tom.ollama.service.OllamaService;
-import tom.task.services.assistant.AssistantManagementService;
 
 @Service
 public class AssistantManagementServiceImpl implements AssistantManagementServiceInternal {

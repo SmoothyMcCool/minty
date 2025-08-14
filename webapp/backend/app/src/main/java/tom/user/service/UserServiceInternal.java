@@ -5,7 +5,7 @@ import java.util.Optional;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
-import tom.task.services.UserService;
+import tom.api.services.UserService;
 import tom.user.repository.EncryptedUser;
 import tom.user.repository.User;
 
