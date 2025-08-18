@@ -106,7 +106,7 @@ public class WorkflowTracker {
 		// Start the processing chain with a new conversation. Every task gets the
 		// conversation ID. They have to be careful in how its used. Best not use it in
 		// parallelized tasks...
-		Map<String, String> input = new HashMap<>();
+		Map<String, Object> input = new HashMap<>();
 		input.put("Conversation ID", workflowConversation.getConversationId());
 		currentTask.setInput(input);
 
@@ -131,7 +131,7 @@ public class WorkflowTracker {
 		// have to wait for all tasks to complete as we do not want to manually trigger
 		// a step if there are preceding inputs (in this situation, the follow-on step
 		// should only trigger once).
-		List<Map<String, String>> output = completedTask.getOutput();
+		List<Map<String, Object>> output = completedTask.getOutput();
 		int currentWorkflowStep = completedTask.getStepNumber();
 		int lastWorkflowStep = workflow.getWorkflowSteps().size() - 1;
 
@@ -181,7 +181,7 @@ public class WorkflowTracker {
 			taskExecutor.execute(wrappedTask);
 		} else {
 			// An list of outputs creates one task per list item.
-			for (Map<String, String> prevOut : completedTask.getOutput()) {
+			for (Map<String, Object> prevOut : completedTask.getOutput()) {
 				WorkflowTaskWrapper wrappedTask = createTask(nextStep, taskRequest, prevOut);
 				pendingTasks.put(stepTaskCount, wrappedTask);
 				logger.info(
@@ -192,10 +192,10 @@ public class WorkflowTracker {
 
 	}
 
-	private WorkflowTaskWrapper createTask(int nextStep, TaskRequest taskRequest, Map<String, String> prevOut) {
+	private WorkflowTaskWrapper createTask(int nextStep, TaskRequest taskRequest, Map<String, Object> prevOut) {
 		AiTask task = taskRegistryService.newTask(userId, taskRequest);
 
-		Map<String, String> taskInput = prevOut;
+		Map<String, Object> taskInput = prevOut;
 
 		if (prevOut != null) {
 			taskInput = new HashMap<>(prevOut);

@@ -17,11 +17,11 @@ public class NullTask implements AiTask {
 	}
 
 	@Override
-	public void setInput(Map<String, String> input) {
+	public void setInput(Map<String, Object> input) {
 	}
 
 	@Override
-	public List<Map<String, String>> runTask() {
+	public List<Map<String, Object>> runTask() {
 		return List.of();
 	}
 

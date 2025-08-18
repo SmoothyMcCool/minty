@@ -33,11 +33,11 @@ public class DataEmitter implements AiTask {
 	}
 
 	@Override
-	public List<Map<String, String>> runTask() {
+	public List<Map<String, Object>> runTask() {
 		List<String> data = config.getData();
 		String key = config.getKeyName();
 
-		List<Map<String, String>> result = new ArrayList<>();
+		List<Map<String, Object>> result = new ArrayList<>();
 
 		data.forEach(datum -> {
 			result.add(Map.of(key, datum));
@@ -47,7 +47,7 @@ public class DataEmitter implements AiTask {
 	}
 
 	@Override
-	public void setInput(Map<String, String> input) {
+	public void setInput(Map<String, Object> input) {
 	}
 
 	@Override

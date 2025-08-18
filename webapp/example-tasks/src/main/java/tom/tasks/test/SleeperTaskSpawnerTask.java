@@ -45,14 +45,14 @@ public class SleeperTaskSpawnerTask implements AiTask {
 	}
 
 	@Override
-	public List<Map<String, String>> runTask() {
+	public List<Map<String, Object>> runTask() {
 		doTheThing();
 
-		List<Map<String, String>> output = new ArrayList<>();
+		List<Map<String, Object>> output = new ArrayList<>();
 
 		for (int i = 0; i < 10; i++) {
 			int sleepTime = new Random().nextInt(3) + 1;
-			Map<String, String> cfg = Map.of("Data", Integer.toString(sleepTime));
+			Map<String, Object> cfg = Map.of("Data", Integer.valueOf(sleepTime));
 			output.add(cfg);
 		}
 
@@ -60,7 +60,7 @@ public class SleeperTaskSpawnerTask implements AiTask {
 	}
 
 	@Override
-	public void setInput(Map<String, String> input) {
+	public void setInput(Map<String, Object> input) {
 		// This task intentionally ignores all input, because you're allowed to do that.
 	}
 

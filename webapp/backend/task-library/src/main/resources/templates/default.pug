@@ -50,12 +50,16 @@ html(lang='en')
 
 		h1 All Conversations:
 			h2 Conversation
-			pre
-				ul
-					each message in conversation
-						li
-							if message.user
-								strong User:
-							else
-								strong Assistant:
-							| #{message.message}
+			if conversation
+				pre
+					ul
+						each message in conversation
+							li
+								if message.user
+									strong User:
+								else
+									strong Assistant:
+								| #{message.message}
+
+			else
+				p No messages in this conversation.

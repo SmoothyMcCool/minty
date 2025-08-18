@@ -42,16 +42,16 @@ public class SleeperTask implements AiTask {
 	}
 
 	@Override
-	public List<Map<String, String>> runTask() {
+	public List<Map<String, Object>> runTask() {
 		doTheThing();
 		// throw new RuntimeException("test");
 		return List.of();
 	}
 
 	@Override
-	public void setInput(Map<String, String> input) {
+	public void setInput(Map<String, Object> input) {
 		if (input.containsKey("Data")) {
-			configuration.setDelay((Integer.parseInt(input.get("Data"))));
+			configuration.setDelay((Integer) (input.get("Data")));
 		}
 	}
 
