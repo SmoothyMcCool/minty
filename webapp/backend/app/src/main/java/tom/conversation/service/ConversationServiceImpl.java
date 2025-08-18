@@ -123,7 +123,15 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 
 	@Override
 	public List<Conversation> listConversationsForUser(int userId) {
-		return conversationRepository.findAllByOwnerId(userId);
+		List<Conversation> conversations = conversationRepository.findAllByOwnerId(userId);
+
+		// Remove all the internal workflow conversations.
+		conversations = conversations.stream()
+				.filter(conversation -> conversation
+						.getAssociatedAssistantId() != AssistantManagementServiceInternal.WorkflowDefaultAssistantId)
+				.toList();
+
+		return conversations;
 	}
 
 }

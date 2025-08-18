@@ -1,5 +1,5 @@
 <div class="mb-2 row">
-	<ng-container *ngIf="edit">
+	<ng-container *ngIf="edit; else notEditing">
 		<label for="task" class="col-3 col-form-label">Task</label>
 		<button class="col-1 btn btn-outline"
 			type="button"
@@ -13,7 +13,16 @@
 			</select>
 		</div>
 	</ng-container>
-	<h3 *ngIf="task && !edit">{{task.name}}</h3>
+	<ng-template #notEditing>
+		<div class="d-flex align-items-baseline">
+			<h3 *ngIf="task && !edit">{{task.name}}</h3>
+			<button class="btn btn-outline"
+				type="button"
+				#popoverButton>
+				<i class="bi bi-question-circle"></i>
+			</button>
+		</div>
+	</ng-template>
 </div>
 <ng-container *ngIf="task && taskDescription">
 	<minty-task-config-editor [assistants]="assistants" [taskConfiguration]="taskDescription.configuration"

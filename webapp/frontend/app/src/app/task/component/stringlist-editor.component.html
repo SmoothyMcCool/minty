@@ -1,0 +1,24 @@
+<div class="row g-1">
+	<ul class="list-group">
+		<li class="list-group-item" *ngFor="let entry of entries; let i = index">
+			<div class="d-flex">
+				<input
+					type="text"
+					class="form-control form-control-sm"
+					name="entry"
+					[ngModel]="entry"
+					(ngModelChange)="valueChanged(i, $event)"
+					required
+					placeholder="Input Name"
+				/>
+				<button
+					type="button"
+					class="btn btn-danger btn-sm"
+					(click)="removeEntry(i)">
+					<i class="bi bi-x"></i>
+				</button>
+			</div>
+		</li>
+	</ul>
+	<button type="button" class="btn btn-primary btn-sm me-2" (click)="addEntry()">Add Row</button>
+</div>

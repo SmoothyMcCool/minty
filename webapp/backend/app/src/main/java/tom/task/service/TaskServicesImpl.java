@@ -10,7 +10,6 @@ import tom.api.services.TaskServices;
 import tom.api.services.UserService;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
-import tom.api.services.ewm.EwmOslcQueryService;
 import tom.conversation.service.ConversationServiceInternal;
 
 @Service
@@ -23,12 +22,11 @@ public class TaskServicesImpl implements TaskServices {
 	private final PythonService pythonService;
 	private final RenderService renderService;
 	private final UserService userService;
-	private final EwmOslcQueryService ewmOslcQueryService;
 
 	public TaskServicesImpl(AssistantManagementService assistantManagementService,
 			AssistantQueryService assistantQueryService, ConversationServiceInternal conversationService,
-			HttpService httpService, PythonService pythonService, RenderService renderService, UserService userService,
-			EwmOslcQueryService ewmOslcQueryService) {
+			HttpService httpService, PythonService pythonService, RenderService renderService,
+			UserService userService) {
 		this.assistantManagementService = assistantManagementService;
 		this.assistantQueryService = assistantQueryService;
 		this.conversationService = conversationService;
@@ -36,7 +34,6 @@ public class TaskServicesImpl implements TaskServices {
 		this.pythonService = pythonService;
 		this.renderService = renderService;
 		this.userService = userService;
-		this.ewmOslcQueryService = ewmOslcQueryService;
 	}
 
 	@Override
@@ -74,8 +71,4 @@ public class TaskServicesImpl implements TaskServices {
 		return userService;
 	}
 
-	@Override
-	public EwmOslcQueryService getEwmOslcQueryService() {
-		return ewmOslcQueryService;
-	}
 }

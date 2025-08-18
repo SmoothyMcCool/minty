@@ -19,7 +19,7 @@
 						<label for="stringInput-{{item.key}}">{{item.key}}</label>
 					</div>
 					<div class="col-8">
-						<input type="text" class="form-control form-control-sm" id="stringInput{{item.key}}" name="stringInput-{{item.key}}"
+						<input [type]="(item.key || '').toLowerCase().includes('password') ? 'password' : 'text'" class="form-control form-control-sm" id="stringInput-{{item.key}}" name="stringInput-{{item.key}}"
 							[ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)">
 					</div>
 				</div>
@@ -27,6 +27,16 @@
 			<ng-container *ngSwitchCase="'Map'">
 				<div class="row g-1">
 					<minty-map-editor name="mapInput" [ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)"></minty-map-editor>
+				</div>
+			</ng-container>
+			<ng-container *ngSwitchCase="'StringList'">
+				<div class="row g-1">
+					<div class="col-4">
+						<label for="stringInput-{{item.key}}">{{item.key}}</label>
+					</div>
+					<div class="col-8 g-1">
+						<minty-stringlist-editor name="stringListInput-{{item.key}}" [ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)"></minty-stringlist-editor>
+					</div>
 				</div>
 			</ng-container>
 			<ng-container *ngSwitchCase="'AssistantIdentifier'">

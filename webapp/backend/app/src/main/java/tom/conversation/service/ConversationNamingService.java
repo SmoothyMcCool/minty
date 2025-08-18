@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
 import tom.api.services.assistant.AssistantQueryService;
+import tom.assistant.service.management.AssistantManagementServiceInternal;
 import tom.conversation.model.Conversation;
 import tom.conversation.repository.ConversationRepository;
 import tom.model.Assistant;
@@ -41,6 +42,12 @@ public class ConversationNamingService {
 
 		Assistant namingAssistant = Assistant.CreateConversationNamingAssistant(conversationNamingModel);
 		List<Conversation> conversations = conversationRepository.findAllByTitle(null);
+
+		// Ignore all conversations internal to workflows.
+		conversations = conversations.stream()
+				.filter(conversation -> conversation
+						.getAssociatedAssistantId() != AssistantManagementServiceInternal.WorkflowDefaultAssistantId)
+				.toList();
 
 		conversations.forEach(conversation -> {
 			List<Message> messages = ollamaService.getChatMemory().get(conversation.getConversationId());

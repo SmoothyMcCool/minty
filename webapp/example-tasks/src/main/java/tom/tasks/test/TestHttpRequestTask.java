@@ -5,10 +5,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import tom.api.services.TaskServices;
 import tom.task.AiTask;
 import tom.task.ServiceConsumer;
 import tom.task.annotations.PublicTask;
-import tom.task.services.TaskServices;
 
 // This class defines no constructor that takes a configuration object because
 // it defines no set-time configuration. It still takes in input from previous tasks though,

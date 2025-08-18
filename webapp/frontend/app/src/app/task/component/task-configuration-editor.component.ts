@@ -3,11 +3,12 @@ import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from "@angular/f
 import { CommonModule } from "@angular/common";
 import { Assistant } from "src/app/model/assistant";
 import { MapEditorComponent } from "./map-editor.component";
+import { StringListEditorComponent } from "./stringlist-editor.component";
 
 @Component({
 	selector: 'minty-task-config-editor',
 	templateUrl: 'task-configuration-editor.component.html',
-	imports: [CommonModule, FormsModule, MapEditorComponent],
+	imports: [CommonModule, FormsModule, MapEditorComponent, StringListEditorComponent],
 	providers: [
 		{
 			provide: NG_VALUE_ACCESSOR,

@@ -17,7 +17,7 @@ import { NewWorkflowComponent } from './app/workflow/component/new-workflow.comp
 import { WorkflowComponent } from './app/workflow/component/workflow.component';
 import { WorkflowListComponent } from './app/workflow/component/workflow-list.component';
 import { importProvidersFrom } from '@angular/core';
-import { MarkdownModule } from 'ngx-markdown';
+import { MarkdownModule, MERMAID_OPTIONS, provideMarkdown } from 'ngx-markdown';
 import { EditAssistantComponent } from './app/assistant/component/edit-assistant.component';
 import { EditWorkflowComponent } from './app/workflow/component/edit-workflow.component';
 import { ViewDocumentsComponent } from './app/document/view-documents.component';
@@ -100,8 +100,17 @@ bootstrapApplication(AppComponent, {
 			}
 		]/*, withDebugTracing()*/),
 		provideHttpClient(withInterceptorsFromDi()),
-		importProvidersFrom(
-			MarkdownModule.forRoot()
-		)
+		provideMarkdown(/*{
+			mermaidOptions: {
+				provide: MERMAID_OPTIONS,
+				useValue: {
+					darkMode: false,
+					look: 'classic',
+				}
+			}
+		}*/)
+		//importProvidersFrom(
+		//	MarkdownModule.forRoot()
+		//)
 	]
 });
