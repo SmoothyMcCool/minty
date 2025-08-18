@@ -45,16 +45,19 @@ public class TestHttpRequestTask implements AiTask, ServiceConsumer {
 	}
 
 	@Override
-	public List<Map<String, String>> runTask() {
+	public List<Map<String, Object>> runTask() {
 		user = taskServices.getHttpService().getBasicAuth(userId, "http://localhost:8080/Minty/api/login", null,
 				new TestUser());
 		return List.of();
 	}
 
 	@Override
-	public void setInput(Map<String, String> input) {
+	public void setInput(Map<String, Object> input) {
 		if (input.containsKey("UserName")) {
-			userId = Integer.parseInt(input.get("UserName"));
+			Object userId = input.get("UserName");
+			if (userId instanceof Integer) {
+				userId = (Integer) input.get("UserName");
+			}
 		}
 	}
 

@@ -3,12 +3,9 @@ package tom.tasks.python;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import tom.api.services.TaskServices;
 import tom.task.AiTask;
@@ -50,24 +47,24 @@ public class PythonTask implements AiTask, ServiceConsumer {
 	}
 
 	@Override
-	public List<Map<String, String>> runTask() {
-		Map<String, String> response = doTheThing();
+	public List<Map<String, Object>> runTask() {
+		Map<String, Object> response = doTheThing();
 		return List.of(response);
 	}
 
 	@Override
-	public void setInput(Map<String, String> input) {
+	public void setInput(Map<String, Object> input) {
 		// Merge whatever we get with the input dictionary to pass to the python
 		// interpreter.
 		configuration.getInputDictionary().putAll(input);
 	}
 
-	private Map<String, String> doTheThing() {
-		logger.info("doWork: Executing " + configuration.getPythonFile());
+	private Map<String, Object> doTheThing() {
+		logger.debug("doWork: Executing " + configuration.getPythonFile());
 
 		if (configuration.getInputDictionary().containsKey("Data")) {
 
-			String code = configuration.getInputDictionary().get("Data");
+			String code = configuration.getInputDictionary().get("Data").toString();
 			result = taskServices.getPythonService().executeCodeString(code, configuration.getInputDictionary());
 
 			logger.info("doWork: completed execution of input-provided code.");
@@ -83,14 +80,7 @@ public class PythonTask implements AiTask, ServiceConsumer {
 			result.put(null, configuration.getInputDictionary().get("ConversationId"));
 		}
 
-		ObjectMapper mapper = new ObjectMapper();
-		return result.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> {
-			try {
-				return mapper.writeValueAsString(e.getValue());
-			} catch (Exception except) {
-				return String.valueOf(e.getValue());
-			}
-		}));
+		return result;
 
 	}
 

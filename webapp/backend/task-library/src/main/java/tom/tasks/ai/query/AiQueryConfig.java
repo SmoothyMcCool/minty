@@ -5,10 +5,11 @@ import java.util.Map;
 
 import tom.task.TaskConfig;
 import tom.task.TaskConfigTypes;
+import tom.tasks.TaskUtils;
 
 public class AiQueryConfig implements TaskConfig {
 
-	private int assistant;
+	private Integer assistant;
 	private String query;
 
 	public AiQueryConfig() {
@@ -29,17 +30,17 @@ public class AiQueryConfig implements TaskConfig {
 		return cfg;
 	}
 
-	public void updateFrom(Map<String, String> map) {
+	public void updateFrom(Map<String, Object> map) {
 		if (map.containsKey("Assistant")) {
-			assistant = Integer.parseInt(map.get("Assistant"));
+			assistant = TaskUtils.safeConvert(map.get("Assistant"), Integer.class);
 		}
 		if (map.containsKey("Prompt")) {
-			query = map.get("Prompt");
+			query = TaskUtils.safeConvert(map.get("Prompt"), String.class);
 		}
 	}
 
 	public int getAssistant() {
-		return assistant;
+		return assistant == null ? 0 : assistant;
 	}
 
 	public String getQuery() {

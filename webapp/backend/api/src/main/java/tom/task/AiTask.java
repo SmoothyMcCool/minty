@@ -20,13 +20,13 @@ public interface AiTask {
 	// Override this method, and do some work that generates results for the next
 	// stage in the workflow to consume. One task is generated per item in the list.
 	// If no items are generated, no further workflow steps are generated.
-	List<Map<String, String>> runTask();
+	List<Map<String, Object>> runTask();
 
 	// If this Task is part of a workflow, and not the initial Task, this is the
 	// output of the previous Task for this Task to process.
 	// For this to have any effect, this object should look like the config object
 	// of any downstream tasks.
-	void setInput(Map<String, String> input);
+	void setInput(Map<String, Object> input);
 
 	// A description of what the shape of the input map should look like for this
 	// task to make use of it.

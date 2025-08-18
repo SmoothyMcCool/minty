@@ -18,7 +18,7 @@ public class WorkflowTaskWrapper implements Runnable {
 	private final AiTask task;
 	private final WorkflowTracker workflowTracker;
 	private final TaskRequest taskRequest;
-	private List<Map<String, String>> output = List.of();
+	private List<Map<String, Object>> output = List.of();
 
 	public WorkflowTaskWrapper(int taskId, int stepNumber, AiTask task, WorkflowTracker workflowTracker,
 			TaskRequest taskRequest) {
@@ -40,7 +40,7 @@ public class WorkflowTaskWrapper implements Runnable {
 		workflowTracker.taskComplete(this);
 	}
 
-	public List<Map<String, String>> getOutput() {
+	public List<Map<String, Object>> getOutput() {
 		return output;
 	}
 

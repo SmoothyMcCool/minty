@@ -46,7 +46,7 @@ public class ConfluenceQuery implements AiTask {
 	}
 
 	@Override
-	public List<Map<String, String>> runTask() {
+	public List<Map<String, Object>> runTask() {
 		String auth;
 		if (!config.getApiKey().isBlank()) {
 			auth = config.getUsername() + ":" + config.getPassword();
@@ -59,7 +59,7 @@ public class ConfluenceQuery implements AiTask {
 		HttpClient client = HttpClients.createDefault();
 		ObjectMapper mapper = new ObjectMapper();
 
-		List<Map<String, String>> output = new ArrayList<>();
+		List<Map<String, Object>> output = new ArrayList<>();
 
 		for (String pageId : config.getPages()) {
 			final String baseUrl = config.getBaseUrl().replaceAll("/+$", "");
@@ -101,10 +101,10 @@ public class ConfluenceQuery implements AiTask {
 	}
 
 	@Override
-	public void setInput(Map<String, String> input) {
+	public void setInput(Map<String, Object> input) {
 		if (input.containsKey("Data")) {
 			try {
-				config.updateFrom(input.get("Data"));
+				config.updateFrom(input);
 			} catch (JsonProcessingException e) {
 				throw new RuntimeException("Received malformed data as input.");
 			}
