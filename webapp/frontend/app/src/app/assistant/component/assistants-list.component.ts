@@ -5,15 +5,16 @@ import { Assistant } from '../../model/assistant';
 import { AssistantService } from '../../assistant.service';
 import { Router, RouterModule } from '@angular/router';
 import { ConversationService } from '../../conversation.service';
-import { FilterPipe } from '../../pipe/filter-pipe';
 import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
 import { UserService } from 'src/app/user.service';
 import { Conversation } from 'src/app/model/conversation';
+import { FilterPipe } from 'src/app/pipe/filter-pipe';
 
 @Component({
 	selector: 'minty-assistants-list',
 	imports: [CommonModule, FormsModule, RouterModule, FilterPipe, ConfirmationDialogComponent],
-	templateUrl: 'assistants-list.component.html'
+	templateUrl: 'assistants-list.component.html',
+	styleUrls: ['assistants-list.component.css']
 })
 export class AssistantsListComponent {
 
@@ -21,6 +22,7 @@ export class AssistantsListComponent {
 	selectedChat: string = '';
 
 	assistants: Assistant[] = [];
+	sharedAssistants: Assistant[] = [];
 
 	fileList: File[] = [];
 	workingAssistant: Assistant = {
@@ -53,6 +55,7 @@ export class AssistantsListComponent {
 		this.assistantService.list().subscribe(assistants => {
 			setTimeout(() => {
 				this.assistants = assistants;
+				this.sharedAssistants = assistants.filter(assistant => assistant.shared === true);
 			}, 0);
 		});
 
@@ -76,6 +79,7 @@ export class AssistantsListComponent {
 		this.assistantService.delete(this.assistantPendingDeletion).subscribe(() => {
 			this.assistantService.list().subscribe(assistants => {
 				this.assistants = assistants;
+				this.sharedAssistants = assistants.filter(assistant => assistant.shared === true);
 				this.deleteInProgress = false;
 			});
 			this.conversationService.list().subscribe(conversations => {
@@ -83,6 +87,7 @@ export class AssistantsListComponent {
 			});
 		});
 		this.assistants = this.assistants.filter(item => item.id === this.assistantPendingDeletion.id);
+		this.sharedAssistants = this.assistants.filter(assistant => assistant.shared === true);
 	}
 
 	startConversation(assistant: Assistant): void {
@@ -134,5 +139,13 @@ export class AssistantsListComponent {
 			return conversation.title;
 		}
 		return conversation.conversationId;
+	}
+
+	getConversationModel(conversation: Conversation): string {
+		const assistant = this.assistants.find( assistant => assistant.id === conversation.associatedAssistantId);
+		if (assistant) {
+			return assistant.model;
+		}
+		return '';
 	}
 }

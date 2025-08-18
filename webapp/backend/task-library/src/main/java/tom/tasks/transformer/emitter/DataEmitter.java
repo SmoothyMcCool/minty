@@ -52,7 +52,7 @@ public class DataEmitter implements AiTask {
 
 	@Override
 	public String expects() {
-		return "This task does nothing with any input it receives. It drops it on the floor. It's meant to be the first task in a workflow.";
+		return "This task does nothing with any input it receives. It drops all input on the floor, in favour of the data that it is set up to emit.";
 	}
 
 	@Override

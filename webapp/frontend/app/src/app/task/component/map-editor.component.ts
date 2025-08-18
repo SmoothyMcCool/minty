@@ -1,7 +1,6 @@
-import { Component, forwardRef, Input } from "@angular/core";
+import { Component, forwardRef } from "@angular/core";
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from "@angular/forms";
 import { CommonModule } from "@angular/common";
-import { Assistant } from "src/app/model/assistant";
 
 @Component({
 	selector: 'minty-map-editor',

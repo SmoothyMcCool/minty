@@ -27,6 +27,10 @@
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents.client5</groupId>
+			<artifactId>httpclient5</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>tom.minty</groupId>
@@ -41,7 +45,7 @@
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>3.4.2</version>
 				<configuration>
-					<outputDirectory>d:/projects/Minty/working/taskLib</outputDirectory>
+					<outputDirectory>${output.directory}/working/taskLib</outputDirectory>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -56,7 +60,7 @@
 							<goal>copy-resources</goal>
 						</goals>
 						<configuration>
-							<outputDirectory>d:/projects/Minty/working/pug</outputDirectory>
+							<outputDirectory>${output.directory}/working/pug</outputDirectory>
 							<resources>
 								<resource>
 									<directory>/src/main/resources/templates</directory>
@@ -74,7 +78,7 @@
 							<goal>copy-resources</goal>
 						</goals>
 						<configuration>
-							<outputDirectory>d:/projects/Minty/working/python</outputDirectory>
+							<outputDirectory>${output.directory}/working/python</outputDirectory>
 							<resources>
 								<resource>
 									<directory>/src/main/resources/python</directory>

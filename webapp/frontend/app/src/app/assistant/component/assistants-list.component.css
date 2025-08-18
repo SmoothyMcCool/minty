@@ -1,0 +1,10 @@
+.clickable-text {
+	cursor: pointer;
+	color: var(--bs-link-color, #0d6efd);
+	transition: color 0.15s ease-in-out;
+}
+
+.clickable-text:hover {
+	color: var(--bs-link-hover-color, #0a58ca);
+	text-decoration: underline;
+}

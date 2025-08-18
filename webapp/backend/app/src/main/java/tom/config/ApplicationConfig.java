@@ -12,6 +12,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
@@ -128,6 +131,16 @@ public class ApplicationConfig implements WebMvcConfigurer {
 	OllamaApi ollamaApi() {
 		logger.info("ollama URI is " + ollamaUri);
 		return OllamaApi.builder().baseUrl(ollamaUri).build();
+	}
+
+	@Bean
+	public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
+		PropertySourcesPlaceholderConfigurer configurer = new PropertySourcesPlaceholderConfigurer();
+		configurer.setLocations(
+				new FileSystemResource(System.getProperty("catalina.base") + "/conf/minty/application.properties"),
+				new ClassPathResource("application.properties"));
+		configurer.setIgnoreResourceNotFound(true);
+		return configurer;
 	}
 
 	@Override

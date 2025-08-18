@@ -10,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.core.task.AsyncTaskExecutor;
 
+import tom.assistant.service.management.AssistantManagementServiceInternal;
 import tom.conversation.model.Conversation;
 import tom.conversation.service.ConversationServiceInternal;
 import tom.model.ChatMessage;
@@ -46,7 +47,8 @@ public class WorkflowTracker {
 		this.conversationService = conversationService;
 		this.taskExecutor = taskExecutor;
 		results = new ExecutionResult(workflow.numSteps());
-		workflowConversation = conversationService.newConversation(userId, -1); // Assistant ID doesn't matter.
+		workflowConversation = conversationService.newConversation(userId,
+				AssistantManagementServiceInternal.WorkflowDefaultAssistantId);
 	}
 
 	public synchronized void workflowComplete() {
@@ -61,23 +63,26 @@ public class WorkflowTracker {
 
 		logger.info("Workflow " + getWorkflowName() + " is complete.");
 
-		// Get all conversations used in this task and append them to results, then
-		// delete them.
-		List<ChatMessage> chats = conversationService.getChatMessages(userId, workflowConversation.getConversationId());
-		if (!chats.isEmpty()) {
-			results.setChatMessages(chats);
-		}
-		conversationService.deleteConversation(userId, workflowConversation.getConversationId());
-
-		TaskRequest outputTaskRequest = new TaskRequest();
-		outputTaskRequest.setName(workflow.getOutputStep().getName());
-		outputTaskRequest.setConfiguration(workflow.getOutputStep().getConfiguration());
-		OutputTask outputTask = taskRegistryService.newOutputTask(userId, outputTaskRequest);
-
 		try {
+			// Get all conversations used in this task and append them to results, then
+			// delete them.
+			List<ChatMessage> chats = conversationService.getChatMessages(userId,
+					workflowConversation.getConversationId());
+			if (!chats.isEmpty()) {
+				results.setChatMessages(chats);
+			}
+
+			TaskRequest outputTaskRequest = new TaskRequest();
+			outputTaskRequest.setName(workflow.getOutputStep().getName());
+			outputTaskRequest.setConfiguration(workflow.getOutputStep().getConfiguration());
+			OutputTask outputTask = taskRegistryService.newOutputTask(userId, outputTaskRequest);
+
 			outputTask.execute(results);
+
 		} catch (IOException e) {
-			logger.error("Failed to generate output for " + workflow.getName());
+			logger.error("Failed to generate output for " + workflow.getName() + " with exception ", e);
+		} finally {
+			conversationService.deleteConversation(userId, workflowConversation.getConversationId());
 		}
 	}
 
@@ -87,11 +92,10 @@ public class WorkflowTracker {
 
 	public void runFirstTask() {
 		logger.info("Starting workflow " + workflow.getName());
-
 		results.start();
+
 		if (workflow.getWorkflowSteps().isEmpty()) {
 			// That was quick. I guess we're done.
-			results.stop();
 			return;
 		}
 
@@ -122,43 +126,88 @@ public class WorkflowTracker {
 		// Remove the just-completed task from the list of pending tasks.
 		pendingTasks.remove(completedTask.getTaskId());
 
-		// If the list of pending tasks is empty, and there are no more tasks to
-		// generate from the just completed task (or the task is the last one in the
-		// list of steps), then the workflow should stop.
+		logger.info("completed task " + completedTask.getTaskId() + " for step " + completedTask.getStepNumber());
+		// In the situation where no task generates output but there are more steps, we
+		// have to wait for all tasks to complete as we do not want to manually trigger
+		// a step if there are preceding inputs (in this situation, the follow-on step
+		// should only trigger once).
 		List<Map<String, String>> output = completedTask.getOutput();
 		int currentWorkflowStep = completedTask.getStepNumber();
 		int lastWorkflowStep = workflow.getWorkflowSteps().size() - 1;
-		if (pendingTasks.isEmpty() && (output.isEmpty() || currentWorkflowStep == lastWorkflowStep)) {
-			workflowComplete();
-			return;
-		}
 
-		// Are there steps after this one?
-		if ((output.isEmpty() || currentWorkflowStep == lastWorkflowStep)) {
-			// Out of steps. Either this is the last step or the task produced no output,
-			// which means don't continue on.
-			return;
+		boolean manuallyTriggerNextStep = false;
+
+		if (pendingTasks.isEmpty()) {
+			// If there are no more pending tasks and the current step is the last step, we
+			// are totally done.
+			if (currentWorkflowStep == lastWorkflowStep) {
+				workflowComplete();
+				return;
+			} else {
+				if (completedTask.getOutput().size() == 0) {
+					// If we got here, then we are in the situation where all currently running
+					// tasks are done, and none of them produced an output to trigger the next step,
+					// so we have to ensure it triggers.
+					manuallyTriggerNextStep = true;
+					// There is output from this task, let use the output to generate further tasks.
+					// Nothing to do. Keep running.
+				} // else { // Fake else :)
+					// There is output from this task, let use the output to generate further tasks.
+					// Nothing to do. Keep running.
+					// }
+			}
+		} else {
+			// If there are pending tasks but no output from this task, then do nothing.
+			// Just let other tasks keep running.
+			if (output.isEmpty()) {
+				return;
+			}
+
+			// If there are no pending tasks and output is empty, then we run a single
+			// instance of the follow-on step, unless this task was part of the last step.
+			if (currentWorkflowStep == lastWorkflowStep) {
+				return;
+			}
 		}
 
 		int nextStep = ++currentWorkflowStep;
 		Task step = workflow.getWorkflowSteps().get(nextStep);
 		TaskRequest taskRequest = new TaskRequest(step.getName(), step.getConfiguration());
 
-		for (Map<String, String> prevOut : completedTask.getOutput()) {
-			AiTask task = taskRegistryService.newTask(userId, taskRequest);
-
-			Map<String, String> taskInput = prevOut;
-
-			taskInput = new HashMap<>(prevOut);
-			taskInput.put("Conversation ID", workflowConversation.getConversationId());
-
-			task.setInput(taskInput);
-
-			WorkflowTaskWrapper wrapper = new WorkflowTaskWrapper(++stepTaskCount, nextStep, task, this, taskRequest);
-			pendingTasks.put(stepTaskCount, wrapper);
-			taskExecutor.execute(wrapper);
+		if (manuallyTriggerNextStep) {
+			WorkflowTaskWrapper wrappedTask = createTask(nextStep, taskRequest, null);
+			pendingTasks.put(stepTaskCount, wrappedTask);
+			logger.info("starting manual task " + wrappedTask.getTaskId() + " for step " + wrappedTask.getStepNumber());
+			taskExecutor.execute(wrappedTask);
+		} else {
+			// An list of outputs creates one task per list item.
+			for (Map<String, String> prevOut : completedTask.getOutput()) {
+				WorkflowTaskWrapper wrappedTask = createTask(nextStep, taskRequest, prevOut);
+				pendingTasks.put(stepTaskCount, wrappedTask);
+				logger.info(
+						"starting auto task " + wrappedTask.getTaskId() + " for step " + wrappedTask.getStepNumber());
+				taskExecutor.execute(wrappedTask);
+			}
 		}
 
+	}
+
+	private WorkflowTaskWrapper createTask(int nextStep, TaskRequest taskRequest, Map<String, String> prevOut) {
+		AiTask task = taskRegistryService.newTask(userId, taskRequest);
+
+		Map<String, String> taskInput = prevOut;
+
+		if (prevOut != null) {
+			taskInput = new HashMap<>(prevOut);
+		} else {
+			taskInput = new HashMap<>();
+		}
+		taskInput.put("Conversation ID", workflowConversation.getConversationId());
+
+		task.setInput(taskInput);
+
+		WorkflowTaskWrapper wrapper = new WorkflowTaskWrapper(++stepTaskCount, nextStep, task, this, taskRequest);
+		return wrapper;
 	}
 
 }

@@ -38,13 +38,13 @@ public class SleeperTask implements AiTask {
 		Map<String, Object> results = new HashMap<>();
 
 		results.put("Result", "I slept for " + configuration.getDelay() + " seconds.");
-
 		return results;
 	}
 
 	@Override
 	public List<Map<String, String>> runTask() {
 		doTheThing();
+		// throw new RuntimeException("test");
 		return List.of();
 	}
 

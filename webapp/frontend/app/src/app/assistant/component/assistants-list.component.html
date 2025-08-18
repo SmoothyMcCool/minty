@@ -3,20 +3,25 @@
 		<div class="col-4 col-sm-6">
 			<h4>Active Conversations</h4>
 			<ul class="list-group">
-				<li class="list-group-item list-group-item-action position-relative opacity-75"
+				<li class="list-group-item list-group-item-action position-relative text-bg-light bg-opacity-75"
 					*ngFor="let conversation of conversations" style="height: 2.5rem">
-					<button
-						type="button"
-						class="position-absolute start-0 top-50 translate-middle-y z-0"
-						(click)="selectConversation(conversation)">{{getConversationTitle(conversation)}}</button>
-					<button
-						type="button"
-						class="position-absolute end-0 top-50 translate-middle-y z-1"
-						style="font-size: 20px; color: red"
-						[disabled]="deleteInProgress"
-						(click)="deleteConversation(conversation)">
-						<i class="bi bi-trash3"></i>
-					</button>
+					<div class="d-flex align-items-center h-100">
+						<span
+							class="text-truncate clickable-text"
+							(click)="selectConversation(conversation)">
+							{{getConversationTitle(conversation)}}
+						</span>
+						<span class="badge text-bg-secondary mx-2">{{getConversationModel(conversation)}}</span>
+						<span class="flex-grow-1"></span>
+						<button
+							type="button"
+							class="btn btn-sm p-0"
+							style="font-size: 20px; color: red"
+							[disabled]="deleteInProgress"
+							(click)="deleteConversation(conversation)">
+							<i class="bi bi-trash3"></i>
+						</button>
+					</div>
 				</li>
 			</ul>
 		</div>
@@ -27,7 +32,7 @@
 				<ng-container *ngIf="assistants.length > 0; else noAssistants">
 					<div class="col-4 col-sm-12"
 						*ngFor="let assistant of assistants | filter:{shared: false}; index as i">
-						<div class="card opacity-75">
+						<div class="card text-bg-light bg-opacity-75">
 							<div class="position-absolute top-0 end-0">
 								<button
 									*ngIf="isOwned(assistant)"
@@ -44,7 +49,14 @@
 								</button>
 							</div>
 							<div class="card-body">
-								<h5 class="card-title">{{assistant.name}}</h5>
+								<div class="row">
+									<div class="col-auto pe-0">
+										<h5 class="card-title">{{assistant.name}}</h5>
+									</div>
+									<div class="col-auto p-0">
+										<span class="badge text-bg-secondary mx-2">{{assistant.model}}</span>
+									</div>
+								</div>
 								<button class="btn btn-primary" (click)="startConversation(assistant)">Run!</button>
 							</div>
 						</div>
@@ -52,8 +64,8 @@
 				</ng-container>
 				<div class="row">
 					<h5>Shared Assistants</h5>
-					<ng-container *ngIf="assistants.length > 0; else noSharedAssistants">
-						<div class="col-4" *ngFor="let assistant of assistants | filter:{shared: true}; index as i">
+					<ng-container *ngIf="sharedAssistants.length > 0; else noSharedAssistants">
+						<div class="col-4" *ngFor="let assistant of sharedAssistants; index as i">
 							<div class="card">
 								<div class="card-body">
 									<button *ngIf="isOwned(assistant)"

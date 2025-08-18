@@ -15,13 +15,13 @@ public class SleeperTaskConfig implements TaskConfig {
 	}
 
 	public SleeperTaskConfig(Map<String, String> config) {
-		delay = Integer.parseInt(config.get("delay"));
+		delay = Integer.parseInt(config.get("Delay"));
 	}
 
 	@Override
 	public Map<String, TaskConfigTypes> getConfig() {
 		Map<String, TaskConfigTypes> cfg = new HashMap<>();
-		cfg.put("delay", TaskConfigTypes.Number);
+		cfg.put("Delay", TaskConfigTypes.Number);
 		return cfg;
 	}
 

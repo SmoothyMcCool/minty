@@ -59,7 +59,7 @@
 				<configuration>
 					<warSourceDirectory>src/main/resources</warSourceDirectory>
 					<warName>Minty</warName>
-					<outputDirectory>d:/projects/tomcat/webapps</outputDirectory>
+					<outputDirectory>${tomcat.base}/webapps</outputDirectory>
 					<failOnMissingWebXml>false</failOnMissingWebXml>
 					<webResources>
 						<resource>
@@ -80,6 +80,31 @@
 						</resource>
 					</webResources>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>${maven.resources.version}</version>
+				<executions>
+					<execution>
+						<id>copy-application-properties</id>
+						<phase>install</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${tomcat.base}/conf/Minty</outputDirectory>
+							<resources>
+								<resource>
+									<directory>/src/main/resources</directory>
+									<includes>
+										<include>application.properties</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 		<finalName>Minty</finalName>

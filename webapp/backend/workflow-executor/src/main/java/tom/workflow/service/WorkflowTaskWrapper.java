@@ -3,10 +3,15 @@ package tom.workflow.service;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import tom.task.AiTask;
 import tom.workflow.model.TaskRequest;
 
 public class WorkflowTaskWrapper implements Runnable {
+
+	private final Logger logger = LogManager.getLogger(WorkflowTaskWrapper.class);
 
 	private final int taskId;
 	private final int stepNumber;
@@ -26,7 +31,12 @@ public class WorkflowTaskWrapper implements Runnable {
 
 	@Override
 	public void run() {
-		output = task.runTask();
+		try {
+			output = task.runTask();
+		} catch (Exception e) {
+			logger.error("Task " + task.taskName() + " failed with exception: ", e);
+		}
+
 		workflowTracker.taskComplete(this);
 	}
 
