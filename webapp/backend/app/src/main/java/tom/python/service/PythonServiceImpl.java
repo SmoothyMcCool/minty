@@ -28,7 +28,7 @@ public class PythonServiceImpl implements PythonService {
 	private String tempFileDir;
 
 	@Override
-	public Map<String, Object> execute(String pythonFile, Map<String, String> inputDictionary) {
+	public Map<String, Object> execute(String pythonFile, Map<String, Object> inputDictionary) {
 		Path inputFilePath = null;
 		Path outputFilePath = null;
 
@@ -43,7 +43,7 @@ public class PythonServiceImpl implements PythonService {
 			ObjectMapper mapper = new ObjectMapper();
 
 			inputFilePath = Files.createTempFile(inputFilePath, "py-out-", ".tom");
-			String code = inputDictionary.remove("Code");
+			String code = inputDictionary.remove("Code").toString();
 			Files.writeString(inputFilePath, mapper.writeValueAsString(inputDictionary));
 			inputDictionary.put("Code", code);
 
@@ -82,7 +82,7 @@ public class PythonServiceImpl implements PythonService {
 	}
 
 	@Override
-	public Map<String, Object> executeCodeString(String code, Map<String, String> inputDictionary) {
+	public Map<String, Object> executeCodeString(String code, Map<String, Object> inputDictionary) {
 		Path tempPyFile = null;
 		try {
 			tempPyFile = Files.createTempFile(Path.of(pythonScripts), "tempPy-", ".py");

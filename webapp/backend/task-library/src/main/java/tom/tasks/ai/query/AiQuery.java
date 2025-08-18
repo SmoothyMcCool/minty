@@ -22,7 +22,7 @@ public class AiQuery implements AiTask, ServiceConsumer {
 	private AiQueryConfig config = new AiQueryConfig();
 	private int userId = 0;
 	private Map<String, Object> result = new HashMap<>();
-	private Map<String, String> input = Map.of();
+	private Map<String, Object> input = Map.of();
 
 	public AiQuery() {
 
@@ -54,9 +54,9 @@ public class AiQuery implements AiTask, ServiceConsumer {
 	}
 
 	@Override
-	public List<Map<String, String>> runTask() {
+	public List<Map<String, Object>> runTask() {
 		String response = doTheThing();
-		Map<String, String> responseAsMap = parseResponse(response);
+		Map<String, Object> responseAsMap = parseResponse(response);
 
 		if (input.containsKey("Conversation ID")) {
 			result.put("Conversation ID", input.get("Conversation ID"));
@@ -71,7 +71,7 @@ public class AiQuery implements AiTask, ServiceConsumer {
 		return List.of(responseAsMap);
 	}
 
-	private Map<String, String> parseResponse(String response) {
+	private Map<String, Object> parseResponse(String response) {
 
 		if (response == null || response.isBlank()) {
 			return new HashMap<>();
@@ -80,7 +80,7 @@ public class AiQuery implements AiTask, ServiceConsumer {
 		try {
 			ObjectMapper mapper = new ObjectMapper();
 
-			Map<String, String> map = mapper.readValue(response, new TypeReference<Map<String, String>>() {
+			Map<String, Object> map = mapper.readValue(response, new TypeReference<Map<String, Object>>() {
 			});
 			return map != null ? map : new HashMap<>();
 		} catch (Exception e) {
@@ -89,7 +89,7 @@ public class AiQuery implements AiTask, ServiceConsumer {
 	}
 
 	@Override
-	public void setInput(Map<String, String> input) {
+	public void setInput(Map<String, Object> input) {
 		config.updateFrom(input);
 		this.input = input;
 	}
@@ -113,7 +113,7 @@ public class AiQuery implements AiTask, ServiceConsumer {
 
 	@Override
 	public String expects() {
-		return "This task appends the contents of \"data\" to the provided query. It will not make use of any conversations.";
+		return "This task appends the contents of \"data\" to the provided query.\n\nIt will not make use of any conversations.\n";
 	}
 
 	@Override

@@ -3,7 +3,9 @@ package tom.tasks.transformer.renamer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import tom.task.AiTask;
 import tom.task.annotations.PublicTask;
@@ -34,8 +36,8 @@ public class DataRenamer implements AiTask {
 	}
 
 	@Override
-	public List<Map<String, String>> runTask() {
-		Map<String, String> result = new HashMap<>();
+	public List<Map<String, Object>> runTask() {
+		Map<String, Object> result = new HashMap<>();
 		Map<String, String> renames = config.getRenames();
 
 		if (input == null) {
@@ -54,8 +56,9 @@ public class DataRenamer implements AiTask {
 	}
 
 	@Override
-	public void setInput(Map<String, String> input) {
-		this.input = input;
+	public void setInput(Map<String, Object> input) {
+		this.input = input.entrySet().stream()
+				.collect(Collectors.toMap(Map.Entry::getKey, e -> Objects.toString(e.getValue(), null)));
 	}
 
 	@Override

@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import tom.task.TaskConfig;
 import tom.task.TaskConfigTypes;
+import tom.tasks.TaskUtils;
 
 public class ConfluenceQueryConfig implements TaskConfig {
 
@@ -63,8 +64,11 @@ public class ConfluenceQueryConfig implements TaskConfig {
 		return baseUrl;
 	}
 
-	public void updateFrom(String pagesStr) throws JsonMappingException, JsonProcessingException {
-		pages = stringToList(pagesStr);
+	public void updateFrom(Map<String, Object> obj) throws JsonMappingException, JsonProcessingException {
+		if (obj.containsKey("Data")) {
+			pages = TaskUtils.safeConvert(obj.containsKey("Data"), new TypeReference<List<String>>() {
+			});
+		}
 	}
 
 	private List<String> stringToList(String pagesStr) throws JsonMappingException, JsonProcessingException {

@@ -22,7 +22,7 @@ public class ConversationalAiQuery implements AiTask, ServiceConsumer {
 	private AiQueryConfig config = new AiQueryConfig();
 	private int userId = 0;
 	private Map<String, Object> result = new HashMap<>();
-	private Map<String, String> input = Map.of();
+	private Map<String, Object> input = Map.of();
 
 	public ConversationalAiQuery() {
 
@@ -54,12 +54,12 @@ public class ConversationalAiQuery implements AiTask, ServiceConsumer {
 	}
 
 	@Override
-	public List<Map<String, String>> runTask() {
+	public List<Map<String, Object>> runTask() {
 
-		Map<String, String> response = new HashMap<>();
+		Map<String, Object> response = new HashMap<>();
 		response.put("Data", doTheThing());
 
-		result = parseResponse(response.get("Data"));
+		result = parseResponse(response.get("Data").toString());
 
 		return List.of(response);
 	}
@@ -89,7 +89,7 @@ public class ConversationalAiQuery implements AiTask, ServiceConsumer {
 	}
 
 	@Override
-	public void setInput(Map<String, String> input) {
+	public void setInput(Map<String, Object> input) {
 		config.updateFrom(input);
 		this.input = input;
 	}
@@ -105,7 +105,7 @@ public class ConversationalAiQuery implements AiTask, ServiceConsumer {
 		}
 
 		if (input.containsKey("Conversation ID")) {
-			query.setConversationId(input.get("Conversation ID"));
+			query.setConversationId(input.get("Conversation ID").toString());
 		}
 
 		return taskServices.getAssistantQueryService().ask(userId, query);
