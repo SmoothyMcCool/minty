@@ -1,5 +1,6 @@
 package tom.config;
 
+import java.time.Duration;
 import java.util.List;
 
 import javax.sql.DataSource;
@@ -16,6 +17,7 @@ import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -30,6 +32,7 @@ import org.springframework.session.jdbc.config.annotation.web.http.EnableJdbcHtt
 import org.springframework.session.web.http.HeaderHttpSessionIdResolver;
 import org.springframework.session.web.http.HttpSessionIdResolver;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartResolver;
 import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer;
@@ -130,7 +133,12 @@ public class ApplicationConfig implements WebMvcConfigurer {
 	@Bean
 	OllamaApi ollamaApi() {
 		logger.info("ollama URI is " + ollamaUri);
-		return OllamaApi.builder().baseUrl(ollamaUri).build();
+		SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+		factory.setReadTimeout(Duration.ofMinutes(10));
+
+		RestClient.Builder restClientBuilder = RestClient.builder().requestFactory(factory);
+
+		return OllamaApi.builder().baseUrl(ollamaUri).restClientBuilder(restClientBuilder).build();
 	}
 
 	@Bean

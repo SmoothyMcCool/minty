@@ -28,8 +28,7 @@ public class ConfluenceQueryConfig implements TaskConfig {
 	public ConfluenceQueryConfig(Map<String, String> config) throws JsonMappingException, JsonProcessingException {
 		pages = stringToList(config.get("Page IDs"));
 		username = config.get("Username");
-		password = config.get("Password");
-		apiKey = config.get("API Key");
+		apiKey = config.get("Access Token");
 		baseUrl = config.get("Base URL");
 	}
 
@@ -39,8 +38,7 @@ public class ConfluenceQueryConfig implements TaskConfig {
 		cfg.put("Base URL", TaskConfigTypes.String);
 		cfg.put("Page IDs", TaskConfigTypes.StringList);
 		cfg.put("Username", TaskConfigTypes.String);
-		cfg.put("Password", TaskConfigTypes.String);
-		cfg.put("API Key", TaskConfigTypes.String);
+		cfg.put("Access Token", TaskConfigTypes.String);
 		return cfg;
 	}
 

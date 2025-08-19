@@ -26,7 +26,7 @@ public class AiQueryConfig implements TaskConfig {
 	public Map<String, TaskConfigTypes> getConfig() {
 		Map<String, TaskConfigTypes> cfg = new HashMap<>();
 		cfg.put("Assistant", TaskConfigTypes.AssistantIdentifier);
-		cfg.put("Prompt", TaskConfigTypes.String);
+		cfg.put("Query", TaskConfigTypes.TextArea);
 		return cfg;
 	}
 

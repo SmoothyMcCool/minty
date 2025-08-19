@@ -1,5 +1,5 @@
 package tom.task;
 
 public enum TaskConfigTypes {
-	Number, String, StringList, Map, AssistantIdentifier
+	Number, String, StringList, Map, AssistantIdentifier, TextArea
 }
