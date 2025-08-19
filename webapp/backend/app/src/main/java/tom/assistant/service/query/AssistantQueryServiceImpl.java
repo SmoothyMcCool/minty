@@ -94,13 +94,6 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 
 	@Override
 	public String ask(Assistant assistant, String query, String conversationId) {
-
-		Optional<ChatClientRequestSpec> spec = prepare(query, conversationId, assistant);
-		if (spec.isEmpty()) {
-			logger.warn("ask: failed to generate chat request");
-			return "";
-		}
-
 		ChatResponse chatResponse = prepare(query, conversationId, assistant).get().call().chatResponse();
 
 		if (chatResponse != null) {

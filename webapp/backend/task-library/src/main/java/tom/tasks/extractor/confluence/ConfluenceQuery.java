@@ -7,12 +7,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.HttpStatus;
-import org.apache.hc.core5.http.ParseException;
+import org.apache.hc.core5.http.io.HttpClientResponseHandler;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -55,27 +54,29 @@ public class ConfluenceQuery implements AiTask {
 		}
 
 		String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes());
-
-		HttpClient client = HttpClients.createDefault();
 		ObjectMapper mapper = new ObjectMapper();
-
 		List<Map<String, Object>> output = new ArrayList<>();
 
-		for (String pageId : config.getPages()) {
-			final String baseUrl = config.getBaseUrl().replaceAll("/+$", "");
-			final String completeUrl = baseUrl + "/rest/api/content/" + pageId + "?expand=body.storage";
-			HttpGet request = new HttpGet(completeUrl);
-			request.addHeader("Authorization", "Basic " + encodedAuth);
-			request.addHeader("Accept", "application/json");
+		try (CloseableHttpClient client = HttpClients.createDefault()) {
 
-			try (ClassicHttpResponse response = client.executeOpen(null, request, null)) {
-				int statusCode = response.getCode();
+			for (String pageId : config.getPages()) {
+				final String baseUrl = config.getBaseUrl().replaceAll("/+$", "");
+				final String completeUrl = baseUrl + "/rest/api/content/" + pageId + "?expand=body.storage";
+				HttpGet request = new HttpGet(completeUrl);
+				request.addHeader("Authorization", "Basic " + encodedAuth);
+				request.addHeader("Accept", "application/json");
 
-				if (statusCode != HttpStatus.SC_OK) {
-					throw new RuntimeException("Confluence didn't return 200 OK for pageId " + pageId);
-				}
+				HttpClientResponseHandler<String> responseHandler = response -> {
+					int statusCode = response.getCode();
 
-				String responseBody = response.getEntity() != null ? EntityUtils.toString(response.getEntity()) : "";
+					if (statusCode != HttpStatus.SC_OK) {
+						throw new RuntimeException("Confluence didn't return 200 OK for pageId " + pageId);
+					}
+
+					return EntityUtils.toString(response.getEntity());
+				};
+
+				String responseBody = client.execute(request, responseHandler);
 
 				JsonNode root = mapper.readTree(responseBody);
 				String pageText = root.path("body").path("storage").path("value").asText();
@@ -83,9 +84,9 @@ public class ConfluenceQuery implements AiTask {
 
 				output.add(Map.of("Data", pageText));
 
-			} catch (IOException | ParseException e) {
-				throw new RuntimeException("Failed to make request for page " + pageId, e);
 			}
+		} catch (IOException e) {
+			throw new RuntimeException("ConfluenceQuery: Caught exception while fetching page.", e);
 		}
 
 		return output;
