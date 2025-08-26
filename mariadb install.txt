@@ -41,7 +41,7 @@ CREATE DATABASE Minty;
 >>> Create the tables for Minty Assistants
 USE Minty;
 CREATE TABLE IF NOT EXISTS Assistant (
-	id INTEGER NOT NULL AUTO_INCREMENT,
+	id UUID NOT NULL DEFAULT (UUID()),
 	name VARCHAR(50),
 	numFiles INTEGER,
 	processedFiles INTEGER,
@@ -49,40 +49,38 @@ CREATE TABLE IF NOT EXISTS Assistant (
 	prompt TEXT,
 	model TEXT,
 	temperature DOUBLE,
-	ownerId INTEGER,
+	ownerId UUID,
 	shared BOOLEAN,
 	hasMemory BOOLEAN,
 	PRIMARY KEY (id)
 );
 CREATE TABLE IF NOT EXISTS Conversation (
-	id INTEGER NOT NULL AUTO_INCREMENT,
 	title TEXT,
-	conversationId TEXT,
-	ownerId INTEGER,
-	associatedAssistantId INTEGER,
+	conversationId UUID NOT NULL DEFAULT (UUID()),
+	ownerId UUID,
+	associatedAssistantId UUID,
 	associatedWorkflow TEXT,
-	PRIMARY KEY (id)
+	PRIMARY KEY (conversationId)
 );
 CREATE TABLE IF NOT EXISTS Document (
-    documentId VARCHAR(255) NOT NULL,
+    documentId UUID NOT NULL DEFAULT (UUID()),
 	title TEXT,
 	state INTEGER,
-	model TEXT,
-	ownerId INTEGER,
+	ownerId UUID,
 	PRIMARY KEY (documentId)
 );
 CREATE TABLE IF NOT EXISTS DocumentAssistantLinks (
-	assistantId INTEGER NOT NULL,
-	documentId VARCHAR(255) NOT NULL,
+	assistantId UUID NOT NULL,
+	documentId UUID NOT NULL,
 	PRIMARY KEY (assistantId, documentId),
 	FOREIGN KEY (assistantId) REFERENCES Assistant(id),
 	FOREIGN KEY (documentId) REFERENCES Document(documentId)
 );
 CREATE TABLE IF NOT EXISTS Workflow (
-	id INTEGER NOT NULL AUTO_INCREMENT,
+	id UUID NOT NULL DEFAULT (UUID()),
 	name VARCHAR(255),
 	description TEXT,
-	ownerId INTEGER,
+	ownerId UUID,
 	shared BOOLEAN,
 	workflowSteps JSON NOT NULL,
 	outputStep JSON NOT NULL,
@@ -90,8 +88,17 @@ CREATE TABLE IF NOT EXISTS Workflow (
 	watchLocation TEXT,
 	PRIMARY KEY (id)
 );
+CREATE TABLE IF NOT EXISTS WorkflowExecution (
+	id UUID NOT NULL DEFAULT (UUID()),
+	ownerId UUID,
+	name TEXT,
+	state JSON,
+	result JSON,
+	output TEXT,
+	outputFormat TEXT
+);
 CREATE TABLE IF NOT EXISTS User (
-	id INTEGER NOT NULL AUTO_INCREMENT,
+	id UUID NOT NULL DEFAULT (UUID()),
 	account VARCHAR(50),
 	password VARCHAR(100),
 	crypt TEXT,
@@ -100,7 +107,7 @@ CREATE TABLE IF NOT EXISTS User (
 );
 CREATE TABLE IF NOT EXISTS UserMeta (
 	id INTEGER NOT NULL AUTO_INCREMENT,
-	userId INTEGER,
+	userId UUID,
 	totalAssistantsCreated INTEGER,
 	totalConversations INTEGER,
 	totalWorkflowsCreated INTEGER,
