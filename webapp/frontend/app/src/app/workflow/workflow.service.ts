@@ -1,9 +1,10 @@
 import { Injectable } from "@angular/core";
-import { Workflow } from "../model/workflow";
+import { Workflow } from "../model/workflow/workflow";
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { AlertService } from "../alert.service";
 import { catchError, EMPTY, map, Observable } from "rxjs";
 import { ApiResult } from "../model/api-result";
+import { TaskDescription } from "../model/task-description";
 
 @Injectable({
 	providedIn: 'root'
@@ -20,7 +21,7 @@ export class WorkflowService {
 	constructor(private http: HttpClient, private alertService: AlertService) {
 	}
 
-	getWorkflow(workflowId: number): Observable<Workflow> {
+	getWorkflow(workflowId: string): Observable<Workflow> {
 		let params: HttpParams = new HttpParams();
 		params = params.append('workflowId', workflowId);
 
@@ -31,12 +32,12 @@ export class WorkflowService {
 					return EMPTY;
 				}),
 				map((result: ApiResult) => {
-					return this.makeProper(result.data);
+					return this.objectify(result.data);
 				})
 			);
 	}
 
-	deleteWorkflow(workflowId: number): Observable<Workflow[]> {
+	deleteWorkflow(workflowId: string): Observable<Workflow[]> {
 		let params: HttpParams = new HttpParams();
 		params = params.append('workflowId', workflowId);
 
@@ -47,7 +48,7 @@ export class WorkflowService {
 					return EMPTY;
 				}),
 				map((result: ApiResult) => {
-					return Array.from(result.data as any[]).map(element => this.makeProper(element));
+					return Array.from(result.data as any[]).map(element => this.objectify(element));
 				})
 			);
 	}
@@ -120,7 +121,7 @@ export class WorkflowService {
 					return EMPTY;
 				}),
 				map((result: ApiResult) => {
-					return Array.from(result.data as any[]).map(element => this.makeProper(element));
+					return Array.from(result.data as any[]).map(element => this.objectify(element));
 				})
 			);
 	}
@@ -144,24 +145,52 @@ export class WorkflowService {
 			);
 	}
 
-		private makeProper(workflow: any): Workflow {
-			let w: Workflow = {
-				id: workflow.id,
-				ownerId: workflow.ownerId,
-				name: workflow.name,
-				description: workflow.description,
-				shared: workflow.shared,
-				workflowSteps: (workflow.workflowSteps as any[]).map(element => {
-					return {
-						name: element.name,
-						configuration: new Map(Object.entries(element.configuration))
-					};
-				}),
-				outputStep: {
-					name: workflow.outputStep.name,
-					configuration: new Map(Object.entries(workflow.outputStep.configuration))
+	sanitize(workflow: Workflow, taskTemplates: TaskDescription[], outputTaskTemplates: TaskDescription[]) {
+		workflow.workflowSteps.forEach(step => {
+			const template = taskTemplates.find(template => template.name === step.name);
+			if (template) {
+				const sanitizedConfig = new Map<string, string>();
+				const keys = step.configuration.keys();
+				for (const key of keys) {
+					if (template.configuration.has(key)) {
+						sanitizedConfig.set(key, step.configuration.get(key));
+					}
+				}
+				step.configuration = sanitizedConfig;
+			}
+		});
+
+		const outputTemplate = outputTaskTemplates.find(template => template.name === workflow.outputStep.name);
+		if (outputTemplate) {
+			const sanitizedConfig = new Map<string, string>();
+			const keys = workflow.outputStep.configuration.keys();
+			for (const key of keys) {
+				if (outputTemplate.configuration.has(key)) {
+					sanitizedConfig.set(key, workflow.outputStep.configuration.get(key));
 				}
 			}
-			return w;
+			workflow.outputStep.configuration = sanitizedConfig;
 		}
+	}
+
+	private objectify(workflow: any): Workflow {
+		let w: Workflow = {
+			id: workflow.id,
+			ownerId: workflow.ownerId,
+			name: workflow.name,
+			description: workflow.description,
+			shared: workflow.shared,
+			workflowSteps: (workflow.workflowSteps as any[]).map(element => {
+				return {
+					name: element.name,
+					configuration: new Map(Object.entries(element.configuration))
+				};
+			}),
+			outputStep: {
+				name: workflow.outputStep.name,
+				configuration: new Map(Object.entries(workflow.outputStep.configuration))
+			}
+		}
+		return w;
+	}
 }

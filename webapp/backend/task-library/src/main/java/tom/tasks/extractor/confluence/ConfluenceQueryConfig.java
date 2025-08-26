@@ -17,9 +17,9 @@ public class ConfluenceQueryConfig implements TaskConfig {
 
 	private List<String> pages;
 	private String username;
-	private String password;
 	private String apiKey;
 	private String baseUrl;
+	private Boolean useBearerAuth;
 
 	public ConfluenceQueryConfig() {
 		pages = List.of();
@@ -30,6 +30,7 @@ public class ConfluenceQueryConfig implements TaskConfig {
 		username = config.get("Username");
 		apiKey = config.get("Access Token");
 		baseUrl = config.get("Base URL");
+		useBearerAuth = Boolean.getBoolean(config.get("Use Bearer Authorization"));
 	}
 
 	@Override
@@ -39,6 +40,7 @@ public class ConfluenceQueryConfig implements TaskConfig {
 		cfg.put("Page IDs", TaskConfigTypes.StringList);
 		cfg.put("Username", TaskConfigTypes.String);
 		cfg.put("Access Token", TaskConfigTypes.String);
+		cfg.put("Use Bearer Authorization", TaskConfigTypes.Boolean);
 		return cfg;
 	}
 
@@ -50,16 +52,16 @@ public class ConfluenceQueryConfig implements TaskConfig {
 		return username;
 	}
 
-	public String getPassword() {
-		return password;
-	}
-
 	public String getApiKey() {
 		return apiKey;
 	}
 
 	public String getBaseUrl() {
 		return baseUrl;
+	}
+
+	public Boolean getUseBearerAuth() {
+		return useBearerAuth;
 	}
 
 	public void updateFrom(Map<String, Object> obj) throws JsonMappingException, JsonProcessingException {

@@ -1,20 +1,21 @@
 package tom.conversation.service;
 
 import java.util.List;
+import java.util.UUID;
 
 import tom.api.services.ConversationService;
 import tom.conversation.model.Conversation;
 
 public interface ConversationServiceInternal extends ConversationService {
 
-	List<Conversation> listConversationsForUser(int userId);
+	List<Conversation> listConversationsForUser(UUID userId);
 
-	void deleteConversationsForAssistant(int userId, int assistantId);
+	void deleteConversationsForAssistant(UUID userId, UUID assistantId);
 
-	Conversation newConversation(int userId, int assistantId);
+	Conversation newConversation(UUID userId, UUID assistantId);
 
-	boolean conversationOwnedBy(String conversationId, int userId);
+	boolean conversationOwnedBy(UUID conversationId, UUID userId);
 
-	boolean deleteConversation(int userId, String conversationId);
+	boolean deleteConversation(UUID userId, UUID conversationId);
 
 }

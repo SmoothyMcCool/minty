@@ -17,6 +17,11 @@ public class NullTask implements AiTask {
 	}
 
 	@Override
+	public String getError() {
+		return null;
+	}
+
+	@Override
 	public void setInput(Map<String, Object> input) {
 	}
 

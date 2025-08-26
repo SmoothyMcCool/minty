@@ -46,21 +46,21 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 
 	@Override
 	@Transactional
-	public void deleteConversationsForAssistant(int userId, int assistantId) {
+	public void deleteConversationsForAssistant(UUID userId, UUID assistantId) {
 		List<Conversation> conversations = conversationRepository.findAllByOwnerIdAndAssociatedAssistantId(userId,
 				assistantId);
 		ChatMemoryRepository chatMemoryRepository = ollamaService.getChatMemoryRepository();
 
 		conversations.forEach(conversation -> {
-			chatMemoryRepository.deleteByConversationId(conversation.getConversationId());
+			chatMemoryRepository.deleteByConversationId(conversation.getConversationId().toString());
 		});
 
 	}
 
 	@Override
-	public int getAssistantIdFromConversationId(String conversationId) {
+	public UUID getAssistantIdFromConversationId(UUID conversationId) {
 		Conversation conversation = conversationRepository.findByConversationId(conversationId);
-		Integer assistantId = conversation.getAssociatedAssistantId();
+		UUID assistantId = conversation.getAssociatedAssistantId();
 		if (assistantId == null) {
 			return AssistantManagementService.DefaultAssistantId;
 		}
@@ -68,12 +68,12 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 	}
 
 	@Override
-	public List<ChatMessage> getChatMessages(int userId, String conversationId) {
+	public List<ChatMessage> getChatMessages(UUID userId, UUID conversationId) {
 
 		List<ChatMessage> result = new ArrayList<>();
 		ChatMemory chatMemory = ollamaService.getChatMemory();
 
-		List<Message> messages = chatMemory.get(conversationId);
+		List<Message> messages = chatMemory.get(conversationId.toString());
 		result = messages.stream()
 				.map(message -> new ChatMessage(message.getMessageType() == MessageType.USER, message.getText()))
 				.collect(Collectors.toList());
@@ -84,23 +84,23 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 
 	@Override
 	@Transactional
-	public boolean deleteConversation(int userId, String conversationId) {
+	public boolean deleteConversation(UUID userId, UUID conversationId) {
 		Conversation conversation = conversationRepository.findByConversationId(conversationId);
-		if (conversation.getOwnerId() != userId) {
+		if (!conversation.getOwnerId().equals(userId)) {
 			logger.warn("Conversation " + conversationId + " not owned by " + userId);
 			return false;
 		}
 
 		ChatMemory chatMemory = ollamaService.getChatMemory();
 
-		chatMemory.clear(conversationId);
+		chatMemory.clear(conversationId.toString());
 		conversationRepository.deleteByConversationId(conversationId);
 
 		return true;
 	}
 
 	@Override
-	public boolean conversationOwnedBy(String conversationId, int userId) {
+	public boolean conversationOwnedBy(UUID conversationId, UUID userId) {
 		Conversation conversation = conversationRepository.findByConversationId(conversationId);
 		if (conversation == null) {
 			return false;
@@ -110,11 +110,10 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 
 	@Override
 	@Transactional
-	public Conversation newConversation(int userId, int assistantId) {
+	public Conversation newConversation(UUID userId, UUID assistantId) {
 		Conversation conversation = new Conversation();
 		conversation.setAssociatedAssistantId(assistantId);
-		conversation.setConversationId(UUID.randomUUID().toString());
-		conversation.setId(null);
+		conversation.setConversationId(null);
 		conversation.setOwnerId(userId);
 		conversation.setTitle(null);
 
@@ -122,13 +121,13 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 	}
 
 	@Override
-	public List<Conversation> listConversationsForUser(int userId) {
+	public List<Conversation> listConversationsForUser(UUID userId) {
 		List<Conversation> conversations = conversationRepository.findAllByOwnerId(userId);
 
 		// Remove all the internal workflow conversations.
 		conversations = conversations.stream()
 				.filter(conversation -> conversation
-						.getAssociatedAssistantId() != AssistantManagementServiceInternal.WorkflowDefaultAssistantId)
+						.getAssociatedAssistantId() != AssistantManagementService.DefaultAssistantId)
 				.toList();
 
 		return conversations;

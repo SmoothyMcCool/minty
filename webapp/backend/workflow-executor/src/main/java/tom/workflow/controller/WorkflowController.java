@@ -1,6 +1,7 @@
 package tom.workflow.controller;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,7 +33,7 @@ public class WorkflowController {
 
 	@RequestMapping(value = { "" }, method = RequestMethod.GET)
 	public ResponseEntity<ResponseWrapper<Workflow>> getWorkflow(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("workflowId") int workflowId) {
+			@RequestParam("workflowId") UUID workflowId) {
 
 		Workflow workflow = workflowService.getWorkflow(user.getId(), workflowId);
 		if (workflow == null) {
@@ -47,7 +48,7 @@ public class WorkflowController {
 
 	@RequestMapping(value = { "" }, method = RequestMethod.DELETE)
 	public ResponseEntity<ResponseWrapper<Boolean>> deleteWorkflow(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("workflowId") int workflowId) {
+			@RequestParam("workflowId") UUID workflowId) {
 
 		if (!workflowService.isWorkflowOwned(workflowId, user.getId())) {
 			ResponseWrapper<Boolean> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),

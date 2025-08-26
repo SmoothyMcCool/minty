@@ -3,10 +3,9 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AlertService } from 'src/app/alert.service';
-import { Workflow } from 'src/app/model/workflow';
+import { Workflow } from 'src/app/model/workflow/workflow';
 import { WorkflowService } from 'src/app/workflow/workflow.service';
 import { TaskTemplateService } from 'src/app/task/task-template.service';
-import { TaskEditorComponent } from 'src/app/task/component/task-editor.component';
 import { TaskDescription } from 'src/app/model/task-description';
 import { WorkflowEditorComponent } from './workflow-editor.component';
 
@@ -19,8 +18,8 @@ import { WorkflowEditorComponent } from './workflow-editor.component';
 export class WorkflowComponent implements OnInit {
 
 	workflow: Workflow = {
-		id: 0,
-		ownerId: 0,
+		id: '',
+		ownerId: '',
 		name: '',
 		description: '',
 		shared: false,
@@ -42,7 +41,7 @@ export class WorkflowComponent implements OnInit {
 	}
 
 	ngOnInit(): void {
-		const workflowId = Number(this.route.snapshot.paramMap.get('id'));
+		const workflowId = this.route.snapshot.paramMap.get('id');
 
 		this.workflowService.getWorkflow(workflowId).subscribe((workflow: Workflow) => {
 			this.workflow = workflow;

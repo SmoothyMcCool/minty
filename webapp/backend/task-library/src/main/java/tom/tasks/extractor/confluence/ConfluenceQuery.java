@@ -1,6 +1,5 @@
 package tom.tasks.extractor.confluence;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -26,6 +25,7 @@ public class ConfluenceQuery implements AiTask {
 
 	private UUID uuid = UUID.randomUUID();
 	private ConfluenceQueryConfig config = new ConfluenceQueryConfig();
+	private String error = null;
 
 	public ConfluenceQuery() {
 	}
@@ -45,15 +45,16 @@ public class ConfluenceQuery implements AiTask {
 	}
 
 	@Override
-	public List<Map<String, Object>> runTask() {
-		String auth;
-		if (!config.getApiKey().isBlank()) {
-			auth = config.getUsername() + ":" + config.getPassword();
-		} else {
-			auth = config.getUsername() + ":" + config.getPassword();
-		}
+	public String getError() {
+		return error;
+	}
 
+	@Override
+	public List<Map<String, Object>> runTask() {
+		String auth = config.getUsername() + ":" + config.getApiKey();
 		String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes());
+		String authString = config.getUseBearerAuth() ? "Bearer " + config.getApiKey() : "Basic " + encodedAuth;
+
 		ObjectMapper mapper = new ObjectMapper();
 		List<Map<String, Object>> output = new ArrayList<>();
 
@@ -63,7 +64,7 @@ public class ConfluenceQuery implements AiTask {
 				final String baseUrl = config.getBaseUrl().replaceAll("/+$", "");
 				final String completeUrl = baseUrl + "/rest/api/content/" + pageId + "?expand=body.storage";
 				HttpGet request = new HttpGet(completeUrl);
-				request.addHeader("Authorization", "Basic " + encodedAuth);
+				request.addHeader("Authorization", authString);
 				request.addHeader("Accept", "application/json");
 
 				HttpClientResponseHandler<String> responseHandler = response -> {
@@ -85,7 +86,8 @@ public class ConfluenceQuery implements AiTask {
 				output.add(Map.of("Data", pageText));
 
 			}
-		} catch (IOException e) {
+		} catch (Exception e) {
+			error = "Caught exception while fetching page: " + e.toString();
 			throw new RuntimeException("ConfluenceQuery: Caught exception while fetching page.", e);
 		}
 

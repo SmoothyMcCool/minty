@@ -1,5 +1,7 @@
 package tom.user.repository;
 
+import java.util.UUID;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -11,18 +13,18 @@ import jakarta.persistence.Table;
 public class EncryptedUser {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private int id;
+	@GeneratedValue(strategy = GenerationType.UUID)
+	private UUID id;
 	private String account;
 	private String password;
 	private String crypt;
 	private String salt;
 
-	public int getId() {
+	public UUID getId() {
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(UUID id) {
 		this.id = id;
 	}
 

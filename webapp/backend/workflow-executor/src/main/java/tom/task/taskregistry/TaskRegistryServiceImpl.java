@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.UUID;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.stream.Stream;
@@ -311,7 +312,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 	}
 
 	@Override
-	public AiTask newTask(int userId, TaskRequest request) {
+	public AiTask newTask(UUID userId, TaskRequest request) {
 
 		if (request == null) {
 			throw new IllegalArgumentException("request cannot be null.");
@@ -388,7 +389,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 	}
 
 	@Override
-	public OutputTask newOutputTask(int userId, TaskRequest request) {
+	public OutputTask newOutputTask(UUID userId, TaskRequest request) {
 
 		if (request == null) {
 			throw new IllegalArgumentException("request cannot be null.");

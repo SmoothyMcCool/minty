@@ -1,7 +1,7 @@
 import { CommonModule } from "@angular/common";
 import { Component, forwardRef, Input } from "@angular/core";
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from "@angular/forms";
-import { Workflow } from "src/app/model/workflow";
+import { Workflow } from "src/app/model/workflow/workflow";
 import { TaskEditorComponent } from "src/app/task/component/task-editor.component";
 import { TaskDescription } from "src/app/model/task-description";
 
@@ -30,8 +30,8 @@ export class WorkflowEditorComponent implements ControlValueAccessor {
 	workflow: Workflow = {
 		name: '',
 		description: '',
-		id: 0,
-		ownerId: 0,
+		id: '',
+		ownerId: '',
 		shared: false,
 		workflowSteps: [],
 		outputStep: {

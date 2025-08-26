@@ -20,6 +20,7 @@ public class PythonTask implements AiTask, ServiceConsumer {
 	private final PythonTaskConfig configuration;
 	private Map<String, Object> result = new HashMap<>();
 	private TaskServices taskServices = null;
+	private String error = null;
 
 	public PythonTask() {
 		configuration = new PythonTaskConfig();
@@ -42,14 +43,43 @@ public class PythonTask implements AiTask, ServiceConsumer {
 	}
 
 	@Override
+	public String getError() {
+		return error;
+	}
+
+	@Override
 	public void setTaskServices(TaskServices taskServices) {
 		this.taskServices = taskServices;
 	}
 
 	@Override
 	public List<Map<String, Object>> runTask() {
-		Map<String, Object> response = doTheThing();
-		return List.of(response);
+		try {
+			logger.debug("doWork: Executing " + configuration.getPythonFile());
+
+			if (configuration.getInputDictionary().containsKey("Data")) {
+
+				String code = configuration.getInputDictionary().get("Data").toString();
+				result = taskServices.getPythonService().executeCodeString(code, configuration.getInputDictionary());
+
+				logger.info("doWork: completed execution of input-provided code.");
+
+			} else {
+
+				result = taskServices.getPythonService().execute(configuration.getPythonFile(),
+						configuration.getInputDictionary());
+				logger.info("doWork: " + configuration.getPythonFile() + " completed.");
+			}
+
+			if (configuration.getInputDictionary().containsKey("ConversationId")) {
+				result.put(null, configuration.getInputDictionary().get("ConversationId"));
+			}
+		} catch (Exception e) {
+			error = "Caught exception while running python: " + e.toString();
+			return List.of();
+		}
+
+		return List.of(result);
 	}
 
 	@Override
@@ -57,31 +87,6 @@ public class PythonTask implements AiTask, ServiceConsumer {
 		// Merge whatever we get with the input dictionary to pass to the python
 		// interpreter.
 		configuration.getInputDictionary().putAll(input);
-	}
-
-	private Map<String, Object> doTheThing() {
-		logger.debug("doWork: Executing " + configuration.getPythonFile());
-
-		if (configuration.getInputDictionary().containsKey("Data")) {
-
-			String code = configuration.getInputDictionary().get("Data").toString();
-			result = taskServices.getPythonService().executeCodeString(code, configuration.getInputDictionary());
-
-			logger.info("doWork: completed execution of input-provided code.");
-
-		} else {
-
-			result = taskServices.getPythonService().execute(configuration.getPythonFile(),
-					configuration.getInputDictionary());
-			logger.info("doWork: " + configuration.getPythonFile() + " completed.");
-		}
-
-		if (configuration.getInputDictionary().containsKey("ConversationId")) {
-			result.put(null, configuration.getInputDictionary().get("ConversationId"));
-		}
-
-		return result;
-
 	}
 
 	@Override

@@ -11,23 +11,16 @@ import tom.task.TaskConfigTypes;
 
 public class JsonOutputConfig implements TaskConfig {
 
-	private String outputFilename = "";
-
 	public JsonOutputConfig() {
 	}
 
 	public JsonOutputConfig(Map<String, String> config) throws JsonMappingException, JsonProcessingException {
-		outputFilename = config.get("Output Filename");
 	}
 
 	@Override
 	public Map<String, TaskConfigTypes> getConfig() {
 		Map<String, TaskConfigTypes> config = new HashMap<>();
-		config.put("Output Filename", TaskConfigTypes.String);
 		return config;
 	}
 
-	public String getOutputFilename() {
-		return outputFilename;
-	}
 }

@@ -2,6 +2,7 @@ package tom.config;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.sql.DataSource;
 
@@ -64,6 +65,9 @@ public class ApplicationConfig implements WebMvcConfigurer {
 
 	@Value("${asyncResponseTimeout}")
 	private String asyncResponseTimeout;
+
+	@Value("${ollamaApiTimeoutMinutes}")
+	private String ollamaApiTimeoutMinutes;
 
 	@Bean
 	public HttpSessionIdResolver httpSessionIdResolver() {
@@ -134,7 +138,7 @@ public class ApplicationConfig implements WebMvcConfigurer {
 	OllamaApi ollamaApi() {
 		logger.info("ollama URI is " + ollamaUri);
 		SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-		factory.setReadTimeout(Duration.ofMinutes(10));
+		factory.setReadTimeout(Duration.ofMinutes(Integer.parseInt(ollamaApiTimeoutMinutes)));
 
 		RestClient.Builder restClientBuilder = RestClient.builder().requestFactory(factory);
 
@@ -185,6 +189,6 @@ public class ApplicationConfig implements WebMvcConfigurer {
 
 	@Override
 	public void configureAsyncSupport(@NonNull AsyncSupportConfigurer configurer) {
-		configurer.setDefaultTimeout(Integer.parseInt(asyncResponseTimeout));
+		configurer.setDefaultTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(asyncResponseTimeout)));
 	}
 }

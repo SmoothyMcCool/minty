@@ -1,26 +1,27 @@
 package tom.workflow.model;
 
 import java.util.List;
+import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class Workflow {
 
-	private int id = 0;
+	private UUID id;
 	private String name = "";
 	private String description = "";
-	private int ownerId = 0;
+	private UUID ownerId;
 	private boolean shared = false;
 	private List<Task> workflowSteps = null;
 	private Task outputStep = null;
 	private boolean triggered = false;
 	private String watchLocation = "";
 
-	public int getId() {
+	public UUID getId() {
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(UUID id) {
 		this.id = id;
 	}
 
@@ -40,11 +41,11 @@ public class Workflow {
 		this.description = description;
 	}
 
-	public int getOwnerId() {
+	public UUID getOwnerId() {
 		return ownerId;
 	}
 
-	public void setOwnerId(int ownerId) {
+	public void setOwnerId(UUID ownerId) {
 		this.ownerId = ownerId;
 	}
 

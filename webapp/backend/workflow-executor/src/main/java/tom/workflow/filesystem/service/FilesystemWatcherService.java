@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 
+import tom.api.services.UserService;
 import tom.workflow.controller.WorkflowRequest;
 import tom.workflow.model.Workflow;
 import tom.workflow.repository.WorkflowRepository;
@@ -59,7 +60,7 @@ public class FilesystemWatcherService {
 
 		request.getTaskConfigurationList().getFirst().put("File", filename.toString());
 
-		workflowService.executeWorkflow(0, request);
+		workflowService.executeWorkflow(UserService.DefaultId, request);
 	}
 
 }

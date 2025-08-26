@@ -17,7 +17,7 @@ import tom.task.annotations.PublicTask;
 public class TestHttpRequestTask implements AiTask, ServiceConsumer {
 
 	private TaskServices taskServices;
-	private int userId;
+	private UUID userId;
 	private TestUser user = null;
 
 	@Override
@@ -37,6 +37,11 @@ public class TestHttpRequestTask implements AiTask, ServiceConsumer {
 		result.put("id", user.getId());
 
 		return result;
+	}
+
+	@Override
+	public String getError() {
+		return null;
 	}
 
 	@Override

@@ -45,6 +45,11 @@ public class SleeperTaskSpawnerTask implements AiTask {
 	}
 
 	@Override
+	public String getError() {
+		return null;
+	}
+
+	@Override
 	public List<Map<String, Object>> runTask() {
 		doTheThing();
 

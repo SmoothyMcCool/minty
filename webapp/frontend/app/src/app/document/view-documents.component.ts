@@ -117,11 +117,11 @@ export class ViewDocumentsComponent implements OnInit {
 		});
 	}
 
-	isOwned(ownerId: number) {
+	isOwned(ownerId: string) {
 		return this.userService.getUser().id == ownerId;
 	}
 
-	findAssistant(assistantId: number): Assistant {
+	findAssistant(assistantId: string): Assistant {
 		const assistant = this.assistants.find(assistant => assistant.id === assistantId);
 		if (assistant != undefined) {
 			return assistant;

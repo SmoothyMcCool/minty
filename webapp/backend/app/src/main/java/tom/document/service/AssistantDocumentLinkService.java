@@ -1,22 +1,23 @@
 package tom.document.service;
 
 import java.util.List;
+import java.util.UUID;
 
 import tom.document.model.MintyDoc;
 
 public interface AssistantDocumentLinkService {
 
-	void removeLink(Integer assistantId, String documentId);
+	void removeLink(UUID assistantId, UUID documentId);
 
-	void removeAllLinksToAssistant(Integer assistantId);
+	void removeAllLinksToAssistant(UUID assistantId);
 
-	void createLink(Integer assistantId, String documentId);
+	void createLink(UUID assistantId, UUID documentId);
 
-	List<MintyDoc> getDocumentsForAssistant(Integer assistantId);
+	List<MintyDoc> getDocumentsForAssistant(UUID assistantId);
 
-	List<String> getDocumentIdsForAssistant(Integer assistantId);
+	List<UUID> getDocumentIdsForAssistant(UUID assistantId);
 
-	List<Integer> getAssistantIdsForDocument(String documentId);
+	List<UUID> getAssistantIdsForDocument(UUID documentId);
 
-	void updateLinksForAssistant(Integer assistantId, List<String> newDocumentIds);
+	void updateLinksForAssistant(UUID assistantId, List<UUID> newDocumentIds);
 }

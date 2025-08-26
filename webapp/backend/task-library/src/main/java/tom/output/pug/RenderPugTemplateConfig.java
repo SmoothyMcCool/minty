@@ -12,21 +12,18 @@ import tom.task.TaskConfigTypes;
 public class RenderPugTemplateConfig implements TaskConfig {
 
 	private String template = "";
-	private String outputFilename = "";
 
 	public RenderPugTemplateConfig() {
 	}
 
 	public RenderPugTemplateConfig(Map<String, String> config) throws JsonMappingException, JsonProcessingException {
 		template = config.get("Pug Template");
-		outputFilename = config.get("Output Filename");
 	}
 
 	@Override
 	public Map<String, TaskConfigTypes> getConfig() {
 		Map<String, TaskConfigTypes> config = new HashMap<>();
 		config.put("Pug Template", TaskConfigTypes.String);
-		config.put("Output Filename", TaskConfigTypes.String);
 		return config;
 	}
 
@@ -34,7 +31,4 @@ public class RenderPugTemplateConfig implements TaskConfig {
 		return template;
 	}
 
-	public String getOutputFilename() {
-		return outputFilename;
-	}
 }

@@ -4,10 +4,10 @@ import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
 import { AlertService } from "src/app/alert.service";
 import { TaskTemplateService } from "src/app/task/task-template.service";
-import { Workflow } from "src/app/model/workflow";
 import { WorkflowService } from "../workflow.service";
 import { TaskDescription } from "src/app/model/task-description";
 import { WorkflowEditorComponent } from "./workflow-editor.component";
+import { Workflow } from "src/app/model/workflow/workflow";
 
 @Component({
 	selector: 'minty-edit-workflow',
@@ -23,8 +23,8 @@ export class EditWorkflowComponent implements OnInit {
 	workflow: Workflow = {
 		name: '',
 		description: '',
-		id: 0,
-		ownerId: 0,
+		id: '',
+		ownerId: '',
 		shared: false,
 		workflowSteps: [],
 		outputStep: {
@@ -61,6 +61,8 @@ export class EditWorkflowComponent implements OnInit {
 	}
 
 	updateWorkflow() {
+		this.workflowService.sanitize(this.workflow, this.taskTemplates, this.outputTaskTemplates);
+
 		this.workflowService.updateWorkflow(this.workflow).subscribe(() => {
 			this.alertService.postSuccess('Workflow Updated!');
 			this.router.navigateByUrl('workflow');

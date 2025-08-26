@@ -1,6 +1,7 @@
 package tom.meta.repository;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -14,7 +15,7 @@ public class UserMeta {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
-	private int userId;
+	private UUID userId;
 	private int totalAssistantsCreated;
 	private int totalConversations;
 	private int totalWorkflowsCreated;
@@ -31,11 +32,11 @@ public class UserMeta {
 		this.id = id;
 	}
 
-	public int getUserId() {
+	public UUID getUserId() {
 		return userId;
 	}
 
-	public void setUserId(int userId) {
+	public void setUserId(UUID userId) {
 		this.userId = userId;
 	}
 

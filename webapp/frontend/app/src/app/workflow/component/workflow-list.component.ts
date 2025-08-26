@@ -3,11 +3,12 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { Router, RouterModule } from '@angular/router';
-import { ResultService } from 'src/app/result.service';
+import { ResultService } from 'src/app/workflow/result.service';
 import { WorkflowService } from '../workflow.service';
-import { Workflow } from 'src/app/model/workflow';
+import { Workflow } from 'src/app/model/workflow/workflow';
 import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
 import { UserService } from 'src/app/user.service';
+import { WorkflowState } from 'src/app/model/workflow/workflow-state';
 
 @Component({
 	selector: 'minty-workflow-list',
@@ -19,14 +20,14 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 
 	responseType: string;
 	responseText: unknown;
-	results: string[] = [];
+	results: WorkflowState[] = [];
 	workflows: Workflow[] = [];
 	private subscription: Subscription;
 
 	confirmWorkflowDeleteVisible = false;
 	confirmResultDeleteVisible = false;
 	workflowPendingDeletion: Workflow;
-	resultPendingDeletion: string;
+	resultPendingDeletionId: string;
 
 	constructor(private router: Router,
 		private workflowService: WorkflowService,
@@ -35,7 +36,7 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 	}
 
 	ngOnInit() {
-		this.subscription = this.resultService.workflowResultList$.subscribe((value: string[]) => {
+		this.subscription = this.resultService.workflowResultList$.subscribe((value: WorkflowState[]) => {
 			this.results = value;
 		});
 		this.workflowService.listWorkflows().subscribe((workflows) => {
@@ -50,17 +51,17 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 		}
 	}
 
-	displayResultsFor(result: string) {
+	displayResultsFor(result: WorkflowState) {
 		this.responseText = '';
-		if (this.endsWithIgnoreCase(result, 'json')) {
-			this.responseType = 'JSON';
-		} else if (this.endsWithIgnoreCase(result, 'html')) {
-			this.responseType = 'HTML';
-		} else {
-			this.responseType = 'TEXT';
-		}
-		this.resultService.getWorkflowResult(result).subscribe(result => {
-			this.responseText = result;
+		this.resultService.getWorkflowResult(result.id).subscribe(result => {
+			if (this.endsWithIgnoreCase(result.outputFormat, 'text/json')) {
+				this.responseType = 'JSON';
+			} else if (this.endsWithIgnoreCase(result.outputFormat, 'text/html')) {
+				this.responseType = 'HTML';
+			} else {
+				this.responseType = 'TEXT';
+			}
+			this.responseText = result.output;
 		});
 	}
 
@@ -83,16 +84,16 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 		this.workflows = this.workflows.filter(item => item.id === this.workflowPendingDeletion.id);
 	}
 
-	deleteResult(event: MouseEvent, result: string) {
+	deleteResult(event: MouseEvent, result: WorkflowState) {
 		event.stopPropagation();
 		this.confirmResultDeleteVisible = true;
-		this.resultPendingDeletion = result;
+		this.resultPendingDeletionId = result.id;
 	}
 
 	confirmDeleteResult() {
 		this.confirmResultDeleteVisible = false;
-		this.resultService.deleteWorkflowResult(this.resultPendingDeletion).subscribe();
-		this.results = this.results.filter(item => item != this.resultPendingDeletion);
+		this.resultService.deleteWorkflowResult(this.resultPendingDeletionId).subscribe();
+		this.results = this.results.filter(item => item.id != this.resultPendingDeletionId);
 	}
 
 	copyToClipboard() {
@@ -113,7 +114,7 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 		this.router.navigate(['workflow/', taskId]);
 	}
 
-	editWorkflow(workflowId: number) {
+	editWorkflow(workflowId: string) {
 		this.router.navigate(['/workflow/edit', workflowId]);
 	}
 

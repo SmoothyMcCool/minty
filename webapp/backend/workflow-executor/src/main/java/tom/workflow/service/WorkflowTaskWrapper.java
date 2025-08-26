@@ -16,11 +16,11 @@ public class WorkflowTaskWrapper implements Runnable {
 	private final int taskId;
 	private final int stepNumber;
 	private final AiTask task;
-	private final WorkflowTracker workflowTracker;
+	private final WorkflowRunner workflowTracker;
 	private final TaskRequest taskRequest;
 	private List<Map<String, Object>> output = List.of();
 
-	public WorkflowTaskWrapper(int taskId, int stepNumber, AiTask task, WorkflowTracker workflowTracker,
+	public WorkflowTaskWrapper(int taskId, int stepNumber, AiTask task, WorkflowRunner workflowTracker,
 			TaskRequest taskRequest) {
 		this.taskId = taskId;
 		this.stepNumber = stepNumber;
@@ -33,11 +33,16 @@ public class WorkflowTaskWrapper implements Runnable {
 	public void run() {
 		try {
 			output = task.runTask();
+			workflowTracker.taskComplete(this);
 		} catch (Exception e) {
+			String error = task.getError();
 			logger.error("Task " + task.taskName() + " failed with exception: ", e);
+			if (error == null || error.isBlank()) {
+				error = "Task " + task.taskName() + " failed with exception: " + e;
+			}
+			workflowTracker.taskFailed(this, error);
 		}
 
-		workflowTracker.taskComplete(this);
 	}
 
 	public List<Map<String, Object>> getOutput() {
@@ -58,5 +63,9 @@ public class WorkflowTaskWrapper implements Runnable {
 
 	public Map<String, Object> getResult() {
 		return task.getResult();
+	}
+
+	public String getError() {
+		return task.getError();
 	}
 }

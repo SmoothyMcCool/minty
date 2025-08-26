@@ -1,8 +1,7 @@
 package tom.render.service;
 
-import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Path;
+import java.io.StringWriter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,18 +36,17 @@ public class RenderServiceImpl implements RenderService {
 	}
 
 	@Override
-	public Path renderPug(String template, String outfileName, ExecutionResult data) throws IOException {
+	public String renderPug(String template, ExecutionResult data) throws IOException {
 
-		if (template == null || outfileName == null || data == null || pugFileLocation == null || resultsDir == null) {
+		if (template == null || data == null || pugFileLocation == null || resultsDir == null) {
 			throw new IllegalArgumentException("A Required parameter is null");
 		}
 
-		Path location = Path.of(resultsDir, outfileName);
-
-		try (FileWriter writer = new FileWriter(location.toString())) {
+		try (StringWriter writer = new StringWriter()) {
 			PugTemplate pugTemplate = pugConfiguration.getTemplate(pugFileLocation + "/" + template);
-			PugModel model = new PugModel(data.getResults());
+			PugModel model = new PugModel(data.toMap());
 			pugTemplate.process(model, writer);
+			return writer.toString();
 		} catch (PugException e) {
 			logger.error("PugRenderService: Caught PugException: ", e);
 			throw e;
@@ -56,23 +54,21 @@ public class RenderServiceImpl implements RenderService {
 			logger.error("PugRenderService: Caught IOException: ", e);
 			throw e;
 		}
-
-		return location;
 	}
 
 	@Override
-	public Path renderJson(String outfileName, ExecutionResult data) throws IOException {
+	public String renderJson(ExecutionResult data) throws IOException {
 
-		if (outfileName == null || data == null || resultsDir == null) {
+		if (data == null || resultsDir == null) {
 			throw new IllegalArgumentException("A Required parameter is null");
 		}
 
-		Path location = Path.of(resultsDir, outfileName);
+		StringWriter writer = new StringWriter();
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.registerModule(new JavaTimeModule());
-		mapper.writerWithDefaultPrettyPrinter().writeValue(location.toFile(), data);
+		mapper.writerWithDefaultPrettyPrinter().writeValue(writer, data);
 
-		return location;
+		return writer.toString();
 	}
 
 }

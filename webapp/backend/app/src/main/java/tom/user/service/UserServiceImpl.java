@@ -1,6 +1,7 @@
 package tom.user.service;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -68,7 +69,7 @@ public class UserServiceImpl implements UserServiceInternal {
 	}
 
 	@Override
-	public String getUsernameFromId(int userId) {
+	public String getUsernameFromId(UUID userId) {
 		return userRepository.findById(userId).get().getAccount();
 	}
 
@@ -83,7 +84,7 @@ public class UserServiceImpl implements UserServiceInternal {
 	}
 
 	@Override
-	public Optional<User> getUserFromId(int userId) {
+	public Optional<User> getUserFromId(UUID userId) {
 		try {
 			return Optional.of(decrypt(userRepository.findById(userId).get()));
 		} catch (JsonProcessingException e) {

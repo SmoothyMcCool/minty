@@ -1,7 +1,6 @@
 package tom.output.pug;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
 import tom.api.services.TaskServices;
 import tom.output.ExecutionResult;
@@ -25,9 +24,12 @@ public class RenderPugTemplate implements OutputTask, ServiceConsumer {
 	}
 
 	@Override
-	public Path execute(ExecutionResult data) throws IOException {
-		return taskServices.getRenderService().renderPug(configuration.getTemplate(), configuration.getOutputFilename(),
-				data);
+	public String execute(ExecutionResult data) throws IOException {
+		return taskServices.getRenderService().renderPug(configuration.getTemplate(), data);
 	}
 
+	@Override
+	public String getFormat() {
+		return "text/html";
+	}
 }

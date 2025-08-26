@@ -127,8 +127,9 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor, OnDest
 	}
 
 	taskChanged($event) {
-		this.task.name = $event;
 		this.taskDescription = this.taskTemplates.find(element => element.name === $event);
+		this.task.name = $event;
+
 		this.destroyPopover();
 		this.createPopover();
 	}

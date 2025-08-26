@@ -1,6 +1,7 @@
 package tom.conversation.controller;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,7 +33,7 @@ public class ConversationController {
 
 	@RequestMapping(value = { "new" }, method = RequestMethod.GET)
 	public ResponseEntity<ResponseWrapper<Conversation>> startNewConversation(
-			@AuthenticationPrincipal UserDetailsUser user, @RequestParam("assistantId") Integer assistantId) {
+			@AuthenticationPrincipal UserDetailsUser user, @RequestParam("assistantId") UUID assistantId) {
 		ResponseWrapper<Conversation> response = ResponseWrapper
 				.SuccessResponse(conversationService.newConversation(user.getId(), assistantId));
 		metadataService.newConversation(user.getId());
@@ -51,7 +52,7 @@ public class ConversationController {
 
 	@RequestMapping(value = { "/history" }, method = RequestMethod.GET)
 	public ResponseEntity<ResponseWrapper<List<ChatMessage>>> getChatHistory(
-			@AuthenticationPrincipal UserDetailsUser user, @RequestParam("conversationId") String conversationId) {
+			@AuthenticationPrincipal UserDetailsUser user, @RequestParam("conversationId") UUID conversationId) {
 
 		List<ChatMessage> messages = conversationService.getChatMessages(user.getId(), conversationId);
 
@@ -61,7 +62,7 @@ public class ConversationController {
 
 	@RequestMapping(value = { "/delete" }, method = RequestMethod.DELETE)
 	public ResponseEntity<ResponseWrapper<String>> deleteConversation(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("conversationId") String conversationId) {
+			@RequestParam("conversationId") UUID conversationId) {
 
 		if (!conversationService.deleteConversation(user.getId(), conversationId)) {
 			ResponseWrapper<String> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),

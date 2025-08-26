@@ -1,7 +1,6 @@
 package tom.output.noop;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
 import tom.output.ExecutionResult;
 import tom.output.OutputTask;
@@ -14,8 +13,12 @@ public class NullOutput implements OutputTask {
 	}
 
 	@Override
-	public Path execute(ExecutionResult result) throws IOException {
+	public String execute(ExecutionResult result) throws IOException {
 		return null;
 	}
 
+	@Override
+	public String getFormat() {
+		return "text/plain";
+	}
 }

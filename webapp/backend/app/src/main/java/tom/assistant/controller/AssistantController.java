@@ -3,6 +3,7 @@ package tom.assistant.controller;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
@@ -89,7 +90,7 @@ public class AssistantController {
 
 	@RequestMapping(value = { "/get" }, method = RequestMethod.GET)
 	public ResponseEntity<ResponseWrapper<Assistant>> getAssistant(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("id") int assistantId) {
+			@RequestParam("id") UUID assistantId) {
 		Assistant assistant = assistantManagementService.findAssistant(user.getId(), assistantId);
 
 		if (assistant == null) {
@@ -104,14 +105,14 @@ public class AssistantController {
 
 	@RequestMapping(value = { "/conversation" }, method = RequestMethod.GET)
 	public ResponseEntity<ResponseWrapper<Assistant>> getAssistantForChat(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("conversationId") String conversationId) {
-		int assistantId = conversationService.getAssistantIdFromConversationId(conversationId);
+			@RequestParam("conversationId") UUID conversationId) {
+		UUID assistantId = conversationService.getAssistantIdFromConversationId(conversationId);
 		return getAssistant(user, assistantId);
 	}
 
 	@RequestMapping(value = { "/delete" }, method = RequestMethod.DELETE)
 	public ResponseEntity<ResponseWrapper<Boolean>> deleteAssistant(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("id") int assistantId) {
+			@RequestParam("id") UUID assistantId) {
 
 		boolean success = assistantManagementService.deleteAssistant(user.getId(), assistantId);
 

@@ -1,16 +1,18 @@
 package tom.model;
 
+import java.util.UUID;
+
 public class AssistantQuery {
 
-	private int assistantId = 0;
-	private String conversationId = "";
-	private String query = "";
+	private UUID assistantId;
+	private UUID conversationId;
+	private String query;
 
-	public String getConversationId() {
+	public UUID getConversationId() {
 		return conversationId;
 	}
 
-	public void setConversationId(String conversationId) {
+	public void setConversationId(UUID conversationId) {
 		this.conversationId = conversationId;
 	}
 
@@ -22,11 +24,11 @@ public class AssistantQuery {
 		this.query = query;
 	}
 
-	public int getAssistantId() {
+	public UUID getAssistantId() {
 		return assistantId;
 	}
 
-	public void setAssistantId(int assistantId) {
+	public void setAssistantId(UUID assistantId) {
 		this.assistantId = assistantId;
 	}
 

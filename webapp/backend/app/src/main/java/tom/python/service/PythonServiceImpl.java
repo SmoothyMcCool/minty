@@ -66,7 +66,7 @@ public class PythonServiceImpl implements PythonService {
 		} catch (IOException | InterruptedException e) {
 
 			logger.warn("Exception while trying to run python file. ", e);
-			return Map.of();
+			throw new RuntimeException("Exception while trying to run python file: ", e);
 
 		} finally {
 
@@ -92,7 +92,7 @@ public class PythonServiceImpl implements PythonService {
 
 		} catch (IOException e) {
 			logger.warn("Exception while trying to run python codestring: ", e);
-			return new HashMap<>();
+			throw new RuntimeException("Exception while trying to run python codestring: ", e);
 
 		} finally {
 			if (tempPyFile != null) {

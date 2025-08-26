@@ -2,19 +2,20 @@ package tom.model;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 public class AssistantBuilder {
-	private Integer id;
+	private UUID id;
 	private String name;
 	private String model;
 	private Double temperature;
 	private String prompt;
-	private Integer ownerId;
+	private UUID ownerId;
 	private boolean shared;
 	private boolean hasMemory;
-	private List<String> documentIds;
+	private List<UUID> documentIds;
 
-	public AssistantBuilder id(Integer id) {
+	public AssistantBuilder id(UUID id) {
 		this.id = id;
 		return this;
 	}
@@ -39,12 +40,12 @@ public class AssistantBuilder {
 		return this;
 	}
 
-	public AssistantBuilder documentIds(List<String> documentIds) {
+	public AssistantBuilder documentIds(List<UUID> documentIds) {
 		this.documentIds = documentIds;
 		return this;
 	}
 
-	public AssistantBuilder ownerId(Integer ownerId) {
+	public AssistantBuilder ownerId(UUID ownerId) {
 		this.ownerId = ownerId;
 		return this;
 	}
@@ -60,16 +61,12 @@ public class AssistantBuilder {
 	}
 
 	public Assistant build() {
-		return new Assistant(
-			Objects.requireNonNull(id, "id must not be null"),
-			Objects.requireNonNull(name, "name must not be null"),
-			Objects.requireNonNull(model, "model must not be null"),
-			Objects.requireNonNull(temperature, "temperature must not be null"),
-			Objects.requireNonNull(prompt, "prompt must not be null"),
-			Objects.requireNonNull(documentIds, "documentIds must not be null"),
-			Objects.requireNonNull(ownerId, "ownerId must not be null"),
-			shared,
-			hasMemory
-		);
+		return new Assistant(Objects.requireNonNull(id, "id must not be null"),
+				Objects.requireNonNull(name, "name must not be null"),
+				Objects.requireNonNull(model, "model must not be null"),
+				Objects.requireNonNull(temperature, "temperature must not be null"),
+				Objects.requireNonNull(prompt, "prompt must not be null"),
+				Objects.requireNonNull(documentIds, "documentIds must not be null"),
+				Objects.requireNonNull(ownerId, "ownerId must not be null"), shared, hasMemory);
 	}
 }
