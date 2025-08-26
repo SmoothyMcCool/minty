@@ -5,7 +5,6 @@ import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import tom.task.TaskConfig;
 import tom.task.TaskConfigTypes;
@@ -24,7 +23,6 @@ public class GitLabMergRequestExtractorConfig implements TaskConfig {
 
 	public GitLabMergRequestExtractorConfig(Map<String, String> config)
 			throws JsonMappingException, JsonProcessingException {
-		ObjectMapper objectMapper = new ObjectMapper();
 		baseUrl = config.get("Base URL");
 		projectId = config.get("Project ID");
 		mergeRequestId = config.get("Merge Request ID");

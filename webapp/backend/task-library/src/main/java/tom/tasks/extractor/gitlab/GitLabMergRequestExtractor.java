@@ -12,6 +12,8 @@ import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.Header;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -58,8 +60,16 @@ public class GitLabMergRequestExtractor implements AiTask {
 	public List<Map<String, Object>> runTask() {
 		String changesJson;
 		try {
+			String baseUrl = configuration.getBaseUrl();
+			if (baseUrl.endsWith("/")) {
+				baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
+			}
+			if (!baseUrl.endsWith("/api/v4")) {
+				baseUrl = baseUrl + "/api/v4";
+			}
+
 			changesJson = fetchGitLabJson(configuration.getBaseUrl() + "/projects/" + configuration.getProjectId()
-					+ "/merge_requests/" + configuration.getMergeRequestId() + "/changes",
+					+ "/merge_requests/" + configuration.getMergeRequestId() + "/diffs",
 					configuration.getPrivateToken());
 
 			ObjectMapper mapper = new ObjectMapper();
@@ -71,8 +81,8 @@ public class GitLabMergRequestExtractor implements AiTask {
 			for (JsonNode change : root.get("changes")) {
 				String filePath = change.get("new_path").asText();
 				String diff = change.get("diff").asText();
-				String fileContent = fetchFileContent(configuration.getBaseUrl(), configuration.getProjectId(),
-						filePath, targetBranch, configuration.getPrivateToken());
+				String fileContent = fetchFileContent(baseUrl, configuration.getProjectId(), filePath, targetBranch,
+						configuration.getPrivateToken());
 				String[] fileLines = fileContent.split("\n");
 
 				List<AnnotatedLine> annotated = annotateLines(diff, fileLines);
@@ -177,10 +187,18 @@ public class GitLabMergRequestExtractor implements AiTask {
 		try (CloseableHttpClient client = HttpClients.createDefault()) {
 			HttpGet request = new HttpGet(url);
 			request.addHeader("PRIVATE-TOKEN", token);
+
 			ClassicHttpResponse response = client.executeOpen(null, request, null);
 			if (response.getCode() != 200) {
 				throw new RuntimeException("GitLab API error: " + response.getCode());
 			}
+
+			Header contentType = response.getHeader("Content-Type");
+			if (!contentType.getValue().equals(ContentType.APPLICATION_JSON.toString())) {
+				throw new RuntimeException("GitLab API error: Did not return application/json. Instead returned "
+						+ contentType.getValue());
+			}
+
 			return EntityUtils.toString(response.getEntity());
 		}
 	}
