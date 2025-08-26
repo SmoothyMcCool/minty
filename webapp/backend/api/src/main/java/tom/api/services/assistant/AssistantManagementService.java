@@ -1,23 +1,24 @@
 package tom.api.services.assistant;
 
 import java.util.List;
+import java.util.UUID;
 
 import tom.model.Assistant;
 
 public interface AssistantManagementService {
 
-	int DefaultAssistantId = 0;
+	final UUID DefaultAssistantId = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
-	Assistant createAssistant(int userId, Assistant assistant);
+	Assistant createAssistant(UUID userId, Assistant assistant);
 
-	List<Assistant> listAssistants(int userId);
+	List<Assistant> listAssistants(UUID userId);
 
-	Assistant findAssistant(int userId, int assistantId);
+	Assistant findAssistant(UUID userId, UUID assistantId);
 
-	boolean deleteAssistant(int id, int assistantId);
+	boolean deleteAssistant(UUID id, UUID assistantId);
 
-	Assistant updateAssistant(int userId, Assistant assistant);
+	Assistant updateAssistant(UUID userId, Assistant assistant);
 
-	String getModelForAssistant(int userId, int assistantId);
+	String getModelForAssistant(UUID userId, UUID assistantId);
 
 }

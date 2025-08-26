@@ -20,9 +20,10 @@ public class ConversationalAiQuery implements AiTask, ServiceConsumer {
 	private TaskServices taskServices;
 	private UUID uuid = UUID.randomUUID();
 	private AiQueryConfig config = new AiQueryConfig();
-	private int userId = 0;
+	private UUID userId;
 	private Map<String, Object> result = new HashMap<>();
 	private Map<String, Object> input = Map.of();
+	private String error = null;
 
 	public ConversationalAiQuery() {
 
@@ -49,19 +50,36 @@ public class ConversationalAiQuery implements AiTask, ServiceConsumer {
 	}
 
 	@Override
-	public void setUserId(int userId) {
+	public String getError() {
+		return error;
+	}
+
+	@Override
+	public void setUserId(UUID userId) {
 		this.userId = userId;
 	}
 
 	@Override
 	public List<Map<String, Object>> runTask() {
 
-		Map<String, Object> response = new HashMap<>();
-		response.put("Data", doTheThing());
+		AssistantQuery query = new AssistantQuery();
+		query.setAssistantId(config.getAssistant());
 
-		result = parseResponse(response.get("Data").toString());
+		if (input.containsKey("Data")) {
+			query.setQuery(config.getQuery() + " " + input.get("Data"));
+		} else {
+			query.setQuery(config.getQuery());
+		}
 
-		return List.of(response);
+		if (input.containsKey("Conversation ID")) {
+			query.setConversationId(UUID.fromString(input.get("Conversation ID").toString()));
+		}
+
+		String aiResponse = taskServices.getAssistantQueryService().ask(userId, query);
+
+		result = parseResponse(aiResponse);
+
+		return List.of(result);
 	}
 
 	private Map<String, Object> parseResponse(String response) {
@@ -92,23 +110,6 @@ public class ConversationalAiQuery implements AiTask, ServiceConsumer {
 	public void setInput(Map<String, Object> input) {
 		config.updateFrom(input);
 		this.input = input;
-	}
-
-	private String doTheThing() {
-		AssistantQuery query = new AssistantQuery();
-		query.setAssistantId(config.getAssistant());
-
-		if (input.containsKey("Data")) {
-			query.setQuery(config.getQuery() + " " + input.get("Data"));
-		} else {
-			query.setQuery(config.getQuery());
-		}
-
-		if (input.containsKey("Conversation ID")) {
-			query.setConversationId(input.get("Conversation ID").toString());
-		}
-
-		return taskServices.getAssistantQueryService().ask(userId, query);
 	}
 
 	@Override

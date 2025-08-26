@@ -22,13 +22,13 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 
 	private routerSubscription: Subscription;
 	private assistant: Assistant = {
-		id: 0,
+		id: '',
 		name: '',
 		prompt: '',
 		model: '',
 		temperature: 0,
 		numFiles: 0,
-		ownerId: 0,
+		ownerId: '',
 		shared: false,
 		hasMemory: false,
 		documentIds: []

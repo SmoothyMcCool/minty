@@ -1,8 +1,8 @@
-import { Task } from "../model/task";
+import { Task } from '../task';
 
 export interface Workflow {
-	id: number;
-	ownerId: number;
+	id: string;
+	ownerId: string;
 	name: string;
 	description: string;
 	shared: boolean;

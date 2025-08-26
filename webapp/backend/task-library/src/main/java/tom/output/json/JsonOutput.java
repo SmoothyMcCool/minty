@@ -1,7 +1,6 @@
 package tom.output.json;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
 import tom.api.services.TaskServices;
 import tom.output.ExecutionResult;
@@ -13,10 +12,8 @@ import tom.task.ServiceConsumer;
 public class JsonOutput implements OutputTask, ServiceConsumer {
 
 	private TaskServices taskServices;
-	private JsonOutputConfig configuration;
 
 	public JsonOutput(JsonOutputConfig configuration) {
-		this.configuration = configuration;
 	}
 
 	@Override
@@ -25,8 +22,12 @@ public class JsonOutput implements OutputTask, ServiceConsumer {
 	}
 
 	@Override
-	public Path execute(ExecutionResult data) throws IOException {
-		return taskServices.getRenderService().renderJson(configuration.getOutputFilename(), data);
+	public String execute(ExecutionResult data) throws IOException {
+		return taskServices.getRenderService().renderJson(data);
 	}
 
+	@Override
+	public String getFormat() {
+		return "text/json";
+	}
 }

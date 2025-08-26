@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
@@ -62,7 +63,7 @@ public class HttpServiceImpl implements HttpService {
 	}
 
 	@Override
-	public <ResponseType> ResponseType getBasicAuth(int userId, String url, Map<String, String> parameters,
+	public <ResponseType> ResponseType getBasicAuth(UUID userId, String url, Map<String, String> parameters,
 			ResponseType dummy) {
 
 		try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
@@ -99,7 +100,7 @@ public class HttpServiceImpl implements HttpService {
 	}
 
 	@Override
-	public <ResponseType> ResponseType getJavaEEFormAuth(int userId, String url, Map<String, String> parameters,
+	public <ResponseType> ResponseType getJavaEEFormAuth(UUID userId, String url, Map<String, String> parameters,
 			ResponseType dummy) {
 
 		// TODO

@@ -4,12 +4,25 @@
 			<ng-container *ngSwitchCase="'Number'">
 				<div class="row g-1">
 					<div class="col-4">
-						<label for="numberInput{{item.key}}">{{item.key}}</label>
+						<label for="numberInput-{{item.key}}">{{item.key}}</label>
 					</div>
 					<div class="col-8">
 						<input type="number" step="1" class="form-control form-control-sm" id="numberInput-{{item.key}}"
 							name="numberInput-{{item.key}}" [ngModel]="getConfig(item.key)"
 							(ngModelChange)="valueChanged(item.key, $event)">
+					</div>
+				</div>
+			</ng-container>
+			<ng-container *ngSwitchCase="'Boolean'">
+				<div class="row g-1">
+					<div class="col-4"></div>
+					<div class="col-8">
+						<div class="form-group mb-2">
+							<input type="checkbox" class="form-check-input me-2" id="booleanInput-{{item.key}}"
+								name="booleanInput-{{item.key}}" [ngModel]="getConfig(item.key)"
+								(ngModelChange)="valueChanged(item.key, $event)">
+							<label for="booleanInput-{{item.key}}">{{item.key}}</label>
+						</div>
 					</div>
 				</div>
 			</ng-container>

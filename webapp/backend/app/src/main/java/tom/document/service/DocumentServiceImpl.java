@@ -4,6 +4,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -72,16 +73,19 @@ public class DocumentServiceImpl implements DocumentService {
 
 		File[] newFiles = docPath.toFile().listFiles();
 		for (File newFile : newFiles) {
-			String documentId = newFile.getName();
-			startTaskFor(newFile.toPath(), documentId);
+			processFile(newFile);
 		}
 
 	}
 
 	@Override
 	public void processFile(File file) {
-		String documentId = file.getName();
-		startTaskFor(file.toPath(), documentId);
+		try {
+			UUID documentId = UUID.fromString(file.getName());
+			startTaskFor(file.toPath(), documentId);
+		} catch (Exception e) {
+			logger.error("Could not start processing task for file " + file.getName(), e);
+		}
 	}
 
 	@Override
@@ -112,7 +116,7 @@ public class DocumentServiceImpl implements DocumentService {
 
 	private static int NumKeywordsPerDocument = 5;
 
-	private List<Document> enrich(String documentId, List<Document> documents, ChatModel chatModel) {
+	private List<Document> enrich(UUID documentId, List<Document> documents, ChatModel chatModel) {
 		KeywordMetadataEnricher keywordifier = new KeywordMetadataEnricher(chatModel, NumKeywordsPerDocument);
 		documents = keywordifier.apply(documents);
 
@@ -129,7 +133,7 @@ public class DocumentServiceImpl implements DocumentService {
 		return summarizer.apply(documents);
 	}
 
-	private void startTaskFor(Path file, String documentId) {
+	private void startTaskFor(Path file, UUID documentId) {
 		String filename = file.getFileName().toString();
 		MintyDoc doc = this.findByDocumentId(documentId);
 
@@ -148,7 +152,7 @@ public class DocumentServiceImpl implements DocumentService {
 
 	@Override
 	@Transactional
-	public boolean deleteDocument(int userId, String documentId) {
+	public boolean deleteDocument(UUID userId, UUID documentId) {
 
 		MintyDoc document = findByDocumentId(documentId);
 		if (document.getOwnerId() != userId) {
@@ -180,25 +184,25 @@ public class DocumentServiceImpl implements DocumentService {
 	}
 
 	@Override
-	public boolean documentExists(String documentId) {
+	public boolean documentExists(UUID documentId) {
 		return documentRepository.existsByDocumentId(documentId);
 	}
 
 	@Override
-	public MintyDoc addDocument(int userId, MintyDoc document) {
+	public MintyDoc addDocument(UUID userId, MintyDoc document) {
 		document.setOwnerId(userId);
 		document.setState(DocumentState.NO_CONTENT);
 		return documentRepository.save(document);
 	}
 
 	@Override
-	public boolean documentOwnedBy(int userId, String documentId) {
+	public boolean documentOwnedBy(UUID userId, UUID documentId) {
 		MintyDoc doc = documentRepository.findByDocumentId(documentId);
 		return userId == doc.getOwnerId();
 	}
 
 	@Override
-	public MintyDoc findByDocumentId(String documentId) {
+	public MintyDoc findByDocumentId(UUID documentId) {
 		return documentRepository.findByDocumentId(documentId);
 	}
 

@@ -2,6 +2,7 @@ package tom.assistant.repository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -13,17 +14,17 @@ import jakarta.persistence.Transient;
 public class Assistant {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Integer id;
+	@GeneratedValue(strategy = GenerationType.UUID)
+	private UUID id;
 	private String name;
 	private String prompt;
 	private String model;
 	private Double temperature;
-	private Integer ownerId;
+	private UUID ownerId;
 	private boolean shared;
 	private boolean hasMemory;
 	@Transient
-	private List<String> associatedDocumentIds;
+	private List<UUID> associatedDocumentIds;
 
 	public Assistant() {
 	}
@@ -41,8 +42,8 @@ public class Assistant {
 	}
 
 	public tom.model.Assistant toTaskAssistant() {
-		return new tom.model.Assistant(id, name, model.toString(), temperature, prompt, associatedDocumentIds,
-				ownerId, shared, hasMemory);
+		return new tom.model.Assistant(id, name, model.toString(), temperature, prompt, associatedDocumentIds, ownerId,
+				shared, hasMemory);
 	}
 
 	public Assistant updateWith(tom.model.Assistant assistant) {
@@ -56,11 +57,11 @@ public class Assistant {
 		return this;
 	}
 
-	public Integer getId() {
+	public UUID getId() {
 		return id;
 	}
 
-	public void setId(Integer id) {
+	public void setId(UUID id) {
 		this.id = id;
 	}
 
@@ -96,11 +97,11 @@ public class Assistant {
 		this.temperature = temperature;
 	}
 
-	public Integer getOwnerId() {
+	public UUID getOwnerId() {
 		return ownerId;
 	}
 
-	public void setOwnerId(Integer ownerId) {
+	public void setOwnerId(UUID ownerId) {
 		this.ownerId = ownerId;
 	}
 
@@ -121,11 +122,11 @@ public class Assistant {
 	}
 
 	@Transient
-	public List<String> getAssociatedDocumentIds() {
+	public List<UUID> getAssociatedDocumentIds() {
 		return associatedDocumentIds;
 	}
 
-	public void setAssociatedDocuments(List<String> associatedDocumentIds) {
+	public void setAssociatedDocuments(List<UUID> associatedDocumentIds) {
 		this.associatedDocumentIds = associatedDocumentIds;
 	}
 

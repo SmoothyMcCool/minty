@@ -1,12 +1,13 @@
 package tom.document.service;
 
 import java.io.File;
+import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import tom.document.model.MintyDoc;
 import tom.document.model.DocumentState;
+import tom.document.model.MintyDoc;
 
 public class DocumentProcessingTask implements Runnable {
 
@@ -25,21 +26,23 @@ public class DocumentProcessingTask implements Runnable {
 			String filename = file.getName();
 			logger.info("Started processing " + filename);
 
-			MintyDoc doc = documentService.findByDocumentId(filename);
+			MintyDoc doc = documentService.findByDocumentId(UUID.fromString(filename));
 			if (doc != null) {
 				if (doc.getState() == DocumentState.READY) {
-					// No good, this document is already processed. Log a warning and delete this file.
-					logger.warn("Attempt to reprocess already processed document " + doc.getTitle() + ". Deleting file.");
+					// No good, this document is already processed. Log a warning and delete this
+					// file.
+					logger.warn(
+							"Attempt to reprocess already processed document " + doc.getTitle() + ". Deleting file.");
 					file.delete();
 					return;
 				}
-			}
-			else {
-				logger.warn("Found file " + filename + " for processing but no associated document record was found. Deleting file.");
+			} else {
+				logger.warn("Found file " + filename
+						+ " for processing but no associated document record was found. Deleting file.");
 				file.delete();
 				return;
 			}
-	
+
 			documentService.transformAndStore(file, doc);
 			file.delete();
 

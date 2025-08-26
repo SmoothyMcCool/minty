@@ -4,7 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { Router } from "@angular/router";
 import { AlertService } from "src/app/alert.service";
 import { TaskTemplateService } from "src/app/task/task-template.service";
-import { Workflow } from "src/app/model/workflow";
+import { Workflow } from "src/app/model/workflow/workflow";
 import { WorkflowService } from "../workflow.service";
 import { TaskDescription } from "src/app/model/task-description";
 import { WorkflowEditorComponent } from "./workflow-editor.component";
@@ -23,8 +23,8 @@ export class NewWorkflowComponent implements OnInit {
 	workflow: Workflow = {
 		name: '',
 		description: '',
-		id: 0,
-		ownerId: 0,
+		id: '',
+		ownerId: '',
 		shared: false,
 		workflowSteps: [],
 		outputStep: {
@@ -55,6 +55,8 @@ export class NewWorkflowComponent implements OnInit {
 	}
 
 	createWorkflow() {
+		this.workflowService.sanitize(this.workflow, this.taskTemplates, this.outputTaskTemplates);
+
 		this.workflowService.newWorkflow(this.workflow).subscribe(() => {
 			this.alertService.postSuccess('Workflow Created!');
 			this.router.navigateByUrl('workflow');

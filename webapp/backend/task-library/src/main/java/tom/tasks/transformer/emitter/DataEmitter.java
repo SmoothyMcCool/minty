@@ -29,6 +29,11 @@ public class DataEmitter implements AiTask {
 
 	@Override
 	public Map<String, Object> getResult() {
+		return Map.of();
+	}
+
+	@Override
+	public String getError() {
 		return null;
 	}
 

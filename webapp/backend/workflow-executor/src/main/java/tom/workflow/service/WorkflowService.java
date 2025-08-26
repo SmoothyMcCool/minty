@@ -1,26 +1,27 @@
 package tom.workflow.service;
 
 import java.util.List;
+import java.util.UUID;
 
 import tom.workflow.controller.WorkflowRequest;
 import tom.workflow.model.Workflow;
 
 public interface WorkflowService {
 
-	void executeWorkflow(int userId, WorkflowRequest request);
+	void executeWorkflow(UUID userId, WorkflowRequest request);
 
-	Workflow createWorkflow(int userId, Workflow workflow);
+	Workflow createWorkflow(UUID userId, Workflow workflow);
 
-	Workflow updateWorkflow(int id, Workflow workflow);
+	Workflow updateWorkflow(UUID userId, Workflow workflow);
 
-	List<Workflow> listWorkflows(int userId);
+	List<Workflow> listWorkflows(UUID userId);
 
-	Workflow getWorkflow(int userId, int workflowId);
+	Workflow getWorkflow(UUID userId, UUID workflowId);
 
-	void deleteWorkflow(int userId, int workflowId);
+	void deleteWorkflow(UUID userId, UUID workflowId);
 
-	boolean isAllowedToExecute(int workflowId, int userId);
+	boolean isAllowedToExecute(UUID workflowId, UUID userId);
 
-	boolean isWorkflowOwned(int workflowId, int userId);
+	boolean isWorkflowOwned(UUID workflowId, UUID userId);
 
 }

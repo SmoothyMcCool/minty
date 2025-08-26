@@ -1,6 +1,7 @@
 package tom.workflow.repository;
 
 import java.util.List;
+import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -15,11 +16,11 @@ import tom.workflow.model.Task;
 public class Workflow {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Integer id;
+	@GeneratedValue(strategy = GenerationType.UUID)
+	private UUID id;
 	private String name;
 	private String description;
-	private int ownerId;
+	private UUID ownerId;
 	private boolean shared;
 	@Column(columnDefinition = "json")
 	@Convert(converter = TaskConverter.class)
@@ -44,11 +45,11 @@ public class Workflow {
 		this.watchLocation = workflow.getWatchLocation();
 	}
 
-	public Integer getId() {
+	public UUID getId() {
 		return id;
 	}
 
-	public void setId(Integer id) {
+	public void setId(UUID id) {
 		this.id = id;
 	}
 
@@ -68,11 +69,11 @@ public class Workflow {
 		this.description = description;
 	}
 
-	public int getOwnerId() {
+	public UUID getOwnerId() {
 		return ownerId;
 	}
 
-	public void setOwnerId(int ownerId) {
+	public void setOwnerId(UUID ownerId) {
 		this.ownerId = ownerId;
 	}
 

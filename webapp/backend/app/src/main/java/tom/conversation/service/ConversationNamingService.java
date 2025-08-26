@@ -10,8 +10,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
+import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
-import tom.assistant.service.management.AssistantManagementServiceInternal;
 import tom.conversation.model.Conversation;
 import tom.conversation.repository.ConversationRepository;
 import tom.model.Assistant;
@@ -46,11 +46,11 @@ public class ConversationNamingService {
 		// Ignore all conversations internal to workflows.
 		conversations = conversations.stream()
 				.filter(conversation -> conversation
-						.getAssociatedAssistantId() != AssistantManagementServiceInternal.WorkflowDefaultAssistantId)
+						.getAssociatedAssistantId() != AssistantManagementService.DefaultAssistantId)
 				.toList();
 
 		conversations.forEach(conversation -> {
-			List<Message> messages = ollamaService.getChatMemory().get(conversation.getConversationId());
+			List<Message> messages = ollamaService.getChatMemory().get(conversation.getConversationId().toString());
 			if (messages.size() > 1) {
 				StringBuilder sb = new StringBuilder();
 				messages.forEach(message -> {
@@ -58,7 +58,7 @@ public class ConversationNamingService {
 					String content = message.getText();
 					sb.append(speaker + ": " + content);
 				});
-				String summary = assistantQueryService.ask(namingAssistant, sb.toString(), "");
+				String summary = assistantQueryService.ask(namingAssistant, sb.toString());
 
 				// In case we're using Qwen3, strip off the <think> block.
 				if (summary.startsWith("<think>")) {

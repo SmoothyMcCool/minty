@@ -100,7 +100,7 @@ export class AssistantService {
 			);
 	}
 
-	ask(conversationId: string, assistantId: number, query: string): Observable<string> {
+	ask(conversationId: string, assistantId: string, query: string): Observable<string> {
 		const headers: HttpHeaders = new HttpHeaders({
 			'Content-Type': 'application/json'
 		});

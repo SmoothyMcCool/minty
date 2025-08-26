@@ -1,17 +1,19 @@
 package tom.meta.service;
 
+import java.util.UUID;
+
 public interface MetadataService {
 
-	void newAssistant(int userId);
+	void newAssistant(UUID userId);
 
-	void userLoggedIn(int userId);
+	void userLoggedIn(UUID userId);
 
-	void workflowCreated(int userId);
+	void workflowCreated(UUID userId);
 
-	void workflowExecuted(int userId);
+	void workflowExecuted(UUID userId);
 
-	void newConversation(int userId);
+	void newConversation(UUID userId);
 
-	void addUser(int userId);
+	void addUser(UUID userId);
 
 }

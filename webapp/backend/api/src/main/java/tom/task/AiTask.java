@@ -10,10 +10,13 @@ public interface AiTask {
 	String taskName();
 
 	// The results of this Task. This may be, but is not necessarily the same as the
-	// output of doWork. This result represents all or a portion of the final output
-	// of the overall workflow (for example, information retrieved from a webpage
-	// during this Task).
+	// output of runTask. This result represents all or a portion of the final
+	// output of the overall workflow (for example, information retrieved from a
+	// webpage during this Task).
 	Map<String, Object> getResult();
+
+	// If any error occured, output it here to aid in debugging.
+	String getError();
 
 	// Run the task. This task is expected to return information used in the
 	// construction of tasks in the next workflow step.

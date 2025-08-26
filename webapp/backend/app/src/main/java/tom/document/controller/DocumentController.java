@@ -43,14 +43,14 @@ public class DocumentController {
 
 	@RequestMapping(value = { "/add" }, method = RequestMethod.POST)
 	public ResponseEntity<ResponseWrapper<MintyDoc>> addDocument(@AuthenticationPrincipal UserDetailsUser user,
-		@RequestBody MintyDoc document) {
+			@RequestBody MintyDoc document) {
 
-		boolean exists = documentService.documentExists(document.getTitle());
+		boolean exists = documentService.documentExists(document.getDocumentId());
 
-		document.setDocumentId(UUID.randomUUID().toString());
+		document.setDocumentId(UUID.randomUUID());
 		if (exists) {
-			ResponseWrapper<MintyDoc> response = ResponseWrapper
-					.ApiFailureResponse(HttpStatus.CONFLICT.value(), List.of(ApiError.DOCUMENT_ALREADY_EXISTS));
+			ResponseWrapper<MintyDoc> response = ResponseWrapper.ApiFailureResponse(HttpStatus.CONFLICT.value(),
+					List.of(ApiError.DOCUMENT_ALREADY_EXISTS));
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
@@ -82,19 +82,22 @@ public class DocumentController {
 	}
 
 	@RequestMapping(value = { "/list" }, method = RequestMethod.GET)
-	public ResponseEntity<ResponseWrapper<List<MintyDoc>>> listDocuments(@AuthenticationPrincipal UserDetailsUser user) {
+	public ResponseEntity<ResponseWrapper<List<MintyDoc>>> listDocuments(
+			@AuthenticationPrincipal UserDetailsUser user) {
 		List<MintyDoc> documents = documentService.listDocuments();
-	
+
 		ResponseWrapper<List<MintyDoc>> response = ResponseWrapper.SuccessResponse(documents);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	@RequestMapping(value = { "/delete" }, method = RequestMethod.DELETE)
 	public ResponseEntity<ResponseWrapper<Boolean>> deleteDocument(@AuthenticationPrincipal UserDetailsUser user,
-		@RequestParam("documentId") String documentId) {
+			@RequestParam("documentId") UUID documentId) {
 
 		if (!documentService.deleteDocument(user.getId(), documentId)) {
-			return new ResponseEntity<>(ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(), List.of(ApiError.NOT_OWNED)), HttpStatus.OK);
+			return new ResponseEntity<>(
+					ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(), List.of(ApiError.NOT_OWNED)),
+					HttpStatus.OK);
 		}
 
 		return new ResponseEntity<>(ResponseWrapper.SuccessResponse(true), HttpStatus.OK);

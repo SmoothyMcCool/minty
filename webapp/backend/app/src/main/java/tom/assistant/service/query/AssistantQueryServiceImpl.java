@@ -3,6 +3,7 @@ package tom.assistant.service.query;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -53,7 +54,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	}
 
 	@Override
-	public String ask(int userId, AssistantQuery query) {
+	public String ask(UUID userId, AssistantQuery query) {
 		User user = userService.getUserFromId(userId).get();
 
 		Optional<ChatClientRequestSpec> spec = prepareFromQuery(user, query);
@@ -73,7 +74,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	}
 
 	@Override
-	public Stream<String> askStreaming(int userId, AssistantQuery query) {
+	public Stream<String> askStreaming(UUID userId, AssistantQuery query) {
 		User user = userService.getUserFromId(userId).get();
 
 		Optional<ChatClientRequestSpec> spec = prepareFromQuery(user, query);
@@ -93,7 +94,19 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	}
 
 	@Override
-	public String ask(Assistant assistant, String query, String conversationId) {
+	public String ask(Assistant assistant, String query) {
+
+		ChatResponse chatResponse = prepare(query, null, assistant).get().call().chatResponse();
+		if (chatResponse != null) {
+			return chatResponse.getResult().getOutput().getText();
+		}
+
+		logger.warn("ask: Chat response was null");
+		return "";
+	}
+
+	@Override
+	public String ask(Assistant assistant, String query, UUID conversationId) {
 		ChatResponse chatResponse = prepare(query, conversationId, assistant).get().call().chatResponse();
 
 		if (chatResponse != null) {
@@ -116,7 +129,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		return prepare(query.getQuery(), query.getConversationId(), assistant);
 	}
 
-	private Optional<ChatClientRequestSpec> prepare(String query, String conversationId, Assistant assistant) {
+	private Optional<ChatClientRequestSpec> prepare(String query, UUID conversationId, Assistant assistant) {
 
 		MintyOllamaModel model;
 		try {
@@ -165,8 +178,8 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			}
 
 			if (conversationId != null) {
-				final String finalConversationId = conversationId;
-				spec = spec.advisors(a -> a.param(ChatMemory.CONVERSATION_ID, finalConversationId));
+				final UUID finalConversationId = conversationId;
+				spec = spec.advisors(a -> a.param(ChatMemory.CONVERSATION_ID, finalConversationId.toString()));
 			}
 
 			spec = spec.user(query);

@@ -1,6 +1,7 @@
 package tom.conversation.repository;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
@@ -8,15 +9,15 @@ import org.springframework.stereotype.Service;
 import tom.conversation.model.Conversation;
 
 @Service
-public interface ConversationRepository extends JpaRepository<Conversation, Integer> {
+public interface ConversationRepository extends JpaRepository<Conversation, UUID> {
 
-	Conversation findByConversationId(String conversationId);
+	Conversation findByConversationId(UUID conversationId);
 
-	List<Conversation> findAllByOwnerIdAndAssociatedAssistantId(int userId, Integer assistantId);
+	List<Conversation> findAllByOwnerIdAndAssociatedAssistantId(UUID userId, UUID assistantId);
 
-	List<Conversation> findAllByOwnerId(int userId);
+	List<Conversation> findAllByOwnerId(UUID userId);
 
-	void deleteByConversationId(String conversationId);
+	void deleteByConversationId(UUID conversationId);
 
 	List<Conversation> findAllByTitle(String string);
 

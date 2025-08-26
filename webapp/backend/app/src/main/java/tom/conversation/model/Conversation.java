@@ -1,5 +1,7 @@
 package tom.conversation.model;
 
+import java.util.UUID;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -8,24 +10,15 @@ import jakarta.persistence.Id;
 @Entity
 public class Conversation {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Integer id;
 	private String title;
-	private String conversationId;
-	private Integer ownerId;
-	private Integer associatedAssistantId;
+	@Id
+	@GeneratedValue(strategy = GenerationType.UUID)
+	private UUID conversationId;
+	private UUID ownerId;
+	private UUID associatedAssistantId;
 
 	public Conversation() {
 
-	}
-
-	public Integer getId() {
-		return id;
-	}
-
-	public void setId(Integer id) {
-		this.id = id;
 	}
 
 	public String getTitle() {
@@ -36,27 +29,27 @@ public class Conversation {
 		this.title = title;
 	}
 
-	public String getConversationId() {
+	public UUID getConversationId() {
 		return conversationId;
 	}
 
-	public void setConversationId(String conversationId) {
+	public void setConversationId(UUID conversationId) {
 		this.conversationId = conversationId;
 	}
 
-	public Integer getOwnerId() {
+	public UUID getOwnerId() {
 		return ownerId;
 	}
 
-	public void setOwnerId(Integer ownerId) {
+	public void setOwnerId(UUID ownerId) {
 		this.ownerId = ownerId;
 	}
 
-	public Integer getAssociatedAssistantId() {
+	public UUID getAssociatedAssistantId() {
 		return associatedAssistantId;
 	}
 
-	public void setAssociatedAssistantId(Integer associatedAssistantId) {
+	public void setAssociatedAssistantId(UUID associatedAssistantId) {
 		this.associatedAssistantId = associatedAssistantId;
 	}
 

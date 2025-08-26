@@ -2,6 +2,7 @@ package tom.tasks.ai.query;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import tom.task.TaskConfig;
 import tom.task.TaskConfigTypes;
@@ -9,17 +10,16 @@ import tom.tasks.TaskUtils;
 
 public class AiQueryConfig implements TaskConfig {
 
-	private Integer assistant;
+	private UUID assistant;
 	private String query;
 
 	public AiQueryConfig() {
-		assistant = 0;
 		query = "";
 	}
 
 	public AiQueryConfig(Map<String, String> config) {
-		assistant = Integer.parseInt(config.get("Assistant"));
-		query = config.get("Prompt");
+		assistant = UUID.fromString(config.get("Assistant"));
+		query = config.get("Query");
 	}
 
 	@Override
@@ -32,15 +32,15 @@ public class AiQueryConfig implements TaskConfig {
 
 	public void updateFrom(Map<String, Object> map) {
 		if (map.containsKey("Assistant")) {
-			assistant = TaskUtils.safeConvert(map.get("Assistant"), Integer.class);
+			assistant = TaskUtils.safeConvert(map.get("Assistant"), UUID.class);
 		}
-		if (map.containsKey("Prompt")) {
-			query = TaskUtils.safeConvert(map.get("Prompt"), String.class);
+		if (map.containsKey("Query")) {
+			query = TaskUtils.safeConvert(map.get("Query"), String.class);
 		}
 	}
 
-	public int getAssistant() {
-		return assistant == null ? 0 : assistant;
+	public UUID getAssistant() {
+		return assistant;
 	}
 
 	public String getQuery() {

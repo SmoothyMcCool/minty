@@ -3,6 +3,7 @@ package tom.config.security;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -16,7 +17,7 @@ public class UserDetailsUser implements UserDetails {
 
 	private String username;
 	private String password;
-	private int userId;
+	private UUID userId;
 
 	public UserDetailsUser(User user) {
 		this.username = user.getName();
@@ -31,7 +32,7 @@ public class UserDetailsUser implements UserDetails {
 		return auth;
 	}
 
-	public int getId() {
+	public UUID getId() {
 		return userId;
 	}
 

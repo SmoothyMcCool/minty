@@ -100,7 +100,7 @@ bootstrapApplication(AppComponent, {
 			}
 		]/*, withDebugTracing()*/),
 		provideHttpClient(withInterceptorsFromDi()),
-		provideMarkdown(/*{
+		provideMarkdown({
 			mermaidOptions: {
 				provide: MERMAID_OPTIONS,
 				useValue: {
@@ -108,7 +108,7 @@ bootstrapApplication(AppComponent, {
 					look: 'classic',
 				}
 			}
-		}*/)
+		})
 		//importProvidersFrom(
 		//	MarkdownModule.forRoot()
 		//)

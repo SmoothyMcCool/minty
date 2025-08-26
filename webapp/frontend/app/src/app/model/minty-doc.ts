@@ -3,5 +3,5 @@ export interface MintyDoc {
 	state: string;
 	documentId: string;
 	ownerId: string;
-	associatedAssistantIds: number[];
+	associatedAssistantIds: string[];
 }

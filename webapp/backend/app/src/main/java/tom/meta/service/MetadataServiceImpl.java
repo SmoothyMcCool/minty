@@ -2,6 +2,7 @@ package tom.meta.service;
 
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
@@ -18,62 +19,59 @@ public class MetadataServiceImpl implements MetadataService {
 	}
 
 	@Override
-	public void newAssistant(int userId) {
-		Optional<UserMeta> maybeMeta = metadataRepository.findByUserId(userId);
-		if (maybeMeta.isPresent()) {
-			UserMeta meta = maybeMeta.get();
-			meta.setTotalAssistantsCreated(meta.getTotalAssistantsCreated() + 1);
-			metadataRepository.save(meta);
-		}
+	public void newAssistant(UUID userId) {
+		UserMeta meta = getUser(userId);
+		meta.setTotalAssistantsCreated(meta.getTotalAssistantsCreated() + 1);
+		metadataRepository.save(meta);
 	}
 
 	@Override
-	public void userLoggedIn(int userId) {
-		Optional<UserMeta> maybeMeta = metadataRepository.findByUserId(userId);
-		if (maybeMeta.isPresent()) {
-			UserMeta meta = maybeMeta.get();
-			meta.setLastLogin(LocalDate.now());
-			meta.setTotalLogins(meta.getTotalLogins() + 1);
-			metadataRepository.save(meta);
-		}
+	public void userLoggedIn(UUID userId) {
+		UserMeta meta = getUser(userId);
+		meta.setLastLogin(LocalDate.now());
+		meta.setTotalLogins(meta.getTotalLogins() + 1);
+		metadataRepository.save(meta);
 	}
 
 	@Override
-	public void workflowCreated(int userId) {
-		Optional<UserMeta> maybeMeta = metadataRepository.findByUserId(userId);
-		if (maybeMeta.isPresent()) {
-			UserMeta meta = maybeMeta.get();
-			meta.setTotalWorkflowsCreated(meta.getTotalWorkflowsCreated() + 1);
-			metadataRepository.save(meta);
-		}
+	public void workflowCreated(UUID userId) {
+		UserMeta meta = getUser(userId);
+		meta.setTotalWorkflowsCreated(meta.getTotalWorkflowsCreated() + 1);
+		metadataRepository.save(meta);
 	}
 
 	@Override
-	public void workflowExecuted(int userId) {
-		Optional<UserMeta> maybeMeta = metadataRepository.findByUserId(userId);
-		if (maybeMeta.isPresent()) {
-			UserMeta meta = maybeMeta.get();
-			meta.setTotalWorkflowRuns(meta.getTotalWorkflowRuns() + 1);
-			metadataRepository.save(meta);
-		}
+	public void workflowExecuted(UUID userId) {
+		UserMeta meta = getUser(userId);
+		meta.setTotalWorkflowRuns(meta.getTotalWorkflowRuns() + 1);
+		metadataRepository.save(meta);
 	}
 
 	@Override
-	public void newConversation(int userId) {
-		Optional<UserMeta> maybeMeta = metadataRepository.findByUserId(userId);
-		if (maybeMeta.isPresent()) {
-			UserMeta meta = maybeMeta.get();
-			meta.setTotalConversations(meta.getTotalConversations() + 1);
-			metadataRepository.save(meta);
-		}
+	public void newConversation(UUID userId) {
+		UserMeta meta = getUser(userId);
+		meta.setTotalConversations(meta.getTotalConversations() + 1);
+		metadataRepository.save(meta);
 	}
 
 	@Override
-	public void addUser(int userId) {
+	public void addUser(UUID userId) {
 		UserMeta meta = new UserMeta();
 		meta.setUserId(userId);
 		meta.setId(null);
 		metadataRepository.save(meta);
+	}
+
+	private UserMeta getUser(UUID userId) {
+		Optional<UserMeta> maybeMeta = metadataRepository.findByUserId(userId);
+		if (!maybeMeta.isPresent()) {
+			addUser(userId);
+			maybeMeta = metadataRepository.findByUserId(userId);
+			if (!maybeMeta.isPresent()) {
+				throw new RuntimeException("Failed to create metadata for user!");
+			}
+		}
+		return maybeMeta.get();
 	}
 
 }

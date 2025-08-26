@@ -20,9 +20,10 @@ public class AiQuery implements AiTask, ServiceConsumer {
 	private TaskServices taskServices;
 	private UUID uuid = UUID.randomUUID();
 	private AiQueryConfig config = new AiQueryConfig();
-	private int userId = 0;
+	private UUID userId;
 	private Map<String, Object> result = new HashMap<>();
 	private Map<String, Object> input = Map.of();
+	private String error = null;
 
 	public AiQuery() {
 
@@ -49,26 +50,50 @@ public class AiQuery implements AiTask, ServiceConsumer {
 	}
 
 	@Override
-	public void setUserId(int userId) {
+	public String getError() {
+		return error;
+	}
+
+	@Override
+	public void setUserId(UUID userId) {
 		this.userId = userId;
 	}
 
 	@Override
 	public List<Map<String, Object>> runTask() {
-		String response = doTheThing();
-		Map<String, Object> responseAsMap = parseResponse(response);
+		try {
+			AssistantQuery query = new AssistantQuery();
+			query.setAssistantId(config.getAssistant());
 
-		if (input.containsKey("Conversation ID")) {
-			result.put("Conversation ID", input.get("Conversation ID"));
+			if (input.containsKey("Data")) {
+				query.setQuery(config.getQuery() + " " + input.get("Data"));
+			} else {
+				query.setQuery(config.getQuery());
+			}
+
+			if (input.containsKey("Conversation ID")) {
+				query.setConversationId(null);
+			}
+
+			String response = taskServices.getAssistantQueryService().ask(userId, query);
+
+			Map<String, Object> responseAsMap = parseResponse(response);
+
+			if (!responseAsMap.isEmpty()) {
+				result.put("Data", responseAsMap);
+			} else {
+				result.put("Data", response);
+			}
+
+			if (input.containsKey("Conversation ID")) {
+				responseAsMap.put("Conversation ID", input.get("Conversation ID"));
+			}
+
+			return List.of(responseAsMap);
+		} catch (Exception e) {
+			error = "Failed to Query Assistant: " + e.toString();
 		}
-
-		if (!responseAsMap.isEmpty()) {
-			result.put("Data", responseAsMap);
-		} else {
-			result.put("Data", response);
-		}
-
-		return List.of(responseAsMap);
+		return List.of();
 	}
 
 	private Map<String, Object> parseResponse(String response) {
@@ -92,23 +117,6 @@ public class AiQuery implements AiTask, ServiceConsumer {
 	public void setInput(Map<String, Object> input) {
 		config.updateFrom(input);
 		this.input = input;
-	}
-
-	private String doTheThing() {
-		AssistantQuery query = new AssistantQuery();
-		query.setAssistantId(config.getAssistant());
-
-		if (input.containsKey("Data")) {
-			query.setQuery(config.getQuery() + " " + input.get("Data"));
-		} else {
-			query.setQuery(config.getQuery());
-		}
-
-		if (input.containsKey("Conversation ID")) {
-			query.setConversationId(null);
-		}
-
-		return taskServices.getAssistantQueryService().ask(userId, query);
 	}
 
 	@Override

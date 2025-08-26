@@ -1,8 +1,11 @@
 package tom.document.model;
 
 import java.util.List;
+import java.util.UUID;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Transient;
 
@@ -10,12 +13,13 @@ import jakarta.persistence.Transient;
 public class MintyDoc {
 
 	@Id
-	private String documentId;
+	@GeneratedValue(strategy = GenerationType.UUID)
+	private UUID documentId;
 	private String title;
 	private DocumentState state = DocumentState.NO_CONTENT;
-	private int ownerId;
+	private UUID ownerId;
 	@Transient
-	private List<Integer> associatedAssistantIds;
+	private List<UUID> associatedAssistantIds;
 
 	public MintyDoc() {
 	}
@@ -36,28 +40,28 @@ public class MintyDoc {
 		this.state = state;
 	}
 
-	public String getDocumentId() {
+	public UUID getDocumentId() {
 		return documentId;
 	}
 
-	public void setDocumentId(String documentId) {
+	public void setDocumentId(UUID documentId) {
 		this.documentId = documentId;
 	}
 
-	public int getOwnerId() {
+	public UUID getOwnerId() {
 		return ownerId;
 	}
 
-	public void setOwnerId(int ownerId) {
+	public void setOwnerId(UUID ownerId) {
 		this.ownerId = ownerId;
 	}
 
 	@Transient
-	public List<Integer> getAssociatedAssistantIds() {
+	public List<UUID> getAssociatedAssistantIds() {
 		return associatedAssistantIds;
 	}
 
-	public void setAssociatedAssistants(List<Integer> associatedAssistantIds) {
+	public void setAssociatedAssistants(List<UUID> associatedAssistantIds) {
 		this.associatedAssistantIds = associatedAssistantIds;
 	}
 

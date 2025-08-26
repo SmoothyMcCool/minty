@@ -3,6 +3,7 @@ package tom.assistant.service.management;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,7 +36,7 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 	}
 
 	@Override
-	public Assistant createAssistant(int userId, Assistant assistant) {
+	public Assistant createAssistant(UUID userId, Assistant assistant) {
 		tom.assistant.repository.Assistant repoAsst = new tom.assistant.repository.Assistant(assistant);
 		repoAsst.setOwnerId(userId);
 		repoAsst.setId(null);
@@ -45,7 +46,7 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 
 	@Override
 	@Transactional
-	public Assistant updateAssistant(int userId, Assistant assistant) {
+	public Assistant updateAssistant(UUID userId, Assistant assistant) {
 		Optional<tom.assistant.repository.Assistant> maybeAssistant = assistantRepository.findById(assistant.id());
 
 		if (maybeAssistant.isEmpty()) {
@@ -54,7 +55,7 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 		}
 
 		tom.assistant.repository.Assistant repoAssistant = maybeAssistant.get();
-		if (repoAssistant.getOwnerId() != userId) {
+		if (!repoAssistant.getOwnerId().equals(userId)) {
 			logger.warn("Assistant Id " + assistant.id() + " not owned by user id " + userId);
 			return null;
 		}
@@ -63,14 +64,14 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 
 		repoAssistant = assistantRepository.save(repoAssistant.updateWith(assistant));
 
-		List<String> docs = assistantDocumentLinkService.getDocumentIdsForAssistant(repoAssistant.getId());
+		List<UUID> docs = assistantDocumentLinkService.getDocumentIdsForAssistant(repoAssistant.getId());
 		repoAssistant.setAssociatedDocuments(docs);
 
 		return repoAssistant.toTaskAssistant();
 	}
 
 	@Override
-	public List<Assistant> listAssistants(int userId) {
+	public List<Assistant> listAssistants(UUID userId) {
 		List<tom.assistant.repository.Assistant> asstList = assistantRepository.findAllByOwnerIdOrSharedTrue(userId);
 
 		if (asstList == null || asstList.size() == 0) {
@@ -78,11 +79,11 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 		}
 
 		asstList = asstList.stream().map(assistant -> {
-			if (assistant.getOwnerId() == userId) {
+			if (assistant.getOwnerId().equals(userId)) {
 				// Don't mark this as shared since it's owned by the current user.
 				assistant.setShared(false);
 			}
-			List<String> documentIds = assistantDocumentLinkService.getDocumentIdsForAssistant(assistant.getId());
+			List<UUID> documentIds = assistantDocumentLinkService.getDocumentIdsForAssistant(assistant.getId());
 			assistant.setAssociatedDocuments(documentIds);
 			return assistant;
 		}).toList();
@@ -92,15 +93,15 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 
 	@Override
 	@Transactional
-	public Assistant findAssistant(int userId, int assistantId) {
+	public Assistant findAssistant(UUID userId, UUID assistantId) {
 		if (assistantId == AssistantManagementService.DefaultAssistantId) {
 			return Assistant.CreateDefaultAssistant(ollamaService.getDefaultModel().toString());
 		}
 
 		try {
 			tom.assistant.repository.Assistant assistant = assistantRepository.findById(assistantId).get();
-			if (assistant.isShared() || assistant.getOwnerId() == userId) {
-				List<String> docIds = assistantDocumentLinkService.getDocumentIdsForAssistant(assistant.getId());
+			if (assistant.isShared() || assistant.getOwnerId().equals(userId)) {
+				List<UUID> docIds = assistantDocumentLinkService.getDocumentIdsForAssistant(assistant.getId());
 				assistant.setAssociatedDocuments(docIds);
 				return assistant.toTaskAssistant();
 			}
@@ -113,7 +114,7 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 	}
 
 	@Override
-	public Assistant unrestrictedFindAssistant(Integer assistantId) {
+	public Assistant unrestrictedFindAssistant(UUID assistantId) {
 		tom.assistant.repository.Assistant assistant = assistantRepository.findById(assistantId).get();
 		assistant.setAssociatedDocuments(assistantDocumentLinkService.getDocumentIdsForAssistant(assistantId));
 		return assistant.toTaskAssistant();
@@ -121,7 +122,7 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 
 	@Override
 	@Transactional
-	public boolean deleteAssistant(int userId, int assistantId) {
+	public boolean deleteAssistant(UUID userId, UUID assistantId) {
 		Assistant assistant = findAssistant(userId, assistantId);
 
 		if (assistant == null) {
@@ -139,7 +140,7 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 	}
 
 	@Override
-	public String getModelForAssistant(int userId, int assistantId) {
+	public String getModelForAssistant(UUID userId, UUID assistantId) {
 		Assistant assistant = findAssistant(userId, assistantId);
 		if (assistant == null) {
 			logger.warn("Tried to access an assistant that does not exist or user has no permission. User " + userId

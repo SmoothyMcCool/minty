@@ -22,7 +22,7 @@ export class SignupComponent {
 
 	constructor(private userService: UserService, private router: Router) {
 		this.user = {
-			id: 0,
+			id: '',
 			name: '',
 			password: '',
 		};

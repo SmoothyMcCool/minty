@@ -1,6 +1,5 @@
 package tom.workflow.service;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,45 +9,52 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.core.task.AsyncTaskExecutor;
 
-import tom.assistant.service.management.AssistantManagementServiceInternal;
+import tom.api.services.assistant.AssistantManagementService;
 import tom.conversation.model.Conversation;
 import tom.conversation.service.ConversationServiceInternal;
 import tom.model.ChatMessage;
-import tom.output.ExecutionResult;
 import tom.output.OutputTask;
 import tom.task.AiTask;
 import tom.task.taskregistry.TaskRegistryService;
 import tom.workflow.model.Task;
 import tom.workflow.model.TaskRequest;
 import tom.workflow.model.Workflow;
+import tom.workflow.tracking.model.WorkflowExecution;
+import tom.workflow.tracking.service.WorkflowTrackingService;
 
-public class WorkflowTracker {
+public class WorkflowRunner {
 
-	private final Logger logger = LogManager.getLogger(WorkflowTracker.class);
+	private final Logger logger = LogManager.getLogger(WorkflowRunner.class);
 
 	private final TaskRegistryService taskRegistryService;
 	private final ConversationServiceInternal conversationService;
+	private final WorkflowTrackingService workflowTrackingService;
 	private final AsyncTaskExecutor taskExecutor;
 	private final Workflow workflow;
 	private boolean taskComplete;
-	private int userId;
-	private UUID uuid = UUID.randomUUID();
-	private ExecutionResult results;
+	private UUID userId;
+	private WorkflowExecution executionState;
 	private int stepTaskCount = 0;
 	private Map<Integer, WorkflowTaskWrapper> pendingTasks = new HashMap<>();
 	private Conversation workflowConversation;
 
-	public WorkflowTracker(int userId, Workflow workflow, TaskRegistryService taskRegistryService,
-			ConversationServiceInternal conversationService, AsyncTaskExecutor taskExecutor) {
+	public WorkflowRunner(UUID userId, Workflow workflow, TaskRegistryService taskRegistryService,
+			ConversationServiceInternal conversationService, WorkflowTrackingService workflowTrackingService,
+			AsyncTaskExecutor taskExecutor) {
 		taskComplete = false;
 		this.userId = userId;
 		this.workflow = workflow;
 		this.taskRegistryService = taskRegistryService;
 		this.conversationService = conversationService;
+		this.workflowTrackingService = workflowTrackingService;
 		this.taskExecutor = taskExecutor;
-		results = new ExecutionResult(workflow.numSteps());
+		executionState = new WorkflowExecution(workflow.numSteps(), userId);
 		workflowConversation = conversationService.newConversation(userId,
-				AssistantManagementServiceInternal.WorkflowDefaultAssistantId);
+				AssistantManagementService.DefaultAssistantId);
+	}
+
+	public WorkflowExecution getExecutionState() {
+		return executionState;
 	}
 
 	public synchronized void workflowComplete() {
@@ -59,7 +65,7 @@ public class WorkflowTracker {
 
 		taskComplete = true;
 
-		results.stop();
+		executionState.getResult().stop();
 
 		logger.info("Workflow " + getWorkflowName() + " is complete.");
 
@@ -69,7 +75,7 @@ public class WorkflowTracker {
 			List<ChatMessage> chats = conversationService.getChatMessages(userId,
 					workflowConversation.getConversationId());
 			if (!chats.isEmpty()) {
-				results.setChatMessages(chats);
+				executionState.getResult().setChatMessages(chats);
 			}
 
 			TaskRequest outputTaskRequest = new TaskRequest();
@@ -77,22 +83,25 @@ public class WorkflowTracker {
 			outputTaskRequest.setConfiguration(workflow.getOutputStep().getConfiguration());
 			OutputTask outputTask = taskRegistryService.newOutputTask(userId, outputTaskRequest);
 
-			outputTask.execute(results);
+			executionState.setOutput(outputTask.execute(executionState.getResult().toApiResult()));
+			executionState.setOutputFormat(outputTask.getFormat());
 
-		} catch (IOException e) {
+		} catch (Exception e) {
 			logger.error("Failed to generate output for " + workflow.getName() + " with exception ", e);
 		} finally {
 			conversationService.deleteConversation(userId, workflowConversation.getConversationId());
+			executionState.setName(getWorkflowName());
+			workflowTrackingService.workflowCompleted(this);
 		}
 	}
 
 	public String getWorkflowName() {
-		return workflow.getName() + "-" + uuid;
+		return workflow.getName() + " - " + executionState.getResult().getStartTime().toString();
 	}
 
 	public void runFirstTask() {
-		logger.info("Starting workflow " + workflow.getName());
-		results.start();
+		executionState.getResult().start();
+		logger.info("Starting workflow " + getWorkflowName());
 
 		if (workflow.getWorkflowSteps().isEmpty()) {
 			// That was quick. I guess we're done.
@@ -116,12 +125,29 @@ public class WorkflowTracker {
 
 		pendingTasks.put(stepTaskCount, wrapper);
 
+		executionState.addTasks(stepNumber, 1);
 		taskExecutor.execute(wrapper);
 	}
 
-	public synchronized void taskComplete(WorkflowTaskWrapper completedTask) {
+	// This method is needed where a task fails with exception and has not set an
+	// error message.
+	public synchronized void taskFailed(WorkflowTaskWrapper completedTask, String error) {
+		logger.warn("Task failed: " + completedTask.getTaskId() + " for step " + completedTask.getStepNumber()
+				+ ", with error: " + error);
+		executionState.completeTask(completedTask.getStepNumber(), completedTask.getResult(), error);
+		startNextTask(completedTask);
+	}
 
-		results.addResult(completedTask.getStepNumber(), completedTask.getResult());
+	public synchronized void taskComplete(WorkflowTaskWrapper completedTask) {
+		logger.info("Task completed: " + completedTask.getTaskId() + " for step " + completedTask.getStepNumber());
+		executionState.completeTask(completedTask.getStepNumber(), completedTask.getResult(), completedTask.getError());
+		startNextTask(completedTask);
+	}
+
+	private void startNextTask(WorkflowTaskWrapper completedTask) {
+		// Save results.
+		Map<String, Object> results = completedTask.getResult();
+		executionState.getResult().addResult(completedTask.getStepNumber(), results);
 
 		// Remove the just-completed task from the list of pending tasks.
 		pendingTasks.remove(completedTask.getTaskId());
@@ -179,6 +205,7 @@ public class WorkflowTracker {
 			pendingTasks.put(stepTaskCount, wrappedTask);
 			logger.info("starting manual task " + wrappedTask.getTaskId() + " for step " + wrappedTask.getStepNumber());
 			taskExecutor.execute(wrappedTask);
+			executionState.addTasks(nextStep, 1);
 		} else {
 			// An list of outputs creates one task per list item.
 			for (Map<String, Object> prevOut : completedTask.getOutput()) {
@@ -188,6 +215,7 @@ public class WorkflowTracker {
 						"starting auto task " + wrappedTask.getTaskId() + " for step " + wrappedTask.getStepNumber());
 				taskExecutor.execute(wrappedTask);
 			}
+			executionState.addTasks(nextStep, completedTask.getOutput().size());
 		}
 
 	}
@@ -208,6 +236,10 @@ public class WorkflowTracker {
 
 		WorkflowTaskWrapper wrapper = new WorkflowTaskWrapper(++stepTaskCount, nextStep, task, this, taskRequest);
 		return wrapper;
+	}
+
+	public UUID getUser() {
+		return userId;
 	}
 
 }

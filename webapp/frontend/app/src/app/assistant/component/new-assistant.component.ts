@@ -19,13 +19,13 @@ export class NewAssistantComponent implements OnInit {
 	availableDocuments: MintyDoc[] = [];
 	models: string[] = [];
 	workingAssistant: Assistant = {
-		id: 0,
+		id: '',
 		name: '',
 		prompt: '',
 		model: '',
 		temperature: 0,
 		numFiles: 0,
-		ownerId: 0,
+		ownerId: '',
 		shared: false,
 		hasMemory: false,
 		documentIds: []

@@ -27,10 +27,11 @@
 	<div class="col-3">
 		This list refreshes every five seconds.
 		<div class="d-grid gap-3" *ngFor="let result of results">
+			<!-- If the ID is null, the task is still in progress-->
 			<div class="p-2 bg-light border btn text-start" (click)="displayResultsFor(result)">
 				<button type="button" class="bi bi-trash3" style="font-size: 20px; color: red; float: right;"
 					(click)="deleteResult($event, result)"></button>
-				{{result}}
+				{{result.name}}
 			</div>
 		</div>
 	</div>

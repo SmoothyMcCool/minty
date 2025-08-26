@@ -47,6 +47,13 @@ html(lang='en')
 							pre
 								code
 									| #{item}
+		h1 Errors
+		each valueList, index in errors
+			h2 Step #{index + 1}
+			ul
+				each value in valueList
+					li
+						| #{value}
 
 		h1 All Conversations:
 			h2 Conversation
