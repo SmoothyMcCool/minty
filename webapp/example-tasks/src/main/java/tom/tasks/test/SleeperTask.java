@@ -9,11 +9,11 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import tom.task.AiTask;
+import tom.task.MintyTask;
 import tom.task.annotations.PublicTask;
 
 @PublicTask(name = "Sleep", configClass = "tom.tasks.test.SleeperTaskConfig")
-public class SleeperTask implements AiTask {
+public class SleeperTask implements MintyTask {
 
 	private final Logger logger = LogManager.getLogger(SleeperTask.class);
 

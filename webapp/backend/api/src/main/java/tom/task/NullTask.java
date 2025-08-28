@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class NullTask implements AiTask {
+public class NullTask implements MintyTask {
 
 	@Override
 	public String taskName() {

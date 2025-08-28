@@ -14,7 +14,7 @@ import tom.conversation.model.Conversation;
 import tom.conversation.service.ConversationServiceInternal;
 import tom.model.ChatMessage;
 import tom.output.OutputTask;
-import tom.task.AiTask;
+import tom.task.MintyTask;
 import tom.task.taskregistry.TaskRegistryService;
 import tom.workflow.model.Task;
 import tom.workflow.model.TaskRequest;
@@ -110,7 +110,7 @@ public class WorkflowRunner {
 
 		Task step = workflow.getWorkflowSteps().get(0);
 		TaskRequest taskRequest = new TaskRequest(step.getName(), step.getConfiguration());
-		AiTask currentTask = taskRegistryService.newTask(userId, taskRequest);
+		MintyTask currentTask = taskRegistryService.newTask(userId, taskRequest);
 
 		// Start the processing chain with a new conversation. Every task gets the
 		// conversation ID. They have to be careful in how its used. Best not use it in
@@ -221,7 +221,7 @@ public class WorkflowRunner {
 	}
 
 	private WorkflowTaskWrapper createTask(int nextStep, TaskRequest taskRequest, Map<String, Object> prevOut) {
-		AiTask task = taskRegistryService.newTask(userId, taskRequest);
+		MintyTask task = taskRegistryService.newTask(userId, taskRequest);
 
 		Map<String, Object> taskInput = prevOut;
 

@@ -9,6 +9,7 @@ import { Workflow } from 'src/app/model/workflow/workflow';
 import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
 import { UserService } from 'src/app/user.service';
 import { WorkflowState } from 'src/app/model/workflow/workflow-state';
+import { WorkflowResult } from 'src/app/model/workflow/workflow-result';
 
 @Component({
 	selector: 'minty-workflow-list',
@@ -19,7 +20,7 @@ import { WorkflowState } from 'src/app/model/workflow/workflow-state';
 export class WorkflowListComponent implements OnInit, OnDestroy {
 
 	responseType: string;
-	responseText: unknown;
+	currentResult: WorkflowResult = null;
 	results: WorkflowState[] = [];
 	workflows: Workflow[] = [];
 	private subscription: Subscription;
@@ -52,7 +53,7 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 	}
 
 	displayResultsFor(result: WorkflowState) {
-		this.responseText = '';
+		this.currentResult = null;
 		this.resultService.getWorkflowResult(result.id).subscribe(result => {
 			if (this.endsWithIgnoreCase(result.outputFormat, 'text/json')) {
 				this.responseType = 'JSON';
@@ -61,7 +62,7 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 			} else {
 				this.responseType = 'TEXT';
 			}
-			this.responseText = result.output;
+			this.currentResult = result;
 		});
 	}
 
@@ -97,9 +98,13 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 	}
 
 	copyToClipboard() {
-		navigator.clipboard.writeText(this.responseText as string).then(() => {
-			console.log('Copied: ' + this.responseText as string);
+		navigator.clipboard.writeText(this.currentResult.output as string).then(() => {
+			console.log('Copied: ' + this.currentResult.output as string);
 		});
+	}
+
+	viewFullscreen() {
+		this.router.navigate(['/workflow/result', this.currentResult.id]);
 	}
 
 	isOwned(workflow: Workflow): boolean {

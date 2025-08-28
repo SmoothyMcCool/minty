@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import tom.api.services.TaskServices;
-import tom.task.AiTask;
+import tom.task.MintyTask;
 import tom.task.ServiceConsumer;
 import tom.task.annotations.PublicTask;
 
@@ -14,7 +14,7 @@ import tom.task.annotations.PublicTask;
 // it defines no set-time configuration. It still takes in input from previous tasks though,
 // so it can be controlled as a step in a workflow.
 @PublicTask(name = "TestHttpRequest")
-public class TestHttpRequestTask implements AiTask, ServiceConsumer {
+public class TestHttpRequestTask implements MintyTask, ServiceConsumer {
 
 	private TaskServices taskServices;
 	private UUID userId;

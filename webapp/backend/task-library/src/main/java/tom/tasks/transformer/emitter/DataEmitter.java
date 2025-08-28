@@ -5,11 +5,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import tom.task.AiTask;
+import tom.task.MintyTask;
 import tom.task.annotations.PublicTask;
 
 @PublicTask(name = "Emit Records", configClass = "tom.tasks.transformer.emitter.DataEmitterConfig")
-public class DataEmitter implements AiTask {
+public class DataEmitter implements MintyTask {
 
 	private UUID uuid = UUID.randomUUID();
 	private DataEmitterConfig config;

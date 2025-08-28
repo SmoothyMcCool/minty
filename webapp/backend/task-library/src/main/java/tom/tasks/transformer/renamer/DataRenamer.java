@@ -7,11 +7,11 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import tom.task.AiTask;
+import tom.task.MintyTask;
 import tom.task.annotations.PublicTask;
 
 @PublicTask(name = "Rename Fields", configClass = "tom.tasks.transformer.renamer.DataRenamerConfig")
-public class DataRenamer implements AiTask {
+public class DataRenamer implements MintyTask {
 
 	private UUID uuid = UUID.randomUUID();
 	private DataRenamerConfig config;

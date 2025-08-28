@@ -10,12 +10,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import tom.api.services.TaskServices;
 import tom.model.AssistantQuery;
-import tom.task.AiTask;
+import tom.task.MintyTask;
 import tom.task.ServiceConsumer;
 import tom.task.annotations.PublicTask;
 
 @PublicTask(name = "Query the Robot", configClass = "tom.tasks.ai.query.AiQueryConfig")
-public class AiQuery implements AiTask, ServiceConsumer {
+public class AiQuery implements MintyTask, ServiceConsumer {
 
 	private TaskServices taskServices;
 	private UUID uuid = UUID.randomUUID();
