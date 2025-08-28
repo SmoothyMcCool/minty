@@ -3,7 +3,7 @@ package tom.task;
 import java.util.List;
 import java.util.Map;
 
-public interface AiTask {
+public interface MintyTask {
 
 	// Set a unique identifiable name for this task, to help with tracing through
 	// logs.

@@ -11,11 +11,11 @@ import java.util.Random;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import tom.task.AiTask;
+import tom.task.MintyTask;
 import tom.task.annotations.PublicTask;
 
 @PublicTask(name = "Spawn Sleeper Tasks", configClass = "tom.tasks.test.SleeperTaskSpawnerTaskConfig")
-public class SleeperTaskSpawnerTask implements AiTask {
+public class SleeperTaskSpawnerTask implements MintyTask {
 
 	private final Logger logger = LogManager.getLogger(SleeperTaskSpawnerTask.class);
 

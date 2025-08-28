@@ -32,7 +32,7 @@ import tom.api.services.TaskServices;
 import tom.output.OutputTask;
 import tom.output.annotations.Output;
 import tom.output.noop.NullOutput;
-import tom.task.AiTask;
+import tom.task.MintyTask;
 import tom.task.NullTask;
 import tom.task.NullTaskConfig;
 import tom.task.ServiceConsumer;
@@ -93,7 +93,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 		}
 
 		try (URLClassLoader classLoader = new URLClassLoader(urls.toArray(new URL[urls.size()]),
-				AiTask.class.getClassLoader())) {
+				MintyTask.class.getClassLoader())) {
 
 			// Cache the classloader for later.
 			this.classLoader = classLoader;
@@ -242,7 +242,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 	}
 
 	private boolean isValidPublicTask(Class<?> loadedClass) throws ClassNotFoundException {
-		if (!AiTask.class.isAssignableFrom(loadedClass)) {
+		if (!MintyTask.class.isAssignableFrom(loadedClass)) {
 			return false;
 		}
 
@@ -312,13 +312,13 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 	}
 
 	@Override
-	public AiTask newTask(UUID userId, TaskRequest request) {
+	public MintyTask newTask(UUID userId, TaskRequest request) {
 
 		if (request == null) {
 			throw new IllegalArgumentException("request cannot be null.");
 		}
 
-		AiTask task = new NullTask();
+		MintyTask task = new NullTask();
 
 		if (!publicTasks.containsKey(request.getName())) {
 			logger.warn("Task " + request.getName() + " does not exist.");
@@ -357,14 +357,14 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 			// constructor
 			if (configClass.equals(NullTaskConfig.class)) {
 				Constructor<?> constructor = taskClass.getDeclaredConstructor();
-				task = (AiTask) constructor.newInstance();
+				task = (MintyTask) constructor.newInstance();
 			} else {
 				Constructor<?>[] constructors = taskClass.getConstructors();
 				for (Constructor<?> constructor : constructors) {
 					if (constructor.getParameterCount() == 1
 							&& constructor.getParameterTypes()[0].isAssignableFrom(configClass)) {
 
-						task = (AiTask) constructor.newInstance(configClass.cast(taskConfig));
+						task = (MintyTask) constructor.newInstance(configClass.cast(taskConfig));
 					}
 				}
 			}
@@ -507,8 +507,8 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 				td.setName(entry.getKey());
 				td.setConfiguration(configMapToStringMap(entry.getValue().right));
 
-				if (AiTask.class.isAssignableFrom(clazz)) {
-					AiTask task = (AiTask) clazz.getDeclaredConstructor().newInstance();
+				if (MintyTask.class.isAssignableFrom(clazz)) {
+					MintyTask task = (MintyTask) clazz.getDeclaredConstructor().newInstance();
 
 					td.setInputs(task.expects());
 					td.setOutputs(task.produces());

@@ -6,7 +6,7 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import tom.task.AiTask;
+import tom.task.MintyTask;
 import tom.workflow.model.TaskRequest;
 
 public class WorkflowTaskWrapper implements Runnable {
@@ -15,12 +15,12 @@ public class WorkflowTaskWrapper implements Runnable {
 
 	private final int taskId;
 	private final int stepNumber;
-	private final AiTask task;
+	private final MintyTask task;
 	private final WorkflowRunner workflowTracker;
 	private final TaskRequest taskRequest;
 	private List<Map<String, Object>> output = List.of();
 
-	public WorkflowTaskWrapper(int taskId, int stepNumber, AiTask task, WorkflowRunner workflowTracker,
+	public WorkflowTaskWrapper(int taskId, int stepNumber, MintyTask task, WorkflowRunner workflowTracker,
 			TaskRequest taskRequest) {
 		this.taskId = taskId;
 		this.stepNumber = stepNumber;

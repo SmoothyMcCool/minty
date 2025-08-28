@@ -22,6 +22,7 @@ import { EditAssistantComponent } from './app/assistant/component/edit-assistant
 import { EditWorkflowComponent } from './app/workflow/component/edit-workflow.component';
 import { ViewDocumentsComponent } from './app/document/view-documents.component';
 import { ResponseInterceptor } from './app/response-interceptor';
+import { DisplayWorkflowResultComponent } from './app/workflow/component/display-workflow-result.component';
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -71,6 +72,10 @@ bootstrapApplication(AppComponent, {
 					{
 						path: 'new',
 						component: NewWorkflowComponent
+					},
+					{
+						path: 'result/:id',
+						component: DisplayWorkflowResultComponent
 					},
 					{
 						path: 'edit/:id',

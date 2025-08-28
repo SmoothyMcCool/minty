@@ -17,11 +17,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import tom.task.AiTask;
+import tom.task.MintyTask;
 import tom.task.annotations.PublicTask;
 
 @PublicTask(name = "Get Confluence Pages", configClass = "tom.tasks.extractor.confluence.ConfluenceQueryConfig")
-public class ConfluenceQuery implements AiTask {
+public class ConfluenceQuery implements MintyTask {
 
 	private UUID uuid = UUID.randomUUID();
 	private ConfluenceQueryConfig config = new ConfluenceQueryConfig();

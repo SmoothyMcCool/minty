@@ -8,12 +8,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import tom.api.services.TaskServices;
-import tom.task.AiTask;
+import tom.task.MintyTask;
 import tom.task.ServiceConsumer;
 import tom.task.annotations.PublicTask;
 
 @PublicTask(name = "Execute Python", configClass = "tom.tasks.python.PythonTaskConfig")
-public class PythonTask implements AiTask, ServiceConsumer {
+public class PythonTask implements MintyTask, ServiceConsumer {
 
 	private final Logger logger = LogManager.getLogger(PythonTask.class);
 

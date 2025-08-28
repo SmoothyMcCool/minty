@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS WorkflowExecution (
 	name TEXT,
 	state JSON,
 	result JSON,
-	output TEXT,
+	output LONGTEXT,
 	outputFormat TEXT
 );
 CREATE TABLE IF NOT EXISTS User (
