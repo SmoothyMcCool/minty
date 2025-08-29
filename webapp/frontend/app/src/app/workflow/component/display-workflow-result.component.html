@@ -3,16 +3,16 @@
 		<button class="btn btn-primary me-2" *ngIf="result" (click)="copyToClipboard()">Copy to clipboard</button>
 		<div *ngIf="result">
 			<ng-container *ngIf="responseType === 'JSON'; else notJson">
-				<pre style="white-space: pre-wrap;">{{result.output}}</pre>
+				<pre style="white-space: pre-wrap;">{{resultHtml}}</pre>
 			</ng-container>
 			<ng-template #notJson>
 				<ng-container *ngIf="responseType === 'HTML'; else Text">
-					<div [innerHtml]="result.output"></div>
+					<div [innerHtml]="resultHtml"></div>
 				</ng-container>
 			</ng-template>
 			<ng-template #Text>
 				<ng-container *ngIf="responseType === 'TEXT'">
-					<p>{{result.output}}</p>
+					<p>{{resultHtml}}</p>
 				</ng-container>
 			</ng-template>
 		</div>

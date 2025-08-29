@@ -41,16 +41,16 @@
 		<button class="btn btn-primary" *ngIf="currentResult" (click)="viewFullscreen()">View Fullscreen</button>
 		<div *ngIf="currentResult">
 			<ng-container *ngIf="responseType === 'JSON'; else notJson">
-				<pre style="white-space: pre-wrap;">{{currentResult.output}}</pre>
+				<pre style="white-space: pre-wrap;">{{resultHtml}}</pre>
 			</ng-container>
 			<ng-template #notJson>
 				<ng-container *ngIf="responseType === 'HTML'; else Text">
-					<div [innerHtml]="currentResult.output"></div>
+					<div [innerHtml]="resultHtml"></div>
 				</ng-container>
 			</ng-template>
 			<ng-template #Text>
 				<ng-container *ngIf="responseType === 'TEXT'">
-					<p>{{currentResult.output}}</p>
+					<p>{{resultHtml}}</p>
 				</ng-container>
 			</ng-template>
 		</div>

@@ -2,23 +2,25 @@ doctype html
 html(lang='en')
 
 	head
-		title Result
 		meta(charset='UTF-8')
 		meta(
 			name='viewport'
 			content='width=device-width, initial-scale=1'
 		)
+
+	body
+
 		style.
-			pre {
+			.pre {
 				white-space: pre-wrap;
 				margin: 0;
 			}
 
-			code {
-				font-family: monospace;
+			button[aria-expanded="true"] .rotate {
+				transform: rotate(90deg);
+				transition: transform 0.3s ease;
 			}
 
-	body
 		h1 Results
 		if startTime
 			p
@@ -41,11 +43,19 @@ html(lang='en')
 		each valueList, index in results
 			h2 Step #{index + 1}
 			ul
-				each val in valueList
+				each val, vIdx in valueList
 					li
-						each item in val
-							pre
-								code
+						each item, iIdx in val
+							- var blockId = `targetBlock-${index}-${vIdx}-${iIdx}`;
+
+							span.text-primary(
+								onclick="(function(btn){ const div=btn.nextElementSibling; div.classList.toggle('show'); const arrow=btn.querySelector('.rotate'); arrow.classList.toggle('down'); })(this);"
+							)
+								| Show Details
+								span.rotate.ms-2 ▸
+
+							div.collapse.mt-3(id=blockId)
+								.card.card-body
 									| #{item}
 		h1 Errors
 		each valueList, index in errors
