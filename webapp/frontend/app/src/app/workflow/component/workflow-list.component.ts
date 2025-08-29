@@ -10,6 +10,7 @@ import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-
 import { UserService } from 'src/app/user.service';
 import { WorkflowState } from 'src/app/model/workflow/workflow-state';
 import { WorkflowResult } from 'src/app/model/workflow/workflow-result';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
 	selector: 'minty-workflow-list',
@@ -21,6 +22,7 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 
 	responseType: string;
 	currentResult: WorkflowResult = null;
+	resultHtml: SafeHtml;
 	results: WorkflowState[] = [];
 	workflows: Workflow[] = [];
 	private subscription: Subscription;
@@ -30,7 +32,8 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 	workflowPendingDeletion: Workflow;
 	resultPendingDeletionId: string;
 
-	constructor(private router: Router,
+	constructor(private sanitizer: DomSanitizer,
+		private router: Router,
 		private workflowService: WorkflowService,
 		private resultService: ResultService,
 		private userService: UserService) {
@@ -63,6 +66,7 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 				this.responseType = 'TEXT';
 			}
 			this.currentResult = result;
+			this.resultHtml = this.sanitizer.bypassSecurityTrustHtml(this.currentResult.output);
 		});
 	}
 

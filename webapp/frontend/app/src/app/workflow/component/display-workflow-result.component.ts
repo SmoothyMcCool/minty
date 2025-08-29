@@ -5,6 +5,7 @@ import { RouterModule, ActivatedRoute, Router } from "@angular/router";
 import { ConfirmationDialogComponent } from "src/app/app/component/confirmation-dialog.component";
 import { WorkflowResult } from "src/app/model/workflow/workflow-result";
 import { ResultService } from "../result.service";
+import { DomSanitizer, SafeHtml } from "@angular/platform-browser";
 
 
 @Component({
@@ -16,9 +17,11 @@ import { ResultService } from "../result.service";
 export class DisplayWorkflowResultComponent implements OnInit {
 
 	result: WorkflowResult = null;
+	resultHtml: SafeHtml;
 	responseType: string;
 
-	constructor(private route: ActivatedRoute,
+	constructor(private sanitizer: DomSanitizer,
+		private route: ActivatedRoute,
 		private router: Router,
 		private resultService: ResultService) {
 	}
@@ -35,6 +38,7 @@ export class DisplayWorkflowResultComponent implements OnInit {
 					this.responseType = 'TEXT';
 				}
 				this.result = result;
+				this.resultHtml = this.sanitizer.bypassSecurityTrustHtml(this.result.output);
 			})
 		});
 	}
