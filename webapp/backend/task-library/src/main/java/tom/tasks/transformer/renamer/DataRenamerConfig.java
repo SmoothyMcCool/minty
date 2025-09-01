@@ -2,6 +2,7 @@ package tom.tasks.transformer.renamer;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -36,4 +37,15 @@ public class DataRenamerConfig implements TaskConfig {
 	Map<String, String> getRenames() {
 		return renames;
 	}
+
+	@Override
+	public List<String> getSystemConfigVariables() {
+		return List.of();
+	}
+
+	@Override
+	public List<String> getUserConfigVariables() {
+		return List.of();
+	}
+
 }

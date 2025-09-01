@@ -1,5 +1,6 @@
-package tom.user.repository;
+package tom.user.model;
 
+import java.util.Map;
 import java.util.UUID;
 
 public class User {
@@ -7,6 +8,7 @@ public class User {
 	private UUID id;
 	private String name;
 	private String password;
+	private Map<String, String> defaults;
 
 	public UUID getId() {
 		return id;
@@ -30,6 +32,14 @@ public class User {
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+
+	public Map<String, String> getDefaults() {
+		return defaults;
+	}
+
+	public void setDefaults(Map<String, String> defaults) {
+		this.defaults = defaults;
 	}
 
 }

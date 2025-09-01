@@ -1,6 +1,7 @@
 package tom.tasks.python;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -41,4 +42,13 @@ public class PythonTaskConfig implements TaskConfig {
 		return inputDictionary;
 	}
 
+	@Override
+	public List<String> getSystemConfigVariables() {
+		return List.of();
+	}
+
+	@Override
+	public List<String> getUserConfigVariables() {
+		return List.of();
+	}
 }

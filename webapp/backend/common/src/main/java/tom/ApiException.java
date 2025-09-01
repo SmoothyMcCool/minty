@@ -23,10 +23,6 @@ public class ApiException extends Exception {
 	}
 
 	static private String ListToString(List<ApiError> strings) {
-		StringBuilder sb = new StringBuilder();
-		for (ApiError as : strings) {
-			sb.append(as.name());
-		}
-		return sb.toString();
+		return String.join(",", strings.stream().map(el -> el.toString()).toList());
 	}
 }

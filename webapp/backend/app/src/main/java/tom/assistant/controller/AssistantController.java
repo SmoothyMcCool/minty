@@ -23,11 +23,11 @@ import tom.ApiError;
 import tom.api.services.ConversationService;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
-import tom.config.security.UserDetailsUser;
 import tom.controller.ResponseWrapper;
 import tom.meta.service.MetadataService;
 import tom.model.Assistant;
 import tom.model.AssistantQuery;
+import tom.model.security.UserDetailsUser;
 import tom.ollama.service.OllamaService;
 
 @Controller

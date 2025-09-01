@@ -16,13 +16,11 @@ import { ViewWorkflowComponent } from './app/workflow/component/view-workflow.co
 import { NewWorkflowComponent } from './app/workflow/component/new-workflow.component';
 import { WorkflowComponent } from './app/workflow/component/workflow.component';
 import { WorkflowListComponent } from './app/workflow/component/workflow-list.component';
-import { importProvidersFrom } from '@angular/core';
-import { MarkdownModule, MERMAID_OPTIONS, provideMarkdown } from 'ngx-markdown';
+import { MERMAID_OPTIONS, provideMarkdown } from 'ngx-markdown';
 import { EditAssistantComponent } from './app/assistant/component/edit-assistant.component';
 import { EditWorkflowComponent } from './app/workflow/component/edit-workflow.component';
 import { ViewDocumentsComponent } from './app/document/view-documents.component';
 import { ResponseInterceptor } from './app/response-interceptor';
-import { DisplayWorkflowResultComponent } from './app/workflow/component/display-workflow-result.component';
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -72,10 +70,6 @@ bootstrapApplication(AppComponent, {
 					{
 						path: 'new',
 						component: NewWorkflowComponent
-					},
-					{
-						path: 'result/:id',
-						component: DisplayWorkflowResultComponent
 					},
 					{
 						path: 'edit/:id',

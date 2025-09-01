@@ -24,11 +24,11 @@ import java.util.stream.Stream;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
 import tom.api.services.TaskServices;
+import tom.config.ExternalProperties;
 import tom.output.OutputTask;
 import tom.output.annotations.Output;
 import tom.output.noop.NullOutput;
@@ -47,18 +47,25 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 
 	private final Logger logger = LogManager.getLogger(TaskRegistryServiceImpl.class);
 
-	@Value("${taskLibrary}")
-	private String taskLibrary;
+	private final String taskLibrary;
 
-	private Map<String, ImmutablePair<Class<?>, Map<String, TaskConfigTypes>>> publicTasks;
-	private Map<String, ImmutablePair<Class<?>, Map<String, TaskConfigTypes>>> publicOutputTasks;
+	private final Map<String, ImmutablePair<Class<?>, Map<String, TaskConfigTypes>>> publicTasks;
+	private final Map<String, ImmutablePair<Class<?>, Map<String, TaskConfigTypes>>> publicOutputTasks;
+	private final Map<String, String> systemConfigs;
+	private final Map<String, String> userConfigs;
 	private final TaskServices taskServices;
+	private final ExternalProperties properties;
 	private URLClassLoader classLoader;
 
-	public TaskRegistryServiceImpl(TaskServices taskServices) {
+	public TaskRegistryServiceImpl(TaskServices taskServices, ExternalProperties properties) {
 		publicTasks = new HashMap<>();
 		publicOutputTasks = new HashMap<>();
+		systemConfigs = new HashMap<>();
+		userConfigs = new HashMap<>();
+		this.properties = properties;
+
 		this.taskServices = taskServices;
+		taskLibrary = properties.get("taskLibrary");
 	}
 
 	@PostConstruct
@@ -126,7 +133,14 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 					taskCfg = (TaskConfig) configClass.getDeclaredConstructor().newInstance();
 
 					publicTasks.put(annotation.name(), ImmutablePair.of(loadedClass, taskCfg.getConfig()));
-					logger.info("Registering task " + annotation.name());
+
+					List<String> taskSysCfgs = taskCfg.getSystemConfigVariables();
+					systemConfigs.putAll(addConfigurationValues(taskCfg, annotation, configClass, taskSysCfgs));
+
+					List<String> taskUserCfgs = taskCfg.getUserConfigVariables();
+					userConfigs.putAll(addConfigurationValues(taskCfg, annotation, configClass, taskUserCfgs));
+	
+					logger.info("Registered task " + annotation.name());
 
 				} else if (isValidOutputTask(loadedClass)) {
 
@@ -152,11 +166,53 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 				}
 			}
 
+			// Now that we have processed all classes, let's try to read out our default values
+			readSystemDefaults();
+
 		} catch (IOException | ClassNotFoundException | InstantiationException | IllegalAccessException
 				| IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
 			logger.warn("findAndRegisterAllTaskClasses: Failed to load class: ", e);
 		}
 
+	}
+
+	private Map<String, String> addConfigurationValues(TaskConfig taskCfg, PublicTask annotation,
+			Class<?> configClass, List<String> taskConfigurationItems) {
+		Map<String, String> result = new HashMap<>();
+
+		if (taskConfigurationItems != null) {
+			for (String configKey: taskConfigurationItems) {
+
+				if (!taskCfg.getConfig().containsKey(configKey)) {
+					logger.warn("Expected user config " + configKey + " not found in Config class " + taskCfg.getClass().getName());
+					continue;
+				}
+
+				if (taskCfg.getConfig().get(configKey).compareTo(TaskConfigTypes.String) != 0 &&
+					taskCfg.getConfig().get(configKey).compareTo(TaskConfigTypes.Number) != 0 &&
+					taskCfg.getConfig().get(configKey).compareTo(TaskConfigTypes.Boolean) != 0) {
+					logger.warn("Cannot declare non-primitive (or String) types as system or user configuration items. Item is "
+							+ configClass.getName() + "." + configKey);
+				} else {
+					result.put(annotation.name() + "::" + configKey, "");
+				}
+			}
+		}
+
+		return result;
+	}
+
+	private void readSystemDefaults() {
+		systemConfigs.entrySet().forEach(entry -> {
+			if (properties.has(entry.getKey())) {
+				logger.info("Registering system default value " +
+					entry.getKey() + "=" + properties.get(entry.getKey()));
+				systemConfigs.put(entry.getKey(), properties.get(entry.getKey()));
+			} else {
+				logger.warn("System default value not found! " + entry.getKey());
+				systemConfigs.put(entry.getKey(), "Error! Default not defined in system properties!");
+			}
+		});
 	}
 
 	private boolean isConfigClassValid(Class<?> configClass, Class<?> loadedClass) {
@@ -549,6 +605,16 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 					e);
 			return Map.of();
 		}
+	}
+
+	@Override
+	public Map<String, String> getSystemDefaults() {
+		return systemConfigs;
+	}
+
+	@Override
+	public Map<String, String> getUserDefaults() {
+		return userConfigs;
 	}
 
 	private Map<String, String> configMapToStringMap(Map<String, TaskConfigTypes> aiConfigMap) {

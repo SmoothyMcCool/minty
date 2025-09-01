@@ -44,6 +44,16 @@ public class ConfluenceQueryConfig implements TaskConfig {
 		return cfg;
 	}
 
+	@Override
+	public List<String> getSystemConfigVariables() {
+		return List.of("Base URL", "Use Bearer Authorization");
+	}
+
+	@Override
+	public List<String> getUserConfigVariables() {
+		return List.of("Username", "Access Token");
+	}
+
 	public List<String> getPages() {
 		return pages;
 	}
@@ -76,4 +86,5 @@ public class ConfluenceQueryConfig implements TaskConfig {
 		return mapper.readValue(pagesStr, new TypeReference<List<String>>() {
 		});
 	}
+
 }

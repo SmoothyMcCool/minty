@@ -19,6 +19,7 @@ import jakarta.transaction.Transactional;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.assistant.service.management.AssistantManagementServiceInternal;
 import tom.conversation.model.Conversation;
+import tom.conversation.model.ConversationEntity;
 import tom.conversation.repository.ConversationRepository;
 import tom.model.ChatMessage;
 import tom.ollama.service.OllamaService;
@@ -47,7 +48,7 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 	@Override
 	@Transactional
 	public void deleteConversationsForAssistant(UUID userId, UUID assistantId) {
-		List<Conversation> conversations = conversationRepository.findAllByOwnerIdAndAssociatedAssistantId(userId,
+		List<ConversationEntity> conversations = conversationRepository.findAllByOwnerIdAndAssociatedAssistantId(userId,
 				assistantId);
 		ChatMemoryRepository chatMemoryRepository = ollamaService.getChatMemoryRepository();
 
@@ -59,7 +60,7 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 
 	@Override
 	public UUID getAssistantIdFromConversationId(UUID conversationId) {
-		Conversation conversation = conversationRepository.findByConversationId(conversationId);
+		ConversationEntity conversation = conversationRepository.findByConversationId(conversationId);
 		UUID assistantId = conversation.getAssociatedAssistantId();
 		if (assistantId == null) {
 			return AssistantManagementService.DefaultAssistantId;
@@ -85,7 +86,7 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 	@Override
 	@Transactional
 	public boolean deleteConversation(UUID userId, UUID conversationId) {
-		Conversation conversation = conversationRepository.findByConversationId(conversationId);
+		ConversationEntity conversation = conversationRepository.findByConversationId(conversationId);
 		if (!conversation.getOwnerId().equals(userId)) {
 			logger.warn("Conversation " + conversationId + " not owned by " + userId);
 			return false;
@@ -101,7 +102,7 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 
 	@Override
 	public boolean conversationOwnedBy(UUID conversationId, UUID userId) {
-		Conversation conversation = conversationRepository.findByConversationId(conversationId);
+		ConversationEntity conversation = conversationRepository.findByConversationId(conversationId);
 		if (conversation == null) {
 			return false;
 		}
@@ -111,18 +112,20 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 	@Override
 	@Transactional
 	public Conversation newConversation(UUID userId, UUID assistantId) {
-		Conversation conversation = new Conversation();
+		ConversationEntity conversation = new ConversationEntity();
 		conversation.setAssociatedAssistantId(assistantId);
 		conversation.setConversationId(null);
 		conversation.setOwnerId(userId);
 		conversation.setTitle(null);
 
-		return conversationRepository.save(conversation);
+		return conversationRepository.save(conversation).fromEntity();
 	}
 
 	@Override
 	public List<Conversation> listConversationsForUser(UUID userId) {
-		List<Conversation> conversations = conversationRepository.findAllByOwnerId(userId);
+		List<Conversation> conversations = conversationRepository.findAllByOwnerId(userId).stream()
+				.map(conversation -> conversation.fromEntity())
+				.toList();
 
 		// Remove all the internal workflow conversations.
 		conversations = conversations.stream()

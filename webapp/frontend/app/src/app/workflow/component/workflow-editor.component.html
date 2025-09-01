@@ -10,7 +10,7 @@
 	<div class="mb-2 row">
 		<label for="name" class="col-3 col-form-label">Description</label>
 		<div class="col-9">
-			<textarea id="name" name="name" type="text" rows="3" class="form-control" [(ngModel)]="workflow.description"
+			<textarea id="name" name="name" type="text" style="height: 100px;" class="form-control" [(ngModel)]="workflow.description"
 				autocomplete="off" required></textarea>
 		</div>
 	</div>
@@ -44,7 +44,7 @@
 				<button *ngIf="edit" type="button" class="bi bi-trash3"
 					style="font-size: 20px; color: red; float: right;" (click)="deleteStep(i)"></button>
 				<minty-task-editor name="{{step.name}}-editor-{{i}}" [edit]="edit" [taskTemplates]="taskTemplates"
-					[(ngModel)]="step"></minty-task-editor>
+					[(ngModel)]="step" [defaults]="defaults"></minty-task-editor>
 			</div>
 		</div>
 		<div class="row" *ngIf="!last">
@@ -66,4 +66,4 @@
 
 <h3>Output</h3>
 <minty-task-editor name="outputEditor" [edit]="edit" [taskTemplates]="outputTaskTemplates"
-	[(ngModel)]="workflow.outputStep"></minty-task-editor>
+	[(ngModel)]="workflow.outputStep" [defaults]="defaults"></minty-task-editor>

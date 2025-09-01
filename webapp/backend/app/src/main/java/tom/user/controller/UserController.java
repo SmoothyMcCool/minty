@@ -2,6 +2,7 @@ package tom.user.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,11 +22,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.servlet.http.HttpServletRequest;
 import tom.ApiError;
 import tom.ApiException;
-import tom.config.security.UserDetailsUser;
 import tom.controller.ResponseWrapper;
 import tom.meta.service.MetadataService;
+import tom.model.security.UserDetailsUser;
+import tom.task.taskregistry.TaskRegistryService;
+import tom.user.model.User;
 import tom.user.repository.EncryptedUser;
-import tom.user.repository.User;
 import tom.user.repository.UserRepository;
 import tom.user.service.UserServiceInternal;
 
@@ -38,12 +40,14 @@ public class UserController {
 	private final UserRepository userRepository;
 	private final UserServiceInternal userService;
 	private final MetadataService metadataService;
+	private final TaskRegistryService taskRegistryService;
 
 	public UserController(UserRepository userRepository, UserServiceInternal userService,
-			MetadataService metadataService) {
+			MetadataService metadataService, TaskRegistryService taskRegistryService) {
 		this.userRepository = userRepository;
 		this.userService = userService;
 		this.metadataService = metadataService;
+		this.taskRegistryService = taskRegistryService;
 	}
 
 	@RequestMapping(value = { "/new" }, method = RequestMethod.POST)
@@ -99,13 +103,13 @@ public class UserController {
 		List<ApiError> errors = new ArrayList<>();
 
 		// Make sure user is only trying to update themselves.
-		if (userDetails.getId() != user.getId()) {
+		if (!userDetails.getId().equals(user.getId())) {
 			errors.add(ApiError.CANT_UPDATE_OTHER_USERS);
 		}
 		// Make sure the username isn't in use.
 		EncryptedUser existingUser = userRepository.findByAccount(user.getName());
 		if (existingUser != null) {
-			if (existingUser.getId() != user.getId()) {
+			if (!existingUser.getId().equals(user.getId())) {
 				errors.add(ApiError.USERNAME_ALREADY_TAKEN);
 			}
 		}
@@ -128,6 +132,29 @@ public class UserController {
 
 		user.setPassword("");
 		ResponseWrapper<User> response = ResponseWrapper.SuccessResponse(user);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@RequestMapping(value = { "/defaults/system" }, method = RequestMethod.GET)
+	public ResponseEntity<ResponseWrapper<Map<String, String>>> systemDefaults(@AuthenticationPrincipal UserDetailsUser userDetails) {
+		ResponseWrapper<Map<String, String>> response = ResponseWrapper.SuccessResponse(taskRegistryService.getSystemDefaults());
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@RequestMapping(value = { "/defaults/user" }, method = RequestMethod.GET)
+	public ResponseEntity<ResponseWrapper<Map<String, String>>> userDefaults(@AuthenticationPrincipal UserDetailsUser userDetails) {
+		User user = userService.getUserFromId(userDetails.getId()).orElseThrow();
+		Map<String, String> currentUserDefaults = user.getDefaults();
+		Map<String, String> taskDefaults = taskRegistryService.getUserDefaults();
+
+		// Add any values absent to currentUserDefaults from taskDefaults.
+		taskDefaults.entrySet().stream().forEach(value -> {
+			if (!currentUserDefaults.containsKey(value.getKey())) {
+				currentUserDefaults.put(value.getKey(), value.getValue());
+			}
+		});
+
+		ResponseWrapper<Map<String, String>> response = ResponseWrapper.SuccessResponse(currentUserDefaults);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 

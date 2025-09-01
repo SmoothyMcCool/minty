@@ -18,11 +18,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import tom.ApiError;
 import tom.ApiException;
-import tom.config.security.UserDetailsUser;
 import tom.controller.ResponseWrapper;
 import tom.meta.service.MetadataService;
+import tom.model.security.UserDetailsUser;
+import tom.user.model.User;
 import tom.user.repository.EncryptedUser;
-import tom.user.repository.User;
 import tom.user.repository.UserRepository;
 import tom.user.service.UserServiceInternal;
 

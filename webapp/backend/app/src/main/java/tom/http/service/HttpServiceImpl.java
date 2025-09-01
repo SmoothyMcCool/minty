@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import tom.api.services.HttpService;
-import tom.user.repository.User;
+import tom.user.model.User;
 import tom.user.repository.UserRepository;
 import tom.user.service.UserServiceInternal;
 

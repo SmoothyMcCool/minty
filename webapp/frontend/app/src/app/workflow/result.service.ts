@@ -80,11 +80,11 @@ export class ResultService {
 			);
 	}
 
-	getWorkflowOutput(workflowId: string): Observable<string> {
+	openWorkflowOutput(workflowId: string) {
 		let params: HttpParams = new HttpParams();
 		params = params.append('workflowId', workflowId);
 
-		return this.http.get<ApiResult>(ResultService.GetWorkflowOutput, { params: params })
+		this.http.get<ApiResult>(ResultService.GetWorkflowOutput, { params: params })
 			.pipe(
 				catchError(error => {
 					this.alertService.postFailure(JSON.stringify(error));
@@ -93,7 +93,12 @@ export class ResultService {
 				map((result: ApiResult) => {
 					return result.data as string;
 				})
-			);
+			).subscribe((result: string) => {
+				const blob = new Blob([result], { type: 'text/html' });
+				const url = URL.createObjectURL(blob);
+				window.open(url, '_blank');
+				URL.revokeObjectURL(url); 
+			});
 	}
 
 	deleteWorkflowResult(workflowId: string): Observable<unknown> {

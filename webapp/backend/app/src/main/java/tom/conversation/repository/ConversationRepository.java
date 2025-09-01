@@ -6,19 +6,19 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
-import tom.conversation.model.Conversation;
+import tom.conversation.model.ConversationEntity;
 
 @Service
-public interface ConversationRepository extends JpaRepository<Conversation, UUID> {
+public interface ConversationRepository extends JpaRepository<ConversationEntity, UUID> {
 
-	Conversation findByConversationId(UUID conversationId);
+	ConversationEntity findByConversationId(UUID conversationId);
 
-	List<Conversation> findAllByOwnerIdAndAssociatedAssistantId(UUID userId, UUID assistantId);
+	List<ConversationEntity> findAllByOwnerIdAndAssociatedAssistantId(UUID userId, UUID assistantId);
 
-	List<Conversation> findAllByOwnerId(UUID userId);
+	List<ConversationEntity> findAllByOwnerId(UUID userId);
 
 	void deleteByConversationId(UUID conversationId);
 
-	List<Conversation> findAllByTitle(String string);
+	List<ConversationEntity> findAllByTitle(String string);
 
 }

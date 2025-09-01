@@ -4,7 +4,6 @@ import java.util.Properties;
 
 import javax.sql.DataSource;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
@@ -22,21 +21,19 @@ import com.zaxxer.hikari.HikariDataSource;
 @EnableJpaRepositories("tom")
 public class DatabaseConfig {
 
-	// Properties for JPA
-	@Value("${applicationDbUrl}")
-	private String applicationDbUrl;
-	@Value("${applicationDbUser}")
-	private String applicationDbUser;
-	@Value("${applicationDbPassword}")
-	private String applicationDbPassword;
+	private ExternalProperties props;
+
+	public DatabaseConfig(ExternalProperties properties) {
+		props = properties;
+	}
 
 	@Bean
 	@SpringSessionDataSource
 	public DataSource applicationDataSource() {
 		HikariConfig config = new HikariConfig();
-		config.setJdbcUrl(applicationDbUrl);
-		config.setUsername(applicationDbUser);
-		config.setPassword(applicationDbPassword);
+		config.setJdbcUrl(props.get("applicationDbUrl"));
+		config.setUsername(props.get("applicationDbUser"));
+		config.setPassword(props.get("applicationDbPassword"));
 		config.setDriverClassName("org.mariadb.jdbc.Driver");
 		config.setMaximumPoolSize(20);
 

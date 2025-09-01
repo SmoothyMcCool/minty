@@ -9,8 +9,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import tom.config.security.UserDetailsUser;
 import tom.controller.ResponseWrapper;
+import tom.model.security.UserDetailsUser;
 import tom.task.taskregistry.TaskRegistryService;
 import tom.workflow.model.TaskDescription;
 

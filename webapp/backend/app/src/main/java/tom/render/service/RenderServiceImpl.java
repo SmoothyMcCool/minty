@@ -5,7 +5,6 @@ import java.io.StringWriter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,6 +15,7 @@ import de.neuland.pug4j.exceptions.PugException;
 import de.neuland.pug4j.model.PugModel;
 import de.neuland.pug4j.template.PugTemplate;
 import tom.api.services.RenderService;
+import tom.config.ExternalProperties;
 import tom.output.ExecutionResult;
 
 @Service
@@ -23,16 +23,14 @@ public class RenderServiceImpl implements RenderService {
 
 	private final Logger logger = LogManager.getLogger(RenderServiceImpl.class);
 
-	@Value("${pugTemplates}")
-	private String pugFileLocation;
-
-	@Value("${workflowResultsLocation}")
-	private String resultsDir;
-
+	private final String pugFileLocation;
+	private final String resultsDir;
 	private final PugConfiguration pugConfiguration;
 
-	public RenderServiceImpl(PugConfiguration pugConfiguration) {
+	public RenderServiceImpl(PugConfiguration pugConfiguration, ExternalProperties properties) {
 		this.pugConfiguration = pugConfiguration;
+		resultsDir = properties.get("workflowResultsLocation");
+		pugFileLocation = properties.get("pugTemplates");
 	}
 
 	@Override

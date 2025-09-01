@@ -10,13 +10,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.ai.ollama.api.OllamaApi;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -53,21 +48,22 @@ import de.neuland.pug4j.template.FileTemplateLoader;
 @Configuration
 @EnableWebMvc
 @EnableJdbcHttpSession
-@PropertySource("classpath:application.properties")
 @EnableTransactionManagement
 @EnableScheduling
 public class ApplicationConfig implements WebMvcConfigurer {
 
 	private static final Logger logger = LogManager.getLogger(ApplicationConfig.class);
 
-	@Value("${ollamaUri}")
-	private String ollamaUri;
+	ExternalProperties props;
 
-	@Value("${asyncResponseTimeout}")
-	private String asyncResponseTimeout;
+	public ApplicationConfig(ExternalProperties properties) {
+		this.props = properties;
+	}
 
-	@Value("${ollamaApiTimeoutMinutes}")
-	private String ollamaApiTimeoutMinutes;
+	@Bean
+	public static ExternalProperties properties() {
+		return new ExternalProperties();
+	}
 
 	@Bean
 	public HttpSessionIdResolver httpSessionIdResolver() {
@@ -136,23 +132,16 @@ public class ApplicationConfig implements WebMvcConfigurer {
 
 	@Bean
 	OllamaApi ollamaApi() {
+		String ollamaUri = props.get("ollamaUri");
 		logger.info("ollama URI is " + ollamaUri);
 		SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-		factory.setReadTimeout(Duration.ofMinutes(Integer.parseInt(ollamaApiTimeoutMinutes)));
+
+		Integer ollamaTimeout = props.getInt("ollamaApiTimeoutMinutes", 20); 
+		factory.setReadTimeout(Duration.ofMinutes(ollamaTimeout));
 
 		RestClient.Builder restClientBuilder = RestClient.builder().requestFactory(factory);
 
 		return OllamaApi.builder().baseUrl(ollamaUri).restClientBuilder(restClientBuilder).build();
-	}
-
-	@Bean
-	public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
-		PropertySourcesPlaceholderConfigurer configurer = new PropertySourcesPlaceholderConfigurer();
-		configurer.setLocations(
-				new FileSystemResource(System.getProperty("catalina.base") + "/conf/minty/application.properties"),
-				new ClassPathResource("application.properties"));
-		configurer.setIgnoreResourceNotFound(true);
-		return configurer;
 	}
 
 	@Override
@@ -189,6 +178,7 @@ public class ApplicationConfig implements WebMvcConfigurer {
 
 	@Override
 	public void configureAsyncSupport(@NonNull AsyncSupportConfigurer configurer) {
-		configurer.setDefaultTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(asyncResponseTimeout)));
+		Integer asyncResponseTimeout = props.getInt("asyncResponseTimeout", 20);
+		configurer.setDefaultTimeout(TimeUnit.MINUTES.toMillis(asyncResponseTimeout));
 	}
 }
