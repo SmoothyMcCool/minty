@@ -57,17 +57,7 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 
 	displayResultsFor(result: WorkflowState) {
 		this.currentResult = null;
-		this.resultService.getWorkflowResult(result.id).subscribe(result => {
-			if (this.endsWithIgnoreCase(result.outputFormat, 'text/json')) {
-				this.responseType = 'JSON';
-			} else if (this.endsWithIgnoreCase(result.outputFormat, 'text/html')) {
-				this.responseType = 'HTML';
-			} else {
-				this.responseType = 'TEXT';
-			}
-			this.currentResult = result;
-			this.resultHtml = this.sanitizer.bypassSecurityTrustHtml(this.currentResult.output);
-		});
+		this.resultService.openWorkflowOutput(result.id);
 	}
 
 	private endsWithIgnoreCase(str: string, ending: string) {

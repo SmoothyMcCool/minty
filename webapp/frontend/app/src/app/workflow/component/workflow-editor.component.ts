@@ -1,9 +1,11 @@
 import { CommonModule } from "@angular/common";
-import { Component, forwardRef, Input } from "@angular/core";
+import { Component, forwardRef, Input, OnInit } from "@angular/core";
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from "@angular/forms";
 import { Workflow } from "src/app/model/workflow/workflow";
 import { TaskEditorComponent } from "src/app/task/component/task-editor.component";
 import { TaskDescription } from "src/app/model/task-description";
+import { UserService } from "src/app/user.service";
+import { ActivatedRoute } from "@angular/router";
 
 @Component({
 	selector: 'minty-workflow-editor',
@@ -18,7 +20,7 @@ import { TaskDescription } from "src/app/model/task-description";
 		}
 	]
 })
-export class WorkflowEditorComponent implements ControlValueAccessor {
+export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 
 	@Input() taskTemplates: TaskDescription[] = [];
 	@Input() outputTaskTemplates: TaskDescription[] = [];
@@ -46,7 +48,22 @@ export class WorkflowEditorComponent implements ControlValueAccessor {
 	configParams = new Map<string, string>();
 	outputTaskConfigParams = new Map<string, string>();
 
-	constructor() {
+	defaults: Map<string, string>;
+
+	constructor(private userService: UserService,
+		private route: ActivatedRoute
+	) {
+	}
+
+	ngOnInit() {
+		this.route.params.subscribe(params => {
+			this.userService.systemDefaults().subscribe(systemDefaults => {
+				this.userService.userDefaults().subscribe(userDefaults => {
+					// User defaults should take priority in conflicts.
+					this.defaults = new Map([ ...systemDefaults, ...userDefaults ]);
+				});
+			});
+		});
 	}
 
 	addStep(after: number) {

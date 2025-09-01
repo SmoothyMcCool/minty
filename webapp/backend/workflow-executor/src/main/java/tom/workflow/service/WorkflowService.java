@@ -8,7 +8,7 @@ import tom.workflow.model.Workflow;
 
 public interface WorkflowService {
 
-	void executeWorkflow(UUID userId, WorkflowRequest request);
+	String executeWorkflow(UUID userId, WorkflowRequest request);
 
 	Workflow createWorkflow(UUID userId, Workflow workflow);
 

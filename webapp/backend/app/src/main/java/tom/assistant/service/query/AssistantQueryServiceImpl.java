@@ -30,7 +30,7 @@ import tom.model.Assistant;
 import tom.model.AssistantQuery;
 import tom.ollama.service.MintyOllamaModel;
 import tom.ollama.service.OllamaService;
-import tom.user.repository.User;
+import tom.user.model.User;
 import tom.user.service.UserServiceInternal;
 
 @Service

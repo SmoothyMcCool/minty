@@ -43,7 +43,7 @@
 						<label for="textInput-{{item.key}}">{{item.key}}</label>
 					</div>
 					<div class="col-8">
-						<textarea id="stringInput-{{item.key}}" name="textInput-{{item.key}}" type="text" rows="3" class="form-control form-control-sm" [ngModel]="getConfig(item.key)"
+						<textarea id="stringInput-{{item.key}}" name="textInput-{{item.key}}" type="text" style="height: 100px;" class="form-control form-control-sm" [ngModel]="getConfig(item.key)"
 							(ngModelChange)="valueChanged(item.key, $event)" autocomplete="off" required></textarea>
 					</div>
 				</div>

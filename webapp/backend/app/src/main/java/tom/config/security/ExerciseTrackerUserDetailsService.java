@@ -8,7 +8,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import tom.user.repository.User;
+import tom.model.security.UserDetailsUser;
+import tom.user.model.User;
 import tom.user.repository.UserRepository;
 import tom.user.service.UserServiceInternal;
 
@@ -26,7 +27,7 @@ public class ExerciseTrackerUserDetailsService implements UserDetailsService {
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		System.out.println("UserDetailsService: Request for user: " + username);
+		logger.info("UserDetailsService: Request for user: " + username);
 		User user = null;
 		try {
 			user = userService.decrypt(userRepository.findByAccount(username));

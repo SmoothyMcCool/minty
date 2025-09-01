@@ -6,9 +6,11 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
-public class Conversation {
+@Table(name = "Conversation")
+public class ConversationEntity {
 
 	private String title;
 	@Id
@@ -17,7 +19,7 @@ public class Conversation {
 	private UUID ownerId;
 	private UUID associatedAssistantId;
 
-	public Conversation() {
+	public ConversationEntity() {
 
 	}
 
@@ -51,6 +53,15 @@ public class Conversation {
 
 	public void setAssociatedAssistantId(UUID associatedAssistantId) {
 		this.associatedAssistantId = associatedAssistantId;
+	}
+
+	public Conversation fromEntity() {
+		Conversation convo = new Conversation();
+		convo.setAssociatedAssistantId(associatedAssistantId);
+		convo.setConversationId(conversationId);
+		convo.setOwnerId(ownerId);
+		convo.setTitle(title);
+		return convo;
 	}
 
 }

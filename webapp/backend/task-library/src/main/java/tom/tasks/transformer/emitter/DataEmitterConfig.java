@@ -36,4 +36,14 @@ public class DataEmitterConfig implements TaskConfig {
 	String getKeyName() {
 		return keyName;
 	}
+
+	@Override
+	public List<String> getSystemConfigVariables() {
+		return List.of();
+	}
+
+	@Override
+	public List<String> getUserConfigVariables() {
+		return List.of();
+	}
 }

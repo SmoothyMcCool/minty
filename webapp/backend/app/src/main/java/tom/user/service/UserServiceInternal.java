@@ -7,8 +7,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
 import tom.api.services.UserService;
+import tom.user.model.User;
 import tom.user.repository.EncryptedUser;
-import tom.user.repository.User;
 
 public interface UserServiceInternal extends UserService {
 

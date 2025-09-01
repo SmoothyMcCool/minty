@@ -23,4 +23,8 @@ public interface TaskRegistryService {
 
 	Map<String, String> getConfigForOutputTask(String outputName);
 
+	Map<String, String> getSystemDefaults();
+
+	Map<String, String> getUserDefaults();
+
 }

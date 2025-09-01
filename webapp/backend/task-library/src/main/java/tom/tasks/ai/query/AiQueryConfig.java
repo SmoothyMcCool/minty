@@ -1,6 +1,7 @@
 package tom.tasks.ai.query;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -45,5 +46,15 @@ public class AiQueryConfig implements TaskConfig {
 
 	public String getQuery() {
 		return query;
+	}
+
+	@Override
+	public List<String> getSystemConfigVariables() {
+		return List.of();
+	}
+
+	@Override
+	public List<String> getUserConfigVariables() {
+		return List.of();
 	}
 }

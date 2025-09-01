@@ -16,6 +16,8 @@ export class UserService {
 	private static readonly Logout = 'api/logout';
 	private static readonly Signup = 'api/user/new';
 	private static readonly Update = 'api/user/update';
+	private static readonly GetSystemDefaults = 'api/user/defaults/system';
+	private static readonly GetUserDefaults = 'api/user/defaults/user';
 
 	private user: User = null;
 
@@ -41,6 +43,7 @@ export class UserService {
 				map((result: HttpResponse<ApiResult>) => {
 					sessionStorage.setItem('x-auth-token', result.headers.get('x-auth-token'));
 					this.user = result.body.data as User;
+					this.user.defaults = new Map(Object.entries(this.user.defaults));
 					return this.user;
 				})
 			);
@@ -61,11 +64,35 @@ export class UserService {
 	}
 
 	update(user: User): Observable<User> {
-		return this.http.post<ApiResult>(UserService.Update, user)
+		const body = {
+			id: user.id,
+			name: user.name,
+			password: user.password,
+			defaults: Object.fromEntries(user.defaults)
+		};
+		return this.http.post<ApiResult>(UserService.Update, body)
 			.pipe(
 				map((result: ApiResult) => {
 					this.user = result.data as User;
 					return this.user;
+				})
+			);
+	}
+
+	systemDefaults(): Observable<Map<string, string>> {
+		return this.http.get<ApiResult>(UserService.GetSystemDefaults)
+			.pipe(
+				map((result: ApiResult) => {
+					return new Map(Object.entries(result.data));
+				})
+			);
+	}
+
+	userDefaults(): Observable<Map<string, string>> {
+		return this.http.get<ApiResult>(UserService.GetUserDefaults)
+			.pipe(
+				map((result: ApiResult) => {
+					return new Map(Object.entries(result.data));
 				})
 			);
 	}

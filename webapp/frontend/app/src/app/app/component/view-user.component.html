@@ -45,6 +45,37 @@
 							[(ngModel)]="repeatPassword" (input)="passwordUpdated()" required>
 					</div>
 				</div>
+				<div class="mb-3 row">
+					<table class="table table-bordered table-sm align-middle">
+						<thead class="table-light">
+							<tr>
+								<th style="width: 50%;">Configuration Thingy</th>
+								<th style="width: 50%;">Value of Thingy</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr *ngFor="let entry of defaultValues; let i = index; trackBy: trackByKey">
+								<td>
+									<label
+										class="form-label"
+										id="key-{{i}}">
+									{{entry.key}}
+									</label>
+								</td>
+								<td>
+									<input
+										type="text"
+										class="form-control form-control-sm"
+										name="value-{{i}}"
+										[ngModel]="entry.value"
+										(ngModelChange)="updateConfig(entry.key, $event)"
+										placeholder="{{entry.value}}"
+									/>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
 				<div class="centred space-after">
 					<button type="submit" id="updateButton" class="btn btn-primary" [class.disabled]="!formValid()"
 						[disabled]="!formValid()">Update!</button>

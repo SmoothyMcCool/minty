@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -12,19 +12,32 @@ import { UserService } from '../../user.service';
 	templateUrl: 'view-user.component.html',
 	styleUrls: ['./view-user.component.css']
 })
-export class ViewUserComponent {
+export class ViewUserComponent implements OnInit {
 	user: User;
 	repeatPassword = '';
 	passwordMismatch = true;
 	messages: string[] = [];
+	defaultValues: { key: string, value: string }[] = [];
 
 	constructor(private userService: UserService, private router: Router, private alertService: AlertService) {
+	}
+
+	ngOnInit() {
 		this.user = this.userService.getUser();
+		this.userService.userDefaults().subscribe(userDefaults => {
+			this.user.defaults = userDefaults;
+			this.defaultValues = Array.from(this.user.defaults.entries())
+				.map(([key, value]) => ({ key,value }));
+		});
 	}
 
 	update(): boolean {
 		this.messages = [];
 		if (this.formValid()) {
+			// Remove all blank or whitespace-only default values.
+			this.user.defaults = new Map([...this.user.defaults.entries()]
+				.filter(([key, value]) => !this.isBlank(value)));
+
 			this.userService.update(this.user)
 				.subscribe({
 					next: () => {
@@ -47,5 +60,13 @@ export class ViewUserComponent {
 
 	formValid(): boolean {
 		return !(this.passwordMismatch || this.user.name.length === 0);
+	}
+
+	updateConfig(key: string , value: string) {
+		this.user.defaults.set(key, value);
+	}
+
+	private isBlank(str: string) {
+		return (!str || /^\s*$/.test(str));
 	}
 }

@@ -1,6 +1,7 @@
 package tom.output.pug;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -31,4 +32,13 @@ public class RenderPugTemplateConfig implements TaskConfig {
 		return template;
 	}
 
+	@Override
+	public List<String> getSystemConfigVariables() {
+		return List.of("Pug Template");
+	}
+
+	@Override
+	public List<String> getUserConfigVariables() {
+		return List.of();
+	}
 }

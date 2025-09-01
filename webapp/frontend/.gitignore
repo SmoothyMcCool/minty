@@ -7,4 +7,6 @@ _test-output
 _temp
 **/.angular/**
 **/package-lock.json
-deploy
+deploy/*
+!deploy/bootstrap.min.css
+!deploy/bootstrap.bundle.min.js

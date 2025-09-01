@@ -1,6 +1,7 @@
 package tom.tasks.test;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import tom.task.TaskConfig;
@@ -28,4 +29,15 @@ public class SleeperTaskSpawnerTaskConfig implements TaskConfig {
 	public int getDelay() {
 		return delay;
 	}
+
+	@Override
+	public List<String> getSystemConfigVariables() {
+		return List.of();
+	}
+
+	@Override
+	public List<String> getUserConfigVariables() {
+		return List.of();
+	}
+
 }

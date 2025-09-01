@@ -38,6 +38,8 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor, OnDest
 		return this._taskTemplates;
 	}
 
+	@Input() defaults: Map<string, string>;
+
 	assistants: Assistant[] = [];
 
 	task: Task = {
@@ -129,6 +131,16 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor, OnDest
 	taskChanged($event) {
 		this.taskDescription = this.taskTemplates.find(element => element.name === $event);
 		this.task.name = $event;
+		if (this.taskDescription) {
+			this.taskDescription.configuration.forEach((value, key) => {
+				// System defaults are stored in the form "Task Name::Property Name", so
+				// we need to build that up to find our keys.
+				const fullKey = this.task.name + '::' + key;
+				if (this.defaults && this.defaults.has(fullKey)) {
+					this.task.configuration.set(key, this.defaults.get(fullKey));
+				}
+			});
+		}
 
 		this.destroyPopover();
 		this.createPopover();

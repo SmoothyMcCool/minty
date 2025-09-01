@@ -12,12 +12,12 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import tom.ApiError;
-import tom.config.security.UserDetailsUser;
 import tom.controller.ResponseWrapper;
 import tom.conversation.model.Conversation;
 import tom.conversation.service.ConversationServiceInternal;
 import tom.meta.service.MetadataService;
 import tom.model.ChatMessage;
+import tom.model.security.UserDetailsUser;
 
 @Controller
 @RequestMapping("/api/conversation")

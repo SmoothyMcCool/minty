@@ -1,6 +1,7 @@
 package tom.task;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class NullTaskConfig implements TaskConfig {
@@ -16,4 +17,13 @@ public class NullTaskConfig implements TaskConfig {
 		return new HashMap<>();
 	}
 
+	@Override
+	public List<String> getSystemConfigVariables() {
+		return List.of();
+	}
+
+	@Override
+	public List<String> getUserConfigVariables() {
+		return List.of();
+	}
 }

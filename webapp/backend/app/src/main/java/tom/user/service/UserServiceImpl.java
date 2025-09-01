@@ -1,11 +1,11 @@
 package tom.user.service;
 
+import java.util.HashMap;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.crypto.keygen.KeyGenerators;
@@ -15,8 +15,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import tom.config.ExternalProperties;
+import tom.user.model.User;
 import tom.user.repository.EncryptedUser;
-import tom.user.repository.User;
 import tom.user.repository.UserRepository;
 
 @Service
@@ -24,13 +25,12 @@ public class UserServiceImpl implements UserServiceInternal {
 
 	private static final Logger logger = LogManager.getLogger(UserServiceImpl.class);
 
-	@Value("${secret}")
-	private String secret;
-
+	private final String secret;
 	private final UserRepository userRepository;
 
-	public UserServiceImpl(UserRepository userRepository) {
+	public UserServiceImpl(UserRepository userRepository, ExternalProperties properties) {
 		this.userRepository = userRepository;
+		secret = properties.get("secret");
 	}
 
 	@Override
@@ -42,6 +42,9 @@ public class UserServiceImpl implements UserServiceInternal {
 		User user = mapper.readValue(decrypted, User.class);
 		user.setPassword(encryptedUser.getPassword());
 		user.setId(encryptedUser.getId());
+		if (user.getDefaults() == null) {
+			user.setDefaults(new HashMap<>());
+		}
 		return user;
 	}
 

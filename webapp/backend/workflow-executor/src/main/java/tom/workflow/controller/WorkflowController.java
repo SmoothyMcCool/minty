@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import tom.ApiError;
-import tom.config.security.UserDetailsUser;
 import tom.controller.ResponseWrapper;
 import tom.meta.service.MetadataService;
+import tom.model.security.UserDetailsUser;
 import tom.workflow.model.Workflow;
 import tom.workflow.service.WorkflowService;
 
@@ -62,19 +62,19 @@ public class WorkflowController {
 	}
 
 	@RequestMapping(value = { "/execute" }, method = RequestMethod.POST)
-	public ResponseEntity<ResponseWrapper<Boolean>> executeWorkflow(@AuthenticationPrincipal UserDetailsUser user,
+	public ResponseEntity<ResponseWrapper<String>> executeWorkflow(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestBody WorkflowRequest request) {
 
 		if (!workflowService.isAllowedToExecute(request.getId(), user.getId())) {
-			ResponseWrapper<Boolean> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
+			ResponseWrapper<String> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
 					List.of(ApiError.NOT_OWNED));
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
-		workflowService.executeWorkflow(user.getId(), request);
+		String workflowName = workflowService.executeWorkflow(user.getId(), request);
 		metadataService.workflowExecuted(user.getId());
 
-		ResponseWrapper<Boolean> response = ResponseWrapper.SuccessResponse(true);
+		ResponseWrapper<String> response = ResponseWrapper.SuccessResponse("Started workflow " + workflowName);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 

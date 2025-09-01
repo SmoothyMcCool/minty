@@ -9,23 +9,25 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import tom.api.services.PythonService;
+import tom.config.ExternalProperties;
 
 @Service
 public class PythonServiceImpl implements PythonService {
 
 	private static final Logger logger = LogManager.getLogger(PythonServiceImpl.class);
 
-	@Value("${pythonScripts}")
-	private String pythonScripts;
+	private final String pythonScripts;
+	private final String tempFileDir;
 
-	@Value("${tempFileStore}")
-	private String tempFileDir;
+	public PythonServiceImpl(ExternalProperties properties) {
+		pythonScripts = properties.get("pythonScripts");
+		tempFileDir = properties.get("tempFileDir");
+	}
 
 	@Override
 	public Map<String, Object> execute(String pythonFile, Map<String, Object> inputDictionary) {

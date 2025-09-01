@@ -19,29 +19,22 @@ import org.springframework.ai.ollama.api.OllamaOptions;
 import org.springframework.ai.ollama.management.ModelManagementOptions;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.mariadb.MariaDBVectorStore;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import io.micrometer.observation.ObservationRegistry;
 import jakarta.annotation.PostConstruct;
+import tom.config.ExternalProperties;
 
 @Service
 public class OllamaServiceImpl implements OllamaService {
 
 	private static final Logger logger = LogManager.getLogger(OllamaServiceImpl.class);
 
-	@Value("${ollamaChatModels}")
-	private String ollamaChatModels;
-
-	@Value("${ollamaEmbeddingModel}")
-	private String embeddingModelName;
-
-	@Value("${chatMemoryDepth}")
-	private int chatMemoryDepth;
-
-	@Value("${defaultModel}")
-	private String defaultModel;
+	private final String ollamaChatModels;
+	private final String embeddingModelName;
+	private final int chatMemoryDepth;
+	private final String defaultModel;
 
 	private List<MintyOllamaModel> models;
 	ModelObject modelObject;
@@ -49,17 +42,23 @@ public class OllamaServiceImpl implements OllamaService {
 	private final JdbcTemplate vectorJdbcTemplate;
 	private final DataSource dataSource;
 
-	public OllamaServiceImpl(OllamaApi ollamaApi, JdbcTemplate vectorJdbcTemplate, DataSource dataSource) {
+	public OllamaServiceImpl(OllamaApi ollamaApi, JdbcTemplate vectorJdbcTemplate, DataSource dataSource, ExternalProperties properties) {
 		this.ollamaApi = ollamaApi;
 		this.vectorJdbcTemplate = vectorJdbcTemplate;
 		this.dataSource = dataSource;
 		modelObject = null;
+		ollamaChatModels = properties.get("ollamaChatModels");
+		embeddingModelName  = properties.get("ollamaEmbeddingModel");
+		chatMemoryDepth = properties.getInt("chatMemoryDepth", 20);
+		defaultModel = properties.get("defaultModel");
 	}
 
 	@PostConstruct
 	public void initialize() {
 		models = Arrays.asList(ollamaChatModels.split(",")).stream().map(model -> MintyOllamaModel.valueOf(model))
 				.toList();
+
+		logger.info("Registering models " + models.toString());
 
 		if (models == null) {
 			logger.error("No models found!");

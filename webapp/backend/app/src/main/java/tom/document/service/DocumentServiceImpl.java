@@ -20,7 +20,6 @@ import org.springframework.ai.reader.tika.TikaDocumentReader;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -28,6 +27,7 @@ import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
+import tom.config.ExternalProperties;
 import tom.document.model.DocumentState;
 import tom.document.model.MintyDoc;
 import tom.document.repository.DocumentRepository;
@@ -45,20 +45,20 @@ public class DocumentServiceImpl implements DocumentService {
 	private final OllamaApi ollamaApi;
 	private final DocumentRepository documentRepository;
 
-	@Value("${docFileStore}")
-	private String docFileStore;
-
-	@Value("${ollamaSummarizingModel}")
-	private String summarizingModel;
+	private final String docFileStore;
+	private final String summarizingModel;
 
 	public DocumentServiceImpl(OllamaApi ollamaApi, DocumentRepository documentRepository,
 			@Qualifier("fileProcessingExecutor") ThreadPoolTaskExecutor fileProcessingExecutor,
-			OllamaService ollamaService, AssistantDocumentLinkService assistantDocumentLinkService) {
+			OllamaService ollamaService, AssistantDocumentLinkService assistantDocumentLinkService,
+			ExternalProperties properties) {
 		this.fileProcessingExecutor = fileProcessingExecutor;
 		this.ollamaService = ollamaService;
 		this.ollamaApi = ollamaApi;
 		this.documentRepository = documentRepository;
 		this.assistantDocumentLinkService = assistantDocumentLinkService;
+		summarizingModel = properties.get("ollamaSummarizingModel");
+		docFileStore = properties.get("docFileStore");
 	}
 
 	@PostConstruct

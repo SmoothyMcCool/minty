@@ -1,6 +1,7 @@
 package tom.output.json;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -23,4 +24,13 @@ public class JsonOutputConfig implements TaskConfig {
 		return config;
 	}
 
+	@Override
+	public List<String> getSystemConfigVariables() {
+		return List.of();
+	}
+
+	@Override
+	public List<String> getUserConfigVariables() {
+		return List.of();
+	}
 }

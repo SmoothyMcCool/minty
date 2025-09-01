@@ -8,7 +8,6 @@ import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,10 +21,11 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
 import tom.ApiError;
-import tom.config.security.UserDetailsUser;
+import tom.config.ExternalProperties;
 import tom.controller.ResponseWrapper;
 import tom.document.model.MintyDoc;
 import tom.document.service.DocumentService;
+import tom.model.security.UserDetailsUser;
 
 @Controller
 @RequestMapping("/api/document")
@@ -33,12 +33,12 @@ public class DocumentController {
 
 	private static final Logger logger = LogManager.getLogger(DocumentController.class);
 
-	@Value("${docFileStore}")
-	private String docFileStore;
+	private final String docFileStore;
 	private final DocumentService documentService;
 
-	public DocumentController(DocumentService documentService) {
+	public DocumentController(DocumentService documentService, ExternalProperties properties) {
 		this.documentService = documentService;
+		docFileStore = properties.get("docFileStore");
 	}
 
 	@RequestMapping(value = { "/add" }, method = RequestMethod.POST)

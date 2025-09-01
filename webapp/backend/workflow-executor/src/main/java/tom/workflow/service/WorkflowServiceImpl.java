@@ -41,11 +41,11 @@ public class WorkflowServiceImpl implements WorkflowService {
 	}
 
 	@Override
-	public void executeWorkflow(UUID userId, WorkflowRequest request) {
+	public String executeWorkflow(UUID userId, WorkflowRequest request) {
 		Optional<tom.workflow.repository.Workflow> maybeWorkflow = workflowRepository.findById(request.getId());
 		if (maybeWorkflow.isEmpty()) {
 			logger.warn("Did not find workflow for ID " + request.getId() + ". Cannot run.");
-			return;
+			return null;
 		}
 
 		Workflow workflow = maybeWorkflow.get().toModelWorkflow();
@@ -54,7 +54,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		if (steps.size() != request.getTaskConfigurationList().size()) {
 			logger.warn("Expected to get " + steps.size() + " configuration objects, but instead got "
 					+ request.getTaskConfigurationList().size());
-			return;
+			return null;
 		}
 
 		for (int i = 0; i < steps.size(); i++) {
@@ -66,6 +66,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 				workflowTrackingService, taskExecutor);
 		workflowTrackingService.trackWorkflow(runner);
 		runner.runFirstTask();
+
+		return runner.getWorkflowName();
 	}
 
 	@Override

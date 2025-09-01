@@ -1,4 +1,4 @@
-package tom.config.security;
+package tom.model.security;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -9,7 +9,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import tom.user.repository.User;
+import tom.user.model.User;
 
 public class UserDetailsUser implements UserDetails {
 
