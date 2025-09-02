@@ -1,12 +1,12 @@
-import { HttpClient, HttpParams } from "@angular/common/http";
-import { Injectable } from "@angular/core";
-import { catchError, map } from "rxjs/operators";
-import { EMPTY, Observable, throwError, timer } from "rxjs";
-import { TrackableSubject } from "../trackable-subject";
-import { AlertService } from "../alert.service";
-import { ApiResult } from "../model/api-result";
-import { WorkflowState } from "../model/workflow/workflow-state";
-import { WorkflowResult } from "../model/workflow/workflow-result";
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { catchError, map } from 'rxjs/operators';
+import { EMPTY, Observable, throwError, timer } from 'rxjs';
+import { TrackableSubject } from '../trackable-subject';
+import { AlertService } from '../alert.service';
+import { ApiResult } from '../model/api-result';
+import { WorkflowState } from '../model/workflow/workflow-state';
+import { WorkflowResult } from '../model/workflow/workflow-result';
 
 @Injectable({
 	providedIn: 'root'
@@ -56,7 +56,7 @@ export class ResultService {
 			.pipe(
 				catchError(error => {
 					this.alertService.postFailure(JSON.stringify(error));
-					return throwError(() => new Error(error))
+					return throwError(() => new Error(error));
 				}),
 				map((result: ApiResult) => {
 					return result.data as WorkflowState[];

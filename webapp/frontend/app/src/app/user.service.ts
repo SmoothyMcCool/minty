@@ -1,10 +1,10 @@
-import { HttpClient, HttpHeaders, HttpResponse } from "@angular/common/http";
-import { Injectable } from "@angular/core";
-import { User } from "./model/user";
-import { catchError, EMPTY, finalize, map, Observable } from "rxjs";
-import { ApiResult } from "./model/api-result";
-import { Router } from "@angular/router";
-import { AlertService } from "./alert.service";
+import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { User } from './model/user';
+import { catchError, EMPTY, finalize, map, Observable } from 'rxjs';
+import { ApiResult } from './model/api-result';
+import { Router } from '@angular/router';
+import { AlertService } from './alert.service';
 
 @Injectable({
 	providedIn: 'root'

@@ -84,7 +84,7 @@ export class ViewDocumentsComponent implements OnInit {
 		this.newDocument.title = this.docProperties.title;
 		this.newDocument.state = 'NO_CONTENT';
 		if (!this.docProperties.file || !this.newDocument.title) {
-			this.alertService.postFailure("You have to give a title and actual file, k?");
+			this.alertService.postFailure('You have to give a title and actual file, k?');
 			return;
 		}
 
@@ -95,7 +95,7 @@ export class ViewDocumentsComponent implements OnInit {
 				this.documentService.list().subscribe(documents => {
 					this.documents = documents;
 				});
-			})
+			});
 		});
 	}
 

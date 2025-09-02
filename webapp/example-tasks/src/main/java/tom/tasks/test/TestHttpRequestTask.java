@@ -61,7 +61,7 @@ public class TestHttpRequestTask implements MintyTask, ServiceConsumer {
 		if (input.containsKey("UserName")) {
 			Object userId = input.get("UserName");
 			if (userId instanceof Integer) {
-				userId = (Integer) input.get("UserName");
+				userId = input.get("UserName");
 			}
 		}
 	}

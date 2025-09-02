@@ -1,4 +1,4 @@
-import { Observable, Observer, Subject, Subscription } from "rxjs";
+import { Observable, Observer, Subject, Subscription } from 'rxjs';
 
 export class TrackableSubject<T> {
 
@@ -19,7 +19,7 @@ export class TrackableSubject<T> {
 				this.count--;
 			}
 			internalUnsub();
-		}
+		};
 		return sub;
 	}
 

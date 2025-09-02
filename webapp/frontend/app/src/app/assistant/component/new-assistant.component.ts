@@ -57,7 +57,7 @@ export class NewAssistantComponent implements OnInit {
 	}
 
 	createAssistant() {
-		this.assistantService.create(this.workingAssistant).subscribe((assistant: Assistant) => {
+		this.assistantService.create(this.workingAssistant).subscribe(() => {
 			this.navigateTo('assistants');
 		});
 	}

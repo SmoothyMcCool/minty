@@ -1,11 +1,11 @@
-import { HttpClient, HttpParams } from "@angular/common/http";
-import { Injectable } from "@angular/core";
-import { catchError, map } from "rxjs/operators";
-import { EMPTY, Observable } from "rxjs";
-import { AlertService } from "../alert.service";
-import { ApiResult } from "../model/api-result";
-import { TrackableSubject } from "../trackable-subject";
-import { TaskDescription } from "../model/task-description";
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { catchError, map } from 'rxjs/operators';
+import { EMPTY, Observable } from 'rxjs';
+import { AlertService } from '../alert.service';
+import { ApiResult } from '../model/api-result';
+import { TrackableSubject } from '../trackable-subject';
+import { TaskDescription } from '../model/task-description';
 
 @Injectable({
 	providedIn: 'root'
@@ -32,7 +32,7 @@ export class TaskTemplateService {
 					return EMPTY;
 				}),
 				map((result: ApiResult) => {
-					let returnValue = result.data as TaskDescription[];
+					const returnValue = result.data as TaskDescription[];
 					returnValue.forEach(value => {
 						value.configuration = new Map(Object.entries(value.configuration));
 					});
@@ -82,7 +82,7 @@ export class TaskTemplateService {
 				return EMPTY;
 			}),
 			map((result: ApiResult) => {
-				let returnValue = result.data as TaskDescription[];
+				const returnValue = result.data as TaskDescription[];
 				returnValue.forEach(value => {
 					value.configuration = new Map(Object.entries(value.configuration));
 				});

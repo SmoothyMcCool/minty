@@ -1,11 +1,11 @@
-import { CommonModule } from "@angular/common";
-import { Component, forwardRef, Input, OnInit } from "@angular/core";
-import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from "@angular/forms";
-import { Workflow } from "src/app/model/workflow/workflow";
-import { TaskEditorComponent } from "src/app/task/component/task-editor.component";
-import { TaskDescription } from "src/app/model/task-description";
-import { UserService } from "src/app/user.service";
-import { ActivatedRoute } from "@angular/router";
+import { CommonModule } from '@angular/common';
+import { Component, forwardRef, Input, OnInit } from '@angular/core';
+import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { Workflow } from 'src/app/model/workflow/workflow';
+import { TaskEditorComponent } from 'src/app/task/component/task-editor.component';
+import { TaskDescription } from 'src/app/model/task-description';
+import { UserService } from 'src/app/user.service';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
 	selector: 'minty-workflow-editor',
@@ -90,7 +90,7 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 		if (task) {
 			return task.inputs;
 		}
-		return "";
+		return '';
 	}
 
 	getOutputsFor(taskName: string): string {
@@ -98,7 +98,7 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 		if (task) {
 			return task.outputs;
 		}
-		return "";
+		return '';
 	}
 
 	writeValue(obj: any): void {

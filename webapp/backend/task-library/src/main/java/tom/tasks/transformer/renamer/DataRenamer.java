@@ -13,7 +13,7 @@ import tom.task.annotations.PublicTask;
 @PublicTask(name = "Rename Fields", configClass = "tom.tasks.transformer.renamer.DataRenamerConfig")
 public class DataRenamer implements MintyTask {
 
-	private UUID uuid = UUID.randomUUID();
+	private final UUID uuid = UUID.randomUUID();
 	private DataRenamerConfig config;
 	Map<String, String> input;
 

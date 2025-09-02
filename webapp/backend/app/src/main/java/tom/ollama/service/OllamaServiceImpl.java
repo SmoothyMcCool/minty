@@ -42,13 +42,14 @@ public class OllamaServiceImpl implements OllamaService {
 	private final JdbcTemplate vectorJdbcTemplate;
 	private final DataSource dataSource;
 
-	public OllamaServiceImpl(OllamaApi ollamaApi, JdbcTemplate vectorJdbcTemplate, DataSource dataSource, ExternalProperties properties) {
+	public OllamaServiceImpl(OllamaApi ollamaApi, JdbcTemplate vectorJdbcTemplate, DataSource dataSource,
+			ExternalProperties properties) {
 		this.ollamaApi = ollamaApi;
 		this.vectorJdbcTemplate = vectorJdbcTemplate;
 		this.dataSource = dataSource;
 		modelObject = null;
 		ollamaChatModels = properties.get("ollamaChatModels");
-		embeddingModelName  = properties.get("ollamaEmbeddingModel");
+		embeddingModelName = properties.get("ollamaEmbeddingModel");
 		chatMemoryDepth = properties.getInt("chatMemoryDepth", 20);
 		defaultModel = properties.get("defaultModel");
 	}

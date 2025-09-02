@@ -139,7 +139,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 
 					List<String> taskUserCfgs = taskCfg.getUserConfigVariables();
 					userConfigs.putAll(addConfigurationValues(taskCfg, annotation, configClass, taskUserCfgs));
-	
+
 					logger.info("Registered task " + annotation.name());
 
 				} else if (isValidOutputTask(loadedClass)) {
@@ -166,7 +166,8 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 				}
 			}
 
-			// Now that we have processed all classes, let's try to read out our default values
+			// Now that we have processed all classes, let's try to read out our default
+			// values
 			readSystemDefaults();
 
 		} catch (IOException | ClassNotFoundException | InstantiationException | IllegalAccessException
@@ -176,23 +177,25 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 
 	}
 
-	private Map<String, String> addConfigurationValues(TaskConfig taskCfg, PublicTask annotation,
-			Class<?> configClass, List<String> taskConfigurationItems) {
+	private Map<String, String> addConfigurationValues(TaskConfig taskCfg, PublicTask annotation, Class<?> configClass,
+			List<String> taskConfigurationItems) {
 		Map<String, String> result = new HashMap<>();
 
 		if (taskConfigurationItems != null) {
-			for (String configKey: taskConfigurationItems) {
+			for (String configKey : taskConfigurationItems) {
 
 				if (!taskCfg.getConfig().containsKey(configKey)) {
-					logger.warn("Expected user config " + configKey + " not found in Config class " + taskCfg.getClass().getName());
+					logger.warn("Expected user config " + configKey + " not found in Config class "
+							+ taskCfg.getClass().getName());
 					continue;
 				}
 
-				if (taskCfg.getConfig().get(configKey).compareTo(TaskConfigTypes.String) != 0 &&
-					taskCfg.getConfig().get(configKey).compareTo(TaskConfigTypes.Number) != 0 &&
-					taskCfg.getConfig().get(configKey).compareTo(TaskConfigTypes.Boolean) != 0) {
-					logger.warn("Cannot declare non-primitive (or String) types as system or user configuration items. Item is "
-							+ configClass.getName() + "." + configKey);
+				if (taskCfg.getConfig().get(configKey).compareTo(TaskConfigTypes.String) != 0
+						&& taskCfg.getConfig().get(configKey).compareTo(TaskConfigTypes.Number) != 0
+						&& taskCfg.getConfig().get(configKey).compareTo(TaskConfigTypes.Boolean) != 0) {
+					logger.warn(
+							"Cannot declare non-primitive (or String) types as system or user configuration items. Item is "
+									+ configClass.getName() + "." + configKey);
 				} else {
 					result.put(annotation.name() + "::" + configKey, "");
 				}
@@ -205,8 +208,8 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 	private void readSystemDefaults() {
 		systemConfigs.entrySet().forEach(entry -> {
 			if (properties.has(entry.getKey())) {
-				logger.info("Registering system default value " +
-					entry.getKey() + "=" + properties.get(entry.getKey()));
+				logger.info(
+						"Registering system default value " + entry.getKey() + "=" + properties.get(entry.getKey()));
 				systemConfigs.put(entry.getKey(), properties.get(entry.getKey()));
 			} else {
 				logger.warn("System default value not found! " + entry.getKey());
@@ -298,11 +301,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 	}
 
 	private boolean isValidPublicTask(Class<?> loadedClass) throws ClassNotFoundException {
-		if (!MintyTask.class.isAssignableFrom(loadedClass)) {
-			return false;
-		}
-
-		if (!loadedClass.isAnnotationPresent(PublicTask.class)) {
+		if (!MintyTask.class.isAssignableFrom(loadedClass) || !loadedClass.isAnnotationPresent(PublicTask.class)) {
 			return false;
 		}
 
@@ -327,11 +326,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 	}
 
 	private boolean isValidOutputTask(Class<?> loadedClass) throws ClassNotFoundException {
-		if (!OutputTask.class.isAssignableFrom(loadedClass)) {
-			return false;
-		}
-
-		if (!loadedClass.isAnnotationPresent(Output.class)) {
+		if (!OutputTask.class.isAssignableFrom(loadedClass) || !loadedClass.isAnnotationPresent(Output.class)) {
 			return false;
 		}
 

@@ -1,9 +1,9 @@
-import { Component, forwardRef, Input } from "@angular/core";
-import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from "@angular/forms";
-import { CommonModule } from "@angular/common";
-import { Assistant } from "src/app/model/assistant";
-import { MapEditorComponent } from "./map-editor.component";
-import { StringListEditorComponent } from "./stringlist-editor.component";
+import { Component, forwardRef, Input } from '@angular/core';
+import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { Assistant } from 'src/app/model/assistant';
+import { MapEditorComponent } from './map-editor.component';
+import { StringListEditorComponent } from './stringlist-editor.component';
 
 @Component({
 	selector: 'minty-task-config-editor',

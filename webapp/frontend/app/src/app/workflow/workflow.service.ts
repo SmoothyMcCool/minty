@@ -1,10 +1,10 @@
-import { Injectable } from "@angular/core";
-import { Workflow } from "../model/workflow/workflow";
-import { HttpClient, HttpParams } from "@angular/common/http";
-import { AlertService } from "../alert.service";
-import { catchError, EMPTY, map, Observable } from "rxjs";
-import { ApiResult } from "../model/api-result";
-import { TaskDescription } from "../model/task-description";
+import { Injectable } from '@angular/core';
+import { Workflow } from '../model/workflow/workflow';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { AlertService } from '../alert.service';
+import { catchError, EMPTY, map, Observable } from 'rxjs';
+import { ApiResult } from '../model/api-result';
+import { TaskDescription } from '../model/task-description';
 
 @Injectable({
 	providedIn: 'root'
@@ -63,7 +63,7 @@ export class WorkflowService {
 				return {
 					name: item.name,
 					configuration: Object.fromEntries(item.configuration)
-				}
+				};
 			}),
 			outputStep: {
 				name: workflow.outputStep.name,
@@ -93,7 +93,7 @@ export class WorkflowService {
 				return {
 					name: item.name,
 					configuration: Object.fromEntries(item.configuration)
-				}
+				};
 			}),
 			outputStep: {
 				name: workflow.outputStep.name,
@@ -131,7 +131,7 @@ export class WorkflowService {
 			id: workflow.id,
 			taskConfigurationList: workflow.workflowSteps.map(step => Object.fromEntries(step.configuration)),
 			outputConfiguration: Object.fromEntries(workflow.outputStep.configuration)
-		}
+		};
 
 		return this.http.post<ApiResult>(WorkflowService.ExecuteWorkflow, body)
 			.pipe(
@@ -174,7 +174,7 @@ export class WorkflowService {
 	}
 
 	private objectify(workflow: any): Workflow {
-		let w: Workflow = {
+		const w: Workflow = {
 			id: workflow.id,
 			ownerId: workflow.ownerId,
 			name: workflow.name,
@@ -190,7 +190,7 @@ export class WorkflowService {
 				name: workflow.outputStep.name,
 				configuration: new Map(Object.entries(workflow.outputStep.configuration))
 			}
-		}
+		};
 		return w;
 	}
 }

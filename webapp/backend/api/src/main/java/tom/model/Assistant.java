@@ -20,7 +20,8 @@ public record Assistant(UUID id, String name, String model, Double temperature, 
 	public static Assistant CreateDefaultAssistant(String defaultModel) {
 		AssistantBuilder builder = new AssistantBuilder();
 		builder.id(AssistantManagementService.DefaultAssistantId).name("default").model(defaultModel).temperature(0.7)
-				.prompt("").ownerId(AssistantManagementService.DefaultAssistantId).shared(false).hasMemory(true).documentIds(List.of());
+				.prompt("").ownerId(AssistantManagementService.DefaultAssistantId).shared(false).hasMemory(true)
+				.documentIds(List.of());
 		return builder.build();
 	}
 
@@ -32,7 +33,8 @@ public record Assistant(UUID id, String name, String model, Double temperature, 
 						+ "Your ONLY job is to summarize it in at most 50 characters.\n"
 						+ "Do not add punctuation unless it is part of the conversation.\n"
 						+ "Do not add extra words like \"Summary:\" or explanations.\n\n" + "Conversation:\n\n\n")
-				.ownerId(AssistantManagementService.DefaultAssistantId).shared(false).hasMemory(false).documentIds(List.of());
+				.ownerId(AssistantManagementService.DefaultAssistantId).shared(false).hasMemory(false)
+				.documentIds(List.of());
 		return builder.build();
 	}
 

@@ -16,8 +16,6 @@ public interface UserServiceInternal extends UserService {
 
 	public EncryptedUser encrypt(User user) throws JsonProcessingException;
 
-	public String getUsernameFromId(UUID userId);
-
 	public Optional<User> getUserFromName(String userName);
 
 	public Optional<User> getUserFromId(UUID userId);

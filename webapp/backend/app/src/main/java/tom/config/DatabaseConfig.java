@@ -21,7 +21,7 @@ import com.zaxxer.hikari.HikariDataSource;
 @EnableJpaRepositories("tom")
 public class DatabaseConfig {
 
-	private ExternalProperties props;
+	private final ExternalProperties props;
 
 	public DatabaseConfig(ExternalProperties properties) {
 		props = properties;

@@ -23,7 +23,7 @@ import tom.task.annotations.PublicTask;
 @PublicTask(name = "Get Confluence Pages", configClass = "tom.tasks.extractor.confluence.ConfluenceQueryConfig")
 public class ConfluenceQuery implements MintyTask {
 
-	private UUID uuid = UUID.randomUUID();
+	private final UUID uuid = UUID.randomUUID();
 	private ConfluenceQueryConfig config = new ConfluenceQueryConfig();
 	private String error = null;
 

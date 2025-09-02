@@ -1,4 +1,4 @@
-import { WorkflowExecutionStepState } from "./workflow-execution-step-state";
+import { WorkflowExecutionStepState } from './workflow-execution-step-state';
 
 export interface WorkflowExecutionState {
 	stepStates: WorkflowExecutionStepState[];

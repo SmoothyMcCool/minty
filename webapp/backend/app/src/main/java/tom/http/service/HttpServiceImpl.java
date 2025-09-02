@@ -50,7 +50,7 @@ public class HttpServiceImpl implements HttpService {
 				request.setUri(uriBuilder.build());
 			}
 
-			ResponseType response = client.execute(request, new HttpResponseHandler<ResponseType>(dummy));
+			ResponseType response = client.execute(request, new HttpResponseHandler<>(dummy));
 			return response;
 
 		} catch (URISyntaxException e) {
@@ -85,7 +85,7 @@ public class HttpServiceImpl implements HttpService {
 				request.setUri(uriBuilder.build());
 			}
 
-			ResponseType response = client.execute(request, new HttpResponseHandler<ResponseType>(dummy));
+			ResponseType response = client.execute(request, new HttpResponseHandler<>(dummy));
 			return response;
 
 		} catch (JsonProcessingException e) {
@@ -123,7 +123,7 @@ public class HttpServiceImpl implements HttpService {
 				request.setUri(uriBuilder.build());
 			}
 
-			ResponseType response = client.execute(request, new HttpResponseHandler<ResponseType>(dummy));
+			ResponseType response = client.execute(request, new HttpResponseHandler<>(dummy));
 
 			return response;
 

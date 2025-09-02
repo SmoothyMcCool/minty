@@ -136,7 +136,7 @@ public class ApplicationConfig implements WebMvcConfigurer {
 		logger.info("ollama URI is " + ollamaUri);
 		SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
 
-		Integer ollamaTimeout = props.getInt("ollamaApiTimeoutMinutes", 20); 
+		Integer ollamaTimeout = props.getInt("ollamaApiTimeoutMinutes", 20);
 		factory.setReadTimeout(Duration.ofMinutes(ollamaTimeout));
 
 		RestClient.Builder restClientBuilder = RestClient.builder().requestFactory(factory);

@@ -1,4 +1,4 @@
-import { WorkflowExecutionState } from "./workflow-execution-state";
+import { WorkflowExecutionState } from './workflow-execution-state';
 
 export interface WorkflowState {
 	id: string;

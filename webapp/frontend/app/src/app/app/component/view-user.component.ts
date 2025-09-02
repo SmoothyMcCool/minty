@@ -36,13 +36,13 @@ export class ViewUserComponent implements OnInit {
 		if (this.formValid()) {
 			// Remove all blank or whitespace-only default values.
 			this.user.defaults = new Map([...this.user.defaults.entries()]
-				.filter(([key, value]) => !this.isBlank(value)));
+				.filter(([, value]) => !this.isBlank(value)));
 
 			this.userService.update(this.user)
 				.subscribe({
 					next: () => {
 						this.user = this.userService.getUser();
-						this.alertService.postSuccess("Ok I updated you huzzah.")
+						this.alertService.postSuccess('Ok I updated you huzzah.');
 						return true;
 					},
 					error: (error: string[]) => this.messages = error

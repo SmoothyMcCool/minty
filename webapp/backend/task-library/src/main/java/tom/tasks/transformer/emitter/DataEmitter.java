@@ -11,7 +11,7 @@ import tom.task.annotations.PublicTask;
 @PublicTask(name = "Emit Records", configClass = "tom.tasks.transformer.emitter.DataEmitterConfig")
 public class DataEmitter implements MintyTask {
 
-	private UUID uuid = UUID.randomUUID();
+	private final UUID uuid = UUID.randomUUID();
 	private DataEmitterConfig config;
 
 	public DataEmitter() {

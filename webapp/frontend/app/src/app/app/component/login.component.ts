@@ -27,7 +27,7 @@ export class LoginComponent {
 	}
 
 	login(): boolean {
-		const token = sessionStorage.clear();
+		sessionStorage.clear();
 		this.loginFailed = false;
 		this.userService.login(this.credentials.account, this.credentials.password)
 			.subscribe({
