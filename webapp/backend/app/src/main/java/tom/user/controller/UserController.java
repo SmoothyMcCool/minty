@@ -136,13 +136,16 @@ public class UserController {
 	}
 
 	@RequestMapping(value = { "/defaults/system" }, method = RequestMethod.GET)
-	public ResponseEntity<ResponseWrapper<Map<String, String>>> systemDefaults(@AuthenticationPrincipal UserDetailsUser userDetails) {
-		ResponseWrapper<Map<String, String>> response = ResponseWrapper.SuccessResponse(taskRegistryService.getSystemDefaults());
+	public ResponseEntity<ResponseWrapper<Map<String, String>>> systemDefaults(
+			@AuthenticationPrincipal UserDetailsUser userDetails) {
+		ResponseWrapper<Map<String, String>> response = ResponseWrapper
+				.SuccessResponse(taskRegistryService.getSystemDefaults());
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	@RequestMapping(value = { "/defaults/user" }, method = RequestMethod.GET)
-	public ResponseEntity<ResponseWrapper<Map<String, String>>> userDefaults(@AuthenticationPrincipal UserDetailsUser userDetails) {
+	public ResponseEntity<ResponseWrapper<Map<String, String>>> userDefaults(
+			@AuthenticationPrincipal UserDetailsUser userDetails) {
 		User user = userService.getUserFromId(userDetails.getId()).orElseThrow();
 		Map<String, String> currentUserDefaults = user.getDefaults();
 		Map<String, String> taskDefaults = taskRegistryService.getUserDefaults();

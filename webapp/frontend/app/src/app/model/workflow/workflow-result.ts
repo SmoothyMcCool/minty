@@ -1,4 +1,4 @@
-import { WorkflowExecutionResult } from "./workflow-execution-result";
+import { WorkflowExecutionResult } from './workflow-execution-result';
 
 export interface WorkflowResult {
 	id: string;

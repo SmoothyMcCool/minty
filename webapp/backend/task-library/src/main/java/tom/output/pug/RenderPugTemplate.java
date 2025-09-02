@@ -12,7 +12,7 @@ import tom.task.ServiceConsumer;
 public class RenderPugTemplate implements OutputTask, ServiceConsumer {
 
 	private TaskServices taskServices;
-	private RenderPugTemplateConfig configuration;
+	private final RenderPugTemplateConfig configuration;
 
 	public RenderPugTemplate(RenderPugTemplateConfig configuration) {
 		this.configuration = configuration;

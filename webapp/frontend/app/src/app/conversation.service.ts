@@ -1,14 +1,13 @@
-import { HttpClient, HttpParams } from "@angular/common/http";
-import { Injectable } from "@angular/core";
-import { ApiResult } from "./model/api-result";
-import { catchError, map } from "rxjs/operators";
-import { EMPTY, Observable } from "rxjs";
-import { AlertService } from "./alert.service";
-import { Assistant } from "./model/assistant";
-import { UserService } from "./user.service";
-import { User } from "./model/user";
-import { ChatMessage } from "./model/chat-message";
-import { Conversation } from "./model/conversation";
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { ApiResult } from './model/api-result';
+import { catchError, map } from 'rxjs/operators';
+import { EMPTY, Observable } from 'rxjs';
+import { AlertService } from './alert.service';
+import { Assistant } from './model/assistant';
+import { UserService } from './user.service';
+import { ChatMessage } from './model/chat-message';
+import { Conversation } from './model/conversation';
 
 @Injectable({
 	providedIn: 'root'
@@ -26,7 +25,6 @@ export class ConversationService {
 	}
 
 	create(assistant: Assistant): Observable<Conversation> {
-		const user: User = this.userService.getUser();
 		let params: HttpParams = new HttpParams();
 		params = params.append('assistantId', assistant.id);
 
@@ -43,8 +41,6 @@ export class ConversationService {
 	}
 
 	list(): Observable<Conversation[]> {
-		const user: User = this.userService.getUser();
-
 		return this.http.get<ApiResult>(ConversationService.ListConversations)
 			.pipe(
 				catchError(error => {

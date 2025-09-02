@@ -31,7 +31,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 	private final AsyncTaskExecutor taskExecutor;
 
 	public WorkflowServiceImpl(WorkflowRepository workflowRepository, TaskRegistryService taskRegistryService,
-			WorkflowTrackingService workflowTrackingService,ConversationServiceInternal conversationService,
+			WorkflowTrackingService workflowTrackingService, ConversationServiceInternal conversationService,
 			@Qualifier("taskExecutor") ThreadPoolTaskExecutor taskExecutor) {
 		this.workflowRepository = workflowRepository;
 		this.taskRegistryService = taskRegistryService;

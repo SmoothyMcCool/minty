@@ -1,10 +1,10 @@
-import { HttpClient, HttpParams } from "@angular/common/http";
-import { Injectable } from "@angular/core";
-import { ApiResult } from "./model/api-result";
-import { catchError, map } from "rxjs/operators";
-import { EMPTY, Observable } from "rxjs";
-import { AlertService } from "./alert.service";
-import { MintyDoc } from "./model/minty-doc";
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { ApiResult } from './model/api-result';
+import { catchError, map } from 'rxjs/operators';
+import { EMPTY, Observable } from 'rxjs';
+import { AlertService } from './alert.service';
+import { MintyDoc } from './model/minty-doc';
 
 @Injectable({
 	providedIn: 'root'

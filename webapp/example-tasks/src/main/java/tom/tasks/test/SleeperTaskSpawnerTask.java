@@ -19,7 +19,7 @@ public class SleeperTaskSpawnerTask implements MintyTask {
 
 	private final Logger logger = LogManager.getLogger(SleeperTaskSpawnerTask.class);
 
-	private SleeperTaskSpawnerTaskConfig config;
+	private final SleeperTaskSpawnerTaskConfig config;
 	private Instant startTime;
 
 	public SleeperTaskSpawnerTask() {

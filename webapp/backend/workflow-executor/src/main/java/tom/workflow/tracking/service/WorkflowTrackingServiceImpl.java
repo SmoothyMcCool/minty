@@ -23,7 +23,7 @@ public class WorkflowTrackingServiceImpl implements WorkflowTrackingService {
 	private final Logger logger = LogManager.getLogger(WorkflowTrackingServiceImpl.class);
 
 	private final WorkflowExecutionRepository workflowExecutionRepository;
-	private List<WorkflowRunner> runningWorkflows;
+	private final List<WorkflowRunner> runningWorkflows;
 
 	public WorkflowTrackingServiceImpl(WorkflowExecutionRepository workflowExecutionRepository) {
 		this.workflowExecutionRepository = workflowExecutionRepository;

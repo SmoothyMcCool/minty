@@ -9,7 +9,7 @@ import tom.task.TaskConfigTypes;
 
 public class SleeperTaskSpawnerTaskConfig implements TaskConfig {
 
-	private int delay;
+	private final int delay;
 
 	public SleeperTaskSpawnerTaskConfig() {
 		delay = 0;

@@ -1,10 +1,10 @@
-import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
-import { Injectable } from "@angular/core";
-import { ApiResult } from "./model/api-result";
-import { catchError, map } from "rxjs/operators";
-import { EMPTY, Observable } from "rxjs";
-import { AlertService } from "./alert.service";
-import { Assistant } from "./model/assistant";
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { ApiResult } from './model/api-result';
+import { catchError, map } from 'rxjs/operators';
+import { EMPTY, Observable } from 'rxjs';
+import { AlertService } from './alert.service';
+import { Assistant } from './model/assistant';
 
 @Injectable({
 	providedIn: 'root'
@@ -71,7 +71,7 @@ export class AssistantService {
 				map((_result: ApiResult) => {
 					return null;
 				})
-			)
+			);
 	}
 
 	list(): Observable<Assistant[]> {
@@ -101,10 +101,6 @@ export class AssistantService {
 	}
 
 	ask(conversationId: string, assistantId: string, query: string): Observable<string> {
-		const headers: HttpHeaders = new HttpHeaders({
-			'Content-Type': 'application/json'
-		});
-
 		const body = {
 			conversationId: conversationId,
 			assistantId: assistantId,

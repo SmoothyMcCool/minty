@@ -1,13 +1,13 @@
-import { CommonModule } from "@angular/common";
-import { Component, OnInit } from "@angular/core";
-import { FormsModule } from "@angular/forms";
-import { Router } from "@angular/router";
-import { AlertService } from "src/app/alert.service";
-import { TaskTemplateService } from "src/app/task/task-template.service";
-import { Workflow } from "src/app/model/workflow/workflow";
-import { WorkflowService } from "../workflow.service";
-import { TaskDescription } from "src/app/model/task-description";
-import { WorkflowEditorComponent } from "./workflow-editor.component";
+import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { AlertService } from 'src/app/alert.service';
+import { TaskTemplateService } from 'src/app/task/task-template.service';
+import { Workflow } from 'src/app/model/workflow/workflow';
+import { WorkflowService } from '../workflow.service';
+import { TaskDescription } from 'src/app/model/task-description';
+import { WorkflowEditorComponent } from './workflow-editor.component';
 
 @Component({
 	selector: 'minty-new-workflow',

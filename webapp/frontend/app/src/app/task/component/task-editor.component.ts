@@ -1,12 +1,12 @@
-import { CommonModule } from "@angular/common";
-import { Component, ElementRef, forwardRef, Input, OnDestroy, OnInit, ViewChild } from "@angular/core";
-import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from "@angular/forms";
-import { Task } from "../../model/task";
-import { TaskConfigurationEditorComponent } from "./task-configuration-editor.component";
-import { TaskDescription } from "src/app/model/task-description";
-import { AssistantService } from "src/app/assistant.service";
-import { Assistant } from "src/app/model/assistant";
-import { Popover } from "bootstrap";
+import { CommonModule } from '@angular/common';
+import { Component, ElementRef, forwardRef, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { Task } from '../../model/task';
+import { TaskConfigurationEditorComponent } from './task-configuration-editor.component';
+import { TaskDescription } from 'src/app/model/task-description';
+import { AssistantService } from 'src/app/assistant.service';
+import { Assistant } from 'src/app/model/assistant';
+import { Popover } from 'bootstrap';
 
 @Component({
 	selector: 'minty-task-editor',
@@ -51,10 +51,10 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor, OnDest
 	triggerDirectory: string = '';
 
 	taskDescription: TaskDescription = {
-		name: "",
+		name: '',
 		configuration: new Map<string, string>(),
-		inputs: "",
-		outputs: ""
+		inputs: '',
+		outputs: ''
 	};
 
 	popoverInstance !: Popover;
@@ -95,11 +95,11 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor, OnDest
 
 	escapeHtml(str: string): string {
 		return str
-			.replace(/&/g, "&amp;")
-			.replace(/</g, "&lt;")
-			.replace(/>/g, "&gt;")
-			.replace(/"/g, "&quot;")
-			.replace(/'/g, "&#039;");
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#039;');
 	}
 
 	ngOnDestroy(): void {

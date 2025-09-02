@@ -25,7 +25,7 @@ public class FilesystemMonitor implements Runnable {
 	private WatchService watcher;
 	private final FilesystemWatcherService filesystemWatcherService;
 	private boolean stop;
-	private Map<WatchKey, Path> keyMap;
+	private final Map<WatchKey, Path> keyMap;
 
 	public FilesystemMonitor(Iterable<Workflow> watchers, FilesystemWatcherService filesystemWatcherService) {
 		this.watchers = watchers;

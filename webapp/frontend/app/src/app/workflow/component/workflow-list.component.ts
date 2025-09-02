@@ -10,19 +10,32 @@ import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-
 import { UserService } from 'src/app/user.service';
 import { WorkflowState } from 'src/app/model/workflow/workflow-state';
 import { WorkflowResult } from 'src/app/model/workflow/workflow-result';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { WorkflowExecutionState } from 'src/app/model/workflow/workflow-execution-state';
+import { animate, state, style, transition, trigger } from '@angular/animations';
 
 @Component({
 	selector: 'minty-workflow-list',
 	imports: [CommonModule, FormsModule, RouterModule, ConfirmationDialogComponent],
 	templateUrl: 'workflow-list.component.html',
-	styleUrls: ['workflow.component.css']
+	styleUrls: ['workflow.component.css'],
+	animations: [
+		trigger('slideInOut', [
+			transition(':leave', [
+				style({ transform: 'translateX(0)', opacity: 1 }),
+				animate('300ms ease', style({ transform: 'translateX(100%)', opacity: 0 }))
+			]),
+			transition(':enter', [
+				style({ transform: 'translateX(100%)', opacity: 0 }),
+				animate('300ms ease', style({ transform: 'translateX(0)', opacity: 1 }))
+			])
+		])
+	]
 })
 export class WorkflowListComponent implements OnInit, OnDestroy {
 
 	responseType: string;
 	currentResult: WorkflowResult = null;
-	resultHtml: SafeHtml;
+	workflowStatus: WorkflowExecutionState;
 	results: WorkflowState[] = [];
 	workflows: Workflow[] = [];
 	private subscription: Subscription;
@@ -32,8 +45,7 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 	workflowPendingDeletion: Workflow;
 	resultPendingDeletionId: string;
 
-	constructor(private sanitizer: DomSanitizer,
-		private router: Router,
+	constructor(private router: Router,
 		private workflowService: WorkflowService,
 		private resultService: ResultService,
 		private userService: UserService) {
@@ -60,10 +72,6 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 		this.resultService.openWorkflowOutput(result.id);
 	}
 
-	private endsWithIgnoreCase(str: string, ending: string) {
-		return str.toLowerCase().endsWith(ending.toLowerCase());
-	}
-
 	deleteWorkflow(workflow: Workflow) {
 		this.workflowPendingDeletion = workflow;
 		this.confirmWorkflowDeleteVisible = true;
@@ -77,6 +85,14 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 			});
 		});
 		this.workflows = this.workflows.filter(item => item.id === this.workflowPendingDeletion.id);
+	}
+
+	displayProgress(result: WorkflowState) {
+		this.workflowStatus = result.state;
+	}
+
+	hideProgress() {
+		this.workflowStatus = null;
 	}
 
 	deleteResult(event: MouseEvent, result: WorkflowState) {

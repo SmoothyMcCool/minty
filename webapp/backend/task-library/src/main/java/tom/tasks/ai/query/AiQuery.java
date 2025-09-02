@@ -21,7 +21,7 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 	private UUID uuid = UUID.randomUUID();
 	private AiQueryConfig config = new AiQueryConfig();
 	private UUID userId;
-	private Map<String, Object> result = new HashMap<>();
+	private final Map<String, Object> result = new HashMap<>();
 	private Map<String, Object> input = Map.of();
 	private String error = null;
 

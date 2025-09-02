@@ -74,6 +74,6 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 	restart() {
 		this.conversationService.delete(this.conversationId).subscribe(() => {
 			this.chatHistory = [];
-		})
+		});
 	}
 }

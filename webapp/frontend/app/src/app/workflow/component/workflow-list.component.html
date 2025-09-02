@@ -23,35 +23,61 @@
 	</div>
 </div>
 
-<div class="row well p-2 mx-1 my-2">
-	<div class="col-3">
+<div class="row well p-2 mx-1 my-2" style="overflow: hidden;">
+	<div class="col">
 		This list refreshes every five seconds.
-		<div class="d-grid gap-3" *ngFor="let result of results">
-			<!-- If the ID is null, the task is still in progress-->
-			<div class="p-2 bg-light border btn text-start" (click)="result.id && displayResultsFor(result)">
-				<button type="button" class="bi bi-trash3" style="font-size: 20px; color: red; float: right;"
-					(click)="deleteResult($event, result)"></button>
-				{{result.name}}
-				<span *ngIf="!result.id" class="badge text-bg-secondary mx-2">Result Not Ready</span>
-			</div>
-		</div>
+		<ul class="list-group">
+			<li class="list-group-item list-group-item-action position-relative text-bg-light bg-opacity-75" *ngFor="let result of results">
+				<div class="d-flex align-items-center h-100">
+					<!-- If the ID is null, the task is still in progress-->
+					<span
+						class="text-truncate clickable-text"
+						(click)="displayResultsFor(result)">
+						{{result.name}}
+					</span>
+					<span class="flex-grow-1"></span>
+					<button
+						type="button"
+						class="btn btn-sm pe-3"
+						style="font-size: 20px; color: saddlebrown;"
+						(click)="displayProgress(result)">
+						<i class="bi bi-pie-chart-fill"></i>
+					</button>
+					<span *ngIf="!result.id" class="badge text-bg-secondary mx-2">Result Not Ready</span>
+					<button
+						type="button"
+						class="btn btn-sm p-0"
+						style="font-size: 20px; color: red;"
+						(click)="deleteResult($event, result)">
+						<i class="bi bi-trash3"></i>
+					</button>
+				</div>
+			</li>
+		</ul>
 	</div>
-	<div class="col-9">
-		<button class="btn btn-primary me-2" *ngIf="currentResult" (click)="copyToClipboard()">Copy to clipboard</button>
-		<button class="btn btn-primary" *ngIf="currentResult" (click)="viewFullscreen()">View Fullscreen</button>
-		<div *ngIf="currentResult">
-			<ng-container *ngIf="responseType === 'JSON'; else notJson">
-				<pre style="white-space: pre-wrap;">{{resultHtml}}</pre>
-			</ng-container>
-			<ng-template #notJson>
-				<ng-container *ngIf="responseType === 'HTML'; else Text">
-					<div [innerHtml]="resultHtml"></div>
-				</ng-container>
-			</ng-template>
-			<ng-template #Text>
-				<ng-container *ngIf="responseType === 'TEXT'">
-					<p>{{resultHtml}}</p>
-				</ng-container>
+	<div class="col" *ngIf="workflowStatus" @slideInOut>
+		<button
+			type="button"
+			class="btn btn-sm pe-3"
+			style="font-size: 20px; color: saddlebrown;"
+			(click)="hideProgress()">
+			<i class="bi bi-box-arrow-left"></i>
+		</button>
+		<i style="font-size: 20px;
+			color: orange;
+			text-shadow: 1px 1px 0 black, -1px -1px 0 black, 1px -1px 0 black, -1px 1px 0 black;"
+			class="bi bi-exclamation-triangle-fill me-2">
+		</i>
+		These numbers don't auto-refresh!
+		<div *ngFor="let stepState of workflowStatus.stepStates; let i = index">
+			<h5>Step {{i + 1}}</h5>
+			<div *ngIf="stepState.totalTasks != 0; else notStarted">
+				<p>Total Tasks: {{stepState.numTasks}}
+				Completed Tasks: {{stepState.completedTasks}}
+				Failed Tasks: {{stepState.failedTasks}}</p>
+			</div>
+			<ng-template #notStarted>
+				Step not started yet.
 			</ng-template>
 		</div>
 	</div>

@@ -29,8 +29,7 @@ public class ConversationNamingService {
 	private final OllamaService ollamaService;
 
 	public ConversationNamingService(ConversationRepository conversationRepository,
-			AssistantQueryService assistantQueryService, OllamaService ollamaService,
-			ExternalProperties properties) {
+			AssistantQueryService assistantQueryService, OllamaService ollamaService, ExternalProperties properties) {
 		this.conversationRepository = conversationRepository;
 		this.assistantQueryService = assistantQueryService;
 		this.ollamaService = ollamaService;
@@ -45,10 +44,8 @@ public class ConversationNamingService {
 		List<ConversationEntity> conversations = conversationRepository.findAllByTitle(null);
 
 		// Ignore all conversations internal to workflows.
-		conversations = conversations.stream()
-				.filter(conversation -> conversation
-						.getAssociatedAssistantId() != AssistantManagementService.DefaultAssistantId)
-				.toList();
+		conversations = conversations.stream().filter(conversation -> conversation
+				.getAssociatedAssistantId() != AssistantManagementService.DefaultAssistantId).toList();
 
 		conversations.forEach(conversation -> {
 			List<Message> messages = ollamaService.getChatMemory().get(conversation.getConversationId().toString());

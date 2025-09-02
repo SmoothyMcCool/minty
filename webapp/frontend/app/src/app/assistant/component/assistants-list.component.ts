@@ -13,8 +13,7 @@ import { FilterPipe } from 'src/app/pipe/filter-pipe';
 @Component({
 	selector: 'minty-assistants-list',
 	imports: [CommonModule, FormsModule, RouterModule, FilterPipe, ConfirmationDialogComponent],
-	templateUrl: 'assistants-list.component.html',
-	styleUrls: ['assistants-list.component.css']
+	templateUrl: 'assistants-list.component.html'
 })
 export class AssistantsListComponent {
 
@@ -61,7 +60,7 @@ export class AssistantsListComponent {
 
 		this.conversationService.list().subscribe(conversations => {
 			this.conversations = conversations;
-		})
+		});
 	}
 
 	editAssistant(assistantId: number) {
@@ -93,7 +92,7 @@ export class AssistantsListComponent {
 	startConversation(assistant: Assistant): void {
 		this.conversationService.create(assistant).subscribe( conversation => {
 			this.router.navigate(['/conversation', conversation.conversationId]);
-		})
+		});
 	}
 
 	selectConversation(conversation: Conversation) {

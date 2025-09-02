@@ -1,7 +1,7 @@
-import { CommonModule } from "@angular/common";
-import { Component, Input } from "@angular/core";
-import { ChatMessage } from "../../model/chat-message";
-import { MarkdownModule } from "ngx-markdown";
+import { CommonModule } from '@angular/common';
+import { Component, Input } from '@angular/core';
+import { ChatMessage } from '../../model/chat-message';
+import { MarkdownModule } from 'ngx-markdown';
 
 @Component({
 	selector: 'minty-conversation',

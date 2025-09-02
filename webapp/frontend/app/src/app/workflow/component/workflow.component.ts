@@ -69,7 +69,7 @@ export class WorkflowComponent implements OnInit {
 		if (task) {
 			return task.inputs;
 		}
-		return "";
+		return '';
 	}
 
 	getOutputsFor(taskName: string): string {
@@ -77,7 +77,7 @@ export class WorkflowComponent implements OnInit {
 		if (task) {
 			return task.outputs;
 		}
-		return "";
+		return '';
 	}
 
 	navigateTo(url: string) {
