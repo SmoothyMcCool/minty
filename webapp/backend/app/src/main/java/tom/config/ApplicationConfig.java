@@ -43,6 +43,7 @@ import com.fasterxml.jackson.dataformat.xml.JacksonXmlAnnotationIntrospector;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 
 import de.neuland.pug4j.PugConfiguration;
+import de.neuland.pug4j.filter.MarkdownFilter;
 import de.neuland.pug4j.template.FileTemplateLoader;
 
 @Configuration
@@ -122,6 +123,7 @@ public class ApplicationConfig implements WebMvcConfigurer {
 		PugConfiguration config = new PugConfiguration();
 		config.setCaching(true);
 		config.setTemplateLoader(pugFileLoader);
+		config.setFilter("markdown", new MarkdownFilter());
 		return config;
 	}
 

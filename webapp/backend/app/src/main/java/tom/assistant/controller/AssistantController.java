@@ -83,7 +83,7 @@ public class AssistantController {
 
 	@RequestMapping(value = { "/models" }, method = RequestMethod.GET)
 	public ResponseEntity<ResponseWrapper<List<String>>> listModels(@AuthenticationPrincipal UserDetailsUser user) {
-		List<String> models = ollamaService.listModels().stream().map(model -> model.toString()).toList();
+		List<String> models = ollamaService.listModels();
 		ResponseWrapper<List<String>> response = ResponseWrapper.SuccessResponse(models);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}

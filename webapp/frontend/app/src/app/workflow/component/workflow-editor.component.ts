@@ -56,7 +56,7 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 	}
 
 	ngOnInit() {
-		this.route.params.subscribe(params => {
+		this.route.params.subscribe(() => {
 			this.userService.systemDefaults().subscribe(systemDefaults => {
 				this.userService.userDefaults().subscribe(userDefaults => {
 					// User defaults should take priority in conflicts.

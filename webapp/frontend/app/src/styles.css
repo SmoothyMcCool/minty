@@ -52,3 +52,8 @@ button:disabled {
 	color: var(--bs-link-hover-color, #0a58ca);
 	text-decoration: underline;
 }
+
+.well {
+	background-color: rgba(245, 245, 245, 0.66);
+	border-radius: 10px;
+}

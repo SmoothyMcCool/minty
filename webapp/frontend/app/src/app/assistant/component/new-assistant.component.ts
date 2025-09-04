@@ -7,10 +7,11 @@ import { Router, RouterModule } from '@angular/router';
 import { DocumentService } from '../../document.service';
 import { FilterPipe } from '../../pipe/filter-pipe';
 import { MintyDoc } from 'src/app/model/minty-doc';
+import { AssistantEditorComponent } from './assistant-editor.component';
 
 @Component({
 	selector: 'minty-new-assistant',
-	imports: [CommonModule, FormsModule, RouterModule, FilterPipe],
+	imports: [CommonModule, FormsModule, RouterModule, FilterPipe, AssistantEditorComponent],
 	templateUrl: 'new-assistant.component.html',
 	styleUrls: ['new-assistant.component.css']
 })
@@ -18,7 +19,7 @@ export class NewAssistantComponent implements OnInit {
 
 	availableDocuments: MintyDoc[] = [];
 	models: string[] = [];
-	workingAssistant: Assistant = {
+	assistant: Assistant = {
 		id: '',
 		name: '',
 		prompt: '',
@@ -48,41 +49,17 @@ export class NewAssistantComponent implements OnInit {
 	}
 
 	formInvalid(): boolean {
-		return this.workingAssistant.name?.length === 0 || this.workingAssistant.model?.length === 0;
-	}
-
-	modelChanged(model: string) {
-		this.workingAssistant.model = model;
-		this.workingAssistant.documentIds = [];
+		return this.assistant.name.length === 0 || this.assistant.model.length === 0;
 	}
 
 	createAssistant() {
-		this.assistantService.create(this.workingAssistant).subscribe(() => {
+		this.assistantService.create(this.assistant).subscribe(() => {
 			this.navigateTo('assistants');
 		});
 	}
 
 	navigateTo(url: string): void {
 		this.router.navigateByUrl(url);
-	}
-
-	addDoc(doc: MintyDoc) {
-		if (this.workingAssistant.documentIds.find(el => el === doc.documentId)) {
-			return;
-		}
-		this.workingAssistant.documentIds.push(doc.documentId);
-		this.assistantDocuments.push(doc);
-		// New object for better chances at sane change detection.
-		this.workingAssistant.documentIds = [...this.workingAssistant.documentIds];
-	}
-
-	removeDoc(doc: MintyDoc) {
-		this.workingAssistant.documentIds =
-			this.workingAssistant.documentIds.filter(el => el !== doc.documentId);
-		this.assistantDocuments =
-			this.availableDocuments.filter(doc =>
-				this.workingAssistant.documentIds.find(id =>
-					id === doc.documentId) != undefined);
 	}
 
 }

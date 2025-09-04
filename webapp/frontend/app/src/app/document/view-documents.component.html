@@ -48,6 +48,9 @@
 					</button>
 				</div>
 			</div>
+			<div class="well p-3" *ngIf="!displayDocuments || displayDocuments.length === 0">
+				No Documents!
+			</div>
 		</div>
 	</div>
 </div>

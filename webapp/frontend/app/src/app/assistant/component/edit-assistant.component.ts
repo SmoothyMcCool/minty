@@ -7,18 +7,18 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FilterPipe } from '../../pipe/filter-pipe';
 import { MintyDoc } from 'src/app/model/minty-doc';
 import { DocumentService } from 'src/app/document.service';
+import { AssistantEditorComponent } from './assistant-editor.component';
 
 @Component({
 	selector: 'minty-edit-assistant',
-	imports: [CommonModule, FormsModule, RouterModule, FilterPipe],
+	imports: [CommonModule, FormsModule, RouterModule, FilterPipe, AssistantEditorComponent],
 	templateUrl: 'edit-assistant.component.html'
 })
 export class EditAssistantComponent implements OnInit {
 
 	models: string[] = [];
 	availableDocuments: MintyDoc[] = [];
-	assistantDocuments: MintyDoc[] = [];
-	workingAssistant: Assistant = {
+	assistant: Assistant = {
 		id: '',
 		name: '',
 		prompt: '',
@@ -41,11 +41,9 @@ export class EditAssistantComponent implements OnInit {
 	ngOnInit(): void {
 		this.route.params.subscribe(params => {
 			this.assistantService.getAssistant(params['id']).subscribe((assistant: Assistant) => {
-				this.workingAssistant = assistant;
-
+				this.assistant = assistant;
 				this.documentService.list().subscribe(docs => {
 					this.availableDocuments = docs;
-					this.assistantDocuments = docs.filter(doc => assistant.documentIds.find(id => id === doc.documentId) != undefined);
 				});
 			});
 		});
@@ -55,11 +53,11 @@ export class EditAssistantComponent implements OnInit {
 	}
 
 	formInvalid(): boolean {
-		return this.workingAssistant.name.length === 0 || this.workingAssistant.model.length === 0;
+		return this.assistant.name.length === 0 || this.assistant.model.length === 0;
 	}
 
 	updateAssistant() {
-		this.assistantService.update(this.workingAssistant).subscribe(() => {
+		this.assistantService.update(this.assistant).subscribe(() => {
 			this.navigateTo('assistants');
 		});
 	}
@@ -68,22 +66,4 @@ export class EditAssistantComponent implements OnInit {
 		this.router.navigateByUrl(url);
 	}
 
-	addDoc(doc: MintyDoc) {
-		if (this.workingAssistant.documentIds.find(el => el === doc.documentId)) {
-			return;
-		}
-		this.workingAssistant.documentIds.push(doc.documentId);
-		this.assistantDocuments.push(doc);
-		// New object for better chances at sane change detection.
-		this.workingAssistant.documentIds = [...this.workingAssistant.documentIds];
-	}
-
-	removeDoc(doc: MintyDoc) {
-		this.workingAssistant.documentIds =
-			this.workingAssistant.documentIds.filter(el => el !== doc.documentId);
-		this.assistantDocuments =
-			this.availableDocuments.filter(doc =>
-				this.workingAssistant.documentIds.find(id =>
-					id === doc.documentId) != undefined);
-	}
 }

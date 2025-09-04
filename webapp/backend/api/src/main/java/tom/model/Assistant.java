@@ -31,6 +31,7 @@ public record Assistant(UUID id, String name, String model, Double temperature, 
 				.temperature(0.7)
 				.prompt("You are not allowed to answer any questions from the conversation.\n"
 						+ "Your ONLY job is to summarize it in at most 50 characters.\n"
+						+ "Respond with only the summary, at most 50 characters in length.\n"
 						+ "Do not add punctuation unless it is part of the conversation.\n"
 						+ "Do not add extra words like \"Summary:\" or explanations.\n\n" + "Conversation:\n\n\n")
 				.ownerId(AssistantManagementService.DefaultAssistantId).shared(false).hasMemory(false)

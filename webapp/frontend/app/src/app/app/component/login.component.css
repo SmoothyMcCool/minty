@@ -19,10 +19,6 @@ body, html {
 .blue {
 	color: #0275d8;
 }
-.well {
-	background-color: rgba(245, 245, 245, 0.66);
-	border-radius: 25px;
-}
 .vertical-centre {
 	margin-top: 15%;
 }

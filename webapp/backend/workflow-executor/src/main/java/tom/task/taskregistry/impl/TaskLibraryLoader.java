@@ -1,0 +1,5 @@
+package tom.task.taskregistry.impl;
+
+public class TaskLibraryLoader {
+
+}

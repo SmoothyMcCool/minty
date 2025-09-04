@@ -31,7 +31,6 @@ import tom.config.ExternalProperties;
 import tom.document.model.DocumentState;
 import tom.document.model.MintyDoc;
 import tom.document.repository.DocumentRepository;
-import tom.ollama.service.MintyOllamaModel;
 import tom.ollama.service.OllamaService;
 
 @Service
@@ -90,11 +89,9 @@ public class DocumentServiceImpl implements DocumentService {
 
 	@Override
 	public void transformAndStore(File file, MintyDoc doc) {
-		MintyOllamaModel model = MintyOllamaModel.valueOf(summarizingModel);
-
 		VectorStore vectorStore = ollamaService.getVectorStore();
 		ChatModel chatModel = OllamaChatModel.builder().ollamaApi(ollamaApi)
-				.defaultOptions(OllamaOptions.builder().model(model.id()).build()).build();
+				.defaultOptions(OllamaOptions.builder().model(summarizingModel).build()).build();
 
 		FileSystemResource resource = new FileSystemResource(file);
 		List<Document> documents = read(resource);
