@@ -73,8 +73,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 		logger.info("Searching for task libraries at " + taskLibrary);
 
 		try (Stream<Path> stream = Files.list(Path.of(taskLibrary))) {
-			List<Path> paths = Files.list(Path.of(taskLibrary)).filter(file -> file.toString().endsWith(".jar"))
-					.toList();
+			List<Path> paths = stream.filter(file -> file.toString().endsWith(".jar")).toList();
 
 			List<String> classes = new ArrayList<>();
 			for (Path path : paths) {
@@ -106,63 +105,21 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 			this.classLoader = classLoader;
 
 			for (String className : classNames) {
-				className = className.replace("/", ".");
-				int suffixIdx = className.lastIndexOf(".");
-				className = className.substring(0, suffixIdx);
+				try {
+					className = className.replace("/", ".");
+					int suffixIdx = className.lastIndexOf(".");
+					className = className.substring(0, suffixIdx);
 
-				Class<?> loadedClass = classLoader.loadClass(className);
+					Class<?> loadedClass = classLoader.loadClass(className);
 
-				TaskConfig taskCfg = new NullTaskConfig();
-				if (isValidPublicTask(loadedClass)) {
+					if (isValidPublicTask(loadedClass)) {
+						loadPublicTask(loadedClass);
 
-					// Check if the annotated configuration class is valid.
-					PublicTask annotation = loadedClass.getAnnotation(PublicTask.class);
-					Class<?> configClass = classLoader.loadClass(annotation.configClass());
-
-					if (!isConfigClassValid(configClass, loadedClass)) {
-						continue;
+					} else if (isValidOutputTask(loadedClass)) {
+						loadOutputTask(loadedClass);
 					}
-
-					if (publicTasks.containsKey(annotation.name())) {
-						Class<?> conflictedClass = publicTasks.get(annotation.name()).left;
-						logger.warn("Duplicate task named " + annotation.name() + " found implemented by "
-								+ conflictedClass.toString() + " and " + loadedClass.toString());
-						continue;
-					}
-
-					taskCfg = (TaskConfig) configClass.getDeclaredConstructor().newInstance();
-
-					publicTasks.put(annotation.name(), ImmutablePair.of(loadedClass, taskCfg.getConfig()));
-
-					List<String> taskSysCfgs = taskCfg.getSystemConfigVariables();
-					systemConfigs.putAll(addConfigurationValues(taskCfg, annotation, configClass, taskSysCfgs));
-
-					List<String> taskUserCfgs = taskCfg.getUserConfigVariables();
-					userConfigs.putAll(addConfigurationValues(taskCfg, annotation, configClass, taskUserCfgs));
-
-					logger.info("Registered task " + annotation.name());
-
-				} else if (isValidOutputTask(loadedClass)) {
-
-					// Check if the annotated configuration class is valid.
-					Output annotation = loadedClass.getAnnotation(Output.class);
-					Class<?> configClass = classLoader.loadClass(annotation.configClass());
-
-					if (!isConfigClassValid(configClass, loadedClass)) {
-						continue;
-					}
-
-					if (publicOutputTasks.containsKey(annotation.name())) {
-						Class<?> conflictedClass = publicOutputTasks.get(annotation.name()).left;
-						logger.warn("Duplicate output task named " + annotation.name() + " found implemented by "
-								+ conflictedClass.toString() + " and " + loadedClass.toString());
-						continue;
-					}
-
-					taskCfg = (TaskConfig) configClass.getDeclaredConstructor().newInstance();
-
-					publicOutputTasks.put(annotation.name(), ImmutablePair.of(loadedClass, taskCfg.getConfig()));
-					logger.info("Registering output task " + annotation.name());
+				} catch (Exception e) {
+					logger.warn("Failed to load class: " + className, e);
 				}
 			}
 
@@ -170,11 +127,65 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 			// values
 			readSystemDefaults();
 
-		} catch (IOException | ClassNotFoundException | InstantiationException | IllegalAccessException
-				| IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+		} catch (IOException | IllegalArgumentException | SecurityException e) {
 			logger.warn("findAndRegisterAllTaskClasses: Failed to load class: ", e);
 		}
 
+	}
+
+	private void loadOutputTask(Class<?> loadedClass) throws ClassNotFoundException, InstantiationException,
+			IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+
+		// Check if the annotated configuration class is valid.
+		Output annotation = loadedClass.getAnnotation(Output.class);
+		Class<?> configClass = classLoader.loadClass(annotation.configClass());
+
+		if (!isConfigClassValid(configClass, loadedClass)) {
+			return;
+		}
+
+		if (publicOutputTasks.containsKey(annotation.name())) {
+			Class<?> conflictedClass = publicOutputTasks.get(annotation.name()).left;
+			logger.warn("Duplicate output task named " + annotation.name() + " found implemented by "
+					+ conflictedClass.toString() + " and " + loadedClass.toString());
+			return;
+		}
+
+		TaskConfig taskCfg = (TaskConfig) configClass.getDeclaredConstructor().newInstance();
+
+		publicOutputTasks.put(annotation.name(), ImmutablePair.of(loadedClass, taskCfg.getConfig()));
+		logger.info("Registering output task " + annotation.name());
+	}
+
+	private void loadPublicTask(Class<?> loadedClass) throws ClassNotFoundException, InstantiationException,
+			IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+		TaskConfig taskCfg;
+		// Check if the annotated configuration class is valid.
+		PublicTask annotation = loadedClass.getAnnotation(PublicTask.class);
+		Class<?> configClass = classLoader.loadClass(annotation.configClass());
+
+		if (!isConfigClassValid(configClass, loadedClass)) {
+			return;
+		}
+
+		if (publicTasks.containsKey(annotation.name())) {
+			Class<?> conflictedClass = publicTasks.get(annotation.name()).left;
+			logger.warn("Duplicate task named " + annotation.name() + " found implemented by "
+					+ conflictedClass.toString() + " and " + loadedClass.toString());
+			return;
+		}
+
+		taskCfg = (TaskConfig) configClass.getDeclaredConstructor().newInstance();
+
+		publicTasks.put(annotation.name(), ImmutablePair.of(loadedClass, taskCfg.getConfig()));
+
+		List<String> taskSysCfgs = taskCfg.getSystemConfigVariables();
+		systemConfigs.putAll(addConfigurationValues(taskCfg, annotation, configClass, taskSysCfgs));
+
+		List<String> taskUserCfgs = taskCfg.getUserConfigVariables();
+		userConfigs.putAll(addConfigurationValues(taskCfg, annotation, configClass, taskUserCfgs));
+
+		logger.info("Registered task " + annotation.name());
 	}
 
 	private Map<String, String> addConfigurationValues(TaskConfig taskCfg, PublicTask annotation, Class<?> configClass,

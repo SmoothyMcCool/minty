@@ -9,7 +9,7 @@ import org.springframework.ai.vectorstore.VectorStore;
 
 public interface OllamaService {
 
-	MintyOllamaModel getDefaultModel();
+	String getDefaultModel();
 
 	EmbeddingModel getEmbeddingModel();
 
@@ -19,6 +19,6 @@ public interface OllamaService {
 
 	ChatMemory getChatMemory();
 
-	List<MintyOllamaModel> listModels();
+	List<String> listModels();
 
 }

@@ -62,7 +62,8 @@ html(lang='en')
 
 							div.collapse.mt-3(id=blockId)
 								.card.card-body
-									| #{item}
+									p!= item
+
 		h1 Errors
 		each valueList, index in errors
 			h2 Step #{index + 1}
@@ -82,7 +83,7 @@ html(lang='en')
 									strong User:
 								else
 									strong Assistant:
-								| #{message.message}
+								p!= message.message
 
 			else
 				p No messages in this conversation.

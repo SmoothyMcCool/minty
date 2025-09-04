@@ -36,7 +36,7 @@ public class OllamaServiceImpl implements OllamaService {
 	private final int chatMemoryDepth;
 	private final String defaultModel;
 
-	private List<MintyOllamaModel> models;
+	private List<String> models;
 	ModelObject modelObject;
 	private final OllamaApi ollamaApi;
 	private final JdbcTemplate vectorJdbcTemplate;
@@ -56,8 +56,7 @@ public class OllamaServiceImpl implements OllamaService {
 
 	@PostConstruct
 	public void initialize() {
-		models = Arrays.asList(ollamaChatModels.split(",")).stream().map(model -> MintyOllamaModel.valueOf(model))
-				.toList();
+		models = Arrays.asList(ollamaChatModels.split(","));
 
 		logger.info("Registering models " + models.toString());
 
@@ -66,8 +65,7 @@ public class OllamaServiceImpl implements OllamaService {
 			return;
 		}
 
-		MintyOllamaModel embeddingModelEnum = MintyOllamaModel.valueOf(embeddingModelName);
-		OllamaOptions embeddingOptions = OllamaOptions.builder().model(embeddingModelEnum.getName()).build();
+		OllamaOptions embeddingOptions = OllamaOptions.builder().model(embeddingModelName).build();
 		EmbeddingModel embeddingModel = new OllamaEmbeddingModel(ollamaApi, embeddingOptions, ObservationRegistry.NOOP,
 				ModelManagementOptions.defaults());
 
@@ -86,7 +84,7 @@ public class OllamaServiceImpl implements OllamaService {
 	}
 
 	@Override
-	public List<MintyOllamaModel> listModels() {
+	public List<String> listModels() {
 		return models;
 	}
 
@@ -111,8 +109,8 @@ public class OllamaServiceImpl implements OllamaService {
 	}
 
 	@Override
-	public MintyOllamaModel getDefaultModel() {
-		return MintyOllamaModel.valueOf(defaultModel);
+	public String getDefaultModel() {
+		return defaultModel;
 	}
 
 }

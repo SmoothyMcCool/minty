@@ -127,8 +127,8 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 				.map(conversation -> conversation.fromEntity()).toList();
 
 		// Remove all the internal workflow conversations.
-		conversations = conversations.stream().filter(conversation -> conversation
-				.getAssociatedAssistantId() != AssistantManagementService.DefaultAssistantId).toList();
+		conversations = conversations.stream().filter(conversation -> !conversation.getAssociatedAssistantId()
+				.equals(AssistantManagementService.DefaultAssistantId)).toList();
 
 		return conversations;
 	}

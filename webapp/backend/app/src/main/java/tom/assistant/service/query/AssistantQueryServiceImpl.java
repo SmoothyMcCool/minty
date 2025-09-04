@@ -28,7 +28,6 @@ import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
 import tom.model.Assistant;
 import tom.model.AssistantQuery;
-import tom.ollama.service.MintyOllamaModel;
 import tom.ollama.service.OllamaService;
 import tom.user.model.User;
 import tom.user.service.UserServiceInternal;
@@ -131,17 +130,10 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 
 	private Optional<ChatClientRequestSpec> prepare(String query, UUID conversationId, Assistant assistant) {
 
-		MintyOllamaModel model;
-		try {
-			model = MintyOllamaModel.valueOf(assistant.model());
-		} catch (Exception e) {
-			logger.warn("Invalid model: " + assistant.model() + ". Cannot continue");
-			return Optional.empty();
-		}
+		String model = assistant.model();
 
 		OllamaChatModel chatModel = OllamaChatModel.builder().ollamaApi(ollamaApi)
-				.defaultOptions(
-						OllamaOptions.builder().model(model.getName()).temperature(assistant.temperature()).build())
+				.defaultOptions(OllamaOptions.builder().model(model).temperature(assistant.temperature()).build())
 				.build();
 
 		List<Advisor> advisors = new ArrayList<>();
