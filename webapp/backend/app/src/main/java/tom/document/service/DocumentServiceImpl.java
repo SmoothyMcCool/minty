@@ -186,7 +186,9 @@ public class DocumentServiceImpl implements DocumentService {
 	}
 
 	@Override
+	@Transactional
 	public MintyDoc addDocument(UUID userId, MintyDoc document) {
+		document.setDocumentId(null);
 		document.setOwnerId(userId);
 		document.setState(DocumentState.NO_CONTENT);
 		return documentRepository.save(document);
