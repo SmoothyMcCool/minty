@@ -57,3 +57,8 @@ button:disabled {
 	background-color: rgba(245, 245, 245, 0.66);
 	border-radius: 10px;
 }
+
+.bg-opacity-75 {
+	background-color: rgba(255, 255, 255, 0.75) !important;
+	color: #000 !important;
+}

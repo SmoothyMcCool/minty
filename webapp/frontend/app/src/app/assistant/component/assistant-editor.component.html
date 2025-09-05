@@ -1,7 +1,7 @@
 <ng-container *ngIf="assistant">
 	<div class="form-group mb-2">
 		<label for="assistantName">Name</label>
-		<input type="text" class="form-control opacity-50" id="assistantName" name="assistantName"
+		<input type="text" class="form-control bg-opacity-75" id="assistantName" name="assistantName"
 			[(ngModel)]="assistant.name">
 	</div>
 	<div class="d-flex flex-row">
@@ -18,18 +18,18 @@
 	</div>
 	<div class="form-group mb-2">
 		<label for="model">Model</label>
-		<select class="form-select opacity-50" name="model" [ngModel]="assistant.model" (ngModelChange)="modelChanged($event)">
+		<select class="form-select bg-opacity-75" name="model" [ngModel]="assistant.model" (ngModelChange)="modelChanged($event)">
 			<option *ngFor="let model of models" value="{{model}}">{{model}}</option>
 		</select>
 	</div>
 	<div class="form-group mb-2">
 		<label for="assistantTemperature">Temperature</label>
-		<input type="number" step="0.1" min="0" max="1" class="form-control opacity-50" id="assistantTemperature"
+		<input type="number" step="0.1" min="0" max="1" class="form-control bg-opacity-75" id="assistantTemperature"
 			name="assistantTemperature" [(ngModel)]="assistant.temperature">
 	</div>
 	<div class="form-group mb-2">
 		<label for="assistantPrompt">Prompt</label>
-		<textarea class="form-control opacity-50" id="assistantPrompt" name="assistantPrompt" style="height: 200px;"
+		<textarea class="form-control bg-opacity-75" id="assistantPrompt" name="assistantPrompt" style="height: 200px;"
 			[(ngModel)]="assistant.prompt"></textarea>
 	</div>
 	<div class="form-group mb-2 well p-2" *ngIf="assistant && (availableDocuments && availableDocuments.length > 0); else noDocuments">

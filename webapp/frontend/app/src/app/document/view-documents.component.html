@@ -31,7 +31,6 @@
 				<div class="d-flex align-items-center">
 					<div class="p-1" *ngIf="document.state === 'NO_CONTENT'"><strong class="text-danger">Processing...</strong></div>
 					<div class="p-1"><strong>Title: </strong>{{document.title}}</div>
-					<div class="p-1 ms-2"><strong>Model: </strong>{{document.model}}</div>
 					<ng-container *ngIf="document.associatedAssistantIds && document.associatedAssistantIds.length > 0">
 						<div class="p-1 ms-2"><strong>Used in Assistants: </strong></div>
 						<span class="badge bg-secondary rounded p-1 me-2" *ngFor="let assistant of document.associatedAssistantIds">{{findAssistant(assistant)?.name}}</span>

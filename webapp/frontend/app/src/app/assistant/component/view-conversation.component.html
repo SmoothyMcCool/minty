@@ -1,17 +1,19 @@
 <div class="bg-image img-assistant">
 	<div class="container">
+		<h1>{{assistant.name}}</h1>
 		<div class="row mb-2">
-			<h1>{{assistant.name}}</h1>
-			<div class="row mb-3">
-				<div class="col-2"><h2>Prompt</h2></div>
-				<div class="card-body col-10" style="white-space: pre-wrap">{{assistant.prompt}}</div>
-			</div>
-			<div class="form-floating mb-3">
-				<textarea style="height: 100px;" class="form-control" id="aiQuery" name="aiQuery" [(ngModel)]="userText"></textarea>
-				<label class="ms-3" for="aiQuery">Put your input here</label>
+			<h2 class="col-2">Prompt</h2>
+			<div class="col-10">
+				<div class="overflow-auto well p-3" style="white-space: pre-wrap; height: 200px;">
+					{{assistant.prompt}}
+				</div>
 			</div>
 		</div>
-		<div class="row mb-3">
+		<div class="row mb-2 form-floating">
+			<textarea style="height: 100px;" class="form-control" id="aiQuery" name="aiQuery" [(ngModel)]="userText"></textarea>
+			<label class="ms-3" for="aiQuery">Put your input here</label>
+		</div>
+		<div class="row mb-2">
 			<div class="col me-auto">
 				<button class="btn btn-primary mb-2" (click)="submit(userText)" [disabled]="!userText">Okey Dokey</button>
 			</div>
