@@ -10,6 +10,7 @@ import { CommonModule } from '@angular/common';
 import { DocProperties, DocumentEditorComponent } from './document-editor.component';
 import { FormsModule } from '@angular/forms';
 import { Assistant } from '../model/assistant';
+import { Subscription } from 'rxjs';
 
 @Component({
 	selector: 'minty-view-documents',
@@ -41,6 +42,9 @@ export class ViewDocumentsComponent implements OnInit {
 		file: undefined
 	};
 
+	private subscription: Subscription;
+	private filter: string;
+
 	constructor(private documentService: DocumentService,
 		private userService: UserService,
 		private assistantService: AssistantService,
@@ -51,13 +55,17 @@ export class ViewDocumentsComponent implements OnInit {
 	ngOnInit(): void {
 		this.documentService.list().subscribe(documents => {
 			this.documents = documents;
-			this.displayDocuments = documents;
+			this.filterChanged(this.filter);
 		});
 		this.assistantService.list().subscribe(assistants => {
 			this.assistants = assistants;
 		});
 		this.assistantService.models().subscribe(models => {
 			this.models = models;
+		});
+		this.subscription = this.documentService.mintyDocListList$.subscribe((value: MintyDoc[]) => {
+			this.documents = value;
+			this.filterChanged(this.filter);
 		});
 	}
 
@@ -94,6 +102,7 @@ export class ViewDocumentsComponent implements OnInit {
 				this.cancelNewDocument();
 				this.documentService.list().subscribe(documents => {
 					this.documents = documents;
+					this.filterChanged(this.filter);
 				});
 			});
 		});
@@ -130,6 +139,11 @@ export class ViewDocumentsComponent implements OnInit {
 	}
 
 	filterChanged(filter: string) {
-		this.displayDocuments = this.documents.filter(document => document.title.includes(filter));
+		this.filter = filter;
+		if (this.filter) {
+			this.displayDocuments = this.documents.filter(document => document.title.includes(filter));
+		} else {
+			this.displayDocuments = this.documents;
+		}
 	}
 }

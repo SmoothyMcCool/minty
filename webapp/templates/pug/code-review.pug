@@ -46,7 +46,7 @@ html(lang='en')
 		div.collapse.mt-3(id="reviewedCode")
 			.card.card-body
 				pre
-					code #{results[0][0]}
+					code!= results[0][0]
 
 		h2 Analysis
 		#{results[1][0]}
