@@ -2,6 +2,7 @@ package tom.render.service;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -29,23 +30,21 @@ public class RenderServiceImpl implements RenderService {
 
 	private final Logger logger = LogManager.getLogger(RenderServiceImpl.class);
 
-	private final String pugFileLocation;
-	private final String resultsDir;
 	private final PugConfiguration pugConfiguration;
 	private final WorkflowService workflowService;
+	private final String tempFolder;
 
 	public RenderServiceImpl(PugConfiguration pugConfiguration, WorkflowService workflowService,
 			ExternalProperties properties) {
 		this.pugConfiguration = pugConfiguration;
 		this.workflowService = workflowService;
-		resultsDir = properties.get("workflowResultsLocation");
-		pugFileLocation = properties.get("pugTemplates");
+		this.tempFolder = properties.get("tempFileStore");
 	}
 
 	@Override
-	public String renderPug(String template, ExecutionResult data) throws IOException {
+	public String renderPug(String template, ExecutionResult data) throws PugException, IOException {
 
-		if (template == null || data == null || pugFileLocation == null || resultsDir == null) {
+		if (template == null || data == null || tempFolder == null) {
 			throw new IllegalArgumentException("A Required parameter is null");
 		}
 
@@ -54,9 +53,12 @@ public class RenderServiceImpl implements RenderService {
 		try (StringWriter writer = new StringWriter()) {
 
 			ResultTemplate resultTemplate = workflowService.getResultTemplate(template);
+			if (resultTemplate == null) {
+				throw new RuntimeException("resultTemplate is null!");
+			}
 
-			tempFilePath = Files.createTempFile(Paths.get(pugFileLocation), "pug-" + UUID.randomUUID(), ".pug");
-			Files.write(tempFilePath, resultTemplate.getContent().getBytes());
+			tempFilePath = Files.createTempFile(Paths.get(tempFolder), "pug-" + UUID.randomUUID(), ".pug");
+			Files.write(tempFilePath, resultTemplate.getContent().getBytes(StandardCharsets.UTF_8));
 
 			PugTemplate pugTemplate = pugConfiguration.getTemplate(tempFilePath.toString());
 			PugModel model = new PugModel(data.toMap());
@@ -64,12 +66,6 @@ public class RenderServiceImpl implements RenderService {
 			pugTemplate.process(model, writer);
 			return writer.toString();
 
-		} catch (PugException e) {
-			logger.error("PugRenderService: Caught PugException: ", e);
-			throw e;
-		} catch (IOException e) {
-			logger.error("PugRenderService: Caught IOException: ", e);
-			throw e;
 		} finally {
 			if (tempFilePath != null) {
 				tempFilePath.toFile().delete();
@@ -80,8 +76,8 @@ public class RenderServiceImpl implements RenderService {
 	@Override
 	public String renderJson(ExecutionResult data) throws IOException {
 
-		if (data == null || resultsDir == null) {
-			throw new IllegalArgumentException("A Required parameter is null");
+		if (data == null) {
+			throw new IllegalArgumentException("Data is null");
 		}
 
 		StringWriter writer = new StringWriter();

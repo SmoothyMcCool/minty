@@ -11,7 +11,7 @@ import { UserService } from 'src/app/user.service';
 import { WorkflowState } from 'src/app/model/workflow/workflow-state';
 import { WorkflowResult } from 'src/app/model/workflow/workflow-result';
 import { WorkflowExecutionState } from 'src/app/model/workflow/workflow-execution-state';
-import { animate, state, style, transition, trigger } from '@angular/animations';
+import { animate, style, transition, trigger } from '@angular/animations';
 
 @Component({
 	selector: 'minty-workflow-list',
