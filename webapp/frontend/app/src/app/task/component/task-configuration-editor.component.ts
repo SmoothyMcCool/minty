@@ -1,14 +1,17 @@
-import { Component, forwardRef, Input } from '@angular/core';
+import { Component, forwardRef, Input, OnInit } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Assistant } from 'src/app/model/assistant';
 import { MapEditorComponent } from './map-editor.component';
 import { StringListEditorComponent } from './stringlist-editor.component';
+import { WorkflowService } from 'src/app/workflow/workflow.service';
+import { EnumListEditorComponent } from './enumlist-editor.component';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
 	selector: 'minty-task-config-editor',
 	templateUrl: 'task-configuration-editor.component.html',
-	imports: [CommonModule, FormsModule, MapEditorComponent, StringListEditorComponent],
+	imports: [CommonModule, FormsModule, MapEditorComponent, StringListEditorComponent, EnumListEditorComponent],
 	providers: [
 		{
 			provide: NG_VALUE_ACCESSOR,
@@ -17,11 +20,13 @@ import { StringListEditorComponent } from './stringlist-editor.component';
 		}
 	]
 })
-export class TaskConfigurationEditorComponent implements ControlValueAccessor {
+export class TaskConfigurationEditorComponent implements ControlValueAccessor, OnInit {
 
 	config: Map<string, string> = new Map();
 	onChange: any = () => {};
 	onTouched: any = () => {};
+
+	resultTemplates: string[] = [];
 
 	@Input() assistants: Assistant[] = [];
 
@@ -34,7 +39,18 @@ export class TaskConfigurationEditorComponent implements ControlValueAccessor {
 		return this._taskConfiguration;
 	}
 
-	constructor() {
+	private cachedChoices: { [key: string]: string[] } = {};
+
+	constructor(private route: ActivatedRoute,
+		private workflowService: WorkflowService) {
+	}
+
+	ngOnInit(): void {
+		this.route.params.subscribe(() => {
+			this.workflowService.listResultTemplates().subscribe(resultTemplates => {
+				this.resultTemplates = resultTemplates;
+			});
+		});
 	}
 
 	valueChanged(param: string, value: string) {
@@ -50,6 +66,22 @@ export class TaskConfigurationEditorComponent implements ControlValueAccessor {
 		return null;
 	}
 
+	getChoicesFor(param: string): string[] {
+		// There is likely a non-hacky way to do this, but I'm taking the easy way out for now.
+		if (!this.cachedChoices[param] || this.cachedChoices[param].length === 0) {
+			if (param === 'Pug Template') {
+				this.cachedChoices[param] = this.resultTemplates.filter(el => el.endsWith('.pug'));
+			}
+			// Add more choices here as needed...
+			else {
+				this.cachedChoices[param] = [];
+			}
+			
+		}
+		
+		return this.cachedChoices[param];
+	}
+
 	writeValue(obj: any): void {
 		this.config = obj;
 	}
@@ -63,11 +95,4 @@ export class TaskConfigurationEditorComponent implements ControlValueAccessor {
 		// Nah.
 	}
 
-	addEntry() {
-		this.config.set('','');
-	}
-
-	removeEntry(key: string) {
-		this.config.delete(key);
-	}
 }

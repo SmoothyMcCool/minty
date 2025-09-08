@@ -20,8 +20,6 @@ export class StringListEditorComponent implements ControlValueAccessor {
 	onChange: any = () => {};
 	onTouched: any = () => {};
 
-	mapAsString: string;
-
 	constructor() {
 	}
 

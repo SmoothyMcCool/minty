@@ -14,8 +14,10 @@ import org.springframework.stereotype.Service;
 import tom.conversation.service.ConversationServiceInternal;
 import tom.task.taskregistry.TaskRegistryService;
 import tom.workflow.controller.WorkflowRequest;
+import tom.workflow.model.ResultTemplate;
 import tom.workflow.model.Task;
 import tom.workflow.model.Workflow;
+import tom.workflow.repository.ResultTemplateRepository;
 import tom.workflow.repository.WorkflowRepository;
 import tom.workflow.tracking.service.WorkflowTrackingService;
 
@@ -25,15 +27,18 @@ public class WorkflowServiceImpl implements WorkflowService {
 	private final Logger logger = LogManager.getLogger(WorkflowServiceImpl.class);
 
 	private final WorkflowRepository workflowRepository;
+	private final ResultTemplateRepository resultTemplateRepository;
 	private final TaskRegistryService taskRegistryService;
 	private final WorkflowTrackingService workflowTrackingService;
 	private final ConversationServiceInternal conversationService;
 	private final AsyncTaskExecutor taskExecutor;
 
-	public WorkflowServiceImpl(WorkflowRepository workflowRepository, TaskRegistryService taskRegistryService,
-			WorkflowTrackingService workflowTrackingService, ConversationServiceInternal conversationService,
+	public WorkflowServiceImpl(WorkflowRepository workflowRepository, ResultTemplateRepository resultTemplateRepository,
+			TaskRegistryService taskRegistryService, WorkflowTrackingService workflowTrackingService,
+			ConversationServiceInternal conversationService,
 			@Qualifier("taskExecutor") ThreadPoolTaskExecutor taskExecutor) {
 		this.workflowRepository = workflowRepository;
+		this.resultTemplateRepository = resultTemplateRepository;
 		this.taskRegistryService = taskRegistryService;
 		this.workflowTrackingService = workflowTrackingService;
 		this.taskExecutor = taskExecutor;
@@ -125,4 +130,19 @@ public class WorkflowServiceImpl implements WorkflowService {
 		return workflow.getOwnerId().equals(userId);
 	}
 
+	@Override
+	public String addorUpdateResultTemplate(ResultTemplate resultTemplate) {
+		ResultTemplate result = resultTemplateRepository.save(resultTemplate);
+		return result.getName();
+	}
+
+	@Override
+	public ResultTemplate getResultTemplate(String templateName) {
+		return resultTemplateRepository.findByName(templateName);
+	}
+
+	@Override
+	public List<String> listResultTemplates() {
+		return resultTemplateRepository.findAllTemplateNames();
+	}
 }

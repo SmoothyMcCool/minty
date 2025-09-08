@@ -23,9 +23,10 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 	@Input() models: string[] = [];
 	private _availableDocuments: MintyDoc[] = [];
 	@Input()
-	set availableDocuments(value: MintyDoc[]){
+	set availableDocuments(value: MintyDoc[]) {
 		this._availableDocuments = value;
 		this.assistantDocuments = this._availableDocuments.filter(doc => this.assistant.documentIds.find(id => id === doc.documentId) != undefined);
+		this._availableDocuments = this._availableDocuments.filter(doc => this.assistantDocuments.find(asstDoc => asstDoc.documentId === doc.documentId) == undefined);
 	}
 	get availableDocuments(): MintyDoc[] {
 		return this._availableDocuments;
@@ -34,8 +35,8 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 	assistantDocuments: MintyDoc[] = [];
 	assistant: Assistant;
 
-	onChange: any = () => {};
-	onTouched: any = () => {};
+	onChange: any = () => { };
+	onTouched: any = () => { };
 
 	constructor() {
 	}
@@ -51,17 +52,15 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 		}
 		this.assistant.documentIds.push(doc.documentId);
 		this.assistantDocuments.push(doc);
+		this._availableDocuments = this._availableDocuments.filter(doc => this.assistantDocuments.find(asstDoc => asstDoc.documentId === doc.documentId) == undefined);
 		// New object for better chances at sane change detection.
 		this.assistant.documentIds = [...this.assistant.documentIds];
 	}
 
 	removeDoc(doc: MintyDoc) {
-		this.assistant.documentIds =
-			this.assistant.documentIds.filter(el => el !== doc.documentId);
-		this.assistantDocuments =
-			this.availableDocuments.filter(doc =>
-				this.assistant.documentIds.find(id =>
-					id === doc.documentId) != undefined);
+		this.assistant.documentIds = this.assistant.documentIds.filter(el => el !== doc.documentId);
+		this.assistantDocuments = this.availableDocuments.filter(doc => this.assistant.documentIds.find(id => id === doc.documentId) != undefined);
+		this._availableDocuments.push(doc);
 	}
 
 	writeValue(obj: any): void {

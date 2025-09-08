@@ -5,6 +5,7 @@ import { AlertService } from '../alert.service';
 import { catchError, EMPTY, map, Observable } from 'rxjs';
 import { ApiResult } from '../model/api-result';
 import { TaskDescription } from '../model/task-description';
+import { ResultTemplate } from '../model/workflow/result-template';
 
 @Injectable({
 	providedIn: 'root'
@@ -17,6 +18,8 @@ export class WorkflowService {
 	private static readonly ExecuteWorkflow = 'api/workflow/execute'; // Run a workflow
 	private static readonly NewWorkflow = 'api/workflow/new'; // Create a new workflow
 	private static readonly UpdateWorkflow = 'api/workflow/update'; // Update an existing workflow
+	private static readonly UploadTemplate = 'api/workflow/resultTemplate'; // Upload a new result template
+	private static readonly ListTemplates = 'api/workflow/resultTemplate'; // List all result templates
 
 	constructor(private http: HttpClient, private alertService: AlertService) {
 	}
@@ -141,6 +144,36 @@ export class WorkflowService {
 				}),
 				map((result: ApiResult) => {
 					return result.data as string;
+				})
+			);
+	}
+
+	addResultTemplate(outputTemplate: ResultTemplate): Observable<string> {
+		const formData = new FormData();
+		formData.append('templateName', outputTemplate.name);
+		formData.append('file', outputTemplate.file);
+
+		return this.http.post<ApiResult>(WorkflowService.UploadTemplate, formData)
+			.pipe(
+				catchError(error => {
+					this.alertService.postFailure(JSON.stringify(error));
+					return EMPTY;
+				}),
+				map((result: ApiResult) => {
+					return result.data as string;
+				})
+			);
+	}
+
+	listResultTemplates(): Observable<string[]> {
+		return this.http.get<ApiResult>(WorkflowService.ListTemplates)
+			.pipe(
+				catchError(error => {
+					this.alertService.postFailure(JSON.stringify(error));
+					return EMPTY;
+				}),
+				map((result: ApiResult) => {
+					return result.data as string[];
 				})
 			);
 	}

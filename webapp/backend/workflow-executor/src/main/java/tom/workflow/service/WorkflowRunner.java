@@ -16,6 +16,7 @@ import tom.model.ChatMessage;
 import tom.output.OutputTask;
 import tom.task.MintyTask;
 import tom.task.taskregistry.TaskRegistryService;
+import tom.util.StackTraceUtilities;
 import tom.workflow.model.Task;
 import tom.workflow.model.TaskRequest;
 import tom.workflow.model.Workflow;
@@ -87,6 +88,9 @@ public class WorkflowRunner {
 			executionState.setOutputFormat(outputTask.getFormat());
 
 		} catch (Exception e) {
+			executionState.setOutput(StackTraceUtilities.StackTrace(e));
+			executionState.setOutputFormat("text/plain");
+
 			logger.error("Failed to generate output for " + workflow.getName() + " with exception ", e);
 		} finally {
 			conversationService.deleteConversation(userId, workflowConversation.getConversationId());
@@ -145,9 +149,7 @@ public class WorkflowRunner {
 	}
 
 	private void startNextTask(WorkflowTaskWrapper completedTask) {
-		// Save results.
-		Map<String, Object> results = completedTask.getResult();
-		executionState.getResult().addResult(completedTask.getStepNumber(), results);
+		// Don't save results here. That happened already in taskComplete()!
 
 		// Remove the just-completed task from the list of pending tasks.
 		pendingTasks.remove(completedTask.getTaskId());

@@ -1,5 +1,6 @@
 package tom.workflow.converters;
 
+import java.io.IOException;
 import java.io.StringWriter;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -24,13 +25,21 @@ import tom.workflow.tracking.model.ExecutionResult;
 @Converter
 public class ExecutionResultToStringConverter implements AttributeConverter<ExecutionResult, String> {
 
-	private final Logger logger = LogManager.getLogger(ExecutionResultToStringConverter.class);
+	private static final Logger logger = LogManager.getLogger(ExecutionResultToStringConverter.class);
+
+	private final ObjectMapper mapper;
 
 	public ExecutionResultToStringConverter() {
+		mapper = new ObjectMapper();
+		mapper.registerModule(new JavaTimeModule());
 	}
 
 	@Override
 	public String convertToDatabaseColumn(ExecutionResult attribute) {
+		if (attribute == null) {
+			return null;
+		}
+
 		JsonFactory factory = new JsonFactory();
 		StringWriter writer = new StringWriter();
 
@@ -42,12 +51,15 @@ public class ExecutionResultToStringConverter implements AttributeConverter<Exec
 
 			generator.writeFieldName("results");
 			generator.writeStartArray();
+
 			for (List<Map<String, Object>> stepResults : attribute.getResults()) {
 				generator.writeStartArray();
+
 				for (Map<String, Object> taskResult : stepResults) {
 					generator.writeStartObject();
+
 					for (Map.Entry<String, Object> entry : taskResult.entrySet()) {
-						generator.writeObjectField(entry.getKey(), entry.getValue());
+						writeJsonValue(generator, entry.getKey(), entry.getValue());
 					}
 					generator.writeEndObject();
 				}
@@ -58,7 +70,7 @@ public class ExecutionResultToStringConverter implements AttributeConverter<Exec
 			generator.writeFieldName("errors");
 			generator.writeStartArray();
 			for (List<String> stepErrors : attribute.getErrors()) {
-				generator.writeArray(stepErrors.toArray(new String[0]), 0, stepErrors.size());
+				writeJsonValue(generator, null, stepErrors);
 			}
 			generator.writeEndArray();
 
@@ -76,9 +88,66 @@ public class ExecutionResultToStringConverter implements AttributeConverter<Exec
 
 		} catch (Exception e) {
 			logger.warn("Caught exception while serializing ExecutionResult: ", e);
+			return null;
 		}
 
 		return writer.toString();
+	}
+
+	private static void writeJsonValue(JsonGenerator generator, String fieldName, Object value) throws IOException {
+		if (value == null) {
+			return;
+		}
+
+		if (fieldName != null) {
+			// We are writing an object.
+
+			if (value instanceof List<?> || (value != null && value.getClass().isArray())) {
+				generator.writeArrayFieldStart(fieldName);
+				writeIterable(generator, value);
+				generator.writeEndArray();
+			} else if (value instanceof Map<?, ?>) {
+				generator.writeObjectFieldStart(fieldName);
+				writeMap(generator, (Map<?, ?>) value);
+				generator.writeEndObject();
+			} else {
+				generator.writeObjectField(fieldName, value);
+			}
+		}
+
+		else {
+			// Writing inside an array - no field name
+			if (value instanceof List<?> || (value != null && value.getClass().isArray())) {
+				generator.writeStartArray();
+				writeIterable(generator, value);
+				generator.writeEndArray();
+			} else if (value instanceof Map<?, ?>) {
+				generator.writeStartObject();
+				writeMap(generator, (Map<?, ?>) value);
+				generator.writeEndObject();
+			} else {
+				generator.writeObject(value);
+			}
+		}
+	}
+
+	private static void writeIterable(JsonGenerator generator, Object iterableOrArray) throws IOException {
+		if (iterableOrArray instanceof List<?>) {
+			for (Object item : (List<?>) iterableOrArray) {
+				writeJsonValue(generator, null, item);
+			}
+		} else if (iterableOrArray != null && iterableOrArray.getClass().isArray()) {
+			int length = java.lang.reflect.Array.getLength(iterableOrArray);
+			for (int i = 0; i < length; i++) {
+				writeJsonValue(generator, null, java.lang.reflect.Array.get(iterableOrArray, i));
+			}
+		}
+	}
+
+	private static void writeMap(JsonGenerator generator, Map<?, ?> map) throws IOException {
+		for (Map.Entry<?, ?> entry : map.entrySet()) {
+			writeJsonValue(generator, String.valueOf(entry.getKey()), entry.getValue());
+		}
 	}
 
 	@Override
@@ -88,8 +157,6 @@ public class ExecutionResultToStringConverter implements AttributeConverter<Exec
 		}
 
 		try {
-			ObjectMapper mapper = new ObjectMapper();
-			mapper.registerModule(new JavaTimeModule());
 
 			JsonNode root = mapper.readTree(dbData);
 
@@ -129,7 +196,9 @@ public class ExecutionResultToStringConverter implements AttributeConverter<Exec
 
 			return result;
 
-		} catch (Exception e) {
+		} catch (
+
+		Exception e) {
 			logger.warn("Could not deserialize ExecutionResult", e);
 			return null;
 		}
