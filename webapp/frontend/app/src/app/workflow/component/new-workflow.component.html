@@ -1,15 +1,28 @@
-<div class="pt-5">
-	<div class="well p-2 text-dark container-fluid">
-		<h2>New Workflow</h2>
+<div class="well mb-2 p-2 text-dark container-fluid">
+	<h2>New Workflow</h2>
 
-		<form role="form" (submit)="createWorkflow()">
-			<minty-workflow-editor name="workflowEditor" [edit]="true" [taskTemplates]="taskTemplates"
-				[outputTaskTemplates]="outputTaskTemplates" [(ngModel)]="workflow"></minty-workflow-editor>
+	<form role="form" (submit)="createWorkflow()">
+		<minty-workflow-editor name="workflowEditor" [edit]="true" [taskTemplates]="taskTemplates"
+			[outputTaskTemplates]="outputTaskTemplates" [(ngModel)]="workflow"></minty-workflow-editor>
 
-			<div>
-				<button type="submit" id="submitButton" class="btn btn-primary">The Work Must Flow</button>
-				<button type="button" id="cancelButton" class="btn btn-primary float-end" (click)="cancel()">Cancel</button>
-			</div>
-		</form>
-	</div>
+		<div>
+			<button type="submit" id="submitButton" class="btn btn-primary">The Work Must Flow</button>
+			<button type="button" id="cancelButton" class="btn btn-primary float-end" (click)="cancel()">Cancel</button>
+		</div>
+	</form>
 </div>
+<button class="btn btn-primary" (click)="showTemplateUploader = true" *ngIf="!showTemplateUploader; else uploadTemplate">Upload Output Template</button>
+<ng-template #uploadTemplate>
+	<div class="well p-2">
+		<h3>Upload Output Templates</h3>
+		<div class="form-group mb-2">
+			<label for="templateName">Template Name</label>
+			<input type="text" class="form-control" id="templateName" name="templateName" [(ngModel)]="resultTemplate.name">
+		</div>
+		<div class="form-group mb-2">
+			<label for="outputFile" class="form-label">File</label>
+			<input class="form-control" type="file" id="outputFile" (change)="fileChanged($event)">
+		</div>
+		<button class="btn btn-primary" (click)="uploadFile()">Upload</button>
+	</div>
+</ng-template>

@@ -1,5 +1,6 @@
 package tom.task.service;
 
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import tom.api.services.ConversationService;
@@ -23,10 +24,10 @@ public class TaskServicesImpl implements TaskServices {
 	private final RenderService renderService;
 	private final UserService userService;
 
-	public TaskServicesImpl(AssistantManagementService assistantManagementService,
-			AssistantQueryService assistantQueryService, ConversationServiceInternal conversationService,
-			HttpService httpService, PythonService pythonService, RenderService renderService,
-			UserService userService) {
+	public TaskServicesImpl(@Lazy AssistantManagementService assistantManagementService,
+			@Lazy AssistantQueryService assistantQueryService, @Lazy ConversationServiceInternal conversationService,
+			@Lazy HttpService httpService, @Lazy PythonService pythonService, @Lazy RenderService renderService,
+			@Lazy UserService userService) {
 		this.assistantManagementService = assistantManagementService;
 		this.assistantQueryService = assistantQueryService;
 		this.conversationService = conversationService;

@@ -81,24 +81,13 @@ export class ResultService {
 	}
 
 	openWorkflowOutput(workflowId: string) {
-		let params: HttpParams = new HttpParams();
-		params = params.append('workflowId', workflowId);
 
-		this.http.get<ApiResult>(ResultService.GetWorkflowOutput, { params: params })
-			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
-				map((result: ApiResult) => {
-					return result.data as string;
-				})
-			).subscribe((result: string) => {
-				const blob = new Blob([result], { type: 'text/html' });
+		this.getWorkflowResult(workflowId).subscribe(result => {
+			const blob = new Blob([result.output], { type: result.outputFormat });
 				const url = URL.createObjectURL(blob);
 				window.open(url, '_blank');
 				URL.revokeObjectURL(url); 
-			});
+		});
 	}
 
 	deleteWorkflowResult(workflowId: string): Observable<unknown> {

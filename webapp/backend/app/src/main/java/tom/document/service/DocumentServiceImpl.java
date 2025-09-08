@@ -26,6 +26,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import jakarta.transaction.Transactional;
 import tom.config.ExternalProperties;
 import tom.document.model.DocumentState;
@@ -43,6 +44,7 @@ public class DocumentServiceImpl implements DocumentService {
 	private final AssistantDocumentLinkService assistantDocumentLinkService;
 	private final OllamaApi ollamaApi;
 	private final DocumentRepository documentRepository;
+	private final int keywordsPerDocument;
 
 	private final String docFileStore;
 	private final String summarizingModel;
@@ -58,6 +60,7 @@ public class DocumentServiceImpl implements DocumentService {
 		this.assistantDocumentLinkService = assistantDocumentLinkService;
 		summarizingModel = properties.get("ollamaSummarizingModel");
 		docFileStore = properties.get("docFileStore");
+		keywordsPerDocument = properties.getInt("keywordsPerDocument", 5);
 	}
 
 	@PostConstruct
@@ -71,17 +74,33 @@ public class DocumentServiceImpl implements DocumentService {
 		}
 
 		File[] newFiles = docPath.toFile().listFiles();
+
+		if (newFiles == null) {
+			logger.error("Could not list files in " + docFileStore);
+			return;
+		}
+
 		for (File newFile : newFiles) {
 			processFile(newFile);
 		}
 
 	}
 
+	@PreDestroy
+	public void shutdown() {
+		fileProcessingExecutor.initiateShutdown();
+	}
+
 	@Override
 	public void processFile(File file) {
 		try {
-			UUID documentId = UUID.fromString(file.getName());
-			startTaskFor(file.toPath(), documentId);
+			if (file.isFile()) {
+				UUID documentId = UUID.fromString(file.getName());
+				startTaskFor(file.toPath(), documentId);
+			}
+		} catch (IllegalArgumentException e) {
+			logger.error("Invalid UUID filename! Deleting file " + file.getName(), e);
+			file.delete();
 		} catch (Exception e) {
 			logger.error("Could not start processing task for file " + file.getName(), e);
 		}
@@ -111,10 +130,8 @@ public class DocumentServiceImpl implements DocumentService {
 		return splitter.apply(documents);
 	}
 
-	private static int NumKeywordsPerDocument = 5;
-
 	private List<Document> enrich(UUID documentId, List<Document> documents, ChatModel chatModel) {
-		KeywordMetadataEnricher keywordifier = new KeywordMetadataEnricher(chatModel, NumKeywordsPerDocument);
+		KeywordMetadataEnricher keywordifier = new KeywordMetadataEnricher(chatModel, keywordsPerDocument);
 		documents = keywordifier.apply(documents);
 
 		for (Document document : documents) {
@@ -152,7 +169,13 @@ public class DocumentServiceImpl implements DocumentService {
 	public boolean deleteDocument(UUID userId, UUID documentId) {
 
 		MintyDoc document = findByDocumentId(documentId);
-		if (document.getOwnerId() != userId) {
+
+		if (document == null) {
+			logger.warn("Document " + documentId + " does not exist!");
+			return false;
+		}
+
+		if (!document.getOwnerId().equals(userId)) {
 			logger.warn("User " + userId + " tried to delete unowned document " + documentId);
 			return false;
 		}
@@ -197,7 +220,7 @@ public class DocumentServiceImpl implements DocumentService {
 	@Override
 	public boolean documentOwnedBy(UUID userId, UUID documentId) {
 		MintyDoc doc = documentRepository.findByDocumentId(documentId);
-		return userId == doc.getOwnerId();
+		return doc != null && userId.equals(doc.getOwnerId());
 	}
 
 	@Override

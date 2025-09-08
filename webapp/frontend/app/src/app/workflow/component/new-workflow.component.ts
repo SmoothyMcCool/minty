@@ -8,6 +8,7 @@ import { Workflow } from 'src/app/model/workflow/workflow';
 import { WorkflowService } from '../workflow.service';
 import { TaskDescription } from 'src/app/model/task-description';
 import { WorkflowEditorComponent } from './workflow-editor.component';
+import { ResultTemplate } from 'src/app/model/workflow/result-template';
 
 @Component({
 	selector: 'minty-new-workflow',
@@ -19,6 +20,13 @@ export class NewWorkflowComponent implements OnInit {
 
 	taskTemplates: TaskDescription[] = [];
 	outputTaskTemplates: TaskDescription[] = [];
+	showTemplateUploader = false;
+
+	resultTemplate: ResultTemplate = {
+		id: '',
+		name: '',
+		file: undefined
+	};
 
 	workflow: Workflow = {
 		name: '',
@@ -65,5 +73,29 @@ export class NewWorkflowComponent implements OnInit {
 
 	cancel() {
 		this.router.navigateByUrl('workflow');
+	}
+
+	fileChanged(event: Event) {
+		const newFile = (event.target as HTMLInputElement).files;
+		if (newFile && newFile.length == 1) {
+			this.resultTemplate.file = newFile[0];
+		}
+	}
+
+	uploadFile() {
+		if (!this.resultTemplate.file || !this.resultTemplate.name) {
+				this.alertService.postFailure('You have to give a title and actual file, k?');
+				return;
+			}
+
+			this.workflowService.addResultTemplate(this.resultTemplate).subscribe((message) => {
+				this.alertService.postSuccess(message);
+				this.showTemplateUploader = false;
+				this.resultTemplate = {
+					id: '',
+					name: '',
+					file: undefined
+				};
+			});
 	}
 }

@@ -88,6 +88,12 @@ CREATE TABLE IF NOT EXISTS Workflow (
 	watchLocation TEXT,
 	PRIMARY KEY (id)
 );
+CREATE TABLE IF NOT EXISTS ResultTemplate (
+	id UUID NOT NULL DEFAULT (UUID()),
+	ownerId UUID,
+	name TEXT,
+	content LONGTEXT
+);
 CREATE TABLE IF NOT EXISTS WorkflowExecution (
 	id UUID NOT NULL DEFAULT (UUID()),
 	ownerId UUID,

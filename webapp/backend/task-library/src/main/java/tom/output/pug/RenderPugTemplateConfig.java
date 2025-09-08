@@ -24,7 +24,7 @@ public class RenderPugTemplateConfig implements TaskConfig {
 	@Override
 	public Map<String, TaskConfigTypes> getConfig() {
 		Map<String, TaskConfigTypes> config = new HashMap<>();
-		config.put("Pug Template", TaskConfigTypes.String);
+		config.put("Pug Template", TaskConfigTypes.EnumList);
 		return config;
 	}
 

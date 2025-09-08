@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import tom.workflow.controller.WorkflowRequest;
+import tom.workflow.model.ResultTemplate;
 import tom.workflow.model.Workflow;
 
 public interface WorkflowService {
@@ -23,5 +24,11 @@ public interface WorkflowService {
 	boolean isAllowedToExecute(UUID workflowId, UUID userId);
 
 	boolean isWorkflowOwned(UUID workflowId, UUID userId);
+
+	String addorUpdateResultTemplate(ResultTemplate resultTemplate);
+
+	ResultTemplate getResultTemplate(String templateName);
+
+	List<String> listResultTemplates();
 
 }

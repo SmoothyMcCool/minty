@@ -94,7 +94,7 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 	@Override
 	@Transactional
 	public Assistant findAssistant(UUID userId, UUID assistantId) {
-		if (assistantId == AssistantManagementService.DefaultAssistantId) {
+		if (assistantId.equals(AssistantManagementService.DefaultAssistantId)) {
 			return Assistant.CreateDefaultAssistant(ollamaService.getDefaultModel().toString());
 		}
 
