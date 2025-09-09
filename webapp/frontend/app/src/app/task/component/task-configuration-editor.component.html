@@ -4,24 +4,35 @@
 			<ng-container *ngSwitchCase="'Number'">
 				<div class="row g-1">
 					<div class="col-4">
-						<label for="numberInput-{{item.key}}">{{item.key}}</label>
+						<ng-container *ngIf="defaultFields && defaultFields.includes(item.key); else notDefaultNumber">
+							<label for="numberInput-{{item.key}}">{{item.key}} (System or User Default)</label>
+						</ng-container>
+						<ng-template #notDefaultNumber>
+							<label for="numberInput-{{item.key}}">{{item.key}}</label>
+						</ng-template>
 					</div>
 					<div class="col-8">
 						<input type="number" step="1" class="form-control form-control-sm" id="numberInput-{{item.key}}"
 							name="numberInput-{{item.key}}" [ngModel]="getConfig(item.key)"
-							(ngModelChange)="valueChanged(item.key, $event)">
+							(ngModelChange)="valueChanged(item.key, $event)" [readonly]="defaultFields && defaultFields.includes(item.key)">
 					</div>
 				</div>
 			</ng-container>
 			<ng-container *ngSwitchCase="'Boolean'">
 				<div class="row g-1">
-					<div class="col-4"></div>
+					<div class="col-4">
+						<ng-container *ngIf="defaultFields && defaultFields.includes(item.key); else notDefaultNumber">
+							<label for="booleanInput-{{item.key}}">{{item.key}} (System or User Default)</label>
+						</ng-container>
+						<ng-template #notDefaultNumber>
+							<label for="booleanInput-{{item.key}}">{{item.key}}</label>
+						</ng-template>
+					</div>
 					<div class="col-8">
 						<div class="form-group mb-2">
 							<input type="checkbox" class="form-check-input me-2" id="booleanInput-{{item.key}}"
 								name="booleanInput-{{item.key}}" [ngModel]="getConfig(item.key)"
-								(ngModelChange)="valueChanged(item.key, $event)">
-							<label for="booleanInput-{{item.key}}">{{item.key}}</label>
+								(ngModelChange)="valueChanged(item.key, $event)" [readonly]="defaultFields && defaultFields.includes(item.key)">
 						</div>
 					</div>
 				</div>
@@ -29,11 +40,16 @@
 			<ng-container *ngSwitchCase="'String'">
 				<div class="row g-1">
 					<div class="col-4">
-						<label for="stringInput-{{item.key}}">{{item.key}}</label>
+						<ng-container *ngIf="defaultFields && defaultFields.includes(item.key); else notDefaultNumber">
+							<label for="stringInput-{{item.key}}">{{item.key}} (System or User Default)</label>
+						</ng-container>
+						<ng-template #notDefaultNumber>
+							<label for="stringInput-{{item.key}}">{{item.key}}</label>
+						</ng-template>
 					</div>
 					<div class="col-8">
 						<input [type]="(item.key || '').toLowerCase().includes('password') ? 'password' : 'text'" class="form-control form-control-sm" id="stringInput-{{item.key}}" name="stringInput-{{item.key}}"
-							[ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)">
+							[ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)" [readonly]="defaultFields && defaultFields.includes(item.key)">
 					</div>
 				</div>
 			</ng-container>

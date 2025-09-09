@@ -30,6 +30,15 @@ export class TaskConfigurationEditorComponent implements ControlValueAccessor, O
 
 	@Input() assistants: Assistant[] = [];
 
+	private _defaultFields: string[] = [];
+	@Input()
+	set defaultFields(value: string[]){
+		this._defaultFields = value;
+	}
+	get defaultFields(): string[] {
+		return this._defaultFields;
+	}
+
 	private _taskConfiguration: Map<string, string>;
 	@Input()
 	set taskConfiguration(value: Map<string, string>){

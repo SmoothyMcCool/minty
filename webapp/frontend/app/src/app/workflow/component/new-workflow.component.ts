@@ -9,6 +9,8 @@ import { WorkflowService } from '../workflow.service';
 import { TaskDescription } from 'src/app/model/task-description';
 import { WorkflowEditorComponent } from './workflow-editor.component';
 import { ResultTemplate } from 'src/app/model/workflow/result-template';
+import { UserService } from 'src/app/user.service';
+import { forkJoin } from 'rxjs';
 
 @Component({
 	selector: 'minty-new-workflow',
@@ -21,6 +23,7 @@ export class NewWorkflowComponent implements OnInit {
 	taskTemplates: TaskDescription[] = [];
 	outputTaskTemplates: TaskDescription[] = [];
 	showTemplateUploader = false;
+	defaults: Map<string, string>;
 
 	resultTemplate: ResultTemplate = {
 		id: '',
@@ -50,7 +53,8 @@ export class NewWorkflowComponent implements OnInit {
 	constructor(private alertService: AlertService,
 		private router: Router,
 		private workflowService: WorkflowService,
-		private taskTemplateService: TaskTemplateService) {
+		private taskTemplateService: TaskTemplateService,
+		private userService: UserService) {
 	}
 
 	ngOnInit() {
@@ -60,10 +64,19 @@ export class NewWorkflowComponent implements OnInit {
 		this.taskTemplateService.listOutputTemplates().subscribe((outputTaskTemplates: TaskDescription[]) => {
 			this.outputTaskTemplates = outputTaskTemplates;
 		});
+
+		forkJoin({
+			systemDefaults: this.userService.systemDefaults(),
+			userDefaults: this.userService.userDefaults()
+		}).subscribe(({ systemDefaults, userDefaults }) => {
+			// User defaults should take priority in conflicts.
+			this.defaults = new Map([ ...systemDefaults, ...userDefaults ]);
+		});
+
 	}
 
 	createWorkflow() {
-		this.workflowService.sanitize(this.workflow, this.taskTemplates, this.outputTaskTemplates);
+		this.workflowService.sanitize(this.workflow, this.taskTemplates, this.outputTaskTemplates, this.defaults);
 
 		this.workflowService.newWorkflow(this.workflow).subscribe(() => {
 			this.alertService.postSuccess('Workflow Created!');
