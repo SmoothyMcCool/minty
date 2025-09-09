@@ -1,15 +1,29 @@
+<div class="form-check form-switch">
+	<input class="form-check-input" type="checkbox" id="renderDiagramsSwitch" [(ngModel)]="useMermaid">
+	<label class="form-check-label" for="renderDiagramsSwitch">Render Diagrams</label>
+</div>
 <ng-container *ngFor="let message of messages">
 	<ng-container *ngIf="message.user; else botMessage">
 		<div class="row flex-row-reverse m-2">
 			<div class="col-11 well-user p-2">
-				<markdown mermaid [data]="message.message"></markdown>
+				<ng-container *ngIf="useMermaid; else noMermaid">
+					<markdown mermaid [data]="message.message"></markdown>
+				</ng-container>
+				<ng-template #noMermaid>
+					<markdown [data]="message.message"></markdown>
+				</ng-template>
 			</div>
 		</div>
 	</ng-container>
 	<ng-template #botMessage>
 		<div class="row m-2">
 			<div class="col-11 well-bot p-2">
-				<markdown mermaid [data]="message.message"></markdown>
+				<ng-container *ngIf="useMermaid; else noMermaid">
+					<markdown mermaid [data]="message.message"></markdown>
+				</ng-container>
+				<ng-template #noMermaid>
+					<markdown [data]="message.message"></markdown>
+				</ng-template>
 			</div>
 		</div>
 	</ng-template>
