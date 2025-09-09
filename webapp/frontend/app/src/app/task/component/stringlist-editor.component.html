@@ -1,6 +1,6 @@
 <div class="row g-1">
 	<ul class="list-group">
-		<li class="list-group-item" *ngFor="let entry of entries; let i = index">
+		<li class="list-group-item" *ngFor="let entry of entries; let i = index; trackBy: trackByIndex">
 			<div class="d-flex">
 				<input
 					type="text"
@@ -8,6 +8,7 @@
 					name="entry"
 					[ngModel]="entry"
 					(ngModelChange)="valueChanged(i, $event)"
+					[ngModelOptions]="{ standalone: true }"
 					required
 					placeholder="Input Name"
 				/>

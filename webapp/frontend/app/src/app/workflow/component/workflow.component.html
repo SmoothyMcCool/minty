@@ -2,7 +2,7 @@
 	<div class="well p-2 text-dark container-fluid">
 		<form role="form" (submit)="submit()">
 			<minty-workflow-editor name="workflowEditor" [edit]="false" [taskTemplates]="taskTemplates"
-				[outputTaskTemplates]="outputTaskTemplates" [(ngModel)]="workflow"></minty-workflow-editor>
+				[outputTaskTemplates]="outputTaskTemplates" [defaults]="defaults" [(ngModel)]="workflow"></minty-workflow-editor>
 
 			<div>
 				<button type="submit" class="btn btn-primary">Submit!</button>

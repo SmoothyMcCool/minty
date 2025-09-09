@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, forwardRef, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, forwardRef, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { Task } from '../../model/task';
 import { TaskConfigurationEditorComponent } from './task-configuration-editor.component';
@@ -7,6 +7,7 @@ import { TaskDescription } from 'src/app/model/task-description';
 import { AssistantService } from 'src/app/assistant.service';
 import { Assistant } from 'src/app/model/assistant';
 import { Popover } from 'bootstrap';
+import { Observable, of } from 'rxjs';
 
 @Component({
 	selector: 'minty-task-editor',
@@ -38,7 +39,17 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor, OnDest
 		return this._taskTemplates;
 	}
 
-	@Input() defaults: Map<string, string>;
+	private _defaults: Map<string, string>;
+	@Input()
+	set defaults(value: Map<string, string>) {
+		this._defaults = value;
+		if (this.task?.name) {
+			this.taskChanged(this.task.name);
+		}
+	}
+	get defaults(): Map<string, string> {
+		return this._defaults;
+	}
 
 	assistants: Assistant[] = [];
 
@@ -46,6 +57,7 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor, OnDest
 		name: '',
 		configuration: new Map<string, string>()
 	};
+	defaultFields: string[] = [];
 
 	isFileTriggered: boolean = false;
 	triggerDirectory: string = '';
@@ -132,8 +144,8 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor, OnDest
 		this.taskDescription = this.taskTemplates.find(element => element.name === $event);
 		this.task.name = $event;
 		if (this.taskDescription) {
-			this.taskDescription.configuration.forEach((value, key) => {
-				// System defaults are stored in the form "Task Name::Property Name", so
+			this.taskDescription.configuration.forEach((_value, key) => {
+				// System and user defaults are stored in the form "Task Name::Property Name", so
 				// we need to build that up to find our keys.
 				const fullKey = this.task.name + '::' + key;
 				if (this.defaults && this.defaults.has(fullKey)) {
@@ -142,7 +154,31 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor, OnDest
 			});
 		}
 
+		this.defaultFields = [];
+		this.getDefaultFields().subscribe(defaults => this.defaultFields);
+
 		this.destroyPopover();
 		this.createPopover();
+	}
+
+	getDefaultFields(): Observable<string[]> {
+		if (this.defaultFields && this.defaultFields.length > 0) {
+			return of(this.defaultFields);
+		}
+		this.defaultFields = [];
+
+		if (this.taskDescription) {
+			this.taskDescription.configuration.forEach((_value, key) => {
+					// System and user defaults are stored in the form "Task Name::Property Name", so
+					// we need to build that up to find our keys.
+					const fullKey = this.task.name + '::' + key;
+					if (this.defaults && this.defaults.has(fullKey)) {
+						this.defaultFields.push(key);
+					}
+				}
+			);
+		}
+
+		return of(this.defaultFields);
 	}
 }

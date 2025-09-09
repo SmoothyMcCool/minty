@@ -178,10 +178,13 @@ export class WorkflowService {
 			);
 	}
 
-	sanitize(workflow: Workflow, taskTemplates: TaskDescription[], outputTaskTemplates: TaskDescription[]) {
+	sanitize(workflow: Workflow, taskTemplates: TaskDescription[], outputTaskTemplates: TaskDescription[], defaults: Map<string, string>) {
 		workflow.workflowSteps.forEach(step => {
 			const template = taskTemplates.find(template => template.name === step.name);
 			if (template) {
+				// This removes any keys that should not be present (which happens sometimes if the task type is
+				// changed during workflow construction or editing, but we need it that way so we don't nuke old
+				// values if task type changes back.)
 				const sanitizedConfig = new Map<string, string>();
 				const keys = step.configuration.keys();
 				for (const key of keys) {
@@ -189,6 +192,19 @@ export class WorkflowService {
 						sanitizedConfig.set(key, step.configuration.get(key));
 					}
 				}
+
+				// We also check here for system and user defaults, and nuke them if present. They
+				// get filled in when we want to run the workflow, we never store these values
+				// in the database with the workflow.
+				step.configuration.forEach((_value, key) => {
+					// System and user defaults are stored in the form "Task Name::Property Name", so
+					// we need to build that up to find our keys.
+					const fullKey = step.name + '::' + key;
+					if (defaults && defaults.has(fullKey)) {
+						sanitizedConfig.set(key, '');
+					}
+				});
+
 				step.configuration = sanitizedConfig;
 			}
 		});

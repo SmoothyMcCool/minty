@@ -25,7 +25,6 @@ export class StringListEditorComponent implements ControlValueAccessor {
 
 	valueChanged(index: number, value: string) {
 		this.entries[index] = value;
-		this.entries = [...this.entries];
 		this.onChange(JSON.stringify(this.entries));
 	}
 
@@ -48,13 +47,15 @@ export class StringListEditorComponent implements ControlValueAccessor {
 
 	addEntry() {
 		this.entries.push('');
-		this.entries = [...this.entries];
 		this.onChange(JSON.stringify(this.entries));
 	}
 
 	removeEntry(index: number) {
 		this.entries.splice(index, 1);
-		this.entries = [...this.entries];
 		this.onChange(JSON.stringify(this.entries));
+	}
+
+	trackByIndex(index: number, _item: any): number {
+		return index;
 	}
 }

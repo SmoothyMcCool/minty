@@ -8,6 +8,8 @@ import { WorkflowService } from 'src/app/workflow/workflow.service';
 import { TaskTemplateService } from 'src/app/task/task-template.service';
 import { TaskDescription } from 'src/app/model/task-description';
 import { WorkflowEditorComponent } from './workflow-editor.component';
+import { forkJoin } from 'rxjs';
+import { UserService } from 'src/app/user.service';
 
 @Component({
 	selector: 'minty-workflow',
@@ -31,13 +33,15 @@ export class WorkflowComponent implements OnInit {
 	};
 	taskTemplates: TaskDescription[] = [];
 	outputTaskTemplates: TaskDescription[] = [];
+	defaults: Map<string, string>;
 
 	constructor(
 		private router: Router,
 		private route: ActivatedRoute,
 		private workflowService: WorkflowService,
 		private taskTemplateService: TaskTemplateService,
-		private alertService: AlertService) {
+		private alertService: AlertService,
+		private userService: UserService) {
 	}
 
 	ngOnInit(): void {
@@ -54,6 +58,14 @@ export class WorkflowComponent implements OnInit {
 				this.outputTaskTemplates = output;
 			});
 
+		});
+
+		forkJoin({
+			systemDefaults: this.userService.systemDefaults(),
+			userDefaults: this.userService.userDefaults()
+		}).subscribe(({ systemDefaults, userDefaults }) => {
+			// User defaults should take priority in conflicts.
+			this.defaults = new Map([ ...systemDefaults, ...userDefaults ]);
 		});
 	}
 

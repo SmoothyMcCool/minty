@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, forwardRef, Input, OnInit } from '@angular/core';
+import { Component, forwardRef, Input } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { Workflow } from 'src/app/model/workflow/workflow';
 import { TaskEditorComponent } from 'src/app/task/component/task-editor.component';
@@ -20,10 +20,11 @@ import { ActivatedRoute } from '@angular/router';
 		}
 	]
 })
-export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
+export class WorkflowEditorComponent implements ControlValueAccessor {
 
 	@Input() taskTemplates: TaskDescription[] = [];
 	@Input() outputTaskTemplates: TaskDescription[] = [];
+	@Input() defaults: Map<string, string>;
 	@Input() edit: boolean = false;
 
 	onChange: any = () => {};
@@ -48,22 +49,7 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 	configParams = new Map<string, string>();
 	outputTaskConfigParams = new Map<string, string>();
 
-	defaults: Map<string, string>;
-
-	constructor(private userService: UserService,
-		private route: ActivatedRoute
-	) {
-	}
-
-	ngOnInit() {
-		this.route.params.subscribe(() => {
-			this.userService.systemDefaults().subscribe(systemDefaults => {
-				this.userService.userDefaults().subscribe(userDefaults => {
-					// User defaults should take priority in conflicts.
-					this.defaults = new Map([ ...systemDefaults, ...userDefaults ]);
-				});
-			});
-		});
+	constructor() {
 	}
 
 	addStep(after: number) {

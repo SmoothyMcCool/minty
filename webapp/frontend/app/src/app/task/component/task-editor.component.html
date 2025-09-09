@@ -26,5 +26,5 @@
 </div>
 <ng-container *ngIf="task && taskDescription">
 	<minty-task-config-editor [assistants]="assistants" [taskConfiguration]="taskDescription.configuration"
-		[(ngModel)]="task.configuration" name="{{name}}-taskConfig"></minty-task-config-editor>
+		[(ngModel)]="task.configuration" [defaultFields]="getDefaultFields() | async" name="{{name}}-taskConfig"></minty-task-config-editor>
 </ng-container>

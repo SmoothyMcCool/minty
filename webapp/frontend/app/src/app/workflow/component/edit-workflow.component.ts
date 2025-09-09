@@ -8,6 +8,8 @@ import { WorkflowService } from '../workflow.service';
 import { TaskDescription } from 'src/app/model/task-description';
 import { WorkflowEditorComponent } from './workflow-editor.component';
 import { Workflow } from 'src/app/model/workflow/workflow';
+import { UserService } from 'src/app/user.service';
+import { forkJoin } from 'rxjs';
 
 @Component({
 	selector: 'minty-edit-workflow',
@@ -19,6 +21,7 @@ export class EditWorkflowComponent implements OnInit {
 
 	taskTemplates: TaskDescription[] = [];
 	outputTaskTemplates: TaskDescription[] = [];
+	defaults: Map<string, string>;
 
 	workflow: Workflow = {
 		name: '',
@@ -43,13 +46,22 @@ export class EditWorkflowComponent implements OnInit {
 		private route: ActivatedRoute,
 		private router: Router,
 		private workflowService: WorkflowService,
-		private taskTemplateService: TaskTemplateService) {
+		private taskTemplateService: TaskTemplateService,
+		private userService: UserService) {
 	}
 
 	ngOnInit() {
 		this.route.params.subscribe(params => {
 			this.workflowService.getWorkflow(params['id']).subscribe((workflow: Workflow) => {
 				this.workflow = workflow;
+			});
+
+			forkJoin({
+				systemDefaults: this.userService.systemDefaults(),
+				userDefaults: this.userService.userDefaults()
+			}).subscribe(({ systemDefaults, userDefaults }) => {
+				// User defaults should take priority in conflicts.
+				this.defaults = new Map([ ...systemDefaults, ...userDefaults ]);
 			});
 		});
 		this.taskTemplateService.listTemplates().subscribe((taskTemplates: TaskDescription[]) => {
@@ -61,7 +73,7 @@ export class EditWorkflowComponent implements OnInit {
 	}
 
 	updateWorkflow() {
-		this.workflowService.sanitize(this.workflow, this.taskTemplates, this.outputTaskTemplates);
+		this.workflowService.sanitize(this.workflow, this.taskTemplates, this.outputTaskTemplates, this.defaults);
 
 		this.workflowService.updateWorkflow(this.workflow).subscribe(() => {
 			this.alertService.postSuccess('Workflow Updated!');
