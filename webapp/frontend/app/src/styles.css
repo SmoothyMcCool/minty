@@ -62,3 +62,9 @@ button:disabled {
 	background-color: rgba(255, 255, 255, 0.75) !important;
 	color: #000 !important;
 }
+
+.mermaid {
+	background-color: #ffffff !important;
+	white-space: pre;
+	display: block;
+}
