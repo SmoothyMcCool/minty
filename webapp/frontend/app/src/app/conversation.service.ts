@@ -5,7 +5,6 @@ import { catchError, map } from 'rxjs/operators';
 import { EMPTY, Observable } from 'rxjs';
 import { AlertService } from './alert.service';
 import { Assistant } from './model/assistant';
-import { UserService } from './user.service';
 import { ChatMessage } from './model/chat-message';
 import { Conversation } from './model/conversation';
 
@@ -21,7 +20,7 @@ export class ConversationService {
 	private static readonly DeleteConversation = 'api/conversation/delete';
 
 
-	constructor(private http: HttpClient, private userService: UserService, private alertService: AlertService) {
+	constructor(private http: HttpClient, private alertService: AlertService) {
 	}
 
 	create(assistant: Assistant): Observable<Conversation> {

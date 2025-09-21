@@ -1,9 +1,12 @@
 package tom.assistant.service.query;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -22,10 +25,19 @@ import org.springframework.ai.ollama.api.OllamaOptions;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.SearchRequest.Builder;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.task.TaskRejectedException;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.PreDestroy;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
+import tom.api.services.assistant.LlmResult;
+import tom.api.services.assistant.QueueFullException;
+import tom.api.services.assistant.StreamResult;
+import tom.api.services.assistant.StringResult;
+import tom.config.ExternalProperties;
 import tom.model.Assistant;
 import tom.model.AssistantQuery;
 import tom.ollama.service.OllamaService;
@@ -41,94 +53,183 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	private final OllamaApi ollamaApi;
 	private final UserServiceInternal userService;
 	private final AssistantManagementService assistantManagementService;
+	private final ThreadPoolTaskExecutor llmExecutor;
+	private final Map<UUID, LlmResult> results;
 
-	private static final int MaxResults = 2;
+	private final int maxResults;
 
 	public AssistantQueryServiceImpl(AssistantManagementService assistantManagementService, OllamaService ollamaService,
-			OllamaApi ollamaApi, UserServiceInternal userService) {
+			OllamaApi ollamaApi, UserServiceInternal userService,
+			@Qualifier("llmExecutor") ThreadPoolTaskExecutor llmExecutor, ExternalProperties properties) {
 		this.ollamaService = ollamaService;
 		this.ollamaApi = ollamaApi;
 		this.userService = userService;
 		this.assistantManagementService = assistantManagementService;
+		this.llmExecutor = llmExecutor;
+		this.results = new ConcurrentHashMap<>();
+		this.maxResults = properties.getInt("documentRagLimit", 2);
+	}
+
+	@PreDestroy
+	public void shutdown() {
+		llmExecutor.initiateShutdown();
 	}
 
 	@Override
-	public String ask(UUID userId, AssistantQuery query) {
-		User user = userService.getUserFromId(userId).get();
+	public UUID ask(UUID userId, AssistantQuery query) throws QueueFullException {
 
-		Optional<ChatClientRequestSpec> spec = prepareFromQuery(user, query);
-		if (spec.isEmpty()) {
+		try {
+			LlmRequest request = new LlmRequest(userId, query, Instant.now());
+
+			Runnable task = () -> askInternal(request);
+			request.setTask(task);
+			llmExecutor.submit(task);
+
+			return request.getQuery().getConversationId();
+
+		} catch (TaskRejectedException tre) {
+			// LLM is busy. Maybe next time.
+			throw new QueueFullException("LLM Queue is full, try again later.");
+		}
+
+	}
+
+	private void askInternal(LlmRequest request) {
+		String result = "";
+		results.put(request.getQuery().getConversationId(), LlmResult.IN_PROGRESS);
+
+		User user = userService.getUserFromId(request.getUserId()).get();
+
+		ChatClientRequestSpec spec = prepareFromQuery(user, request.getQuery());
+
+		if (spec == null) {
 			logger.warn("askStreaming: failed to generate chat request");
-			return "";
+			result = "Failed to generate chat request. Requested assistant doesn't exist or isn't shared with you.";
+
+		} else {
+
+			ChatResponse chatResponse = spec.call().chatResponse();
+
+			if (chatResponse != null) {
+				result = chatResponse.getResult().getOutput().getText();
+			} else {
+				result = "Oh no! The LLM returned a blank result. Try again later.";
+			}
 		}
 
-		ChatResponse chatResponse = spec.get().call().chatResponse();
-
-		if (chatResponse != null) {
-			return chatResponse.getResult().getOutput().getText();
-		}
-
-		logger.warn("ask: Chat response was null");
-		return "";
+		StringResult sr = new StringResult();
+		sr.setValue(result);
+		results.put(request.getQuery().getConversationId(), sr);
 	}
 
 	@Override
-	public Stream<String> askStreaming(UUID userId, AssistantQuery query) {
-		User user = userService.getUserFromId(userId).get();
+	public UUID askStreaming(UUID userId, AssistantQuery query) throws QueueFullException {
 
-		Optional<ChatClientRequestSpec> spec = prepareFromQuery(user, query);
-		if (spec.isEmpty()) {
+		try {
+			LlmRequest request = new LlmRequest(userId, query, Instant.now());
+			Runnable task = () -> askStreamingInternal(request);
+			request.setTask(task);
+			llmExecutor.execute(request);
+
+			return request.getQuery().getConversationId();
+
+		} catch (TaskRejectedException tre) {
+			// LLM is super busy - the queue is full. Maybe next time.
+			throw new QueueFullException("LLM Queue is full, try again later.");
+		}
+
+	}
+
+	@Override
+	public LlmResult getResultFor(UUID requestId) {
+		if (!results.containsKey(requestId)) {
+			return null;
+		}
+
+		LlmResult result = results.get(requestId);
+
+		// We can't actually put null into the concurrent hashmap so we fake it.
+		if (result == LlmResult.IN_PROGRESS) {
+			return result;
+		}
+
+		if (result instanceof StringResult) {
+			results.remove(requestId);
+		} else {
+			StreamResult sr = (StreamResult) result;
+			if (sr.isComplete()) {
+				results.remove(requestId);
+			}
+		}
+
+		return result;
+	}
+
+	@Override
+	public int getQueuePositionFor(UUID streamId) {
+		BlockingQueue<Runnable> queue = llmExecutor.getThreadPoolExecutor().getQueue();
+		int index = 1;
+		for (Runnable r : queue) {
+			LlmRequest req = (LlmRequest) r;
+			if (req.getQuery().getConversationId().equals(streamId)) {
+				return index;
+			}
+			index++;
+		}
+
+		// If we got here, the stream is not in the queue. If it is running, there is a
+		// result in the results map. Return 0. If there is no result, there is nothing
+		// happening. Return -1.
+		if (results.containsKey(streamId)) {
+			return 0;
+		}
+		return -1;
+	}
+
+	private void askStreamingInternal(LlmRequest request) {
+		Stream<String> result = null;
+		User user = userService.getUserFromId(request.getUserId()).get();
+
+		StreamResult sr = new StreamResult();
+		results.put(request.getQuery().getConversationId(), sr);
+
+		ChatClientRequestSpec spec = prepareFromQuery(user, request.getQuery());
+		if (spec == null) {
 			logger.warn("askStreaming: failed to generate chat request");
-			return Stream.empty();
+			sr.addChunk("Failed to generate response.");
+			sr.markComplete();
+			return;
 		}
 
-		Stream<String> chatResponse = spec.get().stream().content().toStream();
+		result = spec.stream().content().toStream();
 
-		if (chatResponse != null) {
-			return chatResponse;
+		if (result == null) {
+			sr.addChunk("Failed to generate response.");
+			sr.markComplete();
+			return;
 		}
 
-		logger.warn("askStreaming: Chat response was null");
-		return Stream.empty();
+		result.forEach(chunk -> {
+			sr.addChunk(chunk);
+		});
+
+		sr.markComplete();
+		results.remove(request.getQuery().getConversationId());
 	}
 
-	@Override
-	public String ask(Assistant assistant, String query) {
-
-		ChatResponse chatResponse = prepare(query, null, assistant).get().call().chatResponse();
-		if (chatResponse != null) {
-			return chatResponse.getResult().getOutput().getText();
-		}
-
-		logger.warn("ask: Chat response was null");
-		return "";
-	}
-
-	@Override
-	public String ask(Assistant assistant, String query, UUID conversationId) {
-		ChatResponse chatResponse = prepare(query, conversationId, assistant).get().call().chatResponse();
-
-		if (chatResponse != null) {
-			return chatResponse.getResult().getOutput().getText();
-		}
-
-		logger.warn("ask: Chat response was null");
-		return "";
-	}
-
-	private Optional<ChatClientRequestSpec> prepareFromQuery(User user, AssistantQuery query) {
+	private ChatClientRequestSpec prepareFromQuery(User user, AssistantQuery query) {
 		Assistant assistant = assistantManagementService.findAssistant(user.getId(), query.getAssistantId());
 		if (assistant == null) {
 			logger.warn(
 					"Tried to build a chat session from an assistant that doesn't exist or user cannot access. User: "
 							+ user.getName() + ", assistant: " + query.getAssistantId());
-			return Optional.empty();
+			return null;
 		}
 
 		return prepare(query.getQuery(), query.getConversationId(), assistant);
 	}
 
-	private Optional<ChatClientRequestSpec> prepare(String query, UUID conversationId, Assistant assistant) {
+	private ChatClientRequestSpec prepare(String query, UUID conversationId, Assistant assistant) {
 
 		String model = assistant.model();
 
@@ -153,7 +254,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			if (documentList.length() > 0) {
 				searchRequestBuilder = searchRequestBuilder.filterExpression(" documentId IN " + documentList);
 			}
-			SearchRequest searchRequest = searchRequestBuilder.topK(MaxResults).build();
+			SearchRequest searchRequest = searchRequestBuilder.topK(maxResults).build();
 
 			Advisor ragAdvisor = QuestionAnswerAdvisor.builder(vectorStore).searchRequest(searchRequest).build();
 			advisors.add(ragAdvisor);
@@ -181,7 +282,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			spec = chatClient.prompt(fullPrompt);
 		}
 
-		return Optional.of(spec);
+		return spec;
 	}
 
 }

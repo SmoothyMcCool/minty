@@ -75,8 +75,8 @@ public class ApplicationConfig implements WebMvcConfigurer {
 	@Qualifier("taskExecutor")
 	ThreadPoolTaskExecutor taskExecutor() {
 		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-		taskExecutor.setCorePoolSize(5);
-		taskExecutor.setMaxPoolSize(20);
+		taskExecutor.setCorePoolSize(props.getInt("defaultTaskThreads", 5));
+		taskExecutor.setMaxPoolSize(props.getInt("maximumTaskThreads", 20));
 		return taskExecutor;
 	}
 
@@ -84,8 +84,18 @@ public class ApplicationConfig implements WebMvcConfigurer {
 	@Qualifier("fileProcessingExecutor")
 	ThreadPoolTaskExecutor fileProcessingExecutor() {
 		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-		taskExecutor.setCorePoolSize(5);
-		taskExecutor.setMaxPoolSize(10);
+		taskExecutor.setCorePoolSize(props.getInt("defaultDocumentThreads", 1));
+		taskExecutor.setMaxPoolSize(props.getInt("maximumDocumentThreads", 2));
+		return taskExecutor;
+	}
+
+	@Bean
+	@Qualifier("llmExecutor")
+	ThreadPoolTaskExecutor llmExecutor() {
+		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
+		taskExecutor.setCorePoolSize(props.getInt("defaultLlmThreads", 2));
+		taskExecutor.setMaxPoolSize(props.getInt("maximumLlmThreads", 2));
+		taskExecutor.setQueueCapacity(props.getInt("llmMaxRequests", 100));
 		return taskExecutor;
 	}
 

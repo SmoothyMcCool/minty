@@ -14,4 +14,6 @@ export class ConversationComponent {
 	useMermaid = true;
 
 	@Input() messages: ChatMessage[];
+	@Input() responsePending: boolean;
+	@Input() queueDepth: number;
 };

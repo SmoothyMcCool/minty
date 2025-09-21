@@ -1,23 +1,22 @@
 package tom.config;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.Properties;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
 import org.springframework.util.PropertyPlaceholderHelper;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.Properties;
-
 public class ExternalProperties {
 
 	private static final Logger logger = LogManager.getLogger(ExternalProperties.class);
 
 	private Properties properties = new Properties();
-	private final PropertyPlaceholderHelper placeholderHelper =
-			new PropertyPlaceholderHelper("${", "}");
+	private final PropertyPlaceholderHelper placeholderHelper = new PropertyPlaceholderHelper("${", "}");
 
 	public ExternalProperties() {
 		String path = System.getProperty("catalina.base") + "/conf/Minty/application.properties";
@@ -30,7 +29,7 @@ public class ExternalProperties {
 
 			logger.info("Loaded external properties from: " + path);
 			StringWriter sw = new StringWriter();
-			PrintWriter pw  =new PrintWriter(sw);
+			PrintWriter pw = new PrintWriter(sw);
 			properties.list(pw);
 			logger.info("Properties:\n" + sw.toString());
 
@@ -44,7 +43,9 @@ public class ExternalProperties {
 	 */
 	public String get(String key) {
 		String value = properties.getProperty(key);
-		if (value == null) return null;
+		if (value == null) {
+			return null;
+		}
 		return placeholderHelper.replacePlaceholders(value, properties::getProperty);
 	}
 
@@ -61,7 +62,8 @@ public class ExternalProperties {
 		if (value != null) {
 			try {
 				return Integer.parseInt(value);
-			} catch (NumberFormatException ignored) {}
+			} catch (NumberFormatException ignored) {
+			}
 		}
 		return defaultValue;
 	}

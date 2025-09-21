@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.assistant.repository.AssistantRepository;
+import tom.config.ExternalProperties;
 import tom.conversation.service.ConversationServiceInternal;
 import tom.document.service.AssistantDocumentLinkService;
 import tom.model.Assistant;
@@ -27,12 +28,15 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 	private final AssistantDocumentLinkService assistantDocumentLinkService;
 	private ConversationServiceInternal conversationService;
 	private final OllamaService ollamaService;
+	private final ExternalProperties properties;
 
 	public AssistantManagementServiceImpl(AssistantRepository assistantRepository,
-			AssistantDocumentLinkService assistantDocumentLinkService, OllamaService ollamaService) {
+			AssistantDocumentLinkService assistantDocumentLinkService, OllamaService ollamaService,
+			ExternalProperties properties) {
 		this.assistantRepository = assistantRepository;
 		this.assistantDocumentLinkService = assistantDocumentLinkService;
 		this.ollamaService = ollamaService;
+		this.properties = properties;
 	}
 
 	@Override
@@ -96,6 +100,9 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 	public Assistant findAssistant(UUID userId, UUID assistantId) {
 		if (assistantId.equals(AssistantManagementService.DefaultAssistantId)) {
 			return Assistant.CreateDefaultAssistant(ollamaService.getDefaultModel().toString());
+		}
+		if (assistantId.equals(AssistantManagementService.ConversationNamingAssistantId)) {
+			return Assistant.CreateConversationNamingAssistant(properties.get("conversationNamingModel"));
 		}
 
 		try {

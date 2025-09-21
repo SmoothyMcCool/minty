@@ -1,7 +1,6 @@
-<div class="bg-image img-stats text-dark">
+<div [ngClass]="{ 'bg-image img-stats': user.displayMode === DisplayMode.Fun }" class="text-dark">
 	<div class="container">
 		<h1>Statistics</h1>
-
 		<div class="well p-2">
 			<table class="table">
 				<thead>

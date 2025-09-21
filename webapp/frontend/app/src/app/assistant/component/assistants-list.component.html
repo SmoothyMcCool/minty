@@ -1,4 +1,4 @@
-<div class="container-fluid text-light">
+<div class="container-fluid">
 	<div class="row">
 		<div class="col-4 col-sm-6">
 			<h4>Active Conversations</h4>
@@ -11,7 +11,7 @@
 							(click)="selectConversation(conversation)">
 							{{getConversationTitle(conversation)}}
 						</span>
-						<span class="badge text-bg-secondary mx-2">{{getConversationModel(conversation)}}</span>
+						<span class="badge text-bg-secondary mx-2">{{getConversationAssistantName(conversation)}}</span>
 						<span class="flex-grow-1"></span>
 						<button
 							type="button"

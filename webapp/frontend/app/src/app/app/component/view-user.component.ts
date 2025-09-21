@@ -1,9 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AlertService } from '../../alert.service';
-import { User } from '../../model/user';
+import { DisplayMode, User } from '../../model/user';
 import { UserService } from '../../user.service';
 
 @Component({
@@ -14,16 +13,17 @@ import { UserService } from '../../user.service';
 })
 export class ViewUserComponent implements OnInit {
 	user: User;
+	DisplayMode = DisplayMode;
 	repeatPassword = '';
 	passwordMismatch = true;
 	messages: string[] = [];
 	defaultValues: { key: string, value: string }[] = [];
 
-	constructor(private userService: UserService, private router: Router, private alertService: AlertService) {
+	constructor(private userService: UserService, private alertService: AlertService) {
 	}
 
 	ngOnInit() {
-		this.user = this.userService.getUser();
+		this.userService.getUser();
 		this.userService.userDefaults().subscribe(userDefaults => {
 			this.user.defaults = userDefaults;
 			this.defaultValues = Array.from(this.user.defaults.entries())
@@ -68,5 +68,9 @@ export class ViewUserComponent implements OnInit {
 
 	private isBlank(str: string) {
 		return (!str || /^\s*$/.test(str));
+	}
+
+	displayModeChanged(event: boolean) {
+		this.user.displayMode = event ? DisplayMode.Fun : DisplayMode.Boring;
 	}
 }
