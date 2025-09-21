@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { User } from '../../model/user';
+import { DisplayMode, User } from '../../model/user';
 import { UserService } from '../../user.service';
 import { environment } from 'src/environments/environment';
 
@@ -25,7 +25,8 @@ export class SignupComponent {
 			id: '',
 			name: '',
 			password: '',
-			defaults: new Map()
+			defaults: new Map(),
+			displayMode: DisplayMode.Fun
 		};
 	}
 

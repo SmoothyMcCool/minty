@@ -9,6 +9,7 @@ public class User {
 	private String name;
 	private String password;
 	private Map<String, String> defaults;
+	private String displayMode;
 
 	public UUID getId() {
 		return id;
@@ -40,6 +41,14 @@ public class User {
 
 	public void setDefaults(Map<String, String> defaults) {
 		this.defaults = defaults;
+	}
+
+	public String getDisplayMode() {
+		return displayMode;
+	}
+
+	public void setDisplayMode(String displayMode) {
+		this.displayMode = displayMode;
 	}
 
 }

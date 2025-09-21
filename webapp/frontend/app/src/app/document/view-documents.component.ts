@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { DocumentService } from '../document.service';
 import { ConfirmationDialogComponent } from '../app/component/confirmation-dialog.component';
@@ -11,6 +11,7 @@ import { DocProperties, DocumentEditorComponent } from './document-editor.compon
 import { FormsModule } from '@angular/forms';
 import { Assistant } from '../model/assistant';
 import { Subscription } from 'rxjs';
+import { DisplayMode, User } from '../model/user';
 
 @Component({
 	selector: 'minty-view-documents',
@@ -18,7 +19,10 @@ import { Subscription } from 'rxjs';
 	templateUrl: 'view-documents.component.html',
 	styleUrls: ['view-documents.component.css']
 })
-export class ViewDocumentsComponent implements OnInit {
+export class ViewDocumentsComponent implements OnInit, OnDestroy {
+
+	user: User;
+	DisplayMode = DisplayMode;
 
 	documents: MintyDoc[] = [];
 	displayDocuments: MintyDoc[] = [];
@@ -48,8 +52,9 @@ export class ViewDocumentsComponent implements OnInit {
 	constructor(private documentService: DocumentService,
 		private userService: UserService,
 		private assistantService: AssistantService,
-		private alertService: AlertService
-	) {
+		private alertService: AlertService) {
+
+		this.user = this.userService.getUser();
 	}
 
 	ngOnInit(): void {
@@ -67,6 +72,13 @@ export class ViewDocumentsComponent implements OnInit {
 			this.documents = value;
 			this.filterChanged(this.filter);
 		});
+	}
+
+	ngOnDestroy(): void {
+		if (this.subscription) {
+			this.subscription.unsubscribe();
+			this.subscription = undefined;
+		}
 	}
 
 	addNewDocument() {

@@ -68,6 +68,7 @@ export class UserService {
 			id: user.id,
 			name: user.name,
 			password: user.password,
+			displayMode: user.displayMode,
 			defaults: Object.fromEntries(user.defaults)
 		};
 		return this.http.post<ApiResult>(UserService.Update, body)

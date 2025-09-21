@@ -15,6 +15,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import tom.api.services.UserService;
 import tom.config.ExternalProperties;
 import tom.user.model.User;
 import tom.user.repository.EncryptedUser;
@@ -88,6 +89,9 @@ public class UserServiceImpl implements UserServiceInternal {
 
 	@Override
 	public Optional<User> getUserFromId(UUID userId) {
+		if (userId.equals(UserService.DefaultId)) {
+			return Optional.of(new User());
+		}
 		try {
 			return Optional.of(decrypt(userRepository.findById(userId).get()));
 		} catch (JsonProcessingException e) {

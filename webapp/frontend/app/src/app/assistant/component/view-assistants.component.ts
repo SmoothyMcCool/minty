@@ -1,15 +1,22 @@
+import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { User, DisplayMode } from 'src/app/model/user';
+import { UserService } from 'src/app/user.service';
 
 @Component({
 	selector: 'minty-view-assistants',
-	imports: [RouterModule],
+	imports: [CommonModule, RouterModule],
 	templateUrl: 'view-assistants.component.html',
 	styleUrls: ['view-assistants.component.css']
 })
 export class ViewAssistantsComponent {
 
-	constructor() {
+	user: User;
+	DisplayMode = DisplayMode;
+
+	constructor(private userService: UserService) {
+		this.user = this.userService.getUser();
 	}
 
 }

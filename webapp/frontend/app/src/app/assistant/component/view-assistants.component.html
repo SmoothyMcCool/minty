@@ -1,4 +1,4 @@
-<div class="bg-image img-assistant text-dark">
+<div [ngClass]="{ 'bg-image img-assistant': user.displayMode === DisplayMode.Fun }">
 	<div class="container">
 		<h1>Assistants</h1>
 		<router-outlet></router-outlet>

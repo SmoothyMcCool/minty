@@ -2,8 +2,8 @@
 <form role="form" class="container-fluid well p-3" (submit)="createAssistant()">
 	<minty-assistant-editor name="assistantEditor" [models]="models" [availableDocuments]="availableDocuments" [(ngModel)]="assistant"></minty-assistant-editor>
 	<div>
-		<button type="submit" id="submitButton" [disabled]="formInvalid()" class="btn btn-primary">Ya</button>
+		<button type="submit" id="submitButton" [disabled]="formInvalid()" class="btn btn-primary">Ok</button>
 		<button type="button" id="cancelButton" class="btn btn-primary float-end"
-			(click)="navigateTo('assistants')">Na</button>
+			(click)="navigateTo('assistants')">Nope</button>
 	</div>
 </form>

@@ -1,4 +1,4 @@
-<div class="bg-image img-settings">
+<div [ngClass]="{ 'bg-image img-settings': user.displayMode === DisplayMode.Fun }">
 	<div class="container">
 		<div *ngIf="messages.length > 0" class="alert alert-danger container">
 			<div class="row">
@@ -12,7 +12,6 @@
 		</div>
 
 		<h1>Update Yourself</h1>
-
 		<div class="well p-2">
 			<form role="form" #userForm="ngForm" class="container" (submit)="update()">
 				<div class="mb-3 row">
@@ -40,6 +39,10 @@
 							[(ngModel)]="repeatPassword" (input)="passwordUpdated()" required>
 					</div>
 				</div>
+				<div class="form-check form-switch">
+					<input class="form-check-input" type="checkbox" id="displayMode" name="displayMode" [ngModel]="user.displayMode === DisplayMode.Fun" (ngModelChange)="displayModeChanged($event)">
+					<label class="form-check-label" for="displayMode">I like fun</label>
+				</div>
 				<div class="mb-3 row">
 					<table class="table table-bordered table-sm align-middle">
 						<thead class="table-light">
@@ -59,7 +62,7 @@
 								</td>
 								<td>
 									<input
-										type="text"
+										[type]	="entry.key.includes('password') ? 'password' : 'text'"
 										class="form-control form-control-sm"
 										name="value-{{i}}"
 										[ngModel]="entry.value"

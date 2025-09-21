@@ -1,13 +1,9 @@
 package tom.assistant.controller;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Stream;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -20,10 +16,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import tom.ApiError;
-import tom.api.services.ConversationService;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
+import tom.api.services.assistant.LlmResult;
+import tom.api.services.assistant.QueueFullException;
+import tom.api.services.assistant.StreamResult;
 import tom.controller.ResponseWrapper;
+import tom.conversation.service.ConversationServiceInternal;
 import tom.meta.service.MetadataService;
 import tom.model.Assistant;
 import tom.model.AssistantQuery;
@@ -34,17 +33,15 @@ import tom.ollama.service.OllamaService;
 @RequestMapping("/api/assistant")
 public class AssistantController {
 
-	private static final Logger logger = LogManager.getLogger(AssistantController.class);
-
 	private final MetadataService metadataService;
 	private final AssistantManagementService assistantManagementService;
 	private final OllamaService ollamaService;
-	private final ConversationService conversationService;
+	private final ConversationServiceInternal conversationService;
 	private final AssistantQueryService assistantQueryService;
 
 	public AssistantController(AssistantManagementService assistantManagementService,
 			AssistantQueryService assistantQueryService, MetadataService metadataService, OllamaService ollamaService,
-			ConversationService conversationService) {
+			ConversationServiceInternal conversationService) {
 		this.assistantManagementService = assistantManagementService;
 		this.metadataService = metadataService;
 		this.ollamaService = ollamaService;
@@ -106,8 +103,15 @@ public class AssistantController {
 	@RequestMapping(value = { "/conversation" }, method = RequestMethod.GET)
 	public ResponseEntity<ResponseWrapper<Assistant>> getAssistantForChat(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestParam("conversationId") UUID conversationId) {
-		UUID assistantId = conversationService.getAssistantIdFromConversationId(conversationId);
-		return getAssistant(user, assistantId);
+
+		if (conversationService.conversationOwnedBy(conversationId, user.getId())) {
+			UUID assistantId = conversationService.getAssistantIdFromConversationId(user.getId(), conversationId);
+			return getAssistant(user, assistantId);
+		}
+
+		ResponseWrapper<Assistant> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
+				List.of(ApiError.NOT_OWNED));
+		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	@RequestMapping(value = { "/delete" }, method = RequestMethod.DELETE)
@@ -126,24 +130,78 @@ public class AssistantController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "/ask" }, method = RequestMethod.POST, produces = MediaType.TEXT_PLAIN_VALUE)
-	public StreamingResponseBody ask(@AuthenticationPrincipal UserDetailsUser user, @RequestBody AssistantQuery query) {
+	@RequestMapping(value = { "/ask" }, method = RequestMethod.POST)
+	public ResponseEntity<ResponseWrapper<UUID>> ask(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestBody AssistantQuery query) {
 		Assistant assistant = assistantManagementService.findAssistant(user.getId(), query.getAssistantId());
 		if (assistant == null) {
-			return null;
+			ResponseWrapper<UUID> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
+					List.of(ApiError.NOT_OWNED));
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
-		Stream<String> responseStream = assistantQueryService.askStreaming(user.getId(), query);
-		return outputStream -> {
-			responseStream.forEach(item -> {
-				try {
-					outputStream.write((item).getBytes(StandardCharsets.UTF_8));
-					outputStream.flush();
-				} catch (IOException e) {
-					logger.error("Caught exception while streaming assistant response: ", e);
-					throw new RuntimeException("Error writing to stream", e);
+		if (!assistant.ownerId().equals(user.getId())) {
+			ResponseWrapper<UUID> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
+					List.of(ApiError.NOT_OWNED));
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
+		if (conversationService.conversationOwnedBy(query.getConversationId(), user.getId())) {
+			UUID requestUuid;
+			try {
+				requestUuid = assistantQueryService.askStreaming(user.getId(), query);
+
+			} catch (QueueFullException e) {
+				ResponseWrapper<UUID> response = ResponseWrapper
+						.ApiFailureResponse(HttpStatus.SERVICE_UNAVAILABLE.value(), List.of(ApiError.LLM_BUSY));
+				return new ResponseEntity<>(response, HttpStatus.OK);
+			}
+
+			ResponseWrapper<UUID> response = ResponseWrapper.SuccessResponse(requestUuid);
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
+		ResponseWrapper<UUID> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
+				List.of(ApiError.NOT_OWNED));
+		return new ResponseEntity<>(response, HttpStatus.OK);
+
+	}
+
+	@RequestMapping(value = { "/response" }, method = RequestMethod.POST, produces = MediaType.TEXT_PLAIN_VALUE)
+	public StreamingResponseBody ask(@AuthenticationPrincipal UserDetailsUser user, @RequestBody UUID streamId) {
+
+		LlmResult llmResult = assistantQueryService.getResultFor(streamId);
+		StreamResult streamResult = (StreamResult) llmResult;
+
+		if (streamResult == null) {
+			int queuePosition = assistantQueryService.getQueuePositionFor(streamId);
+			return outputStream -> {
+				if (queuePosition == -1) {
+					return; // Nothing is running, so end the stream.
+				} else {
+					outputStream.write(("~~Not~ready~~" + queuePosition).getBytes(StandardCharsets.UTF_8));
 				}
-			});
+				outputStream.flush();
+			};
+		}
+
+		return outputStream -> {
+
+			while (true) {
+				String chunk;
+				try {
+					chunk = streamResult.takeChunk();
+				} catch (InterruptedException e) {
+					throw new RuntimeException("Streaming thread got interrupted. Aborting.");
+				}
+				if (chunk == null) {
+					break;
+				}
+
+				outputStream.write((chunk).getBytes(StandardCharsets.UTF_8));
+				outputStream.flush();
+			}
+
 		};
 
 	}

@@ -140,10 +140,10 @@ export class AssistantsListComponent {
 		return conversation.conversationId;
 	}
 
-	getConversationModel(conversation: Conversation): string {
+	getConversationAssistantName(conversation: Conversation): string {
 		const assistant = this.assistants.find( assistant => assistant.id === conversation.associatedAssistantId);
 		if (assistant) {
-			return assistant.model;
+			return assistant.name;
 		}
 		return '';
 	}

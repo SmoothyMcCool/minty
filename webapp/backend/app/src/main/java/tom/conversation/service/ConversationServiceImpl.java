@@ -2,6 +2,7 @@ package tom.conversation.service;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -21,6 +22,7 @@ import tom.assistant.service.management.AssistantManagementServiceInternal;
 import tom.conversation.model.Conversation;
 import tom.conversation.model.ConversationEntity;
 import tom.conversation.repository.ConversationRepository;
+import tom.model.Assistant;
 import tom.model.ChatMessage;
 import tom.ollama.service.OllamaService;
 
@@ -32,12 +34,14 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 	private final AssistantManagementServiceInternal assistantManagementService;
 	private final OllamaService ollamaService;
 	private final ConversationRepository conversationRepository;
+	private final HashMap<UUID, Conversation> fakeConversationMap;
 
 	public ConversationServiceImpl(ConversationRepository conversationRepository,
 			AssistantManagementServiceInternal assistantManagementService, OllamaService ollamaService) {
 		this.assistantManagementService = assistantManagementService;
 		this.ollamaService = ollamaService;
 		this.conversationRepository = conversationRepository;
+		fakeConversationMap = new HashMap<>();
 	}
 
 	@PostConstruct
@@ -59,17 +63,33 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 	}
 
 	@Override
-	public UUID getAssistantIdFromConversationId(UUID conversationId) {
-		ConversationEntity conversation = conversationRepository.findByConversationId(conversationId);
+	public UUID getAssistantIdFromConversationId(UUID userId, UUID conversationId) {
+		Conversation conversation;
+		if (fakeConversationMap.containsKey(conversationId)) {
+			conversation = fakeConversationMap.get(conversationId);
+		} else {
+
+			ConversationEntity ce = conversationRepository.findByConversationId(conversationId);
+			if (ce == null) {
+				return null;
+			}
+			conversation = conversationRepository.findByConversationId(conversationId).fromEntity();
+		}
+
 		UUID assistantId = conversation.getAssociatedAssistantId();
 		if (assistantId == null) {
 			return AssistantManagementService.DefaultAssistantId;
 		}
+
 		return assistantId;
 	}
 
 	@Override
 	public List<ChatMessage> getChatMessages(UUID userId, UUID conversationId) {
+
+		if (fakeConversationMap.containsKey(conversationId)) {
+			return List.of();
+		}
 
 		List<ChatMessage> result = new ArrayList<>();
 		ChatMemory chatMemory = ollamaService.getChatMemory();
@@ -86,6 +106,17 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 	@Override
 	@Transactional
 	public boolean deleteConversation(UUID userId, UUID conversationId) {
+
+		if (fakeConversationMap.containsKey(conversationId)) {
+			Conversation conversation = fakeConversationMap.get(conversationId);
+			if (conversation.getOwnerId().equals(userId)) {
+				fakeConversationMap.remove(conversationId);
+				return true;
+			} else {
+				return false;
+			}
+		}
+
 		ConversationEntity conversation = conversationRepository.findByConversationId(conversationId);
 		if (!conversation.getOwnerId().equals(userId)) {
 			logger.warn("Conversation " + conversationId + " not owned by " + userId);
@@ -102,16 +133,39 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 
 	@Override
 	public boolean conversationOwnedBy(UUID conversationId, UUID userId) {
+
+		if (fakeConversationMap.containsKey(conversationId)) {
+			Conversation conversation = fakeConversationMap.get(conversationId);
+			return conversation.getOwnerId().equals(userId);
+		}
 		ConversationEntity conversation = conversationRepository.findByConversationId(conversationId);
 		if (conversation == null) {
 			return false;
 		}
-		return userId == conversation.getOwnerId();
+		return userId.equals(conversation.getOwnerId());
 	}
 
 	@Override
 	@Transactional
 	public Conversation newConversation(UUID userId, UUID assistantId) {
+		Assistant assistant = assistantManagementService.findAssistant(userId, assistantId);
+
+		if (!assistant.hasMemory()) {
+			boolean conversationExists = fakeConversationMap.containsKey(assistantId);
+
+			if (conversationExists) {
+				return fakeConversationMap.get(assistantId);
+			}
+
+			Conversation conversation = new Conversation();
+			conversation.setOwnerId(userId);
+			conversation.setAssociatedAssistantId(assistantId);
+			conversation.setConversationId(assistantId);
+			conversation.setTitle(null);
+			fakeConversationMap.put(assistantId, conversation);
+			return conversation;
+		}
+
 		ConversationEntity conversation = new ConversationEntity();
 		conversation.setAssociatedAssistantId(assistantId);
 		conversation.setConversationId(null);

@@ -1,5 +1,6 @@
 package tom.tasks.ai.query;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +10,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import tom.api.services.TaskServices;
+import tom.api.services.assistant.QueueFullException;
+import tom.api.services.assistant.StringResult;
 import tom.model.AssistantQuery;
 import tom.task.MintyTask;
 import tom.task.ServiceConsumer;
@@ -75,7 +78,26 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 				query.setConversationId(null);
 			}
 
-			String response = taskServices.getAssistantQueryService().ask(userId, query);
+			UUID requestId = null;
+			while (true) {
+				try {
+					requestId = taskServices.getAssistantQueryService().ask(userId, query);
+					break;
+
+				} catch (QueueFullException e) {
+					Thread.sleep(Duration.ofSeconds(5));
+				}
+			}
+
+			String response = null;
+			while (true) {
+				StringResult llmResult = (StringResult) taskServices.getAssistantQueryService().getResultFor(requestId);
+				if (llmResult != null && llmResult.isComplete()) {
+					response = llmResult instanceof StringResult ? ((StringResult) llmResult).getValue() : null;
+					break;
+				}
+				Thread.sleep(Duration.ofSeconds(5));
+			}
 
 			Map<String, Object> responseAsMap = parseResponse(response);
 

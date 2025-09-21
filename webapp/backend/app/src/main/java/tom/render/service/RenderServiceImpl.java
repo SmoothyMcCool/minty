@@ -8,8 +8,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,8 +25,6 @@ import tom.workflow.service.WorkflowService;
 
 @Service
 public class RenderServiceImpl implements RenderService {
-
-	private final Logger logger = LogManager.getLogger(RenderServiceImpl.class);
 
 	private final PugConfiguration pugConfiguration;
 	private final WorkflowService workflowService;

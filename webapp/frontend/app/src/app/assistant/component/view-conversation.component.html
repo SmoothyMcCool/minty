@@ -1,8 +1,17 @@
-<div class="bg-image img-assistant">
+<div [ngClass]="{ 'bg-image img-assistant': user.displayMode === DisplayMode.Fun }">
 	<div class="container">
 		<h1>{{assistant.name}}</h1>
 		<div class="row mb-2">
-			<h2 class="col-2">Prompt</h2>
+			<div class="col-2">
+				<h2 class="row">Prompt</h2>
+				<div class="row" *ngIf="!assistant.hasMemory">
+					<i class="bi bi-exclamation-triangle">
+						This assistant has no conversation history!
+						It will only respond to the last message you send,
+						and your conversation will not be saved.
+					</i>
+				</div>
+			</div>
 			<div class="col-10">
 				<div class="overflow-auto well p-3" style="white-space: pre-wrap; height: 200px;">
 					{{assistant.prompt}}
@@ -15,14 +24,14 @@
 		</div>
 		<div class="row mb-2">
 			<div class="col me-auto">
-				<button class="btn btn-primary mb-2" (click)="submit(userText)" [disabled]="!userText">Okey Dokey</button>
+				<button class="btn btn-primary mb-2" (click)="submit(userText)" [disabled]="!userText || waitingForResponse">Okey Dokey</button>
 			</div>
 			<div class="col-auto">
 				<button class="btn btn-primary" (click)="restart()">Start over</button>
 			</div>
 		</div>
 		<div class="overflow-auto">
-			<minty-conversation [messages]="chatHistory"></minty-conversation>
+			<minty-conversation [messages]="chatHistory" [responsePending]="waitingForResponse" [queueDepth]="queueDepth"></minty-conversation>
 		</div>
 	</div>
 </div>
