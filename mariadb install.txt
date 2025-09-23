@@ -122,6 +122,18 @@ CREATE TABLE IF NOT EXISTS UserMeta (
 	lastLogin TIMESTAMP,
 	PRIMARY KEY (id)
 );
+CREATE TABLE IF NOT EXISTS Tag (
+	id UUID NOT NULL,
+	tag VARCHAR(255),
+	PRIMARY KEY (id, tag)
+);
+CREATE TABLE IF NOT EXISTS TagToDoc (
+	tagId UUID NOT NULL,
+	documentId UUID NOT NULL,
+	PRIMARY KEY (tagId, documentId),
+	FOREIGN KEY (tagId) REFERENCES Tag(id),
+	FOREIGN KEY (documentId) REFERENCES Document(documentId)
+);
 CREATE TABLE IF NOT EXISTS SPRING_AI_CHAT_MEMORY (
 	conversation_id TEXT,
 	content TEXT,
