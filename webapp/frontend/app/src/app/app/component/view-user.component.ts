@@ -23,7 +23,7 @@ export class ViewUserComponent implements OnInit {
 	}
 
 	ngOnInit() {
-		this.userService.getUser();
+		this.user = this.userService.getUser();
 		this.userService.userDefaults().subscribe(userDefaults => {
 			this.user.defaults = userDefaults;
 			this.defaultValues = Array.from(this.user.defaults.entries())
