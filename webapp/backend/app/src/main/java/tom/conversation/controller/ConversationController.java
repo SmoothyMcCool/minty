@@ -74,4 +74,19 @@ public class ConversationController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
+	@RequestMapping(value = { "/rename" }, method = RequestMethod.POST)
+	public ResponseEntity<ResponseWrapper<Conversation>> renameConversation(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("conversationId") UUID conversationId, @RequestParam("title") String title) {
+
+		Conversation conversation = conversationService.renameConversation(user.getId(), conversationId, title);
+		if (conversation == null) {
+			ResponseWrapper<Conversation> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
+					List.of(ApiError.NOT_OWNED));
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
+		ResponseWrapper<Conversation> response = ResponseWrapper.SuccessResponse(conversation);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
 }

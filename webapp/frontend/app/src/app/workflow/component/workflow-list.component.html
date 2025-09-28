@@ -3,18 +3,22 @@
 	<div class="col-4" *ngFor="let workflow of workflows">
 		<div class="card">
 			<div class="card-body">
-				<button
-					*ngIf="isOwned(workflow)"
-					class="bi bi-pencil-square me-2"
-					style="font-size: 20px;"
-					(click)="editWorkflow(workflow.id)">
-				</button>
-				<button *ngIf="isOwned(workflow)"
-					type="button"
-					class="bi bi-trash3"
-					style="font-size: 20px; color: red; float: right;"
-					(click)="deleteWorkflow(workflow)">
-				</button>
+				<div class="position-absolute top-0 end-0">
+					<button
+						*ngIf="isOwned(workflow)"
+						class="btn btn-sm"
+						style="font-size: 14px;"
+						(click)="editWorkflow(workflow.id)">
+						<i class="bi bi-pencil-square"></i>
+					</button>
+					<button *ngIf="isOwned(workflow)"
+						type="button"
+						class="btn btn-sm"
+						style="font-size: 14px; color: red;"
+						(click)="deleteWorkflow(workflow)">
+						<i class="bi bi-trash3"></i>
+					</button>
+				</div>
 				<h5 class="card-title">{{workflow.name}}</h5>
 				<p class="card-text">{{workflow.description}}</p>
 				<button class="btn btn-primary" (click)="navigateToWorkflow(workflow.id)">Low-key stoked!</button>

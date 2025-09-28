@@ -100,9 +100,10 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 	public Assistant findAssistant(UUID userId, UUID assistantId) {
 		if (assistantId.equals(AssistantManagementService.DefaultAssistantId)) {
 			return Assistant.CreateDefaultAssistant(ollamaService.getDefaultModel().toString());
-		}
-		if (assistantId.equals(AssistantManagementService.ConversationNamingAssistantId)) {
+		} else if (assistantId.equals(AssistantManagementService.ConversationNamingAssistantId)) {
 			return Assistant.CreateConversationNamingAssistant(properties.get("conversationNamingModel"));
+		} else if (assistantId.equals(AssistantManagementService.DiagrammingAssistantId)) {
+			return Assistant.CreateDiagrammingAssistant(properties.get("diagrammingModel"));
 		}
 
 		try {

@@ -22,6 +22,7 @@ import { EditAssistantComponent } from './app/assistant/component/edit-assistant
 import { EditWorkflowComponent } from './app/workflow/component/edit-workflow.component';
 import { ViewDocumentsComponent } from './app/document/view-documents.component';
 import { ResponseInterceptor } from './app/response-interceptor';
+import { ViewDiagramsComponent } from './app/diagram/component/view-diagrams.component';
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -89,6 +90,10 @@ bootstrapApplication(AppComponent, {
 			{
 				path: 'documents',
 				component: ViewDocumentsComponent
+			},
+			{
+				path: 'diagrams',
+				component: ViewDiagramsComponent
 			},
 			{
 				path: 'user',

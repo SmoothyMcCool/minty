@@ -5,11 +5,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import tom.task.MintyTask;
 import tom.task.annotations.PublicTask;
 
 @PublicTask(name = "Emit Records", configClass = "tom.tasks.transformer.emitter.DataEmitterConfig")
 public class DataEmitter implements MintyTask {
+
+	private static final Logger logger = LogManager.getLogger(DataEmitter.class);
 
 	private final UUID uuid = UUID.randomUUID();
 	private DataEmitterConfig config;
@@ -46,6 +51,7 @@ public class DataEmitter implements MintyTask {
 
 		data.forEach(datum -> {
 			result.add(Map.of(key, datum));
+			logger.info("key: " + key + ", datum: " + datum);
 		});
 
 		return result;

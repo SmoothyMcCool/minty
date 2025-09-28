@@ -132,6 +132,23 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 	}
 
 	@Override
+	@Transactional
+	public Conversation renameConversation(UUID userId, UUID conversationId, String title) {
+		if (!conversationOwnedBy(userId, conversationId)) {
+			return null;
+		}
+
+		ConversationEntity conversation = conversationRepository.findByConversationId(conversationId);
+		if (conversation == null) {
+			return null;
+		}
+		conversation.setTitle(title);
+		conversation = conversationRepository.save(conversation);
+
+		return conversation.fromEntity();
+	}
+
+	@Override
 	public boolean conversationOwnedBy(UUID conversationId, UUID userId) {
 
 		if (fakeConversationMap.containsKey(conversationId)) {
