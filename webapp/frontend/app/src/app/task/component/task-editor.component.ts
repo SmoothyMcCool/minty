@@ -94,6 +94,7 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor, OnDest
 		const html = `
 	<strong>Inputs:</strong> ${inputs}
 	<br>
+	<br>
 	<strong>Outputs:</strong> ${outputs}
 	`;
 

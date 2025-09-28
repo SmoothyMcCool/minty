@@ -1,0 +1,22 @@
+<div [ngClass]="{ 'bg-image img-document': user.displayMode === DisplayMode.Fun }" class="text-dark">
+	<div class="container">
+		<h1>Diagramming</h1>
+
+		<div class="row">
+			<div class="col-4">
+				<div class="row border border-primary">
+					{{conversation}}
+				</div>
+				<div class="row border border-primary">
+					<markdown [data]="diagram.mermaid"></markdown>
+				</div>
+			</div>
+			<div class="col-8 border border-primary">
+				<pre class="mermaid">
+					<markdown mermaid [data]="diagram.mermaid"></markdown>
+				</pre>
+			</div>
+		</div>
+
+	</div>
+</div>

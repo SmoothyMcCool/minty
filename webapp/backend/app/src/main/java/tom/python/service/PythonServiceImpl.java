@@ -26,7 +26,7 @@ public class PythonServiceImpl implements PythonService {
 
 	public PythonServiceImpl(ExternalProperties properties) {
 		pythonScripts = properties.get("pythonScripts");
-		tempFileDir = properties.get("tempFileDir");
+		tempFileDir = properties.get("tempFileStore");
 	}
 
 	@Override

@@ -9,6 +9,7 @@ public interface AssistantManagementService {
 
 	final UUID DefaultAssistantId = UUID.fromString("00000000-0000-0000-0000-000000000000");
 	final UUID ConversationNamingAssistantId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+	final UUID DiagrammingAssistantId = UUID.fromString("00000000-0000-0000-0000-000000000002");
 
 	Assistant createAssistant(UUID userId, Assistant assistant);
 

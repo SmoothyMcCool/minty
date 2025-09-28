@@ -22,6 +22,7 @@ export class AssistantService {
 	private static readonly GetAssistantForConversation = 'api/assistant/conversation';
 	private static readonly ListModels = 'api/assistant/models';
 	private static readonly GetConversationQueryId = 'api/assistant/queryId';
+	private static readonly GetDiagrammingAssistant = 'api/assistant/diagram';
 
 	constructor(private http: HttpClient, private alertService: AlertService) {
 	}
@@ -217,4 +218,18 @@ export class AssistantService {
 				})
 			);
 	}
+
+	getDiagrammingAssistant() {
+		return this.http.get<ApiResult>(AssistantService.GetDiagrammingAssistant)
+			.pipe(
+				catchError(error => {
+					this.alertService.postFailure(JSON.stringify(error));
+					return EMPTY;
+				}),
+				map((result: ApiResult) => {
+					return result.data as Assistant;
+				})
+			);
+	}
+
 }

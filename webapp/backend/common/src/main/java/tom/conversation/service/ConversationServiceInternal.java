@@ -18,4 +18,6 @@ public interface ConversationServiceInternal extends ConversationService {
 
 	boolean deleteConversation(UUID userId, UUID conversationId);
 
+	Conversation renameConversation(UUID userId, UUID conversationId, String title);
+
 }

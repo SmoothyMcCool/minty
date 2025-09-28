@@ -1,14 +1,22 @@
 package tom.tasks.transformer.emitter;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import tom.task.TaskConfig;
 import tom.task.TaskConfigTypes;
 
 public class DataEmitterConfig implements TaskConfig {
+
+	private static final Logger logger = LogManager.getLogger(DataEmitterConfig.class);
 
 	String keyName;
 	List<String> data = List.of();
@@ -18,14 +26,27 @@ public class DataEmitterConfig implements TaskConfig {
 
 	public DataEmitterConfig(Map<String, String> config) {
 		keyName = config.get("Key Name");
-		data = Arrays.asList(config.get("Data to Emit").split(",")).stream().map(item -> item.trim()).toList();
+
+		String rawData = config.get("Data to Emit");
+		ObjectMapper mapper = new ObjectMapper();
+
+		JsonNode root;
+		try {
+			root = mapper.readTree(rawData);
+			data = new ArrayList<>();
+			for (JsonNode node : root) {
+				data.add(mapper.writeValueAsString(node));
+			}
+		} catch (Exception e) {
+			logger.warn("Data is not valid JSON list.");
+		}
 	}
 
 	@Override
 	public Map<String, TaskConfigTypes> getConfig() {
 		Map<String, TaskConfigTypes> config = new HashMap<>();
 		config.put("Key Name", TaskConfigTypes.String);
-		config.put("Data to Emit", TaskConfigTypes.String);
+		config.put("Data to Emit", TaskConfigTypes.TextArea);
 		return config;
 	}
 

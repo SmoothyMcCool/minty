@@ -1,0 +1,104 @@
+package tom.diagramming.controller;
+
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import tom.ApiError;
+import tom.api.services.assistant.AssistantManagementService;
+import tom.api.services.assistant.AssistantQueryService;
+import tom.api.services.assistant.LlmResult;
+import tom.api.services.assistant.QueueFullException;
+import tom.api.services.assistant.StringResult;
+import tom.assistant.service.management.AssistantManagementServiceInternal;
+import tom.controller.ResponseWrapper;
+import tom.conversation.model.Conversation;
+import tom.conversation.service.ConversationServiceInternal;
+import tom.meta.service.MetadataService;
+import tom.model.AssistantQuery;
+import tom.model.security.UserDetailsUser;
+
+@Controller
+@RequestMapping("/api/diagram")
+public class DiagrammingController {
+
+	private final MetadataService metadataService;
+	private final AssistantManagementServiceInternal assistantManagementService;
+	private final AssistantQueryService assistantQueryService;
+	private final ConversationServiceInternal conversationService;
+
+	public DiagrammingController(AssistantManagementServiceInternal assistantManagementService,
+			AssistantQueryService assistantQueryService, MetadataService metadataService,
+			ConversationServiceInternal conversationService) {
+		this.assistantManagementService = assistantManagementService;
+		this.metadataService = metadataService;
+		this.assistantQueryService = assistantQueryService;
+		this.conversationService = conversationService;
+	}
+
+	@RequestMapping(value = { "ask" }, method = RequestMethod.GET)
+	public ResponseEntity<ResponseWrapper<UUID>> getDiagrammingAssistant(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("request") String request) {
+
+		AssistantQuery query = new AssistantQuery();
+		query.setAssistantId(AssistantManagementService.DiagrammingAssistantId);
+		Conversation conversation = conversationService.newConversation(user.getId(), query.getAssistantId());
+		query.setConversationId(conversation.getConversationId());
+		query.setQuery(request);
+
+		UUID requestId;
+		try {
+			requestId = assistantQueryService.ask(user.getId(), query);
+		} catch (QueueFullException e) {
+			ResponseWrapper<UUID> response = ResponseWrapper.ApiFailureResponse(HttpStatus.SERVICE_UNAVAILABLE.value(),
+					List.of(ApiError.LLM_BUSY));
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
+		ResponseWrapper<UUID> response = ResponseWrapper.SuccessResponse(requestId);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@RequestMapping(value = { "get" }, method = RequestMethod.GET)
+	public ResponseEntity<ResponseWrapper<String>> getResponse(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("requestId") UUID requestId) {
+
+		StringResult llmResult = (StringResult) assistantQueryService.getResultFor(requestId);
+
+		if (llmResult == LlmResult.IN_PROGRESS) {
+			ResponseWrapper<String> response = ResponseWrapper.SuccessResponse("~~LLM~Executing~~");
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
+		if (llmResult == null) {
+			int queuePosition = assistantQueryService.getQueuePositionFor(requestId);
+			// -1 means nothing is running. 0 means it is being processed by the LLM.
+			if (queuePosition == -1) {
+				ResponseWrapper<String> response = ResponseWrapper.SuccessResponse("~~Not~Running~~");
+				return new ResponseEntity<>(response, HttpStatus.OK);
+			}
+
+			ResponseWrapper<String> response = ResponseWrapper.SuccessResponse("~~No~Response~~");
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
+		if (!llmResult.isComplete()) {
+			ResponseWrapper<String> response = ResponseWrapper.SuccessResponse("~~LLM~Executing~~");
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
+		String llmResponse = llmResult.getValue();
+		conversationService.deleteConversation(user.getId(), requestId);
+		ResponseWrapper<String> response = ResponseWrapper.SuccessResponse(llmResponse);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+
+	}
+
+}

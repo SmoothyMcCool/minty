@@ -12,6 +12,31 @@ import tom.task.MintyTask;
 import tom.task.ServiceConsumer;
 import tom.task.annotations.PublicTask;
 
+/*
+import json
+import sys
+
+def read_dict(inFile):
+	with open(inFile, 'r') as f:
+		return json.load(f)
+	except FileNotFoundError:
+		exit(-1)
+	except json.JSONDecodeError:
+		exit(-1)
+
+def write_to_file(data, outFile):
+	with open(filename, "w") as file:
+		json.dump(data, file, indent=4)
+
+def main():
+	if (len(sys.argv) == 3):
+		data = read_dict(sys.argv[1])
+		write_to_file(data, sys.argv[2])
+
+if __name__ == "__main__":
+	main()
+*/
+
 @PublicTask(name = "Execute Python", configClass = "tom.tasks.python.PythonTaskConfig")
 public class PythonTask implements MintyTask, ServiceConsumer {
 
@@ -21,6 +46,7 @@ public class PythonTask implements MintyTask, ServiceConsumer {
 	private Map<String, Object> result = new HashMap<>();
 	private TaskServices taskServices = null;
 	private String error = null;
+	private Map<String, Object> input = Map.of();
 
 	public PythonTask() {
 		configuration = new PythonTaskConfig();
@@ -32,7 +58,7 @@ public class PythonTask implements MintyTask, ServiceConsumer {
 
 	@Override
 	public String taskName() {
-		return "PythonTask-" + configuration.getPythonFile();
+		return "PythonTask-" + configuration.getPython();
 	}
 
 	@Override
@@ -55,24 +81,23 @@ public class PythonTask implements MintyTask, ServiceConsumer {
 	@Override
 	public List<Map<String, Object>> runTask() {
 		try {
-			logger.debug("doWork: Executing " + configuration.getPythonFile());
+			logger.debug("doWork: Executing " + configuration.getPython());
 
-			if (configuration.getInputDictionary().containsKey("Data")) {
+			if (input.containsKey("Code")) {
 
-				String code = configuration.getInputDictionary().get("Data").toString();
-				result = taskServices.getPythonService().executeCodeString(code, configuration.getInputDictionary());
-
+				String code = input.get("Code").toString();
+				result = taskServices.getPythonService().executeCodeString(code, input);
 				logger.info("doWork: completed execution of input-provided code.");
 
 			} else {
 
-				result = taskServices.getPythonService().execute(configuration.getPythonFile(),
-						configuration.getInputDictionary());
-				logger.info("doWork: " + configuration.getPythonFile() + " completed.");
+				result = taskServices.getPythonService().executeCodeString(configuration.getPython(), input);
+				logger.info("doWork: python completed.");
+
 			}
 
-			if (configuration.getInputDictionary().containsKey("ConversationId")) {
-				result.put(null, configuration.getInputDictionary().get("ConversationId"));
+			if (input.containsKey("ConversationId")) {
+				result.put(null, input.get("ConversationId"));
 			}
 		} catch (Exception e) {
 			error = "Caught exception while running python: " + e.toString();
@@ -84,9 +109,7 @@ public class PythonTask implements MintyTask, ServiceConsumer {
 
 	@Override
 	public void setInput(Map<String, Object> input) {
-		// Merge whatever we get with the input dictionary to pass to the python
-		// interpreter.
-		configuration.getInputDictionary().putAll(input);
+		this.input = input;
 	}
 
 	@Override
@@ -94,12 +117,13 @@ public class PythonTask implements MintyTask, ServiceConsumer {
 		return "This task simply provides whatever input and configuration"
 				+ " is provided as a map to the associated Python file when it is run. "
 				+ "What is expected is entirely up to the python you write.\n\nThe one "
-				+ "exception is that if the input contains a key \"Data\", that will be "
-				+ "interpretted as the code to run, overriding any filename provided.";
+				+ "exception is that if the input contains a key \"Code\", that will be "
+				+ "interpretted as the code to run, overriding any code provided in configuration.";
 	}
 
 	@Override
 	public String produces() {
-		return "If the input contained a ConversationId, that is propagated out, for further AI processing fun.";
+		return "The output of the python. If the input contained a ConversationId, that "
+				+ "is propagated out, for further AI processing fun.";
 	}
 }

@@ -44,6 +44,9 @@ export class AssistantsListComponent {
 	confirmDeleteConversationVisible = false;
 	conversationPendingDeletionId: string;
 
+	conversationToRename: Conversation = null;
+	renamedConversationTitle: string;
+	renameConversationVisible = false;
 
 	constructor(
 		private assistantService: AssistantService,
@@ -146,5 +149,22 @@ export class AssistantsListComponent {
 			return assistant.name;
 		}
 		return '';
+	}
+
+	renameConversation(conversation: Conversation) {
+		this.renameConversationVisible = true;
+		this.conversationToRename = conversation;
+		this.renamedConversationTitle = conversation.title;
+	}
+
+	onConfirmConversationRename() {
+		this.conversationToRename.title = this.renamedConversationTitle;
+		this.renameConversationVisible = false;
+		this.conversationService.rename(this.conversationToRename).subscribe(conversation => {
+		});
+	}
+
+	onCancelConversationRename() {
+		this.renameConversationVisible = false;
 	}
 }
