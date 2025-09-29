@@ -74,9 +74,10 @@ public class ConversationController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "/rename" }, method = RequestMethod.POST)
-	public ResponseEntity<ResponseWrapper<Conversation>> renameConversation(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("conversationId") UUID conversationId, @RequestParam("title") String title) {
+	@RequestMapping(value = { "/rename" }, method = RequestMethod.GET)
+	public ResponseEntity<ResponseWrapper<Conversation>> renameConversation(
+			@AuthenticationPrincipal UserDetailsUser user, @RequestParam("conversationId") UUID conversationId,
+			@RequestParam("title") String title) {
 
 		Conversation conversation = conversationService.renameConversation(user.getId(), conversationId, title);
 		if (conversation == null) {

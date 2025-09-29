@@ -62,7 +62,7 @@
 								</td>
 								<td>
 									<input
-										[type]	="entry.key.includes('password') ? 'password' : 'text'"
+										[type]	="entry.key?.toLowerCase().includes('password') ? 'password' : 'text'"
 										class="form-control form-control-sm"
 										name="value-{{i}}"
 										[ngModel]="entry.value"

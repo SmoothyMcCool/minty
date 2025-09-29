@@ -149,7 +149,7 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 	}
 
 	@Override
-	public boolean conversationOwnedBy(UUID conversationId, UUID userId) {
+	public boolean conversationOwnedBy(UUID userId, UUID conversationId) {
 
 		if (fakeConversationMap.containsKey(conversationId)) {
 			Conversation conversation = fakeConversationMap.get(conversationId);

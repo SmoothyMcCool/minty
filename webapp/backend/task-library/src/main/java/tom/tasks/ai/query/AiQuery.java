@@ -17,14 +17,14 @@ import tom.task.MintyTask;
 import tom.task.ServiceConsumer;
 import tom.task.annotations.PublicTask;
 
-@PublicTask(name = "Query the Robot", configClass = "tom.tasks.ai.query.AiQueryConfig")
+@PublicTask(name = "Converse with Robot", configClass = "tom.tasks.ai.query.AiQueryConfig")
 public class AiQuery implements MintyTask, ServiceConsumer {
 
 	private TaskServices taskServices;
 	private UUID uuid = UUID.randomUUID();
 	private AiQueryConfig config = new AiQueryConfig();
 	private UUID userId;
-	private final Map<String, Object> result = new HashMap<>();
+	private Map<String, Object> result = new HashMap<>();
 	private Map<String, Object> input = Map.of();
 	private String error = null;
 
@@ -64,20 +64,21 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 
 	@Override
 	public List<Map<String, Object>> runTask() {
+
+		AssistantQuery query = new AssistantQuery();
+		query.setAssistantId(config.getAssistant());
+
+		if (input.containsKey("Data")) {
+			query.setQuery(config.getQuery() + " " + input.get("Data"));
+		} else {
+			query.setQuery(config.getQuery());
+		}
+
+		if (input.containsKey("Conversation ID")) {
+			query.setConversationId(UUID.fromString(input.get("Conversation ID").toString()));
+		}
+
 		try {
-			AssistantQuery query = new AssistantQuery();
-			query.setAssistantId(config.getAssistant());
-
-			if (input.containsKey("Data")) {
-				query.setQuery(config.getQuery() + " " + input.get("Data"));
-			} else {
-				query.setQuery(config.getQuery());
-			}
-
-			if (input.containsKey("Conversation ID")) {
-				query.setConversationId(null);
-			}
-
 			UUID requestId = null;
 			while (true) {
 				try {
@@ -99,39 +100,36 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 				Thread.sleep(Duration.ofSeconds(5));
 			}
 
-			Map<String, Object> responseAsMap = parseResponse(response);
-
-			if (!responseAsMap.isEmpty()) {
-				result.put("Data", responseAsMap);
-			} else {
-				result.put("Data", response);
-			}
-
-			if (input.containsKey("Conversation ID")) {
-				responseAsMap.put("Conversation ID", input.get("Conversation ID"));
-			}
-
-			return List.of(responseAsMap);
-		} catch (Exception e) {
-			error = "Failed to Query Assistant: " + e.toString();
+			result = parseResponse(response);
+		} catch (InterruptedException e) {
+			throw new RuntimeException(
+					"Task " + taskName() + " got interrupted while waiting for its turn with the LLM.");
 		}
-		return List.of();
+
+		return List.of(result);
 	}
 
 	private Map<String, Object> parseResponse(String response) {
 
+		Map<String, Object> result = new HashMap<>();
+		result.put("Data", response);
+
 		if (response == null || response.isBlank()) {
-			return new HashMap<>();
+			return result;
 		}
 
 		try {
 			ObjectMapper mapper = new ObjectMapper();
 
-			Map<String, Object> map = mapper.readValue(response, new TypeReference<Map<String, Object>>() {
+			Map<String, String> resultAsMap = mapper.readValue(response, new TypeReference<Map<String, String>>() {
 			});
-			return map != null ? map : new HashMap<>();
+			if (resultAsMap != null) {
+				result.put("Data", resultAsMap);
+			}
+			return result;
+
 		} catch (Exception e) {
-			return new HashMap<>();
+			return result;
 		}
 	}
 
@@ -143,13 +141,15 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 
 	@Override
 	public String expects() {
-		return "This task appends the contents of \"data\" to the provided query.\n\nIt will not make use of any conversations.\n";
+		return "This task appends the contents of \"data\" to the provided prompt. It will use the conversation defined by "
+				+ "the input \"Conversation ID\", provided by the workflow runner, that is used to continue an AI conversation. "
+				+ "NOTE!!! For this to work, you MUST choose an Assistant that has memory enabled!";
 	}
 
 	@Override
 	public String produces() {
 		return "This task produces the response from the AI as an output to the next task, "
-				+ "in the form defined by the AI assistant.  If the task fails to create an output as a Map from the AI "
-				+ "response, it will return a Map containing the key \"Data\", which holds the output from the AI as a string.";
+				+ "in the form defined by the AI assistant. The response will be emitted as an Oject with a Single \"Data\" "
+				+ "key, with the value set to the response from the AI";
 	}
 }
