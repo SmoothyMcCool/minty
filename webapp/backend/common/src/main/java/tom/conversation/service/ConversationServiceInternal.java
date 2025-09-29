@@ -12,11 +12,11 @@ public interface ConversationServiceInternal extends ConversationService {
 
 	void deleteConversationsForAssistant(UUID userId, UUID assistantId);
 
-	Conversation newConversation(UUID userId, UUID assistantId);
-
 	boolean conversationOwnedBy(UUID conversationId, UUID userId);
 
 	boolean deleteConversation(UUID userId, UUID conversationId);
+
+	Conversation newConversation(UUID userId, UUID assistantId);
 
 	Conversation renameConversation(UUID userId, UUID conversationId, String title);
 

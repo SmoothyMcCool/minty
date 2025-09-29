@@ -89,7 +89,7 @@ export class ConversationService {
 		params = params.append('conversationId', conversation.conversationId);
 		params = params.append('title', conversation.title);
 
-		return this.http.post<ApiResult>(ConversationService.RenameConversation, { params: params })
+		return this.http.get<ApiResult>(ConversationService.RenameConversation, { params: params })
 			.pipe(
 				catchError(error => {
 					this.alertService.postFailure(JSON.stringify(error));
