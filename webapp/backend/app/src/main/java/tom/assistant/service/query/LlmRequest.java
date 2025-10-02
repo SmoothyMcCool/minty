@@ -1,24 +1,24 @@
 package tom.assistant.service.query;
 
 import java.time.Instant;
-import java.util.UUID;
 
+import tom.api.UserId;
 import tom.model.AssistantQuery;
 
 public class LlmRequest implements Runnable {
 
-	private final UUID userId;
+	private final UserId userId;
 	private final AssistantQuery query;
 	private final Instant queueTime;
 	private Runnable task;
 
-	public LlmRequest(UUID userId, AssistantQuery query, Instant queueTime) {
+	public LlmRequest(UserId userId, AssistantQuery query, Instant queueTime) {
 		this.userId = userId;
 		this.query = query;
 		this.queueTime = queueTime;
 	}
 
-	public UUID getUserId() {
+	public UserId getUserId() {
 		return userId;
 	}
 

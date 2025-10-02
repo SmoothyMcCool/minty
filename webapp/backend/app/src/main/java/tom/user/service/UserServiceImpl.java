@@ -2,7 +2,6 @@ package tom.user.service;
 
 import java.util.HashMap;
 import java.util.Optional;
-import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,6 +14,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import tom.api.UserId;
 import tom.api.services.UserService;
 import tom.config.ExternalProperties;
 import tom.user.model.User;
@@ -73,8 +73,8 @@ public class UserServiceImpl implements UserServiceInternal {
 	}
 
 	@Override
-	public String getUsernameFromId(UUID userId) {
-		return userRepository.findById(userId).get().getAccount();
+	public String getUsernameFromId(UserId userId) {
+		return userRepository.findById(userId.value()).get().getAccount();
 	}
 
 	@Override
@@ -88,12 +88,12 @@ public class UserServiceImpl implements UserServiceInternal {
 	}
 
 	@Override
-	public Optional<User> getUserFromId(UUID userId) {
+	public Optional<User> getUserFromId(UserId userId) {
 		if (userId.equals(UserService.DefaultId)) {
 			return Optional.of(new User());
 		}
 		try {
-			return Optional.of(decrypt(userRepository.findById(userId).get()));
+			return Optional.of(decrypt(userRepository.findById(userId.value()).get()));
 		} catch (JsonProcessingException e) {
 			logger.warn("Failed to get user for user ID " + userId);
 			return Optional.empty();

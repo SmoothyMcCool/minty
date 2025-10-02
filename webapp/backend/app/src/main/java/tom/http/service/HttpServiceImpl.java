@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.UUID;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
@@ -18,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import tom.api.UserId;
 import tom.api.services.HttpService;
 import tom.user.model.User;
 import tom.user.repository.UserRepository;
@@ -63,13 +63,13 @@ public class HttpServiceImpl implements HttpService {
 	}
 
 	@Override
-	public <ResponseType> ResponseType getBasicAuth(UUID userId, String url, Map<String, String> parameters,
+	public <ResponseType> ResponseType getBasicAuth(UserId userId, String url, Map<String, String> parameters,
 			ResponseType dummy) {
 
 		try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
 
 			// Get credentials and create the Basic auth header
-			User user = userService.decrypt(userRepository.findById(userId).get());
+			User user = userService.decrypt(userRepository.findById(userId.value()).get());
 			final String auth = ""; // TODO construct an auth string from some credentials somewhere.
 			final byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(StandardCharsets.ISO_8859_1));
 			final String authHeader = "Basic " + new String(encodedAuth);
@@ -100,14 +100,14 @@ public class HttpServiceImpl implements HttpService {
 	}
 
 	@Override
-	public <ResponseType> ResponseType getJavaEEFormAuth(UUID userId, String url, Map<String, String> parameters,
+	public <ResponseType> ResponseType getJavaEEFormAuth(UserId userId, String url, Map<String, String> parameters,
 			ResponseType dummy) {
 
 		// TODO
 		try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
 
 			// Get credentials and create the Basic auth header
-			User user = userService.decrypt(userRepository.findById(userId).get());
+			User user = userService.decrypt(userRepository.findById(userId.value()).get());
 			final String auth = ""; // TODO construct an auth string from some credentials somewhere.
 			final byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(StandardCharsets.ISO_8859_1));
 			final String authHeader = "Basic " + new String(encodedAuth);

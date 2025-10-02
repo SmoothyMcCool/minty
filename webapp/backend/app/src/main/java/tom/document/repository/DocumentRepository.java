@@ -5,15 +5,16 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
+import tom.api.DocumentId;
 import tom.document.model.MintyDoc;
 
 @Service
 public interface DocumentRepository extends JpaRepository<MintyDoc, UUID> {
 
-	void deleteByDocumentId(UUID documentId);
+	void deleteByDocumentId(DocumentId documentId);
 
-	boolean existsByDocumentId(UUID documentId);
+	boolean existsByDocumentId(DocumentId documentId);
 
-	MintyDoc findByDocumentId(UUID documentId);
+	MintyDoc findByDocumentId(DocumentId documentId);
 
 }

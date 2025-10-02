@@ -1,36 +1,45 @@
 package tom.conversation.model;
 
-import java.util.UUID;
+import tom.api.AssistantId;
+import tom.api.ConversationId;
+import tom.api.UserId;
 
 public class Conversation {
 
 	private String title;
-	private UUID conversationId;
-	private UUID ownerId;
-	private UUID associatedAssistantId;
+	private ConversationId conversationId;
+	private UserId ownerId;
+	private AssistantId associatedAssistantId;
 
 	public String getTitle() {
 		return title;
 	}
+
 	public void setTitle(String title) {
 		this.title = title;
 	}
-	public UUID getConversationId() {
+
+	public ConversationId getConversationId() {
 		return conversationId;
 	}
-	public void setConversationId(UUID conversationId) {
+
+	public void setConversationId(ConversationId conversationId) {
 		this.conversationId = conversationId;
 	}
-	public UUID getOwnerId() {
+
+	public UserId getOwnerId() {
 		return ownerId;
 	}
-	public void setOwnerId(UUID ownerId) {
+
+	public void setOwnerId(UserId ownerId) {
 		this.ownerId = ownerId;
 	}
-	public UUID getAssociatedAssistantId() {
+
+	public AssistantId getAssociatedAssistantId() {
 		return associatedAssistantId;
 	}
-	public void setAssociatedAssistantId(UUID associatedAssistantId) {
+
+	public void setAssociatedAssistantId(AssistantId associatedAssistantId) {
 		this.associatedAssistantId = associatedAssistantId;
 	}
 

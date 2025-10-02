@@ -1,13 +1,15 @@
 package tom.api.services;
 
 import java.util.List;
-import java.util.UUID;
 
+import tom.api.AssistantId;
+import tom.api.ConversationId;
+import tom.api.UserId;
 import tom.model.ChatMessage;
 
 public interface ConversationService {
 
-	UUID getAssistantIdFromConversationId(UUID userId, UUID conversationId);
+	AssistantId getAssistantIdFromConversationId(UserId userId, ConversationId conversationId);
 
-	List<ChatMessage> getChatMessages(UUID userId, UUID conversationId);
+	List<ChatMessage> getChatMessages(UserId userId, ConversationId conversationId);
 }

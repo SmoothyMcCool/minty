@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
@@ -17,6 +17,9 @@ import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
+import tom.api.AssistantId;
+import tom.api.ConversationId;
+import tom.api.UserId;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.assistant.service.management.AssistantManagementServiceInternal;
 import tom.conversation.model.Conversation;
@@ -34,7 +37,7 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 	private final AssistantManagementServiceInternal assistantManagementService;
 	private final OllamaService ollamaService;
 	private final ConversationRepository conversationRepository;
-	private final HashMap<UUID, Conversation> fakeConversationMap;
+	private final HashMap<ConversationId, Conversation> fakeConversationMap;
 
 	public ConversationServiceImpl(ConversationRepository conversationRepository,
 			AssistantManagementServiceInternal assistantManagementService, OllamaService ollamaService) {
@@ -51,7 +54,7 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 
 	@Override
 	@Transactional
-	public void deleteConversationsForAssistant(UUID userId, UUID assistantId) {
+	public void deleteConversationsForAssistant(UserId userId, AssistantId assistantId) {
 		List<ConversationEntity> conversations = conversationRepository.findAllByOwnerIdAndAssociatedAssistantId(userId,
 				assistantId);
 		ChatMemoryRepository chatMemoryRepository = ollamaService.getChatMemoryRepository();
@@ -63,20 +66,20 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 	}
 
 	@Override
-	public UUID getAssistantIdFromConversationId(UUID userId, UUID conversationId) {
+	public AssistantId getAssistantIdFromConversationId(UserId userId, ConversationId conversationId) {
 		Conversation conversation;
 		if (fakeConversationMap.containsKey(conversationId)) {
 			conversation = fakeConversationMap.get(conversationId);
 		} else {
 
-			ConversationEntity ce = conversationRepository.findByConversationId(conversationId);
-			if (ce == null) {
+			Optional<ConversationEntity> ce = conversationRepository.findById(conversationId.value());
+			if (ce.isEmpty()) {
 				return null;
 			}
-			conversation = conversationRepository.findByConversationId(conversationId).fromEntity();
+			conversation = ce.get().fromEntity();
 		}
 
-		UUID assistantId = conversation.getAssociatedAssistantId();
+		AssistantId assistantId = conversation.getAssociatedAssistantId();
 		if (assistantId == null) {
 			return AssistantManagementService.DefaultAssistantId;
 		}
@@ -85,7 +88,7 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 	}
 
 	@Override
-	public List<ChatMessage> getChatMessages(UUID userId, UUID conversationId) {
+	public List<ChatMessage> getChatMessages(UserId userId, ConversationId conversationId) {
 
 		if (fakeConversationMap.containsKey(conversationId)) {
 			return List.of();
@@ -94,7 +97,7 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 		List<ChatMessage> result = new ArrayList<>();
 		ChatMemory chatMemory = ollamaService.getChatMemory();
 
-		List<Message> messages = chatMemory.get(conversationId.toString());
+		List<Message> messages = chatMemory.get(conversationId.value().toString());
 		result = messages.stream()
 				.map(message -> new ChatMessage(message.getMessageType() == MessageType.USER, message.getText()))
 				.collect(Collectors.toList());
@@ -105,11 +108,11 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 
 	@Override
 	@Transactional
-	public boolean deleteConversation(UUID userId, UUID conversationId) {
+	public boolean deleteConversation(UserId userId, ConversationId conversationId) {
 
 		if (fakeConversationMap.containsKey(conversationId)) {
 			Conversation conversation = fakeConversationMap.get(conversationId);
-			if (conversation.getOwnerId().equals(userId)) {
+			if (conversation != null && conversation.getOwnerId().equals(userId)) {
 				fakeConversationMap.remove(conversationId);
 				return true;
 			} else {
@@ -117,8 +120,8 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 			}
 		}
 
-		ConversationEntity conversation = conversationRepository.findByConversationId(conversationId);
-		if (!conversation.getOwnerId().equals(userId)) {
+		Optional<ConversationEntity> conversation = conversationRepository.findById(conversationId.value());
+		if (conversation.isPresent() && !conversation.get().getOwnerId().equals(userId)) {
 			logger.warn("Conversation " + conversationId + " not owned by " + userId);
 			return false;
 		}
@@ -126,60 +129,62 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 		ChatMemory chatMemory = ollamaService.getChatMemory();
 
 		chatMemory.clear(conversationId.toString());
-		conversationRepository.deleteByConversationId(conversationId);
+		conversationRepository.deleteById(conversationId.value());
 
 		return true;
 	}
 
 	@Override
 	@Transactional
-	public Conversation renameConversation(UUID userId, UUID conversationId, String title) {
+	public Conversation renameConversation(UserId userId, ConversationId conversationId, String title) {
 		if (!conversationOwnedBy(userId, conversationId)) {
 			return null;
 		}
 
-		ConversationEntity conversation = conversationRepository.findByConversationId(conversationId);
-		if (conversation == null) {
+		Optional<ConversationEntity> conversation = conversationRepository.findById(conversationId.value());
+		if (conversation.isEmpty()) {
 			return null;
 		}
-		conversation.setTitle(title);
-		conversation = conversationRepository.save(conversation);
+		ConversationEntity ce = conversation.get();
+		ce.setTitle(title);
+		ce = conversationRepository.save(ce);
 
-		return conversation.fromEntity();
+		return ce.fromEntity();
 	}
 
 	@Override
-	public boolean conversationOwnedBy(UUID userId, UUID conversationId) {
+	public boolean conversationOwnedBy(UserId userId, ConversationId conversationId) {
 
 		if (fakeConversationMap.containsKey(conversationId)) {
 			Conversation conversation = fakeConversationMap.get(conversationId);
 			return conversation.getOwnerId().equals(userId);
 		}
-		ConversationEntity conversation = conversationRepository.findByConversationId(conversationId);
-		if (conversation == null) {
+		Optional<ConversationEntity> conversation = conversationRepository.findById(conversationId.value());
+		if (conversation.isEmpty()) {
 			return false;
 		}
-		return userId.equals(conversation.getOwnerId());
+		return userId.equals(conversation.get().getOwnerId());
 	}
 
 	@Override
 	@Transactional
-	public Conversation newConversation(UUID userId, UUID assistantId) {
+	public Conversation newConversation(UserId userId, AssistantId assistantId) {
 		Assistant assistant = assistantManagementService.findAssistant(userId, assistantId);
 
 		if (!assistant.hasMemory()) {
-			boolean conversationExists = fakeConversationMap.containsKey(assistantId);
+			ConversationId conversationId = new ConversationId(assistantId.value());
+			boolean conversationExists = fakeConversationMap.containsKey(conversationId);
 
 			if (conversationExists) {
-				return fakeConversationMap.get(assistantId);
+				return fakeConversationMap.get(conversationId);
 			}
 
 			Conversation conversation = new Conversation();
 			conversation.setOwnerId(userId);
 			conversation.setAssociatedAssistantId(assistantId);
-			conversation.setConversationId(assistantId);
+			conversation.setConversationId(conversationId);
 			conversation.setTitle(null);
-			fakeConversationMap.put(assistantId, conversation);
+			fakeConversationMap.put(conversationId, conversation);
 			return conversation;
 		}
 
@@ -193,7 +198,7 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 	}
 
 	@Override
-	public List<Conversation> listConversationsForUser(UUID userId) {
+	public List<Conversation> listConversationsForUser(UserId userId) {
 		List<Conversation> conversations = conversationRepository.findAllByOwnerId(userId).stream()
 				.map(conversation -> conversation.fromEntity()).toList();
 

@@ -2,8 +2,9 @@ package tom.document.service;
 
 import java.io.File;
 import java.util.List;
-import java.util.UUID;
 
+import tom.api.DocumentId;
+import tom.api.UserId;
 import tom.document.model.MintyDoc;
 
 public interface DocumentService {
@@ -16,14 +17,14 @@ public interface DocumentService {
 
 	List<MintyDoc> listDocuments();
 
-	boolean documentExists(UUID documentId);
+	boolean documentExists(DocumentId documentId);
 
-	MintyDoc addDocument(UUID userId, MintyDoc document);
+	MintyDoc addDocument(UserId userId, MintyDoc document);
 
-	boolean deleteDocument(UUID userId, UUID documentId);
+	boolean deleteDocument(UserId userId, DocumentId documentId);
 
-	boolean documentOwnedBy(UUID userId, UUID documentId);
+	boolean documentOwnedBy(UserId userId, DocumentId documentId);
 
-	MintyDoc findByDocumentId(UUID documentId);
+	MintyDoc findByDocumentId(DocumentId documentId);
 
 }

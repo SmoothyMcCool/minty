@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import tom.api.UserId;
 import tom.api.services.TaskServices;
 import tom.task.MintyTask;
 import tom.task.ServiceConsumer;
@@ -17,7 +18,7 @@ import tom.task.annotations.PublicTask;
 public class TestHttpRequestTask implements MintyTask, ServiceConsumer {
 
 	private TaskServices taskServices;
-	private UUID userId;
+	private UserId userId;
 	private TestUser user = null;
 
 	@Override

@@ -6,6 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import tom.api.UserId;
 
 @Entity
 public class ResultTemplate {
@@ -13,7 +14,7 @@ public class ResultTemplate {
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
 	private UUID id;
-	private UUID ownerId;
+	private UserId ownerId;
 	private String name;
 	private String content;
 
@@ -21,7 +22,7 @@ public class ResultTemplate {
 
 	}
 
-	public ResultTemplate(UUID id, UUID ownerId, String name, String content) {
+	public ResultTemplate(UUID id, UserId ownerId, String name, String content) {
 		this.id = id;
 		this.ownerId = ownerId;
 		this.name = name;
@@ -36,11 +37,11 @@ public class ResultTemplate {
 		this.id = id;
 	}
 
-	public UUID getOwnerId() {
+	public UserId getOwnerId() {
 		return ownerId;
 	}
 
-	public void setOwnerId(UUID ownerId) {
+	public void setOwnerId(UserId ownerId) {
 		this.ownerId = ownerId;
 	}
 

@@ -6,10 +6,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import tom.api.ConversationId;
+import tom.api.UserId;
 import tom.api.services.TaskServices;
+import tom.api.services.assistant.ConversationInUseException;
 import tom.api.services.assistant.QueueFullException;
 import tom.api.services.assistant.StringResult;
 import tom.model.AssistantQuery;
@@ -20,10 +26,12 @@ import tom.task.annotations.PublicTask;
 @PublicTask(name = "Converse with Robot", configClass = "tom.tasks.ai.query.AiQueryConfig")
 public class AiQuery implements MintyTask, ServiceConsumer {
 
+	private final Logger logger = LogManager.getLogger(AiQuery.class);
+
 	private TaskServices taskServices;
 	private UUID uuid = UUID.randomUUID();
 	private AiQueryConfig config = new AiQueryConfig();
-	private UUID userId;
+	private UserId userId;
 	private Map<String, Object> result = new HashMap<>();
 	private Map<String, Object> input = Map.of();
 	private String error = null;
@@ -58,7 +66,7 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 	}
 
 	@Override
-	public void setUserId(UUID userId) {
+	public void setUserId(UserId userId) {
 		this.userId = userId;
 	}
 
@@ -75,17 +83,19 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 		}
 
 		if (input.containsKey("Conversation ID")) {
-			query.setConversationId(UUID.fromString(input.get("Conversation ID").toString()));
+			query.setConversationId(new ConversationId(input.get("Conversation ID").toString()));
 		}
 
 		try {
-			UUID requestId = null;
+			ConversationId requestId = null;
 			while (true) {
 				try {
 					requestId = taskServices.getAssistantQueryService().ask(userId, query);
 					break;
 
-				} catch (QueueFullException e) {
+				} catch (QueueFullException | ConversationInUseException e) {
+					logger.warn(
+							"LLM queue is full or conversation in use. Sleeping for 5 seconds before trying again.");
 					Thread.sleep(Duration.ofSeconds(5));
 				}
 			}
@@ -97,6 +107,7 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 					response = llmResult instanceof StringResult ? ((StringResult) llmResult).getValue() : null;
 					break;
 				}
+				logger.warn("LLM response not ready. Sleeping for 5 seconds before trying again.");
 				Thread.sleep(Duration.ofSeconds(5));
 			}
 

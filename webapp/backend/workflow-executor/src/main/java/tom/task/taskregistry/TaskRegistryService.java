@@ -2,8 +2,8 @@ package tom.task.taskregistry;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
+import tom.api.UserId;
 import tom.output.OutputTask;
 import tom.task.MintyTask;
 import tom.workflow.model.TaskDescription;
@@ -11,9 +11,9 @@ import tom.workflow.model.TaskRequest;
 
 public interface TaskRegistryService {
 
-	MintyTask newTask(UUID userId, TaskRequest request);
+	MintyTask newTask(UserId userId, TaskRequest request);
 
-	OutputTask newOutputTask(UUID userId, TaskRequest request);
+	OutputTask newOutputTask(UserId userId, TaskRequest request);
 
 	List<TaskDescription> getTasks();
 

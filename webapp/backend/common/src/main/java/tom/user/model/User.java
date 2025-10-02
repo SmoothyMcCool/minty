@@ -1,21 +1,22 @@
 package tom.user.model;
 
 import java.util.Map;
-import java.util.UUID;
+
+import tom.api.UserId;
 
 public class User {
 
-	private UUID id;
+	private UserId id;
 	private String name;
 	private String password;
 	private Map<String, String> defaults;
 	private String displayMode;
 
-	public UUID getId() {
+	public UserId getId() {
 		return id;
 	}
 
-	public void setId(UUID id) {
+	public void setId(UserId id) {
 		this.id = id;
 	}
 

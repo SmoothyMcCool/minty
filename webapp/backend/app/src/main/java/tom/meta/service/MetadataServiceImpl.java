@@ -2,10 +2,10 @@ package tom.meta.service;
 
 import java.time.LocalDate;
 import java.util.Optional;
-import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import tom.api.UserId;
 import tom.meta.repository.MetadataRepository;
 import tom.meta.repository.UserMeta;
 
@@ -19,14 +19,14 @@ public class MetadataServiceImpl implements MetadataService {
 	}
 
 	@Override
-	public void newAssistant(UUID userId) {
+	public void newAssistant(UserId userId) {
 		UserMeta meta = getUser(userId);
 		meta.setTotalAssistantsCreated(meta.getTotalAssistantsCreated() + 1);
 		metadataRepository.save(meta);
 	}
 
 	@Override
-	public void userLoggedIn(UUID userId) {
+	public void userLoggedIn(UserId userId) {
 		UserMeta meta = getUser(userId);
 		meta.setLastLogin(LocalDate.now());
 		meta.setTotalLogins(meta.getTotalLogins() + 1);
@@ -34,35 +34,35 @@ public class MetadataServiceImpl implements MetadataService {
 	}
 
 	@Override
-	public void workflowCreated(UUID userId) {
+	public void workflowCreated(UserId userId) {
 		UserMeta meta = getUser(userId);
 		meta.setTotalWorkflowsCreated(meta.getTotalWorkflowsCreated() + 1);
 		metadataRepository.save(meta);
 	}
 
 	@Override
-	public void workflowExecuted(UUID userId) {
+	public void workflowExecuted(UserId userId) {
 		UserMeta meta = getUser(userId);
 		meta.setTotalWorkflowRuns(meta.getTotalWorkflowRuns() + 1);
 		metadataRepository.save(meta);
 	}
 
 	@Override
-	public void newConversation(UUID userId) {
+	public void newConversation(UserId userId) {
 		UserMeta meta = getUser(userId);
 		meta.setTotalConversations(meta.getTotalConversations() + 1);
 		metadataRepository.save(meta);
 	}
 
 	@Override
-	public void addUser(UUID userId) {
+	public void addUser(UserId userId) {
 		UserMeta meta = new UserMeta();
 		meta.setUserId(userId);
 		meta.setId(null);
 		metadataRepository.save(meta);
 	}
 
-	private UserMeta getUser(UUID userId) {
+	private UserMeta getUser(UserId userId) {
 		Optional<UserMeta> maybeMeta = metadataRepository.findByUserId(userId);
 		if (!maybeMeta.isPresent()) {
 			addUser(userId);

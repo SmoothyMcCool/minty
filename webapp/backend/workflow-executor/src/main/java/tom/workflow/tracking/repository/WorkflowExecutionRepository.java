@@ -5,10 +5,11 @@ import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import tom.api.UserId;
 import tom.workflow.tracking.model.WorkflowExecution;
 
 public interface WorkflowExecutionRepository extends JpaRepository<WorkflowExecution, UUID> {
 
-	List<WorkflowExecution> findAllByOwnerId(UUID userId);
+	List<WorkflowExecution> findAllByOwnerId(UserId userId);
 
 }

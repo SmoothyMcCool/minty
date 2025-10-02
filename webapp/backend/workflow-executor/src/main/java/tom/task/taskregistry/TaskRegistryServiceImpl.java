@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.UUID;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.stream.Stream;
@@ -27,6 +26,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
+import tom.api.UserId;
 import tom.api.services.TaskServices;
 import tom.config.ExternalProperties;
 import tom.output.OutputTask;
@@ -374,7 +374,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 	}
 
 	@Override
-	public MintyTask newTask(UUID userId, TaskRequest request) {
+	public MintyTask newTask(UserId userId, TaskRequest request) {
 
 		if (request == null) {
 			throw new IllegalArgumentException("request cannot be null.");
@@ -451,7 +451,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 	}
 
 	@Override
-	public OutputTask newOutputTask(UUID userId, TaskRequest request) {
+	public OutputTask newOutputTask(UserId userId, TaskRequest request) {
 
 		if (request == null) {
 			throw new IllegalArgumentException("request cannot be null.");

@@ -60,7 +60,7 @@ export class ViewConversationComponent implements OnInit {
 
 					// If the last message in the chathistory is from the user, a query is (almost certainly) in progress.
 					// Try to resume it.
-					if (this.chatHistory[0].user) {
+					if (this.chatHistory && this.chatHistory.length > 0 && this.chatHistory[0].user) {
 						this.waitingForResponse = true;
 						this.stream(this.conversationId);
 					}

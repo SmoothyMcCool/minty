@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
 import tom.ApiError;
+import tom.api.DocumentId;
 import tom.config.ExternalProperties;
 import tom.controller.ResponseWrapper;
 import tom.document.model.MintyDoc;
@@ -47,7 +48,7 @@ public class DocumentController {
 
 		boolean exists = documentService.documentExists(document.getDocumentId());
 
-		document.setDocumentId(UUID.randomUUID());
+		document.setDocumentId(new DocumentId(UUID.randomUUID()));
 		if (exists) {
 			ResponseWrapper<MintyDoc> response = ResponseWrapper.ApiFailureResponse(HttpStatus.CONFLICT.value(),
 					List.of(ApiError.DOCUMENT_ALREADY_EXISTS));
@@ -92,7 +93,7 @@ public class DocumentController {
 
 	@RequestMapping(value = { "/delete" }, method = RequestMethod.DELETE)
 	public ResponseEntity<ResponseWrapper<Boolean>> deleteDocument(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("documentId") UUID documentId) {
+			@RequestParam("documentId") DocumentId documentId) {
 
 		if (!documentService.deleteDocument(user.getId(), documentId)) {
 			return new ResponseEntity<>(

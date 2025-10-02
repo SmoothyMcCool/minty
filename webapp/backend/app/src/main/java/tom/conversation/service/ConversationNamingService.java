@@ -2,7 +2,6 @@ package tom.conversation.service;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -11,9 +10,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
+import tom.api.ConversationId;
 import tom.api.services.UserService;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
+import tom.api.services.assistant.ConversationInUseException;
 import tom.api.services.assistant.QueueFullException;
 import tom.api.services.assistant.StringResult;
 import tom.config.ExternalProperties;
@@ -78,7 +79,7 @@ public class ConversationNamingService {
 
 					String summary = "";
 
-					UUID requestId = null;
+					ConversationId requestId = null;
 					while (true) {
 						try {
 							logger.info(
@@ -87,7 +88,9 @@ public class ConversationNamingService {
 							logger.info("requestId: " + requestId);
 							break;
 
-						} catch (QueueFullException e) {
+						} catch (QueueFullException | ConversationInUseException e) {
+							logger.warn(
+									"Failed to enqueue request. Trying again in 5 seconds. Reason: " + e.toString());
 							Thread.sleep(Duration.ofSeconds(5));
 						}
 					}

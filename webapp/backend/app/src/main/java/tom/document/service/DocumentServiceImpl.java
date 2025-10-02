@@ -28,6 +28,8 @@ import org.springframework.stereotype.Service;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.transaction.Transactional;
+import tom.api.DocumentId;
+import tom.api.UserId;
 import tom.config.ExternalProperties;
 import tom.document.model.DocumentState;
 import tom.document.model.MintyDoc;
@@ -95,7 +97,7 @@ public class DocumentServiceImpl implements DocumentService {
 	public void processFile(File file) {
 		try {
 			if (file.isFile()) {
-				UUID documentId = UUID.fromString(file.getName());
+				DocumentId documentId = new DocumentId(UUID.fromString(file.getName()));
 				startTaskFor(file.toPath(), documentId);
 			}
 		} catch (IllegalArgumentException e) {
@@ -130,7 +132,7 @@ public class DocumentServiceImpl implements DocumentService {
 		return splitter.apply(documents);
 	}
 
-	private List<Document> enrich(UUID documentId, List<Document> documents, ChatModel chatModel) {
+	private List<Document> enrich(DocumentId documentId, List<Document> documents, ChatModel chatModel) {
 		KeywordMetadataEnricher keywordifier = new KeywordMetadataEnricher(chatModel, keywordsPerDocument);
 		documents = keywordifier.apply(documents);
 
@@ -147,7 +149,7 @@ public class DocumentServiceImpl implements DocumentService {
 		return summarizer.apply(documents);
 	}
 
-	private void startTaskFor(Path file, UUID documentId) {
+	private void startTaskFor(Path file, DocumentId documentId) {
 		String filename = file.getFileName().toString();
 		MintyDoc doc = this.findByDocumentId(documentId);
 
@@ -166,7 +168,7 @@ public class DocumentServiceImpl implements DocumentService {
 
 	@Override
 	@Transactional
-	public boolean deleteDocument(UUID userId, UUID documentId) {
+	public boolean deleteDocument(UserId userId, DocumentId documentId) {
 
 		MintyDoc document = findByDocumentId(documentId);
 
@@ -204,13 +206,13 @@ public class DocumentServiceImpl implements DocumentService {
 	}
 
 	@Override
-	public boolean documentExists(UUID documentId) {
+	public boolean documentExists(DocumentId documentId) {
 		return documentRepository.existsByDocumentId(documentId);
 	}
 
 	@Override
 	@Transactional
-	public MintyDoc addDocument(UUID userId, MintyDoc document) {
+	public MintyDoc addDocument(UserId userId, MintyDoc document) {
 		document.setDocumentId(null);
 		document.setOwnerId(userId);
 		document.setState(DocumentState.NO_CONTENT);
@@ -218,13 +220,13 @@ public class DocumentServiceImpl implements DocumentService {
 	}
 
 	@Override
-	public boolean documentOwnedBy(UUID userId, UUID documentId) {
+	public boolean documentOwnedBy(UserId userId, DocumentId documentId) {
 		MintyDoc doc = documentRepository.findByDocumentId(documentId);
 		return doc != null && userId.equals(doc.getOwnerId());
 	}
 
 	@Override
-	public MintyDoc findByDocumentId(UUID documentId) {
+	public MintyDoc findByDocumentId(DocumentId documentId) {
 		return documentRepository.findByDocumentId(documentId);
 	}
 

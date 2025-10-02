@@ -1,13 +1,13 @@
 package tom.meta.repository;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import tom.api.UserId;
 
 @Entity
 public class UserMeta {
@@ -15,7 +15,7 @@ public class UserMeta {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
-	private UUID userId;
+	private UserId userId;
 	private int totalAssistantsCreated;
 	private int totalConversations;
 	private int totalWorkflowsCreated;
@@ -32,11 +32,11 @@ public class UserMeta {
 		this.id = id;
 	}
 
-	public UUID getUserId() {
+	public UserId getUserId() {
 		return userId;
 	}
 
-	public void setUserId(UUID userId) {
+	public void setUserId(UserId userId) {
 		this.userId = userId;
 	}
 

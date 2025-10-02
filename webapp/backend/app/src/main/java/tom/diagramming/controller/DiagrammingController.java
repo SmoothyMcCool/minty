@@ -1,7 +1,6 @@
 package tom.diagramming.controller;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,8 +11,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import tom.ApiError;
+import tom.api.ConversationId;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
+import tom.api.services.assistant.ConversationInUseException;
 import tom.api.services.assistant.LlmResult;
 import tom.api.services.assistant.QueueFullException;
 import tom.api.services.assistant.StringResult;
@@ -44,8 +45,8 @@ public class DiagrammingController {
 	}
 
 	@RequestMapping(value = { "ask" }, method = RequestMethod.GET)
-	public ResponseEntity<ResponseWrapper<UUID>> getDiagrammingAssistant(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("request") String request) {
+	public ResponseEntity<ResponseWrapper<ConversationId>> getDiagrammingAssistant(
+			@AuthenticationPrincipal UserDetailsUser user, @RequestParam("request") String request) {
 
 		AssistantQuery query = new AssistantQuery();
 		query.setAssistantId(AssistantManagementService.DiagrammingAssistantId);
@@ -53,29 +54,24 @@ public class DiagrammingController {
 		query.setConversationId(conversation.getConversationId());
 		query.setQuery(request);
 
-		UUID requestId;
+		ConversationId requestId;
 		try {
 			requestId = assistantQueryService.ask(user.getId(), query);
-		} catch (QueueFullException e) {
-			ResponseWrapper<UUID> response = ResponseWrapper.ApiFailureResponse(HttpStatus.SERVICE_UNAVAILABLE.value(),
-					List.of(ApiError.LLM_BUSY));
+		} catch (QueueFullException | ConversationInUseException e) {
+			ResponseWrapper<ConversationId> response = ResponseWrapper
+					.ApiFailureResponse(HttpStatus.SERVICE_UNAVAILABLE.value(), List.of(ApiError.LLM_BUSY));
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
-		ResponseWrapper<UUID> response = ResponseWrapper.SuccessResponse(requestId);
+		ResponseWrapper<ConversationId> response = ResponseWrapper.SuccessResponse(requestId);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	@RequestMapping(value = { "get" }, method = RequestMethod.GET)
 	public ResponseEntity<ResponseWrapper<String>> getResponse(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("requestId") UUID requestId) {
+			@RequestParam("requestId") ConversationId requestId) {
 
 		StringResult llmResult = (StringResult) assistantQueryService.getResultFor(requestId);
-
-		if (llmResult == LlmResult.IN_PROGRESS) {
-			ResponseWrapper<String> response = ResponseWrapper.SuccessResponse("~~LLM~Executing~~");
-			return new ResponseEntity<>(response, HttpStatus.OK);
-		}
 
 		if (llmResult == null) {
 			int queuePosition = assistantQueryService.getQueuePositionFor(requestId);
@@ -86,6 +82,11 @@ public class DiagrammingController {
 			}
 
 			ResponseWrapper<String> response = ResponseWrapper.SuccessResponse("~~No~Response~~");
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
+		if (llmResult == LlmResult.IN_PROGRESS) {
+			ResponseWrapper<String> response = ResponseWrapper.SuccessResponse("~~LLM~Executing~~");
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 

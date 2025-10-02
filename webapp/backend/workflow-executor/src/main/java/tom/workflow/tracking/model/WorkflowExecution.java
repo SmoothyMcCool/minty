@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import tom.api.UserId;
 import tom.workflow.converters.ExecutionResultToStringConverter;
 import tom.workflow.converters.ExecutionStateToStringConverter;
 
@@ -17,7 +18,7 @@ public class WorkflowExecution {
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
 	private UUID id;
-	private UUID ownerId;
+	private UserId ownerId;
 	private String name;
 	@Convert(converter = ExecutionStateToStringConverter.class)
 	private ExecutionState state;
@@ -34,7 +35,7 @@ public class WorkflowExecution {
 		output = "";
 	}
 
-	public WorkflowExecution(int numSteps, UUID ownerId) {
+	public WorkflowExecution(int numSteps, UserId ownerId) {
 		id = null;
 		this.ownerId = ownerId;
 		state = new ExecutionState(numSteps);
@@ -50,11 +51,11 @@ public class WorkflowExecution {
 		this.id = id;
 	}
 
-	public void setOwnerId(UUID ownerId) {
+	public void setOwnerId(UserId ownerId) {
 		this.ownerId = ownerId;
 	}
 
-	public UUID getOwnerId() {
+	public UserId getOwnerId() {
 		return ownerId;
 	}
 

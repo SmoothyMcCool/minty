@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
+import tom.api.UserId;
 import tom.workflow.service.WorkflowRunner;
 import tom.workflow.tracking.model.WorkflowExecution;
 import tom.workflow.tracking.model.controller.WorkflowResult;
@@ -43,7 +44,7 @@ public class WorkflowTrackingServiceImpl implements WorkflowTrackingService {
 	}
 
 	@Override
-	public synchronized List<WorkflowState> getWorkflowList(UUID userId) {
+	public synchronized List<WorkflowState> getWorkflowList(UserId userId) {
 		List<WorkflowState> memoryResults = runningWorkflows.stream().filter(item -> item.getUser().equals(userId))
 				.map(item -> new WorkflowState(item.getExecutionState().getId(), item.getWorkflowName(),
 						item.getExecutionState().getState()))
@@ -54,7 +55,7 @@ public class WorkflowTrackingServiceImpl implements WorkflowTrackingService {
 	}
 
 	@Override
-	public WorkflowResult getResult(UUID userId, UUID resultId) {
+	public WorkflowResult getResult(UserId userId, UUID resultId) {
 		Optional<WorkflowExecution> execution = workflowExecutionRepository.findById(resultId);
 
 		if (execution.isEmpty()) {
@@ -72,7 +73,7 @@ public class WorkflowTrackingServiceImpl implements WorkflowTrackingService {
 	}
 
 	@Override
-	public String getOutput(UUID userId, UUID resultId) {
+	public String getOutput(UserId userId, UUID resultId) {
 		Optional<WorkflowExecution> execution = workflowExecutionRepository.findById(resultId);
 
 		if (execution.isEmpty()) {
@@ -91,7 +92,7 @@ public class WorkflowTrackingServiceImpl implements WorkflowTrackingService {
 
 	@Override
 	@Transactional
-	public void deleteResult(UUID userId, UUID workflowId) {
+	public void deleteResult(UserId userId, UUID workflowId) {
 		Optional<WorkflowExecution> execution = workflowExecutionRepository.findById(workflowId);
 		if (execution.isPresent() && execution.get().getOwnerId().equals(userId)) {
 			workflowExecutionRepository.delete(execution.get());

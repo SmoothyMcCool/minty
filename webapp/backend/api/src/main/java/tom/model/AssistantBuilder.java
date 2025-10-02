@@ -2,20 +2,23 @@ package tom.model;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
+
+import tom.api.AssistantId;
+import tom.api.DocumentId;
+import tom.api.UserId;
 
 public class AssistantBuilder {
-	private UUID id;
+	private AssistantId id;
 	private String name;
 	private String model;
 	private Double temperature;
 	private String prompt;
-	private UUID ownerId;
+	private UserId ownerId;
 	private boolean shared;
 	private boolean hasMemory;
-	private List<UUID> documentIds;
+	private List<DocumentId> documentIds;
 
-	public AssistantBuilder id(UUID id) {
+	public AssistantBuilder id(AssistantId id) {
 		this.id = id;
 		return this;
 	}
@@ -40,12 +43,12 @@ public class AssistantBuilder {
 		return this;
 	}
 
-	public AssistantBuilder documentIds(List<UUID> documentIds) {
+	public AssistantBuilder documentIds(List<DocumentId> documentIds) {
 		this.documentIds = documentIds;
 		return this;
 	}
 
-	public AssistantBuilder ownerId(UUID ownerId) {
+	public AssistantBuilder ownerId(UserId ownerId) {
 		this.ownerId = ownerId;
 		return this;
 	}

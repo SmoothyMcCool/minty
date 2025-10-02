@@ -1,11 +1,11 @@
 package tom.user.service;
 
 import java.util.Optional;
-import java.util.UUID;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
+import tom.api.UserId;
 import tom.api.services.UserService;
 import tom.user.model.User;
 import tom.user.repository.EncryptedUser;
@@ -18,5 +18,5 @@ public interface UserServiceInternal extends UserService {
 
 	public Optional<User> getUserFromName(String userName);
 
-	public Optional<User> getUserFromId(UUID userId);
+	public Optional<User> getUserFromId(UserId userId);
 }

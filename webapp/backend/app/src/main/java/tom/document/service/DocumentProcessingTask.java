@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import tom.api.DocumentId;
 import tom.document.model.DocumentState;
 import tom.document.model.MintyDoc;
 
@@ -26,7 +27,7 @@ public class DocumentProcessingTask implements Runnable {
 			String filename = file.getName();
 			logger.info("Started processing " + filename);
 
-			MintyDoc doc = documentService.findByDocumentId(UUID.fromString(filename));
+			MintyDoc doc = documentService.findByDocumentId(new DocumentId(UUID.fromString(filename)));
 			if (doc != null) {
 				if (doc.getState() == DocumentState.READY) {
 					// No good, this document is already processed. Log a warning and delete this
