@@ -50,7 +50,7 @@ public class LoginController {
 		if (user == null) {
 			return ResponseWrapper.FailureResponse(HttpStatus.BAD_REQUEST.value(), List.of("No user provided."));
 		}
-		EncryptedUser _user = userRepository.findById(user.getId()).get();
+		EncryptedUser _user = userRepository.findById(user.getId().value()).get();
 		_user.setPassword("");
 
 		// Set a 30-minute session timeout.

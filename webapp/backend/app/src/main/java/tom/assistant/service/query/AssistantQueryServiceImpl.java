@@ -4,7 +4,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -31,8 +30,11 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PreDestroy;
+import tom.api.ConversationId;
+import tom.api.UserId;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
+import tom.api.services.assistant.ConversationInUseException;
 import tom.api.services.assistant.LlmResult;
 import tom.api.services.assistant.QueueFullException;
 import tom.api.services.assistant.StreamResult;
@@ -54,7 +56,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	private final UserServiceInternal userService;
 	private final AssistantManagementService assistantManagementService;
 	private final ThreadPoolTaskExecutor llmExecutor;
-	private final Map<UUID, LlmResult> results;
+	private final Map<ConversationId, LlmResult> results;
 
 	private final int maxResults;
 
@@ -76,10 +78,16 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	}
 
 	@Override
-	public UUID ask(UUID userId, AssistantQuery query) throws QueueFullException {
+	public synchronized ConversationId ask(UserId userId, AssistantQuery query)
+			throws QueueFullException, ConversationInUseException {
 
 		try {
+			if (results.containsKey(query.getConversationId())) {
+				throw new ConversationInUseException(query.getConversationId().value().toString());
+			}
+
 			LlmRequest request = new LlmRequest(userId, query, Instant.now());
+			results.put(query.getConversationId(), LlmResult.IN_PROGRESS);
 
 			Runnable task = () -> askInternal(request);
 			request.setTask(task);
@@ -89,6 +97,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 
 		} catch (TaskRejectedException tre) {
 			// LLM is busy. Maybe next time.
+			results.remove(query.getConversationId());
 			throw new QueueFullException("LLM Queue is full, try again later.");
 		}
 
@@ -96,7 +105,6 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 
 	private void askInternal(LlmRequest request) {
 		String result = "";
-		results.put(request.getQuery().getConversationId(), LlmResult.IN_PROGRESS);
 
 		User user = userService.getUserFromId(request.getUserId()).get();
 
@@ -123,13 +131,14 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	}
 
 	@Override
-	public UUID askStreaming(UUID userId, AssistantQuery query) throws QueueFullException {
+	public synchronized ConversationId askStreaming(UserId userId, AssistantQuery query) throws QueueFullException {
 
 		try {
 			LlmRequest request = new LlmRequest(userId, query, Instant.now());
 			Runnable task = () -> askStreamingInternal(request);
 			request.setTask(task);
 			llmExecutor.execute(request);
+			logger.info("Enqueued task for conversation " + query.getConversationId());
 
 			return request.getQuery().getConversationId();
 
@@ -141,7 +150,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	}
 
 	@Override
-	public LlmResult getResultFor(UUID requestId) {
+	public synchronized LlmResult getResultFor(ConversationId requestId) {
 		if (!results.containsKey(requestId)) {
 			return null;
 		}
@@ -157,6 +166,10 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			results.remove(requestId);
 		} else {
 			StreamResult sr = (StreamResult) result;
+			if (sr == null) {
+				logger.warn("StreamResult is null!");
+				return null;
+			}
 			if (sr.isComplete()) {
 				results.remove(requestId);
 			}
@@ -166,7 +179,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	}
 
 	@Override
-	public int getQueuePositionFor(UUID streamId) {
+	public int getQueuePositionFor(ConversationId streamId) {
 		BlockingQueue<Runnable> queue = llmExecutor.getThreadPoolExecutor().getQueue();
 		int index = 1;
 		for (Runnable r : queue) {
@@ -229,7 +242,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		return prepare(query.getQuery(), query.getConversationId(), assistant);
 	}
 
-	private ChatClientRequestSpec prepare(String query, UUID conversationId, Assistant assistant) {
+	private ChatClientRequestSpec prepare(String query, ConversationId conversationId, Assistant assistant) {
 
 		String model = assistant.model();
 
@@ -271,7 +284,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			}
 
 			if (conversationId != null) {
-				final UUID finalConversationId = conversationId;
+				final ConversationId finalConversationId = conversationId;
 				spec = spec.advisors(a -> a.param(ChatMemory.CONVERSATION_ID, finalConversationId.toString()));
 			}
 

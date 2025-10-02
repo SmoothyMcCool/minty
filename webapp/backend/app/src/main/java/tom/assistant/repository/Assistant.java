@@ -9,6 +9,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Transient;
+import tom.api.AssistantId;
+import tom.api.DocumentId;
+import tom.api.UserId;
 
 @Entity
 public class Assistant {
@@ -20,17 +23,17 @@ public class Assistant {
 	private String prompt;
 	private String model;
 	private Double temperature;
-	private UUID ownerId;
+	private UserId ownerId;
 	private boolean shared;
 	private boolean hasMemory;
 	@Transient
-	private List<UUID> associatedDocumentIds;
+	private List<DocumentId> associatedDocumentIds;
 
 	public Assistant() {
 	}
 
 	public Assistant(tom.model.Assistant assistant) {
-		this.id = assistant.id();
+		this.id = assistant.id().getValue();
 		this.name = assistant.name();
 		this.prompt = assistant.prompt();
 		this.model = assistant.model();
@@ -42,8 +45,8 @@ public class Assistant {
 	}
 
 	public tom.model.Assistant toTaskAssistant() {
-		return new tom.model.Assistant(id, name, model.toString(), temperature, prompt, associatedDocumentIds, ownerId,
-				shared, hasMemory);
+		return new tom.model.Assistant(new AssistantId(id), name, model.toString(), temperature, prompt,
+				associatedDocumentIds, ownerId, shared, hasMemory);
 	}
 
 	public Assistant updateWith(tom.model.Assistant assistant) {
@@ -57,12 +60,12 @@ public class Assistant {
 		return this;
 	}
 
-	public UUID getId() {
-		return id;
+	public AssistantId getId() {
+		return new AssistantId(id);
 	}
 
-	public void setId(UUID id) {
-		this.id = id;
+	public void setId(AssistantId id) {
+		this.id = id == null ? null : id.getValue();
 	}
 
 	public String getName() {
@@ -97,11 +100,11 @@ public class Assistant {
 		this.temperature = temperature;
 	}
 
-	public UUID getOwnerId() {
+	public UserId getOwnerId() {
 		return ownerId;
 	}
 
-	public void setOwnerId(UUID ownerId) {
+	public void setOwnerId(UserId ownerId) {
 		this.ownerId = ownerId;
 	}
 
@@ -122,11 +125,11 @@ public class Assistant {
 	}
 
 	@Transient
-	public List<UUID> getAssociatedDocumentIds() {
+	public List<DocumentId> getAssociatedDocumentIds() {
 		return associatedDocumentIds;
 	}
 
-	public void setAssociatedDocuments(List<UUID> associatedDocumentIds) {
+	public void setAssociatedDocuments(List<DocumentId> associatedDocumentIds) {
 		this.associatedDocumentIds = associatedDocumentIds;
 	}
 

@@ -3,12 +3,12 @@ package tom.workflow.service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.core.task.AsyncTaskExecutor;
 
+import tom.api.UserId;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.conversation.model.Conversation;
 import tom.conversation.service.ConversationServiceInternal;
@@ -33,13 +33,13 @@ public class WorkflowRunner {
 	private final AsyncTaskExecutor taskExecutor;
 	private final Workflow workflow;
 	private boolean taskComplete;
-	private UUID userId;
+	private UserId userId;
 	private WorkflowExecution executionState;
 	private int stepTaskCount = 0;
 	private Map<Integer, WorkflowTaskWrapper> pendingTasks = new HashMap<>();
 	private Conversation workflowConversation;
 
-	public WorkflowRunner(UUID userId, Workflow workflow, TaskRegistryService taskRegistryService,
+	public WorkflowRunner(UserId userId, Workflow workflow, TaskRegistryService taskRegistryService,
 			ConversationServiceInternal conversationService, WorkflowTrackingService workflowTrackingService,
 			AsyncTaskExecutor taskExecutor) {
 		taskComplete = false;
@@ -120,7 +120,7 @@ public class WorkflowRunner {
 		// conversation ID. They have to be careful in how its used. Best not use it in
 		// parallelized tasks...
 		Map<String, Object> input = new HashMap<>();
-		input.put("Conversation ID", workflowConversation.getConversationId());
+		input.put("Conversation ID", workflowConversation.getConversationId().value());
 		currentTask.setInput(input);
 
 		int stepNumber = 0;
@@ -154,7 +154,6 @@ public class WorkflowRunner {
 		// Remove the just-completed task from the list of pending tasks.
 		pendingTasks.remove(completedTask.getTaskId());
 
-		logger.info("completed task " + completedTask.getTaskId() + " for step " + completedTask.getStepNumber());
 		// In the situation where no task generates output but there are more steps, we
 		// have to wait for all tasks to complete as we do not want to manually trigger
 		// a step if there are preceding inputs (in this situation, the follow-on step
@@ -232,7 +231,7 @@ public class WorkflowRunner {
 		} else {
 			taskInput = new HashMap<>();
 		}
-		taskInput.put("Conversation ID", workflowConversation.getConversationId());
+		taskInput.put("Conversation ID", workflowConversation.getConversationId().value());
 
 		task.setInput(taskInput);
 
@@ -240,7 +239,7 @@ public class WorkflowRunner {
 		return wrapper;
 	}
 
-	public UUID getUser() {
+	public UserId getUser() {
 		return userId;
 	}
 

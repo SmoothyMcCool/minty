@@ -1,19 +1,21 @@
 package tom.model;
 
 import java.util.Objects;
-import java.util.UUID;
+
+import tom.api.AssistantId;
+import tom.api.ConversationId;
 
 public class AssistantQuery {
 
-	private UUID assistantId;
-	private UUID conversationId;
+	private AssistantId assistantId;
+	private ConversationId conversationId;
 	private String query;
 
-	public UUID getConversationId() {
+	public ConversationId getConversationId() {
 		return conversationId;
 	}
 
-	public void setConversationId(UUID conversationId) {
+	public void setConversationId(ConversationId conversationId) {
 		this.conversationId = conversationId;
 	}
 
@@ -25,11 +27,11 @@ public class AssistantQuery {
 		this.query = query;
 	}
 
-	public UUID getAssistantId() {
+	public AssistantId getAssistantId() {
 		return assistantId;
 	}
 
-	public void setAssistantId(UUID assistantId) {
+	public void setAssistantId(AssistantId assistantId) {
 		this.assistantId = assistantId;
 	}
 

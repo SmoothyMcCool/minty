@@ -5,12 +5,14 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import tom.api.UserId;
+
 public class Workflow {
 
 	private UUID id;
 	private String name = "";
 	private String description = "";
-	private UUID ownerId;
+	private UserId ownerId;
 	private boolean shared = false;
 	private List<Task> workflowSteps = null;
 	private Task outputStep = null;
@@ -41,11 +43,11 @@ public class Workflow {
 		this.description = description;
 	}
 
-	public UUID getOwnerId() {
+	public UserId getOwnerId() {
 		return ownerId;
 	}
 
-	public void setOwnerId(UUID ownerId) {
+	public void setOwnerId(UserId ownerId) {
 		this.ownerId = ownerId;
 	}
 

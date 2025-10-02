@@ -2,11 +2,16 @@ package tom.conversation.model;
 
 import java.util.UUID;
 
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import tom.api.AssistantId;
+import tom.api.ConversationId;
+import tom.api.UserId;
+import tom.repository.converter.UserIdConverter;
 
 @Entity
 @Table(name = "Conversation")
@@ -16,8 +21,10 @@ public class ConversationEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
 	private UUID conversationId;
-	private UUID ownerId;
-	private UUID associatedAssistantId;
+	@Convert(converter = UserIdConverter.class)
+	private UserId ownerId;
+
+	private AssistantId associatedAssistantId;
 
 	public ConversationEntity() {
 
@@ -31,34 +38,34 @@ public class ConversationEntity {
 		this.title = title;
 	}
 
-	public UUID getConversationId() {
-		return conversationId;
+	public ConversationId getConversationId() {
+		return new ConversationId(conversationId);
 	}
 
-	public void setConversationId(UUID conversationId) {
-		this.conversationId = conversationId;
+	public void setConversationId(ConversationId conversationId) {
+		this.conversationId = conversationId == null ? null : conversationId.value();
 	}
 
-	public UUID getOwnerId() {
+	public UserId getOwnerId() {
 		return ownerId;
 	}
 
-	public void setOwnerId(UUID ownerId) {
+	public void setOwnerId(UserId ownerId) {
 		this.ownerId = ownerId;
 	}
 
-	public UUID getAssociatedAssistantId() {
+	public AssistantId getAssociatedAssistantId() {
 		return associatedAssistantId;
 	}
 
-	public void setAssociatedAssistantId(UUID associatedAssistantId) {
+	public void setAssociatedAssistantId(AssistantId associatedAssistantId) {
 		this.associatedAssistantId = associatedAssistantId;
 	}
 
 	public Conversation fromEntity() {
 		Conversation convo = new Conversation();
 		convo.setAssociatedAssistantId(associatedAssistantId);
-		convo.setConversationId(conversationId);
+		convo.setConversationId(new ConversationId(conversationId));
 		convo.setOwnerId(ownerId);
 		convo.setTitle(title);
 		return convo;

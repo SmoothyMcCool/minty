@@ -9,6 +9,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import tom.api.UserId;
+import tom.repository.converter.UserIdConverter;
 import tom.workflow.converters.TaskConverter;
 import tom.workflow.model.Task;
 
@@ -20,7 +22,8 @@ public class Workflow {
 	private UUID id;
 	private String name;
 	private String description;
-	private UUID ownerId;
+	@Convert(converter = UserIdConverter.class)
+	private UserId ownerId;
 	private boolean shared;
 	@Column(columnDefinition = "json")
 	@Convert(converter = TaskConverter.class)
@@ -69,11 +72,11 @@ public class Workflow {
 		this.description = description;
 	}
 
-	public UUID getOwnerId() {
+	public UserId getOwnerId() {
 		return ownerId;
 	}
 
-	public void setOwnerId(UUID ownerId) {
+	public void setOwnerId(UserId ownerId) {
 		this.ownerId = ownerId;
 	}
 

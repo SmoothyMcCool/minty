@@ -2,7 +2,6 @@ package tom.assistant.controller;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -16,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import tom.ApiError;
+import tom.api.AssistantId;
+import tom.api.ConversationId;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
 import tom.api.services.assistant.LlmResult;
@@ -87,7 +88,7 @@ public class AssistantController {
 
 	@RequestMapping(value = { "/get" }, method = RequestMethod.GET)
 	public ResponseEntity<ResponseWrapper<Assistant>> getAssistant(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("id") UUID assistantId) {
+			@RequestParam("id") AssistantId assistantId) {
 		Assistant assistant = assistantManagementService.findAssistant(user.getId(), assistantId);
 
 		if (assistant == null) {
@@ -102,10 +103,11 @@ public class AssistantController {
 
 	@RequestMapping(value = { "/conversation" }, method = RequestMethod.GET)
 	public ResponseEntity<ResponseWrapper<Assistant>> getAssistantForChat(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("conversationId") UUID conversationId) {
+			@RequestParam("conversationId") ConversationId conversationId) {
 
-		if (conversationService.conversationOwnedBy(conversationId, user.getId())) {
-			UUID assistantId = conversationService.getAssistantIdFromConversationId(user.getId(), conversationId);
+		if (conversationService.conversationOwnedBy(user.getId(), conversationId)) {
+			AssistantId assistantId = conversationService.getAssistantIdFromConversationId(user.getId(),
+					conversationId);
 			return getAssistant(user, assistantId);
 		}
 
@@ -116,7 +118,7 @@ public class AssistantController {
 
 	@RequestMapping(value = { "/delete" }, method = RequestMethod.DELETE)
 	public ResponseEntity<ResponseWrapper<Boolean>> deleteAssistant(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("id") UUID assistantId) {
+			@RequestParam("id") AssistantId assistantId) {
 
 		boolean success = assistantManagementService.deleteAssistant(user.getId(), assistantId);
 
@@ -131,44 +133,45 @@ public class AssistantController {
 	}
 
 	@RequestMapping(value = { "/ask" }, method = RequestMethod.POST)
-	public ResponseEntity<ResponseWrapper<UUID>> ask(@AuthenticationPrincipal UserDetailsUser user,
+	public ResponseEntity<ResponseWrapper<ConversationId>> ask(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestBody AssistantQuery query) {
 		Assistant assistant = assistantManagementService.findAssistant(user.getId(), query.getAssistantId());
 		if (assistant == null) {
-			ResponseWrapper<UUID> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
+			ResponseWrapper<ConversationId> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
 					List.of(ApiError.NOT_OWNED));
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
-		if (!assistant.ownerId().equals(user.getId())) {
-			ResponseWrapper<UUID> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
+		if (!assistant.ownerId().equals(user.getId()) && !assistant.shared()) {
+			ResponseWrapper<ConversationId> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
 					List.of(ApiError.NOT_OWNED));
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
-		if (conversationService.conversationOwnedBy(query.getConversationId(), user.getId())) {
-			UUID requestUuid;
+		if (conversationService.conversationOwnedBy(user.getId(), query.getConversationId())) {
+			ConversationId requestUuid;
 			try {
 				requestUuid = assistantQueryService.askStreaming(user.getId(), query);
 
 			} catch (QueueFullException e) {
-				ResponseWrapper<UUID> response = ResponseWrapper
+				ResponseWrapper<ConversationId> response = ResponseWrapper
 						.ApiFailureResponse(HttpStatus.SERVICE_UNAVAILABLE.value(), List.of(ApiError.LLM_BUSY));
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 
-			ResponseWrapper<UUID> response = ResponseWrapper.SuccessResponse(requestUuid);
+			ResponseWrapper<ConversationId> response = ResponseWrapper.SuccessResponse(requestUuid);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
-		ResponseWrapper<UUID> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
+		ResponseWrapper<ConversationId> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
 				List.of(ApiError.NOT_OWNED));
 		return new ResponseEntity<>(response, HttpStatus.OK);
 
 	}
 
 	@RequestMapping(value = { "/response" }, method = RequestMethod.POST, produces = MediaType.TEXT_PLAIN_VALUE)
-	public StreamingResponseBody ask(@AuthenticationPrincipal UserDetailsUser user, @RequestBody UUID streamId) {
+	public StreamingResponseBody ask(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestBody ConversationId streamId) {
 
 		LlmResult llmResult = assistantQueryService.getResultFor(streamId);
 		StreamResult streamResult = (StreamResult) llmResult;

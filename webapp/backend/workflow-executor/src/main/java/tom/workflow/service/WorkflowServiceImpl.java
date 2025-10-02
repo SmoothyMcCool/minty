@@ -11,6 +11,7 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
+import tom.api.UserId;
 import tom.conversation.service.ConversationServiceInternal;
 import tom.task.taskregistry.TaskRegistryService;
 import tom.workflow.controller.WorkflowRequest;
@@ -46,7 +47,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 	}
 
 	@Override
-	public String executeWorkflow(UUID userId, WorkflowRequest request) {
+	public String executeWorkflow(UserId userId, WorkflowRequest request) {
 		Optional<tom.workflow.repository.Workflow> maybeWorkflow = workflowRepository.findById(request.getId());
 		if (maybeWorkflow.isEmpty()) {
 			logger.warn("Did not find workflow for ID " + request.getId() + ". Cannot run.");
@@ -76,27 +77,27 @@ public class WorkflowServiceImpl implements WorkflowService {
 	}
 
 	@Override
-	public Workflow createWorkflow(UUID userId, Workflow workflow) {
+	public Workflow createWorkflow(UserId userId, Workflow workflow) {
 		tom.workflow.repository.Workflow dbWorkflow = new tom.workflow.repository.Workflow(workflow);
 		dbWorkflow.setId(null);
 		return workflowRepository.save(dbWorkflow).toModelWorkflow();
 	}
 
 	@Override
-	public Workflow updateWorkflow(UUID userId, Workflow workflow) {
+	public Workflow updateWorkflow(UserId userId, Workflow workflow) {
 		tom.workflow.repository.Workflow dbWorkflow = new tom.workflow.repository.Workflow(workflow);
 		dbWorkflow.setOwnerId(userId);
 		return workflowRepository.save(dbWorkflow).toModelWorkflow();
 	}
 
 	@Override
-	public List<Workflow> listWorkflows(UUID userId) {
+	public List<Workflow> listWorkflows(UserId userId) {
 		return workflowRepository.findAllByOwnerIdOrSharedTrue(userId).stream()
 				.map(workflow -> workflow.toModelWorkflow()).toList();
 	}
 
 	@Override
-	public Workflow getWorkflow(UUID userId, UUID workflowId) {
+	public Workflow getWorkflow(UserId userId, UUID workflowId) {
 		Optional<tom.workflow.repository.Workflow> maybeWorkflow = workflowRepository.findById(workflowId);
 		if (maybeWorkflow.isEmpty()) {
 			logger.warn("Did not find workflow for ID " + workflowId);
@@ -112,17 +113,17 @@ public class WorkflowServiceImpl implements WorkflowService {
 	}
 
 	@Override
-	public void deleteWorkflow(UUID userId, UUID workflowId) {
+	public void deleteWorkflow(UserId userId, UUID workflowId) {
 		workflowRepository.deleteById(workflowId);
 	}
 
 	@Override
-	public boolean isAllowedToExecute(UUID workflowId, UUID userId) {
+	public boolean isAllowedToExecute(UUID workflowId, UserId userId) {
 		return this.getWorkflow(userId, workflowId) != null;
 	}
 
 	@Override
-	public boolean isWorkflowOwned(UUID workflowId, UUID userId) {
+	public boolean isWorkflowOwned(UUID workflowId, UserId userId) {
 		Workflow workflow = getWorkflow(userId, workflowId);
 		if (workflow == null) {
 			return false;

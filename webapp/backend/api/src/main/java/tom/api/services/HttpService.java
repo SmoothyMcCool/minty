@@ -1,7 +1,8 @@
 package tom.api.services;
 
 import java.util.Map;
-import java.util.UUID;
+
+import tom.api.UserId;
 
 public interface HttpService {
 
@@ -9,10 +10,10 @@ public interface HttpService {
 	<ResponseType> ResponseType getNoAuth(String url, Map<String, String> parameters, ResponseType dummy);
 
 	// Non-HTTPS, BASIC authentication
-	<ResponseType> ResponseType getBasicAuth(UUID userId, String url, Map<String, String> parameters,
+	<ResponseType> ResponseType getBasicAuth(UserId userId, String url, Map<String, String> parameters,
 			ResponseType dummy);
 
 	// Non-HTTPS, Form-based authentication for Java EE
-	<ResponseType> ResponseType getJavaEEFormAuth(UUID userId, String url, Map<String, String> parameters,
+	<ResponseType> ResponseType getJavaEEFormAuth(UserId userId, String url, Map<String, String> parameters,
 			ResponseType dummy);
 }

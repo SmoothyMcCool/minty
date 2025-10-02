@@ -7,6 +7,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import tom.api.UserId;
 
 @Entity
 @Table(name = "User")
@@ -20,12 +21,12 @@ public class EncryptedUser {
 	private String crypt;
 	private String salt;
 
-	public UUID getId() {
-		return id;
+	public UserId getId() {
+		return new UserId(id);
 	}
 
-	public void setId(UUID id) {
-		this.id = id;
+	public void setId(UserId id) {
+		this.id = id == null ? null : id.getValue();
 	}
 
 	public String getAccount() {

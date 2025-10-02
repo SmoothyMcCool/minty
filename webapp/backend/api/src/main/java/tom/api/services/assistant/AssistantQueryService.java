@@ -1,17 +1,17 @@
 package tom.api.services.assistant;
 
-import java.util.UUID;
-
+import tom.api.ConversationId;
+import tom.api.UserId;
 import tom.model.AssistantQuery;
 
 public interface AssistantQueryService {
 
-	UUID ask(UUID userId, AssistantQuery query) throws QueueFullException;
+	ConversationId ask(UserId userId, AssistantQuery query) throws QueueFullException, ConversationInUseException;
 
-	UUID askStreaming(UUID userId, AssistantQuery query) throws QueueFullException;
+	ConversationId askStreaming(UserId userId, AssistantQuery query) throws QueueFullException;
 
-	LlmResult getResultFor(UUID requestId);
+	LlmResult getResultFor(ConversationId requestId);
 
-	int getQueuePositionFor(UUID streamId);
+	int getQueuePositionFor(ConversationId streamId);
 
 }

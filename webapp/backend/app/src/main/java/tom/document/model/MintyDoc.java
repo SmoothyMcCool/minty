@@ -10,6 +10,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Transient;
+import tom.api.AssistantId;
+import tom.api.DocumentId;
+import tom.api.UserId;
 import tom.tag.model.MintyTag;
 
 @Entity(name = "Document")
@@ -20,9 +23,9 @@ public class MintyDoc {
 	private UUID documentId;
 	private String title;
 	private DocumentState state = DocumentState.NO_CONTENT;
-	private UUID ownerId;
+	private UserId ownerId;
 	@Transient
-	private List<UUID> associatedAssistantIds;
+	private List<AssistantId> associatedAssistantIds;
 	@ManyToMany(mappedBy = "associatedDocuments", fetch = FetchType.EAGER)
 	private List<MintyTag> associatedTags;
 
@@ -45,28 +48,28 @@ public class MintyDoc {
 		this.state = state;
 	}
 
-	public UUID getDocumentId() {
-		return documentId;
+	public DocumentId getDocumentId() {
+		return new DocumentId(documentId);
 	}
 
-	public void setDocumentId(UUID documentId) {
-		this.documentId = documentId;
+	public void setDocumentId(DocumentId documentId) {
+		this.documentId = documentId.value();
 	}
 
-	public UUID getOwnerId() {
+	public UserId getOwnerId() {
 		return ownerId;
 	}
 
-	public void setOwnerId(UUID ownerId) {
+	public void setOwnerId(UserId ownerId) {
 		this.ownerId = ownerId;
 	}
 
 	@Transient
-	public List<UUID> getAssociatedAssistantIds() {
+	public List<AssistantId> getAssociatedAssistantIds() {
 		return associatedAssistantIds;
 	}
 
-	public void setAssociatedAssistants(List<UUID> associatedAssistantIds) {
+	public void setAssociatedAssistants(List<AssistantId> associatedAssistantIds) {
 		this.associatedAssistantIds = associatedAssistantIds;
 	}
 

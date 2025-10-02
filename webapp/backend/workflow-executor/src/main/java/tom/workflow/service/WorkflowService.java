@@ -3,27 +3,28 @@ package tom.workflow.service;
 import java.util.List;
 import java.util.UUID;
 
+import tom.api.UserId;
 import tom.workflow.controller.WorkflowRequest;
 import tom.workflow.model.ResultTemplate;
 import tom.workflow.model.Workflow;
 
 public interface WorkflowService {
 
-	String executeWorkflow(UUID userId, WorkflowRequest request);
+	String executeWorkflow(UserId userId, WorkflowRequest request);
 
-	Workflow createWorkflow(UUID userId, Workflow workflow);
+	Workflow createWorkflow(UserId userId, Workflow workflow);
 
-	Workflow updateWorkflow(UUID userId, Workflow workflow);
+	Workflow updateWorkflow(UserId userId, Workflow workflow);
 
-	List<Workflow> listWorkflows(UUID userId);
+	List<Workflow> listWorkflows(UserId userId);
 
-	Workflow getWorkflow(UUID userId, UUID workflowId);
+	Workflow getWorkflow(UserId userId, UUID workflowId);
 
-	void deleteWorkflow(UUID userId, UUID workflowId);
+	void deleteWorkflow(UserId userId, UUID workflowId);
 
-	boolean isAllowedToExecute(UUID workflowId, UUID userId);
+	boolean isAllowedToExecute(UUID workflowId, UserId userId);
 
-	boolean isWorkflowOwned(UUID workflowId, UUID userId);
+	boolean isWorkflowOwned(UUID workflowId, UserId userId);
 
 	String addorUpdateResultTemplate(ResultTemplate resultTemplate);
 

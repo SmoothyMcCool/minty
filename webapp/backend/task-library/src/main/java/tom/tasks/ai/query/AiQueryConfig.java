@@ -3,15 +3,15 @@ package tom.tasks.ai.query;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
+import tom.api.AssistantId;
 import tom.task.TaskConfig;
 import tom.task.TaskConfigTypes;
 import tom.tasks.TaskUtils;
 
 public class AiQueryConfig implements TaskConfig {
 
-	private UUID assistant;
+	private AssistantId assistant;
 	private String query;
 
 	public AiQueryConfig() {
@@ -19,7 +19,7 @@ public class AiQueryConfig implements TaskConfig {
 	}
 
 	public AiQueryConfig(Map<String, String> config) {
-		assistant = UUID.fromString(config.get("Assistant"));
+		assistant = new AssistantId(config.get("Assistant"));
 		query = config.get("Query");
 	}
 
@@ -33,14 +33,14 @@ public class AiQueryConfig implements TaskConfig {
 
 	public void updateFrom(Map<String, Object> map) {
 		if (map.containsKey("Assistant")) {
-			assistant = TaskUtils.safeConvert(map.get("Assistant"), UUID.class);
+			assistant = TaskUtils.safeConvert(map.get("Assistant"), AssistantId.class);
 		}
 		if (map.containsKey("Query")) {
 			query = TaskUtils.safeConvert(map.get("Query"), String.class);
 		}
 	}
 
-	public UUID getAssistant() {
+	public AssistantId getAssistant() {
 		return assistant;
 	}
 
