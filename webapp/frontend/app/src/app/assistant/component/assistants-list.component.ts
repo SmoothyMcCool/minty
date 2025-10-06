@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Assistant } from '../../model/assistant';
@@ -9,13 +9,14 @@ import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-
 import { UserService } from 'src/app/user.service';
 import { Conversation } from 'src/app/model/conversation';
 import { FilterPipe } from 'src/app/pipe/filter-pipe';
+import { User } from 'src/app/model/user';
 
 @Component({
 	selector: 'minty-assistants-list',
 	imports: [CommonModule, FormsModule, RouterModule, FilterPipe, ConfirmationDialogComponent],
 	templateUrl: 'assistants-list.component.html'
 })
-export class AssistantsListComponent {
+export class AssistantsListComponent implements OnInit {
 
 	conversations: Conversation[] = [];
 	selectedChat: string = '';
@@ -48,6 +49,8 @@ export class AssistantsListComponent {
 	renamedConversationTitle: string;
 	renameConversationVisible = false;
 
+	user: User;
+
 	constructor(
 		private assistantService: AssistantService,
 		private conversationService: ConversationService,
@@ -63,6 +66,12 @@ export class AssistantsListComponent {
 
 		this.conversationService.list().subscribe(conversations => {
 			this.conversations = conversations;
+		});
+	}
+
+	ngOnInit() {
+		this.userService.getUser().subscribe(user => {
+			this.user = user;
 		});
 	}
 
@@ -133,7 +142,7 @@ export class AssistantsListComponent {
 	}
 
 	isOwned(assistant: Assistant): boolean {
-		return assistant.ownerId === this.userService.getUser().id;
+		return assistant.ownerId === this.user.id;
 	}
 
 	getConversationTitle(conversation: Conversation): string {

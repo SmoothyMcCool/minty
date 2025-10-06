@@ -34,7 +34,7 @@
 		<div class="col-8 col-sm-6">
 
 			<div class="row">
-				<h5>My Assistants</h5>
+				<h4>My Assistants</h4>
 				<ng-container *ngIf="assistants.length > 0; else noAssistants">
 					<div class="col-4 col-sm-12"
 						*ngFor="let assistant of assistants | filter:{shared: false}; index as i">
@@ -71,7 +71,7 @@
 					</div>
 				</ng-container>
 				<div class="row">
-					<h5>Shared Assistants</h5>
+					<h4>Shared Assistants</h4>
 					<ng-container *ngIf="sharedAssistants.length > 0; else noSharedAssistants">
 						<div class="col-4" *ngFor="let assistant of sharedAssistants; index as i">
 							<div class="card">

@@ -50,6 +50,29 @@ public class UserController {
 		this.taskRegistryService = taskRegistryService;
 	}
 
+	@RequestMapping(value = { "" }, method = RequestMethod.GET)
+	public ResponseEntity<ResponseWrapper<User>> getUser(@AuthenticationPrincipal UserDetailsUser userDetails) {
+
+		EncryptedUser encryptedUser = userRepository.findByAccount(userDetails.getUsername());
+		if (encryptedUser == null) {
+			ResponseWrapper<User> response = ResponseWrapper.ApiFailureResponse(HttpStatus.BAD_REQUEST.value(),
+					List.of(ApiError.NOT_FOUND));
+			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+		}
+
+		User user;
+		try {
+			user = userService.decrypt(userRepository.save(encryptedUser));
+		} catch (Exception e) {
+			ResponseWrapper<User> response = ResponseWrapper.ApiFailureResponse(HttpStatus.BAD_REQUEST.value(),
+					List.of(ApiError.FAILED_TO_DECRYPT_USER));
+			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+		}
+
+		ResponseWrapper<User> response = ResponseWrapper.SuccessResponse(user);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
 	@RequestMapping(value = { "/new" }, method = RequestMethod.POST)
 	public ResponseEntity<ResponseWrapper<User>> newUser(@AuthenticationPrincipal UserDetailsUser userDetails,
 			@RequestBody User user, HttpServletRequest request, BindingResult result) throws ApiException {

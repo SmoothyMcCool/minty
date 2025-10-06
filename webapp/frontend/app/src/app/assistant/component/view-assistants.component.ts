@@ -16,7 +16,11 @@ export class ViewAssistantsComponent {
 	DisplayMode = DisplayMode;
 
 	constructor(private userService: UserService) {
-		this.user = this.userService.getUser();
 	}
 
+	ngOnInit() {
+		this.userService.getUser().subscribe(user => {
+			this.user = user;
+		});
+	}
 }

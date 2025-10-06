@@ -11,7 +11,9 @@
 		"build": "ng build",
 		"test": "ng test",
 		"lint": "ng lint",
-		"e2e": "ng e2e"
+		"e2e": "ng e2e",
+		"test:e2e": "playwright test",
+		"test:e2e:ui": "playwright test --ui"
 	},
 	"private": true,
 	"dependencies": {
@@ -23,6 +25,7 @@
 		"@angular/platform-browser": "^19.2.11",
 		"@angular/platform-browser-dynamic": "^19.2.11",
 		"@angular/router": "^19.2.11",
+		"@playwright/test": "^1.55.1",
 		"@popperjs/core": "^2.11.8",
 		"bootstrap": "^5.3.6",
 		"bootstrap-icons": "^1.11.0",

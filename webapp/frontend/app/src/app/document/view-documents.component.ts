@@ -53,11 +53,12 @@ export class ViewDocumentsComponent implements OnInit, OnDestroy {
 		private userService: UserService,
 		private assistantService: AssistantService,
 		private alertService: AlertService) {
-
-		this.user = this.userService.getUser();
 	}
 
 	ngOnInit(): void {
+		this.userService.getUser().subscribe(user => {
+			this.user = user;
+		});
 		this.documentService.list().subscribe(documents => {
 			this.documents = documents;
 			this.filterChanged(this.filter);
@@ -139,7 +140,7 @@ export class ViewDocumentsComponent implements OnInit, OnDestroy {
 	}
 
 	isOwned(ownerId: string) {
-		return this.userService.getUser().id == ownerId;
+		return this.user.id == ownerId;
 	}
 
 	findAssistant(assistantId: string): Assistant {
