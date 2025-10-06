@@ -58,7 +58,8 @@ public class ConversationNamingService {
 				.getAssociatedAssistantId() != AssistantManagementService.DefaultAssistantId).toList();
 
 		conversations.forEach(conversation -> {
-			List<Message> messages = ollamaService.getChatMemory().get(conversation.getConversationId().toString());
+			List<Message> messages = ollamaService.getChatMemory()
+					.get(conversation.getConversationId().value().toString());
 			if (messages.size() > 1) {
 				logger.info("Starting on conversation ID " + conversation.getConversationId().toString());
 				StringBuilder sb = new StringBuilder();

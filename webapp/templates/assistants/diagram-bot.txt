@@ -15,6 +15,7 @@ Output Format:
 - If clarification is needed: output only the questions, nothing else.
 - If ready to generate: output only the Markdown Mermaid code block, and a text-only version of the mermaid code so that the diagram can be both viewed and the code examined.
 - Do not include any commentary, explanations, or HTML.
+- Do not include any parenthesis in the diagram output.
 
 
 Input:

@@ -23,11 +23,13 @@ export class ViewUserComponent implements OnInit {
 	}
 
 	ngOnInit() {
-		this.user = this.userService.getUser();
-		this.userService.userDefaults().subscribe(userDefaults => {
-			this.user.defaults = userDefaults;
-			this.defaultValues = Array.from(this.user.defaults.entries())
-				.map(([key, value]) => ({ key,value }));
+		this.userService.getUser().subscribe(user => {
+			this.user = user;
+			this.userService.userDefaults().subscribe(userDefaults => {
+				this.user.defaults = userDefaults;
+				this.defaultValues = Array.from(this.user.defaults.entries())
+					.map(([key, value]) => ({ key,value }));
+			});
 		});
 	}
 
@@ -41,8 +43,10 @@ export class ViewUserComponent implements OnInit {
 			this.userService.update(this.user)
 				.subscribe({
 					next: () => {
-						this.user = this.userService.getUser();
-						this.alertService.postSuccess('Ok I updated you huzzah.');
+						this.userService.getUser().subscribe(user => {
+							this.user = user;
+							this.alertService.postSuccess('Ok I updated you huzzah.');
+						});
 						return true;
 					},
 					error: (error: string[]) => this.messages = error

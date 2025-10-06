@@ -50,7 +50,9 @@ export class AppComponent implements OnInit {
 				this.logout();
 			}
 			if (this.userService.loggedIn()) {
-				this.user = this.userService.getUser();
+				this.userService.getUser().subscribe(user => {
+					this.user = user;
+				});
 			}
 		});
 	}

@@ -29,21 +29,23 @@ export class ViewDiagramsComponent implements OnInit {
 	constructor(private userService: UserService,
 		private diagramService: DiagramService
 	) {
-		this.user = this.userService.getUser();
 	}
 
 	ngOnInit(): void {
-		this.conversation = 'Make me a sequence diagram of Alice saying hello to Bob.';
-		this.diagramService.ask(this.conversation).subscribe(requestId => {
-			this.diagramService.get(requestId).subscribe(response => {
-				this.response = response;
-				this.diagram = {
-					id: 'abc',
-					title: 'Beautiful Diagram',
-					mermaid: response
-				};
+		this.userService.getUser().subscribe(user => {
+			this.user = user;
+			this.conversation = 'Make me a sequence diagram of Alice saying hello to Bob.';
+			this.diagramService.ask(this.conversation).subscribe(requestId => {
+				this.diagramService.get(requestId).subscribe(response => {
+					this.response = response;
+					this.diagram = {
+						id: 'abc',
+						title: 'Beautiful Diagram',
+						mermaid: response
+					};
+				})
 			})
-		})
+		});
 	}
 
 }

@@ -1,7 +1,7 @@
 import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { User } from './model/user';
-import { catchError, EMPTY, finalize, map, Observable } from 'rxjs';
+import { catchError, EMPTY, finalize, map, Observable, of } from 'rxjs';
 import { ApiResult } from './model/api-result';
 import { Router } from '@angular/router';
 import { AlertService } from './alert.service';
@@ -18,20 +18,28 @@ export class UserService {
 	private static readonly Update = 'api/user/update';
 	private static readonly GetSystemDefaults = 'api/user/defaults/system';
 	private static readonly GetUserDefaults = 'api/user/defaults/user';
+	private static readonly GetUser = 'api/user';
 
 	private user: User = null;
 
 	constructor(private alertService: AlertService, private http: HttpClient, private router: Router) { }
 
 	loggedIn(): boolean {
-		return this.user != null && sessionStorage.getItem('x-auth-token') != undefined;
+		return sessionStorage.getItem('x-auth-token') != undefined;
 	}
 
-	getUser(): User {
+	getUser(): Observable<User> {
 		if (this.user === null) {
-			this.router.navigateByUrl('/login');
+			return this.http.get<ApiResult>(UserService.GetUser)
+				.pipe(
+					map((result: ApiResult) => {
+						this.user = result.data as User;
+						this.user.defaults = new Map(Object.entries(this.user.defaults));
+						return this.user;
+					})
+				);
 		}
-		return this.user;
+		return of(this.user);
 	}
 
 	login(account: string, password: string): Observable<User> {

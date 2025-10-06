@@ -285,7 +285,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 
 			if (conversationId != null) {
 				final ConversationId finalConversationId = conversationId;
-				spec = spec.advisors(a -> a.param(ChatMemory.CONVERSATION_ID, finalConversationId.toString()));
+				spec = spec.advisors(a -> a.param(ChatMemory.CONVERSATION_ID, finalConversationId.value().toString()));
 			}
 
 			spec = spec.user(query);

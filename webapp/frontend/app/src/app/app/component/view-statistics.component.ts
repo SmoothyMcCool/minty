@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { UserMeta } from '../../model/user-meta';
 import { MetadataService } from '../../metadata.service';
@@ -11,13 +11,21 @@ import { DisplayMode, User } from 'src/app/model/user';
 	templateUrl: 'view-statistics.component.html',
 	styleUrls: ['./view-statistics.component.css']
 })
-export class ViewStatisticsComponent {
+export class ViewStatisticsComponent implements OnInit {
 	metadata: UserMeta[];
 	user: User;
 	DisplayMode = DisplayMode;
 
 	constructor(private metadataService: MetadataService, private userService: UserService) {
 		this.metadataService.getMetadata().subscribe(metadata => this.metadata = metadata);
-		this.user = this.userService.getUser();
+		this.userService.getUser().subscribe(user => {
+			this.user = user;
+		});
+	}
+
+	ngOnInit() {
+		this.userService.getUser().subscribe(user => {
+			this.user = user;
+		});
 	}
 }

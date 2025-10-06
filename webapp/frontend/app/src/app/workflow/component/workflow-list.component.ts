@@ -12,6 +12,7 @@ import { WorkflowState } from 'src/app/model/workflow/workflow-state';
 import { WorkflowResult } from 'src/app/model/workflow/workflow-result';
 import { WorkflowExecutionState } from 'src/app/model/workflow/workflow-execution-state';
 import { animate, style, transition, trigger } from '@angular/animations';
+import { User } from 'src/app/model/user';
 
 @Component({
 	selector: 'minty-workflow-list',
@@ -45,6 +46,8 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 	workflowPendingDeletion: Workflow;
 	resultPendingDeletionId: string;
 
+	user: User;
+
 	constructor(private router: Router,
 		private workflowService: WorkflowService,
 		private resultService: ResultService,
@@ -52,6 +55,9 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 	}
 
 	ngOnInit() {
+		this.userService.getUser().subscribe(user => {
+			this.user = user;
+		});
 		this.subscription = this.resultService.workflowResultList$.subscribe((value: WorkflowState[]) => {
 			this.results = value;
 		});
@@ -118,7 +124,7 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 	}
 
 	isOwned(workflow: Workflow): boolean {
-		return workflow.ownerId === this.userService.getUser().id;
+		return workflow.ownerId === this.user.id;
 	}
 
 	navigateTo(url: string) {
