@@ -46,15 +46,15 @@ public class DocumentController {
 	public ResponseEntity<ResponseWrapper<MintyDoc>> addDocument(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestBody MintyDoc document) {
 
-		boolean exists = documentService.documentExists(document.getDocumentId());
+		boolean exists = documentService.documentExists(document);
 
-		document.setDocumentId(new DocumentId(UUID.randomUUID()));
 		if (exists) {
 			ResponseWrapper<MintyDoc> response = ResponseWrapper.ApiFailureResponse(HttpStatus.CONFLICT.value(),
 					List.of(ApiError.DOCUMENT_ALREADY_EXISTS));
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
+		document.setDocumentId(new DocumentId(UUID.randomUUID()));
 		MintyDoc addedDoc = documentService.addDocument(user.getId(), document);
 		ResponseWrapper<MintyDoc> response = ResponseWrapper.SuccessResponse(addedDoc);
 		return new ResponseEntity<>(response, HttpStatus.OK);

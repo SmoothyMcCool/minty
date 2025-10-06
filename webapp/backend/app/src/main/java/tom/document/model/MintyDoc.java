@@ -53,7 +53,7 @@ public class MintyDoc {
 	}
 
 	public void setDocumentId(DocumentId documentId) {
-		this.documentId = documentId.value();
+		this.documentId = documentId == null ? null : documentId.value();
 	}
 
 	public UserId getOwnerId() {

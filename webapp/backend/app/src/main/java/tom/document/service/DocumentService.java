@@ -17,7 +17,7 @@ public interface DocumentService {
 
 	List<MintyDoc> listDocuments();
 
-	boolean documentExists(DocumentId documentId);
+	boolean documentExists(MintyDoc document);
 
 	MintyDoc addDocument(UserId userId, MintyDoc document);
 
