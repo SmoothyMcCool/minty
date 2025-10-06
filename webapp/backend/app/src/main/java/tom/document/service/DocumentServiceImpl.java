@@ -4,6 +4,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
@@ -185,7 +186,7 @@ public class DocumentServiceImpl implements DocumentService {
 		VectorStore vectorStore = ollamaService.getVectorStore();
 		vectorStore.delete(" documentId == \"" + documentId + "\"");
 
-		documentRepository.deleteByDocumentId(documentId);
+		documentRepository.deleteById(documentId.value());
 
 		return true;
 	}
@@ -206,8 +207,8 @@ public class DocumentServiceImpl implements DocumentService {
 	}
 
 	@Override
-	public boolean documentExists(DocumentId documentId) {
-		return documentRepository.existsByDocumentId(documentId);
+	public boolean documentExists(MintyDoc document) {
+		return documentRepository.existsByTitle(document.getTitle());
 	}
 
 	@Override
@@ -221,13 +222,13 @@ public class DocumentServiceImpl implements DocumentService {
 
 	@Override
 	public boolean documentOwnedBy(UserId userId, DocumentId documentId) {
-		MintyDoc doc = documentRepository.findByDocumentId(documentId);
-		return doc != null && userId.equals(doc.getOwnerId());
+		Optional<MintyDoc> doc = documentRepository.findById(documentId.value());
+		return doc.isPresent() && userId.equals(doc.get().getOwnerId());
 	}
 
 	@Override
 	public MintyDoc findByDocumentId(DocumentId documentId) {
-		return documentRepository.findByDocumentId(documentId);
+		return documentRepository.findById(documentId.value()).orElse(null);
 	}
 
 }
