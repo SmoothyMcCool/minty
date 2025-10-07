@@ -56,22 +56,25 @@ export class AssistantsListComponent implements OnInit {
 		private conversationService: ConversationService,
 		private userService: UserService,
 		private router: Router) {
-
-		this.assistantService.list().subscribe(assistants => {
-			setTimeout(() => {
-				this.assistants = assistants;
-				this.sharedAssistants = assistants.filter(assistant => assistant.shared === true);
-			}, 0);
-		});
-
-		this.conversationService.list().subscribe(conversations => {
-			this.conversations = conversations;
-		});
 	}
 
 	ngOnInit() {
 		this.userService.getUser().subscribe(user => {
 			this.user = user;
+
+			this.assistantService.list().subscribe(assistants => {
+				setTimeout(() => {
+					assistants.sort((left, right) => left.name.localeCompare(right.name));
+					this.assistants = assistants;
+					this.sharedAssistants = assistants.filter(assistant => assistant.shared === true);
+				}, 0);
+			});
+
+			this.conversationService.list().subscribe(conversations => {
+				conversations.sort((left, right) => left.title.localeCompare(right.title));
+				this.conversations = conversations;
+			});
+
 		});
 	}
 

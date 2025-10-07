@@ -26,7 +26,7 @@ export class SignupComponent {
 			name: '',
 			password: '',
 			defaults: new Map(),
-			displayMode: DisplayMode.Fun
+			displayMode: DisplayMode.Boring
 		};
 	}
 

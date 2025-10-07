@@ -26,4 +26,6 @@ public interface AssistantManagementService {
 
 	String getModelForAssistant(UserId userId, AssistantId assistantId);
 
+	boolean isAssistantConversational(AssistantId assistantId);
+
 }

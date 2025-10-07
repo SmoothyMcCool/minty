@@ -173,4 +173,9 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 		this.conversationService = conversationService;
 	}
 
+	@Override
+	public boolean isAssistantConversational(AssistantId assistantId) {
+		tom.assistant.repository.Assistant assistant = assistantRepository.findById(assistantId.value()).get();
+		return assistant.isHasMemory();
+	}
 }

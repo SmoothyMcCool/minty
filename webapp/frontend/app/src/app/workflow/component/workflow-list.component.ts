@@ -13,6 +13,7 @@ import { WorkflowResult } from 'src/app/model/workflow/workflow-result';
 import { WorkflowExecutionState } from 'src/app/model/workflow/workflow-execution-state';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { User } from 'src/app/model/user';
+import { AlertService } from 'src/app/alert.service';
 
 @Component({
 	selector: 'minty-workflow-list',
@@ -43,12 +44,15 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 
 	confirmWorkflowDeleteVisible = false;
 	confirmResultDeleteVisible = false;
+	confirmResultDuplicateWorkflowVisible = false;
 	workflowPendingDeletion: Workflow;
 	resultPendingDeletionId: string;
+	workflowPendingDuplicationId: string;
 
 	user: User;
 
 	constructor(private router: Router,
+		private alertService: AlertService,
 		private workflowService: WorkflowService,
 		private resultService: ResultService,
 		private userService: UserService) {
@@ -62,6 +66,7 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 			this.results = value;
 		});
 		this.workflowService.listWorkflows().subscribe((workflows) => {
+			workflows.sort((left, right) => left.name.localeCompare(right.name));
 			this.workflows = workflows;
 		});
 	}
@@ -139,4 +144,21 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 		this.router.navigate(['/workflow/edit', workflowId]);
 	}
 
+	duplicateWorkflow(workflowId: string) {
+		this.workflowPendingDuplicationId = workflowId;
+		this.confirmResultDuplicateWorkflowVisible = true;
+	}
+
+	confirmDuplicateWorkflow() {
+		this.confirmResultDuplicateWorkflowVisible = false;
+		let w = this.workflows.find(w => w.id === this.workflowPendingDuplicationId);
+		if (w) {
+			w.id = null;
+			this.workflowService.newWorkflow(w).subscribe(workflow => {
+				this.router.navigate(['/workflow/edit', workflow.id]);
+			});
+		} else {
+			this.alertService.postFailure("Failed to duplicate workflow.");
+		}
+	}
 }

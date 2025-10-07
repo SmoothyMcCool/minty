@@ -56,7 +56,7 @@ export class WorkflowService {
 			);
 	}
 
-	newWorkflow(workflow: Workflow): Observable<string> {
+	newWorkflow(workflow: Workflow): Observable<Workflow> {
 		const body = {
 			id: workflow.id,
 			name: workflow.name,
@@ -81,7 +81,7 @@ export class WorkflowService {
 					return EMPTY;
 				}),
 				map((result: ApiResult) => {
-					return result.data as string;
+					return result.data as Workflow;
 				})
 			);
 	}

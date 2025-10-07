@@ -1,6 +1,7 @@
 package tom.document.repository;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -18,12 +19,12 @@ public interface AssistantDocumentLinkRepository extends JpaRepository<Assistant
 	@Transactional
 	@Modifying
 	@Query("delete from AssistantDocumentLink link where link.id.assistantId = :assistantId")
-	void deleteAllByAssistantId(@Param("assistantId") AssistantId assistantId);
+	void deleteAllByAssistantId(@Param("assistantId") UUID assistantId);
 
 	@Query("select link.id.documentId from AssistantDocumentLink link where link.id.assistantId = :assistantId")
-	List<DocumentId> findDocumentIdsByAssistantId(@Param("assistantId") AssistantId assistantId);
+	List<DocumentId> findDocumentIdsByAssistantId(@Param("assistantId") UUID assistantId);
 
 	@Query("select link.id.assistantId from AssistantDocumentLink link where link.id.documentId = :documentId")
-	List<AssistantId> findAssistantIdsbyDocumentId(@Param("documentId") DocumentId documentId);
+	List<AssistantId> findAssistantIdsbyDocumentId(@Param("documentId") UUID documentId);
 
 }
