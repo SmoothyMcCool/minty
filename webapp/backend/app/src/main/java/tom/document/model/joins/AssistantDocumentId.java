@@ -2,23 +2,22 @@ package tom.document.model.joins;
 
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.UUID;
 
 import jakarta.persistence.Embeddable;
-import tom.api.AssistantId;
-import tom.api.DocumentId;
 
 @Embeddable
 public class AssistantDocumentId implements Serializable {
 
 	private static final long serialVersionUID = -3953209437140272990L;
 
-	private AssistantId assistantId;
-	private DocumentId documentId;
+	private UUID assistantId;
+	private UUID documentId;
 
 	public AssistantDocumentId() {
 	}
 
-	public AssistantDocumentId(AssistantId assistantId, DocumentId documentId) {
+	public AssistantDocumentId(UUID assistantId, UUID documentId) {
 		this.assistantId = assistantId;
 		this.documentId = documentId;
 	}
@@ -40,19 +39,19 @@ public class AssistantDocumentId implements Serializable {
 		return Objects.hash(assistantId, documentId);
 	}
 
-	public AssistantId getAssistantId() {
+	public UUID getAssistantId() {
 		return assistantId;
 	}
 
-	public void setAssistantId(AssistantId assistantId) {
+	public void setAssistantId(UUID assistantId) {
 		this.assistantId = assistantId;
 	}
 
-	public DocumentId getDocumentId() {
+	public UUID getDocumentId() {
 		return documentId;
 	}
 
-	public void setDocumentId(DocumentId documentId) {
+	public void setDocumentId(UUID documentId) {
 		this.documentId = documentId;
 	}
 

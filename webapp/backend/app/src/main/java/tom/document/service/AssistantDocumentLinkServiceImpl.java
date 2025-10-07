@@ -41,35 +41,37 @@ public class AssistantDocumentLinkServiceImpl implements AssistantDocumentLinkSe
 
 	@Override
 	public void removeLink(AssistantId assistantId, DocumentId documentId) {
-		assistantDocumentLinkRepository.deleteById(new AssistantDocumentId(assistantId, documentId));
+		assistantDocumentLinkRepository.deleteById(new AssistantDocumentId(assistantId.value(), documentId.value()));
 	}
 
 	@Override
 	public void removeAllLinksToAssistant(AssistantId assistantId) {
-		assistantDocumentLinkRepository.deleteAllByAssistantId(assistantId);
+		assistantDocumentLinkRepository.deleteAllByAssistantId(assistantId.value());
 	}
 
 	@Override
 	public List<MintyDoc> getDocumentsForAssistant(AssistantId assistantId) {
-		List<DocumentId> documentIds = assistantDocumentLinkRepository.findDocumentIdsByAssistantId(assistantId);
+		List<DocumentId> documentIds = assistantDocumentLinkRepository
+				.findDocumentIdsByAssistantId(assistantId.value());
 		return documentRepository.findAllById(documentIds.stream().map(item -> item.value()).toList());
 	}
 
 	@Override
 	public List<DocumentId> getDocumentIdsForAssistant(AssistantId assistantId) {
-		return assistantDocumentLinkRepository.findDocumentIdsByAssistantId(assistantId);
+		return assistantDocumentLinkRepository.findDocumentIdsByAssistantId(assistantId.value());
 	}
 
 	@Override
 	public List<AssistantId> getAssistantIdsForDocument(DocumentId documentId) {
-		return assistantDocumentLinkRepository.findAssistantIdsbyDocumentId(documentId).stream().map(item -> item)
-				.toList();
+		return assistantDocumentLinkRepository.findAssistantIdsbyDocumentId(documentId.value()).stream()
+				.map(item -> item).toList();
 	}
 
 	@Override
 	@Transactional
 	public void updateLinksForAssistant(AssistantId assistantId, List<DocumentId> newDocumentIds) {
-		List<DocumentId> currentDocIds = assistantDocumentLinkRepository.findDocumentIdsByAssistantId(assistantId);
+		List<DocumentId> currentDocIds = assistantDocumentLinkRepository
+				.findDocumentIdsByAssistantId(assistantId.value());
 
 		List<DocumentId> docsToRemove = currentDocIds.stream().filter(item -> !newDocumentIds.contains(item)).toList();
 		List<DocumentId> docsToAdd = newDocumentIds.stream().filter(item -> !currentDocIds.contains(item)).toList();

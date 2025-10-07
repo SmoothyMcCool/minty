@@ -82,8 +82,11 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 			query.setQuery(config.getQuery());
 		}
 
-		if (input.containsKey("Conversation ID")) {
+		if (input.containsKey("Conversation ID")
+				&& taskServices.getAssistantManagementService().isAssistantConversational(query.getAssistantId())) {
 			query.setConversationId(new ConversationId(input.get("Conversation ID").toString()));
+		} else {
+			query.setConversationId(new ConversationId(UUID.randomUUID()));
 		}
 
 		try {
@@ -94,8 +97,8 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 					break;
 
 				} catch (QueueFullException | ConversationInUseException e) {
-					logger.warn(
-							"LLM queue is full or conversation in use. Sleeping for 5 seconds before trying again.");
+					logger.warn("LLM queue is full or conversation in use. Sleeping for 5 seconds before trying again.",
+							e);
 					Thread.sleep(Duration.ofSeconds(5));
 				}
 			}

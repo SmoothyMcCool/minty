@@ -25,7 +25,7 @@ public class AssistantDocumentLink {
 	public AssistantDocumentLink(Assistant assistant, MintyDoc document) {
 		this.assistant = assistant;
 		this.document = document;
-		id = new AssistantDocumentId(assistant.getId(), document.getDocumentId());
+		id = new AssistantDocumentId(assistant.getId().value(), document.getDocumentId().value());
 	}
 
 	@EmbeddedId
