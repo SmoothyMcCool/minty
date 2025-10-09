@@ -13,13 +13,19 @@ import { WorkflowResult } from '../model/workflow/workflow-result';
 })
 export class ResultService {
 
+	private static mimeToExtension = {
+		'text/plain': 'txt',
+		'text/html': 'html',
+		'text/json': 'json',
+	};
+
 	private workflowResultListSubject: TrackableSubject<WorkflowState[]> = new TrackableSubject<WorkflowState[]>();
 	workflowResultList$: Observable<WorkflowState[]> = this.workflowResultListSubject.asObservable();
 
 	private static readonly GetWorkflowResultList = 'api/result/list';
-	private static readonly GetWorkflowResult  = 'api/result';
+	private static readonly GetWorkflowResult = 'api/result';
 	private static readonly GetWorkflowOutput = 'api/result/output';
-	private static readonly DeleteWorkflowResult  = 'api/result';
+	private static readonly DeleteWorkflowResult = 'api/result';
 
 	constructor(private http: HttpClient, private alertService: AlertService) {
 		this.doWorkflowRefresh();
@@ -81,12 +87,26 @@ export class ResultService {
 	}
 
 	openWorkflowOutput(workflowId: string) {
-
 		this.getWorkflowResult(workflowId).subscribe(result => {
 			const blob = new Blob([result.output], { type: result.outputFormat });
-				const url = URL.createObjectURL(blob);
-				window.open(url, '_blank');
-				URL.revokeObjectURL(url); 
+			const url = URL.createObjectURL(blob);
+			window.open(url, '_blank');
+			URL.revokeObjectURL(url);
+		});
+	}
+
+	downloadWorkflowOutput(workflowId: string) {
+		this.getWorkflowResult(workflowId).subscribe(result => {
+			const blob = new Blob([result.output], { type: result.outputFormat });
+			const url = URL.createObjectURL(blob);
+			const link = document.createElement('a');
+			link.href = url;
+			link.download = result.name + '.' + ResultService.mimeToExtension[result.outputFormat];
+			link.style.display = 'none';
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			window.URL.revokeObjectURL(url);
 		});
 	}
 
