@@ -46,6 +46,14 @@
 						(click)="result.id && displayResultsFor(result)">
 						{{result.name}}
 					</span>
+					<button
+						type="button"
+						*ngIf="result.id"
+						class="btn btn-sm ms-1 pe-3"
+						style="font-size: 20px"
+						(click)="downloadResultsFor(result)">
+						<i class="bi bi-download"></i>
+					</button>
 					<span class="flex-grow-1"></span>
 					<button
 						type="button"
