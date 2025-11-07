@@ -15,7 +15,7 @@ def main():
 
 	data = read_dict(sys.argv[1])
 	for key in data:
-		data[key] = data[key].upper()
+		data[key] = "I want to know about {info.value}." + chr(97 + data[key])
 	write_to_file(data, sys.argv[2])
 
 if __name__ == "__main__":

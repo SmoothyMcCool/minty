@@ -68,3 +68,14 @@ button:disabled {
 	white-space: pre;
 	display: block;
 }
+
+[cdk-drag-preview] {
+	z-index: 9999 !important;
+	pointer-events: none;
+	box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+	opacity: 0.9;
+}
+
+[cdk-drag-placeholder] {
+	opacity: 0;
+}

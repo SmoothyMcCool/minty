@@ -1,0 +1,26 @@
+<svg #svg width="100" height="50" viewBox="0 0 100 50" preserveAspectRatio="xMidYMid meet" class="svg-canvas">
+	<rect [attr.x]="rect.x" [attr.y]="rect.y" [attr.width]="rect.width" [attr.height]="rect.height" class="rect-fill" />
+
+	<text [attr.x]="rect.x + rect.width / 2" [attr.y]="rect.y + rect.height / 2" [attr.font-size]="12"
+		class="center-text" (click)="onTaskClick()">
+		{{task.stepName}}
+	</text>
+
+	<g>
+		<rect *ngFor="let port of topPorts; let i = index" [attr.x]="port.x" [attr.y]="port.y" [attr.width]="port.size"
+			[attr.height]="port.size" class="port"
+			(mousedown)="onPortMouseDown(i, true, $event); $event.stopPropagation()"
+			(mouseup)="onPortMouseUp(i, true, $event); $event.stopPropagation()"
+			(mouseenter)="hoverPort.emit({ portIndex: i, isInput: true, entering: true })"
+			(mouseleave)="hoverPort.emit({ portIndex: i, isInput: true, entering: false })"/>
+	</g>
+
+	<g>
+		<rect *ngFor="let port of bottomPorts; let i = index" [attr.x]="port.x" [attr.y]="port.y" [attr.width]="port.size"
+			[attr.height]="port.size" class="port"
+			(mousedown)="onPortMouseDown(i, false, $event); $event.stopPropagation()"
+			(mouseup)="onPortMouseUp(i, false, $event); $event.stopPropagation()"
+			(mouseenter)="hoverPort.emit({ portIndex: i, isInput: false, entering: true })"
+			(mouseleave)="hoverPort.emit({ portIndex: i, isInput: false, entering: false })"/>
+	</g>
+</svg>

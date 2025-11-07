@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
 import tom.api.UserId;
-import tom.workflow.service.WorkflowRunner;
+import tom.workflow.executor.WorkflowRunner;
 import tom.workflow.tracking.model.WorkflowExecution;
 import tom.workflow.tracking.model.controller.WorkflowResult;
 import tom.workflow.tracking.model.controller.WorkflowState;
@@ -45,7 +45,8 @@ public class WorkflowTrackingServiceImpl implements WorkflowTrackingService {
 
 	@Override
 	public synchronized List<WorkflowState> getWorkflowList(UserId userId) {
-		List<WorkflowState> memoryResults = runningWorkflows.stream().filter(item -> item.getUser().equals(userId))
+		List<WorkflowState> memoryResults = runningWorkflows.stream()
+				.filter(item -> item.getUser().equals(userId))
 				.map(item -> new WorkflowState(item.getExecutionState().getId(), item.getWorkflowName(),
 						item.getExecutionState().getState()))
 				.toList();
@@ -69,7 +70,8 @@ public class WorkflowTrackingServiceImpl implements WorkflowTrackingService {
 		}
 
 		WorkflowExecution we = execution.get();
-		return new WorkflowResult(we.getId(), we.getName(), we.getResult(), we.getOutput(), we.getOutputFormat());
+		return new WorkflowResult(we.getId(), we.getName(), we.getResult(), we.getOutput(),
+				we.getOutputFormat());
 	}
 
 	@Override

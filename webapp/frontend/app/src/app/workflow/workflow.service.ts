@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
-import { Workflow } from '../model/workflow/workflow';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { AlertService } from '../alert.service';
 import { catchError, EMPTY, map, Observable } from 'rxjs';
 import { ApiResult } from '../model/api-result';
-import { TaskDescription } from '../model/task-description';
 import { ResultTemplate } from '../model/workflow/result-template';
+import { EnumList } from '../model/workflow/enum-list';
+import { OutputTaskSpecification, TaskRequest, TaskSpecification } from '../model/workflow/task-specification';
+import { Workflow } from '../model/workflow/workflow';
 
 @Injectable({
 	providedIn: 'root'
@@ -20,11 +21,54 @@ export class WorkflowService {
 	private static readonly UpdateWorkflow = 'api/workflow/update'; // Update an existing workflow
 	private static readonly UploadTemplate = 'api/workflow/resultTemplate'; // Upload a new result template
 	private static readonly ListTemplates = 'api/workflow/resultTemplate'; // List all result templates
+	private static readonly ListTaskSpecifications = 'api/workflow/specification/list';
+	private static readonly ListOutputTaskSpecifications = 'api/workflow/output/specification/list';
+	private static readonly ListEnumLists = 'api/workflow/enum';
+
 
 	constructor(private http: HttpClient, private alertService: AlertService) {
 	}
 
+	listTaskSpecifications(): Observable<TaskSpecification[]> {
+		return this.http.get<ApiResult>(WorkflowService.ListTaskSpecifications)
+			.pipe(
+				catchError(error => {
+					this.alertService.postFailure(JSON.stringify(error));
+					return EMPTY;
+				}),
+				map((result: ApiResult) => {
+					const returnValue = result.data as TaskSpecification[];
+					returnValue.forEach(value => {
+						value.configuration = new Map(Object.entries(value.configuration));
+						value.configSpec = new Map(Object.entries(value.configSpec));
+					});
+
+					return returnValue;
+				})
+			);
+	}
+
+	listOutputTaskSpecifications(): Observable<OutputTaskSpecification[]> {
+		return this.http.get<ApiResult>(WorkflowService.ListOutputTaskSpecifications)
+			.pipe(
+				catchError(error => {
+					this.alertService.postFailure(JSON.stringify(error));
+					return EMPTY;
+				}),
+				map((result: ApiResult) => {
+					const returnValue = result.data as OutputTaskSpecification[];
+					returnValue.forEach(value => {
+						value.configuration = new Map(Object.entries(value.configuration));
+						value.configSpec = new Map(Object.entries(value.configSpec));
+					});
+
+					return returnValue;
+				})
+			);
+	}
+
 	getWorkflow(workflowId: string): Observable<Workflow> {
+
 		let params: HttpParams = new HttpParams();
 		params = params.append('workflowId', workflowId);
 
@@ -61,18 +105,37 @@ export class WorkflowService {
 			id: workflow.id,
 			name: workflow.name,
 			description: workflow.description,
-			shared: workflow.shared,
-			workflowSteps: workflow.workflowSteps.map(item => {
+			connections: workflow.connections,
+			steps: workflow.steps.map(item => {
 				return {
-					name: item.name,
-					configuration: Object.fromEntries(item.configuration)
+					taskName: item.taskName,
+					stepName: item.stepName,
+					id: item.id,
+					configuration: Object.fromEntries(item.configuration),
+					layout: {
+						x: item.layout.x,
+						y: item.layout.y,
+						numInputs: item.layout.numInputs,
+						numOutputs: item.layout.numOutputs
+					}
 				};
 			}),
-			outputStep: {
-				name: workflow.outputStep.name,
-				configuration: Object.fromEntries(workflow.outputStep.configuration)
-			}
+			outputStep: null
 		};
+		if (workflow.outputStep) {
+			body.outputStep = {
+				taskName: workflow.outputStep.taskName,
+				stepName: workflow.outputStep.stepName,
+				id: workflow.outputStep.id,
+				configuration: Object.fromEntries(workflow.outputStep.configuration),
+				layout: {
+					x: workflow.outputStep.layout.x,
+					y: workflow.outputStep.layout.y,
+					numInputs: workflow.outputStep.layout.numInputs,
+					numOutputs: workflow.outputStep.layout.numOutputs
+				}
+			}
+		}
 
 		return this.http.post<ApiResult>(WorkflowService.NewWorkflow, body)
 			.pipe(
@@ -91,18 +154,37 @@ export class WorkflowService {
 			id: workflow.id,
 			name: workflow.name,
 			description: workflow.description,
-			shared: workflow.shared,
-			workflowSteps: workflow.workflowSteps.map(item => {
+			connections: workflow.connections,
+			steps: workflow.steps.map(item => {
 				return {
-					name: item.name,
-					configuration: Object.fromEntries(item.configuration)
+					taskName: item.taskName,
+					stepName: item.stepName,
+					id: item.id,
+					configuration: Object.fromEntries(item.configuration),
+					layout: {
+						x: item.layout.x,
+						y: item.layout.y,
+						numInputs: item.layout.numInputs,
+						numOutputs: item.layout.numOutputs
+					}
 				};
 			}),
-			outputStep: {
-				name: workflow.outputStep.name,
-				configuration: Object.fromEntries(workflow.outputStep.configuration)
-			}
+			outputStep: null
 		};
+		if (workflow.outputStep) {
+			body.outputStep = {
+				taskName: workflow.outputStep.taskName,
+				stepName: workflow.outputStep.stepName,
+				id: workflow.outputStep.id,
+				configuration: Object.fromEntries(workflow.outputStep.configuration),
+				layout: {
+					x: workflow.outputStep.layout.x,
+					y: workflow.outputStep.layout.y,
+					numInputs: workflow.outputStep.layout.numInputs,
+					numOutputs: workflow.outputStep.layout.numOutputs
+				}
+			}
+		}
 
 		return this.http.post<ApiResult>(WorkflowService.UpdateWorkflow, body)
 			.pipe(
@@ -132,7 +214,7 @@ export class WorkflowService {
 	execute(workflow: Workflow): Observable<string> {
 		const body = {
 			id: workflow.id,
-			taskConfigurationList: workflow.workflowSteps.map(step => Object.fromEntries(step.configuration)),
+			taskConfigurationList: workflow.steps.map(step => Object.fromEntries(step.configuration)),
 			outputConfiguration: Object.fromEntries(workflow.outputStep.configuration)
 		};
 
@@ -178,17 +260,30 @@ export class WorkflowService {
 			);
 	}
 
-	sanitize(workflow: Workflow, taskTemplates: TaskDescription[], outputTaskTemplates: TaskDescription[], defaults: Map<string, string>) {
-		workflow.workflowSteps.forEach(step => {
-			const template = taskTemplates.find(template => template.name === step.name);
-			if (template) {
+	listEnumLists(): Observable<EnumList[]> {
+		return this.http.get<ApiResult>(WorkflowService.ListEnumLists)
+			.pipe(
+				catchError(error => {
+					this.alertService.postFailure(JSON.stringify(error));
+					return EMPTY;
+				}),
+				map((result: ApiResult) => {
+					return result.data as EnumList[];
+				})
+			);
+	}
+
+	sanitize(workflow: Workflow, taskSpecifications: TaskSpecification[], defaults: Map<string, string>) {
+		workflow.steps.forEach(step => {
+			const spec = taskSpecifications.find(spec => spec.taskName === step.taskName);
+			if (spec) {
 				// This removes any keys that should not be present (which happens sometimes if the task type is
 				// changed during workflow construction or editing, but we need it that way so we don't nuke old
 				// values if task type changes back.)
 				const sanitizedConfig = new Map<string, string>();
 				const keys = step.configuration.keys();
 				for (const key of keys) {
-					if (template.configuration.has(key)) {
+					if (spec.configuration.has(key)) {
 						sanitizedConfig.set(key, step.configuration.get(key));
 					}
 				}
@@ -199,7 +294,7 @@ export class WorkflowService {
 				step.configuration.forEach((_value, key) => {
 					// System and user defaults are stored in the form "Task Name::Property Name", so
 					// we need to build that up to find our keys.
-					const fullKey = step.name + '::' + key;
+					const fullKey = step.taskName + '::' + key;
 					if (defaults && defaults.has(fullKey)) {
 						sanitizedConfig.set(key, '');
 					}
@@ -208,17 +303,10 @@ export class WorkflowService {
 				step.configuration = sanitizedConfig;
 			}
 		});
+		if (workflow.outputStep) {
 
-		const outputTemplate = outputTaskTemplates.find(template => template.name === workflow.outputStep.name);
-		if (outputTemplate) {
-			const sanitizedConfig = new Map<string, string>();
-			const keys = workflow.outputStep.configuration.keys();
-			for (const key of keys) {
-				if (outputTemplate.configuration.has(key)) {
-					sanitizedConfig.set(key, workflow.outputStep.configuration.get(key));
-				}
-			}
-			workflow.outputStep.configuration = sanitizedConfig;
+		} else {
+
 		}
 	}
 
@@ -227,19 +315,48 @@ export class WorkflowService {
 			id: workflow.id,
 			ownerId: workflow.ownerId,
 			name: workflow.name,
-			description: workflow.description,
 			shared: workflow.shared,
-			workflowSteps: (workflow.workflowSteps as any[]).map(element => {
+			description: workflow.description,
+			steps: (workflow.steps as any[]).map((element: TaskRequest) => {
 				return {
-					name: element.name,
-					configuration: new Map(Object.entries(element.configuration))
+					taskName: element.taskName,
+					stepName: element.stepName,
+					id: element.id,
+					configuration: new Map(Object.entries(element.configuration)),
+					layout: {
+						x: element.layout.x,
+						y: element.layout.y,
+						numInputs: element.layout.numInputs,
+						numOutputs: element.layout.numOutputs
+					}
 				};
 			}),
-			outputStep: {
-				name: workflow.outputStep.name,
-				configuration: new Map(Object.entries(workflow.outputStep.configuration))
-			}
+			connections: (workflow.connections as any[]).map(element => {
+				return {
+					readerId: element.readerId,
+					readerPort: element.readerPort,
+					writerId: element.writerId,
+					writerPort: element.writerPort
+				};
+			}),
+			outputStep: null
 		};
+		if (workflow.outputStep) {
+			w.outputStep = {
+				taskName: workflow.outputStep.taskName,
+				stepName: workflow.outputStep.stepName,
+				id: workflow.outputStep.id,
+				configuration: workflow.outputStep.configuration instanceof Map 
+					? new Map(workflow.outputStep.configuration)
+					: new Map(Object.entries(workflow.outputStep.configuration ?? {})),
+				layout: {
+					x: workflow.outputStep.layout.x,
+					y: workflow.outputStep.layout.y,
+					numInputs: workflow.outputStep.layout.numInputs,
+					numOutputs: workflow.outputStep.layout.numOutputs
+				}
+			}
+		}
 		return w;
 	}
 }

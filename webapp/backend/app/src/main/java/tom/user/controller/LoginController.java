@@ -18,6 +18,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import tom.ApiError;
 import tom.ApiException;
+import tom.config.ExternalProperties;
 import tom.controller.ResponseWrapper;
 import tom.meta.service.MetadataService;
 import tom.model.security.UserDetailsUser;
@@ -35,12 +36,14 @@ public class LoginController {
 	private final UserRepository userRepository;
 	private final UserServiceInternal userService;
 	private final MetadataService metadataService;
+	private final ExternalProperties properties;
 
 	public LoginController(UserRepository userRepository, UserServiceInternal userService,
-			MetadataService metadataService) {
+			MetadataService metadataService, ExternalProperties properties) {
 		this.userRepository = userRepository;
 		this.userService = userService;
 		this.metadataService = metadataService;
+		this.properties = properties;
 	}
 
 	@RequestMapping(method = RequestMethod.GET)
@@ -53,10 +56,10 @@ public class LoginController {
 		EncryptedUser _user = userRepository.findById(user.getId().value()).get();
 		_user.setPassword("");
 
-		// Set a 30-minute session timeout.
+		int sessionTimeoutMinutes = properties.getInt("session.timeout", 30);
 		HttpSession s = request.getSession(true);
 		if (s != null) {
-			s.setMaxInactiveInterval(30 * 60);
+			s.setMaxInactiveInterval(sessionTimeoutMinutes * 60);
 		}
 		User result;
 		try {

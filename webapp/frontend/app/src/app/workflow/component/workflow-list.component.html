@@ -33,6 +33,41 @@
 		</div>
 	</div>
 </div>
+<div class="row">
+	<div class="col-4" *ngFor="let workflow of branchingWorkflows">
+		<div class="card">
+			<div class="card-body">
+				<div class="position-absolute top-0 end-0">
+					<button
+						*ngIf="isOwned(workflow)"
+						class="btn btn-sm"
+						style="font-size: 14px;"
+						(click)="duplicateWorkflow(workflow.id)">
+						<i class="bi bi-copy"></i>
+					</button>
+					<button
+						*ngIf="isOwned(workflow)"
+						class="btn btn-sm"
+						style="font-size: 14px;"
+						(click)="editWorkflow(workflow.id)">
+						<i class="bi bi-pencil-square"></i>
+					</button>
+					<button *ngIf="isOwned(workflow)"
+						type="button"
+						class="btn btn-sm"
+						style="font-size: 14px; color: red;"
+						(click)="deleteWorkflow(workflow)">
+						<i class="bi bi-trash3"></i>
+					</button>
+				</div>
+				<h5 class="card-title">{{workflow.name}}</h5>
+				<p class="card-text">{{workflow.description}}</p>
+				<button class="btn btn-primary" (click)="editBranchingWorkflow(workflow.id)">Edut!</button>
+				<button class="btn btn-primary" (click)="runBranchingWorkflow(workflow)">OMG MAYBE????</button>
+			</div>
+		</div>
+	</div>
+</div>
 
 <div class="row well p-2 mx-1 my-2" style="overflow: hidden;">
 	<div class="col">
@@ -88,12 +123,12 @@
 			class="bi bi-exclamation-triangle-fill me-2">
 		</i>
 		These numbers don't auto-refresh!
-		<div *ngFor="let stepState of workflowStatus.stepStates; let i = index">
-			<h5>Step {{i + 1}}</h5>
+		<div *ngFor="let stepState of workflowStatus.stepStates | keyvalue">
+			<h5>Step {{stepState.key}}</h5>
 			<div *ngIf="stepState.totalTasks != 0; else notStarted">
-				<p>Total Tasks: {{stepState.numTasks}}
-				Completed Tasks: {{stepState.completedTasks}}
-				Failed Tasks: {{stepState.failedTasks}}</p>
+				<p>Total Tasks: {{stepState.value.numTasks}}
+				Completed Tasks: {{stepState.value.completedTasks}}
+				Failed Tasks: {{stepState.value.failedTasks}}</p>
 			</div>
 			<ng-template #notStarted>
 				Step not started yet.

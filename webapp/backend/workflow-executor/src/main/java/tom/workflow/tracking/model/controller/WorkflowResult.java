@@ -2,8 +2,9 @@ package tom.workflow.tracking.model.controller;
 
 import java.util.UUID;
 
-import tom.workflow.tracking.model.ExecutionResult;
+import tom.task.ExecutionResult;
 
-public record WorkflowResult(UUID id, String name, ExecutionResult result, String output, String outputFormat) {
+public record WorkflowResult(UUID id, String name, ExecutionResult result, String output,
+		String outputFormat) {
 
 }

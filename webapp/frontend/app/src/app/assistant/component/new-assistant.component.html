@@ -1,9 +1,11 @@
 <h5 class="">Making a new assistant? That's really exciting my guy!</h5>
 <form role="form" class="container-fluid well p-3" (submit)="createAssistant()">
-	<minty-assistant-editor name="assistantEditor" [models]="models" [availableDocuments]="availableDocuments" [(ngModel)]="assistant"></minty-assistant-editor>
-	<div>
-		<button type="submit" id="submitButton" [disabled]="formInvalid()" class="btn btn-primary">Ok</button>
-		<button type="button" id="cancelButton" class="btn btn-primary float-end"
+
+	<div class="d-flex justify-content-end">
+		<button type="submit" id="submitButton" [disabled]="formInvalid()" class="btn btn-primary me-2">Ok</button>
+		<button type="button" id="cancelButton" class="btn btn-danger"
 			(click)="navigateTo('assistants')">Nope</button>
 	</div>
+
+	<minty-assistant-editor name="assistantEditor" [models]="models" [availableDocuments]="availableDocuments" [(ngModel)]="assistant"></minty-assistant-editor>
 </form>

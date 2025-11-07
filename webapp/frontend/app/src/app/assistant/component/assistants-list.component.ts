@@ -64,17 +64,47 @@ export class AssistantsListComponent implements OnInit {
 
 			this.assistantService.list().subscribe(assistants => {
 				setTimeout(() => {
-					assistants.sort((left, right) => left.name.localeCompare(right.name));
+					this.sortAssistants(assistants);
 					this.assistants = assistants;
 					this.sharedAssistants = assistants.filter(assistant => assistant.shared === true);
 				}, 0);
 			});
 
 			this.conversationService.list().subscribe(conversations => {
-				conversations.sort((left, right) => left.title.localeCompare(right.title));
+				this.sortConversations(conversations);
 				this.conversations = conversations;
 			});
 
+		});
+	}
+
+	sortConversations(conversations: Conversation[]) {
+		conversations.sort((left, right) => {
+			if (!left.title && !right.title) {
+				return left.conversationId.localeCompare(right.conversationId);
+			}
+			if (!left.title) {
+				return 1;
+			}
+			if (!right.title) {
+				return -1;
+			}
+			return left.title.localeCompare(right.title);
+		});
+	}
+
+	sortAssistants(assistants: Assistant[]) {
+		assistants.sort((left, right) => {
+			if (!left.name && !right.name) {
+				return left.id.localeCompare(right.id);
+			}
+			if (!left.name) {
+				return 1;
+			}
+			if (!right.name) {
+				return -1;
+			}
+			return left.name.localeCompare(right.name);
 		});
 	}
 
@@ -100,6 +130,7 @@ export class AssistantsListComponent implements OnInit {
 				this.conversations = conversations;
 			});
 		});
+		this.sortAssistants(this.assistants);
 		this.assistants = this.assistants.filter(item => item.id === this.assistantPendingDeletion.id);
 		this.sharedAssistants = this.assistants.filter(assistant => assistant.shared === true);
 	}
@@ -130,6 +161,7 @@ export class AssistantsListComponent implements OnInit {
 			});
 		});
 		this.conversations = this.conversations.filter(item => item.conversationId === this.conversationPendingDeletionId);
+		this.sortConversations(this.conversations);
 	}
 
 	fileListChanged(event: Event) {

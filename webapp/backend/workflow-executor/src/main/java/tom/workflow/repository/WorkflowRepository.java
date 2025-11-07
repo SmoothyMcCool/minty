@@ -14,5 +14,4 @@ public interface WorkflowRepository extends JpaRepository<Workflow, UUID> {
 	// All assistants owned by Owner ID or shared = true
 	List<Workflow> findAllByOwnerIdOrSharedTrue(UserId ownerId);
 
-	List<Workflow> findAllByTriggeredTrue();
 }

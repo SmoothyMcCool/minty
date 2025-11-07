@@ -1,30 +1,25 @@
-<div class="mb-2 row">
-	<ng-container *ngIf="edit; else notEditing">
-		<label for="task" class="col-3 col-form-label">Task</label>
-		<button class="col-1 btn btn-outline"
-			type="button"
-			#popoverButton>
-			<i class="bi bi-question-circle"></i>
-		</button>
-		<div class="col-8" *ngIf="task && taskTemplates">
-			<select class="form-select" id="task" name="task" [(ngModel)]="task.name"
-				(ngModelChange)="taskChanged($event)">
-				<option *ngFor="let template of taskTemplates" [ngValue]="template.name">{{template.name}}</option>
-			</select>
-		</div>
-	</ng-container>
-	<ng-template #notEditing>
-		<div class="d-flex align-items-baseline">
-			<h3 *ngIf="task && !edit">{{task.name}}</h3>
-			<button class="btn btn-outline"
-				type="button"
-				#popoverButton>
-				<i class="bi bi-question-circle"></i>
-			</button>
-		</div>
-	</ng-template>
+<div *ngIf="task" class="mb-2">
+	<h5>{{task.taskName}}
+		<button class="btn btn-outline"
+		type="button"
+		#popoverButton>
+		<i class="bi bi-question-circle"></i>
+	</button>
+	</h5>
+
 </div>
-<ng-container *ngIf="task && taskDescription">
-	<minty-task-config-editor [assistants]="assistants" [taskConfiguration]="taskDescription.configuration"
-		[(ngModel)]="task.configuration" [defaultFields]="getDefaultFields() | async" name="{{name}}-taskConfig"></minty-task-config-editor>
+<ng-container *ngIf="task">
+	<form>
+		<div class="mb-3">
+			<label for="stepName">Step Name</label>
+			<input [type]="text" class="form-control form-control-sm" id="stepName" name="stepName"
+				[ngModel]="task.stepName" (ngModelChange)="onStepNameChanged($event)">
+		</div>
+		<minty-task-config-editor
+			[(ngModel)]="task.configuration"
+			[taskSpecification]="taskSpecification"
+			[defaults]="defaults"
+			[enumLists]="enumLists"
+			name="{{task.taskName}}-taskConfig"></minty-task-config-editor>
+	</form>
 </ng-container>

@@ -5,11 +5,11 @@ import java.util.List;
 import java.util.Map;
 
 import tom.api.AssistantId;
-import tom.task.TaskConfig;
+import tom.task.TaskConfigSpec;
 import tom.task.TaskConfigTypes;
 import tom.tasks.TaskUtils;
 
-public class AiQueryConfig implements TaskConfig {
+public class AiQueryConfig implements TaskConfigSpec {
 
 	private AssistantId assistant;
 	private String query;
@@ -26,7 +26,7 @@ public class AiQueryConfig implements TaskConfig {
 	@Override
 	public Map<String, TaskConfigTypes> getConfig() {
 		Map<String, TaskConfigTypes> cfg = new HashMap<>();
-		cfg.put("Assistant", TaskConfigTypes.AssistantIdentifier);
+		cfg.put("Assistant", TaskConfigTypes.EnumList);
 		cfg.put("Query", TaskConfigTypes.TextArea);
 		return cfg;
 	}

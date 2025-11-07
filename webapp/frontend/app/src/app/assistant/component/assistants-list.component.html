@@ -120,7 +120,7 @@
 				<button type="button" class="btn-close" (click)="onCancel()" aria-label="Close"></button>
 			</div>
 			<div class="modal-body">
-				<input type="text" name="conversationName" maxlength="50" [(ngModel)]="renamedConversationTitle">
+				<input class="form-control" type="text" name="conversationName" maxlength="50" [(ngModel)]="renamedConversationTitle">
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-secondary" (click)="onCancelConversationRename()">Cancel</button>

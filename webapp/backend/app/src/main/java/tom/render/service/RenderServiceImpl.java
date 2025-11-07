@@ -6,6 +6,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -14,12 +17,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import de.neuland.pug4j.PugConfiguration;
-import de.neuland.pug4j.exceptions.PugException;
 import de.neuland.pug4j.model.PugModel;
 import de.neuland.pug4j.template.PugTemplate;
 import tom.api.services.RenderService;
 import tom.config.ExternalProperties;
-import tom.output.ExecutionResult;
+import tom.task.ExecutionResult;
+import tom.task.Packet;
 import tom.workflow.model.ResultTemplate;
 import tom.workflow.service.WorkflowService;
 
@@ -38,10 +41,32 @@ public class RenderServiceImpl implements RenderService {
 	}
 
 	@Override
-	public String renderPug(String template, ExecutionResult data) throws PugException, IOException {
+	public String renderPug(String template, ExecutionResult data) throws IOException {
+		if (data == null) {
+			throw new IllegalArgumentException("Data is null");
+		}
+		PugModel model = new PugModel(data.toMap());
+		return internalRenderPug(template, model);
+	}
 
-		if (template == null || data == null || tempFolder == null) {
-			throw new IllegalArgumentException("A Required parameter is null");
+	@Override
+	public String renderPug(String template, Packet data) throws IOException {
+		if (data == null) {
+			throw new IllegalArgumentException("Data is null");
+		}
+		Map<String, Object> pugInput = new HashMap<>();
+		pugInput.put("Text", data.getText());
+		pugInput.put("Data", data.getData());
+
+		PugModel model = new PugModel(pugInput);
+		return internalRenderPug(template, model);
+	}
+
+	private String internalRenderPug(String template, PugModel model) throws IOException {
+		if (template == null) {
+			throw new IllegalArgumentException("Template is null");
+		} else if (tempFolder == null) {
+			throw new IllegalArgumentException("tempFolder is null");
 		}
 
 		Path tempFilePath = null;
@@ -57,7 +82,6 @@ public class RenderServiceImpl implements RenderService {
 			Files.write(tempFilePath, resultTemplate.getContent().getBytes(StandardCharsets.UTF_8));
 
 			PugTemplate pugTemplate = pugConfiguration.getTemplate(tempFilePath.toString());
-			PugModel model = new PugModel(data.toMap());
 
 			pugTemplate.process(model, writer);
 			return writer.toString();
@@ -82,6 +106,11 @@ public class RenderServiceImpl implements RenderService {
 		mapper.writerWithDefaultPrettyPrinter().writeValue(writer, data);
 
 		return writer.toString();
+	}
+
+	@Override
+	public List<String> listPugTemplates() {
+		return workflowService.listResultTemplates();
 	}
 
 }

@@ -1,11 +1,12 @@
-import { Task } from '../task';
+import { TaskRequest, Connection } from './task-specification';
 
 export interface Workflow {
 	id: string;
 	ownerId: string;
 	name: string;
-	description: string;
 	shared: boolean;
-	workflowSteps: Task[];
-	outputStep: Task;
+	description: string;
+	steps: TaskRequest[];
+	connections: Connection[];
+	outputStep: TaskRequest;
 }

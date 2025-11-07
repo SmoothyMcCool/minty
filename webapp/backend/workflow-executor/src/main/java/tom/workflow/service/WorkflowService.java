@@ -5,8 +5,8 @@ import java.util.UUID;
 
 import tom.api.UserId;
 import tom.workflow.controller.WorkflowRequest;
-import tom.workflow.model.ResultTemplate;
 import tom.workflow.model.Workflow;
+import tom.workflow.model.ResultTemplate;
 
 public interface WorkflowService {
 

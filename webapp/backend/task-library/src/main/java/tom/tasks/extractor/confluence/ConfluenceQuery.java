@@ -1,10 +1,8 @@
 package tom.tasks.extractor.confluence;
 
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
@@ -12,36 +10,57 @@ import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.HttpStatus;
 import org.apache.hc.core5.http.io.HttpClientResponseHandler;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import tom.task.TaskSpec;
 import tom.task.MintyTask;
-import tom.task.annotations.PublicTask;
+import tom.task.OutputPort;
+import tom.task.Packet;
+import tom.task.TaskConfigSpec;
+import tom.task.annotation.RunnableTask;
 
-@PublicTask(name = "Get Confluence Pages", configClass = "tom.tasks.extractor.confluence.ConfluenceQueryConfig")
+@RunnableTask
 public class ConfluenceQuery implements MintyTask {
 
-	private final UUID uuid = UUID.randomUUID();
-	private ConfluenceQueryConfig config = new ConfluenceQueryConfig();
-	private String error = null;
+	private final Logger logger = LogManager.getLogger(ConfluenceQuery.class);
+
+	private ConfluenceQueryConfig config;
+	private Packet input;
+	private String error;
+	private List<? extends OutputPort> outputs;
+	private boolean failed;
 
 	public ConfluenceQuery() {
+		config = null;
+		input = null;
+		error = null;
+		outputs = null;
+		failed = false;
 	}
 
 	public ConfluenceQuery(ConfluenceQueryConfig data) {
+		this();
 		config = data;
 	}
 
 	@Override
-	public String taskName() {
-		return "ConfluenceQuery-" + uuid;
+	public void inputTerminated(int i) {
+		// Don't care.
 	}
 
 	@Override
-	public Map<String, Object> getResult() {
-		return Map.of();
+	public boolean failed() {
+		return failed;
+	}
+
+	@Override
+	public Packet getResult() {
+		return null;
 	}
 
 	@Override
@@ -49,14 +68,23 @@ public class ConfluenceQuery implements MintyTask {
 		return error;
 	}
 
+	private String clean(String html) {
+		if (html == null) {
+			return "";
+		}
+
+		// Get rid of some confluence macros.
+		return html.replaceAll("(?s)<ac:[^>]+>.*?</ac:[^>]+>", "").replaceAll("(?s)<ri:[^>]+>.*?</ri:[^>]+>", "");
+	}
+
 	@Override
-	public List<Map<String, Object>> runTask() {
+	public void run() {
 		String auth = config.getUsername() + ":" + config.getApiKey();
 		String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes());
 		String authString = config.getUseBearerAuth() ? "Bearer " + config.getApiKey() : "Basic " + encodedAuth;
 
 		ObjectMapper mapper = new ObjectMapper();
-		List<Map<String, Object>> output = new ArrayList<>();
+		Packet output = new Packet();
 
 		try (CloseableHttpClient client = HttpClients.createDefault()) {
 
@@ -83,7 +111,9 @@ public class ConfluenceQuery implements MintyTask {
 				String pageText = root.path("body").path("storage").path("value").asText();
 				pageText = clean(pageText);
 
-				output.add(Map.of("Data", pageText));
+				output.setText(pageText);
+				output.setId(input.getId());
+				outputs.get(0).write(output);
 
 			}
 		} catch (Exception e) {
@@ -91,36 +121,84 @@ public class ConfluenceQuery implements MintyTask {
 			throw new RuntimeException("ConfluenceQuery: Caught exception while fetching page.", e);
 		}
 
-		return output;
-	}
-
-	private String clean(String html) {
-		if (html == null) {
-			return "";
-		}
-
-		// Get rid of some confluence macros.
-		return html.replaceAll("(?s)<ac:[^>]+>.*?</ac:[^>]+>", "").replaceAll("(?s)<ri:[^>]+>.*?</ri:[^>]+>", "");
 	}
 
 	@Override
-	public void setInput(Map<String, Object> input) {
-		if (input.containsKey("Data")) {
-			try {
-				config.updateFrom(input);
-			} catch (JsonProcessingException e) {
-				throw new RuntimeException("Received malformed data as input.");
+	public boolean giveInput(int inputNum, Packet dataPacket) {
+		if (inputNum != 0) {
+			failed = true;
+			throw new RuntimeException(
+					"Workflow misconfiguration detect. ConfluenceQuery should only ever have exactly one input!");
+		}
+		try {
+			config.updateFrom(dataPacket.getData());
+			input = dataPacket;
+		} catch (JsonProcessingException e) {
+			throw new RuntimeException("Received malformed data as input.");
+		}
+		return true;
+	}
+
+	@Override
+	public void setOutputConnectors(List<? extends OutputPort> outputs) {
+		this.outputs = outputs;
+	}
+
+	@Override
+	public boolean readyToRun() {
+		return true;
+	}
+
+	@Override
+	public TaskSpec getSpecification() {
+		return new TaskSpec() {
+
+			@Override
+			public String expects() {
+				return "If the \"Data\" contains a \"Pages\" consisting of a list of pageIds, those Page IDs will be used instead of those provided in the config.";
 			}
-		}
+
+			@Override
+			public String produces() {
+				return "For each URL processed, emits a record with the \"Tex\" set to the HTML body of the page.";
+			}
+
+			@Override
+			public int numOutputs() {
+				return 1;
+			}
+
+			@Override
+			public int numInputs() {
+				return 1;
+			}
+
+			@Override
+			public TaskConfigSpec taskConfiguration() {
+				return new ConfluenceQueryConfig();
+			}
+
+			@Override
+			public TaskConfigSpec taskConfiguration(Map<String, String> configuration) {
+				try {
+					return new ConfluenceQueryConfig(configuration);
+				} catch (JsonProcessingException e) {
+					logger.warn("Failed to read configuration.", e);
+					throw new RuntimeException("Failed to read configuration.");
+				}
+			}
+
+			@Override
+			public String taskName() {
+				return "Get Confluence Pages";
+			}
+
+			@Override
+			public String group() {
+				return "Producer";
+			}
+
+		};
 	}
 
-	@Override
-	public String expects() {
-		return "If the \"Data\" contains a URL or list of URLs, those URLs will be used instead of those provided in the config.";
-	}
-
-	@Override
-	public String produces() {
-		return "For each URL processed, emits a record with a single \"Data\" element containing the HTML body of the page.";
-	}
 }

@@ -23,7 +23,11 @@ import tom.ApiError;
 import tom.controller.ResponseWrapper;
 import tom.meta.service.MetadataService;
 import tom.model.security.UserDetailsUser;
+import tom.task.enumspec.EnumSpec;
+import tom.task.taskregistry.TaskRegistryService;
+import tom.workflow.model.OutputTaskSpecDescription;
 import tom.workflow.model.ResultTemplate;
+import tom.workflow.model.TaskSpecDescription;
 import tom.workflow.model.Workflow;
 import tom.workflow.service.WorkflowService;
 
@@ -32,10 +36,13 @@ import tom.workflow.service.WorkflowService;
 public class WorkflowController {
 
 	private final WorkflowService workflowService;
+	private final TaskRegistryService taskRegistryService;
 	private final MetadataService metadataService;
 
-	public WorkflowController(WorkflowService workflowService, MetadataService metadataService) {
+	public WorkflowController(WorkflowService workflowService, TaskRegistryService taskRegistryService,
+			MetadataService metadataService) {
 		this.workflowService = workflowService;
+		this.taskRegistryService = taskRegistryService;
 		this.metadataService = metadataService;
 	}
 
@@ -114,6 +121,24 @@ public class WorkflowController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
+	@GetMapping(value = { "/specification/list" })
+	public ResponseEntity<ResponseWrapper<List<TaskSpecDescription>>> listTaskSpecifications(
+			@AuthenticationPrincipal UserDetailsUser user) {
+
+		List<TaskSpecDescription> taskSpecList = taskRegistryService.getTaskDescriptions();
+		ResponseWrapper<List<TaskSpecDescription>> response = ResponseWrapper.SuccessResponse(taskSpecList);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@GetMapping(value = { "/output/specification/list" })
+	public ResponseEntity<ResponseWrapper<List<OutputTaskSpecDescription>>> listOutputTaskSpecifications(
+			@AuthenticationPrincipal UserDetailsUser user) {
+
+		List<OutputTaskSpecDescription> taskSpecList = taskRegistryService.getOutputTaskDescriptions();
+		ResponseWrapper<List<OutputTaskSpecDescription>> response = ResponseWrapper.SuccessResponse(taskSpecList);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
 	@GetMapping(value = { "/list" })
 	public ResponseEntity<ResponseWrapper<List<Workflow>>> listWorkflows(
 			@AuthenticationPrincipal UserDetailsUser user) {
@@ -166,4 +191,10 @@ public class WorkflowController {
 		return new ResponseEntity<>(ResponseWrapper.SuccessResponse(templateNames), HttpStatus.OK);
 	}
 
+	@GetMapping(value = { "/enum" })
+	public ResponseEntity<ResponseWrapper<List<EnumSpec>>> listEnumerations(
+			@AuthenticationPrincipal UserDetailsUser user) {
+		List<EnumSpec> enums = this.taskRegistryService.getEnumerations(user.getId());
+		return new ResponseEntity<>(ResponseWrapper.SuccessResponse(enums), HttpStatus.OK);
+	}
 }

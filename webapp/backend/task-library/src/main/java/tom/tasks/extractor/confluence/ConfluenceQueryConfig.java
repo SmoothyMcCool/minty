@@ -9,11 +9,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import tom.task.TaskConfig;
+import tom.task.TaskConfigSpec;
 import tom.task.TaskConfigTypes;
 import tom.tasks.TaskUtils;
 
-public class ConfluenceQueryConfig implements TaskConfig {
+public class ConfluenceQueryConfig implements TaskConfigSpec {
 
 	private List<String> pages;
 	private String username;
@@ -75,8 +75,8 @@ public class ConfluenceQueryConfig implements TaskConfig {
 	}
 
 	public void updateFrom(Map<String, Object> obj) throws JsonMappingException, JsonProcessingException {
-		if (obj.containsKey("Data")) {
-			pages = TaskUtils.safeConvert(obj.containsKey("Data"), new TypeReference<List<String>>() {
+		if (obj.containsKey("Pages")) {
+			pages = TaskUtils.safeConvert(obj.containsKey("Pages"), new TypeReference<List<String>>() {
 			});
 		}
 	}

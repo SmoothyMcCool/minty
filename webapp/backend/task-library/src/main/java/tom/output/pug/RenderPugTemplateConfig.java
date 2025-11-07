@@ -4,20 +4,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-
-import tom.task.TaskConfig;
+import tom.task.TaskConfigSpec;
 import tom.task.TaskConfigTypes;
 
-public class RenderPugTemplateConfig implements TaskConfig {
+public class RenderPugTemplateConfig implements TaskConfigSpec {
 
 	private String template = "";
 
 	public RenderPugTemplateConfig() {
 	}
 
-	public RenderPugTemplateConfig(Map<String, String> config) throws JsonMappingException, JsonProcessingException {
+	public RenderPugTemplateConfig(Map<String, String> config) {
 		template = config.get("Pug Template");
 	}
 

@@ -3,14 +3,13 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AlertService } from 'src/app/alert.service';
-import { TaskTemplateService } from 'src/app/task/task-template.service';
-import { Workflow } from 'src/app/model/workflow/workflow';
-import { WorkflowService } from '../workflow.service';
-import { TaskDescription } from 'src/app/model/task-description';
-import { WorkflowEditorComponent } from './workflow-editor.component';
-import { ResultTemplate } from 'src/app/model/workflow/result-template';
 import { UserService } from 'src/app/user.service';
 import { forkJoin } from 'rxjs';
+import { WorkflowService } from '../workflow.service';
+import { Workflow } from 'src/app/model/workflow/workflow';
+import { OutputTaskSpecification, TaskSpecification } from 'src/app/model/workflow/task-specification';
+import { ResultTemplate } from 'src/app/model/workflow/result-template';
+import { WorkflowEditorComponent } from './workflow-editor.component';
 
 @Component({
 	selector: 'minty-new-workflow',
@@ -20,8 +19,8 @@ import { forkJoin } from 'rxjs';
 })
 export class NewWorkflowComponent implements OnInit {
 
-	taskTemplates: TaskDescription[] = [];
-	outputTaskTemplates: TaskDescription[] = [];
+	taskSpecifications: TaskSpecification[] = [];
+	outputTaskSpecifications: OutputTaskSpecification[];
 	showTemplateUploader = false;
 	defaults: Map<string, string>;
 
@@ -37,46 +36,35 @@ export class NewWorkflowComponent implements OnInit {
 		id: '',
 		ownerId: '',
 		shared: false,
-		workflowSteps: [],
-		outputStep: {
-			name: '',
-			configuration: new Map()
-		}
+		steps: [],
+		outputStep: undefined,
+		connections: []
 	};
-
-	isFileTriggered: boolean = false;
-	triggerDirectory: string = '';
-
-	configParams = new Map<string, string>();
-	outputTaskConfigParams = new Map<string, string>();
 
 	constructor(private alertService: AlertService,
 		private router: Router,
 		private workflowService: WorkflowService,
-		private taskTemplateService: TaskTemplateService,
 		private userService: UserService) {
 	}
 
 	ngOnInit() {
-		this.taskTemplateService.listTemplates().subscribe((taskTemplates: TaskDescription[]) => {
-			this.taskTemplates = taskTemplates;
-		});
-		this.taskTemplateService.listOutputTemplates().subscribe((outputTaskTemplates: TaskDescription[]) => {
-			this.outputTaskTemplates = outputTaskTemplates;
-		});
 
 		forkJoin({
 			systemDefaults: this.userService.systemDefaults(),
-			userDefaults: this.userService.userDefaults()
-		}).subscribe(({ systemDefaults, userDefaults }) => {
+			userDefaults: this.userService.userDefaults(),
+			taskSpecifications: this.workflowService.listTaskSpecifications(),
+			outputTaskSpecifications: this.workflowService.listOutputTaskSpecifications()
+		}).subscribe(({ systemDefaults, userDefaults, taskSpecifications, outputTaskSpecifications }) => {
 			// User defaults should take priority in conflicts.
 			this.defaults = new Map([ ...systemDefaults, ...userDefaults ]);
+			this.taskSpecifications = taskSpecifications;
+			this.outputTaskSpecifications = outputTaskSpecifications;
 		});
 
 	}
 
 	createWorkflow() {
-		this.workflowService.sanitize(this.workflow, this.taskTemplates, this.outputTaskTemplates, this.defaults);
+		this.workflowService.sanitize(this.workflow, this.taskSpecifications, this.defaults);
 
 		this.workflowService.newWorkflow(this.workflow).subscribe(() => {
 			this.alertService.postSuccess('Workflow Created!');
@@ -111,4 +99,5 @@ export class NewWorkflowComponent implements OnInit {
 				};
 			});
 	}
+
 }

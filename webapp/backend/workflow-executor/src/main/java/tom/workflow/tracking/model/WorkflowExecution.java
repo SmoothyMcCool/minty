@@ -1,5 +1,6 @@
 package tom.workflow.tracking.model;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -9,8 +10,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import tom.api.UserId;
-import tom.workflow.converters.ExecutionResultToStringConverter;
-import tom.workflow.converters.ExecutionStateToStringConverter;
+import tom.task.ExecutionResult;
+import tom.workflow.converters.ExecutionResultConverter;
+import tom.workflow.converters.ExecutionStateConverter;
 
 @Entity
 public class WorkflowExecution {
@@ -20,9 +22,9 @@ public class WorkflowExecution {
 	private UUID id;
 	private UserId ownerId;
 	private String name;
-	@Convert(converter = ExecutionStateToStringConverter.class)
+	@Convert(converter = ExecutionStateConverter.class)
 	private ExecutionState state;
-	@Convert(converter = ExecutionResultToStringConverter.class)
+	@Convert(converter = ExecutionResultConverter.class)
 	private ExecutionResult result;
 	private String output;
 	private String outputFormat;
@@ -30,16 +32,19 @@ public class WorkflowExecution {
 	public WorkflowExecution() {
 		id = null;
 		this.ownerId = null;
+		this.name = "";
 		state = new ExecutionState();
 		result = new ExecutionResult();
 		output = "";
+		outputFormat = "";
 	}
 
-	public WorkflowExecution(int numSteps, UserId ownerId) {
+	public WorkflowExecution(List<String> stepNames, UserId ownerId) {
+		this();
 		id = null;
 		this.ownerId = ownerId;
-		state = new ExecutionState(numSteps);
-		result = new ExecutionResult(numSteps);
+		state = new ExecutionState(stepNames);
+		result = new ExecutionResult(stepNames);
 		output = "";
 	}
 
@@ -99,18 +104,22 @@ public class WorkflowExecution {
 		this.outputFormat = outputFormat;
 	}
 
-	public void completeTask(int step, Map<String, Object> results, String error) {
-		getResult().addResult(step, results);
-		getResult().addError(step, error);
+	public void completeTask(String stepName, Map<String, Object> results, String error) {
+		getResult().addResult(stepName, results);
+		getResult().addError(stepName, error);
 
-		state.getStepStates().get(step).completeTask();
+		state.getStepStates().get(stepName).completeTask();
 		if (error != null && !error.isBlank()) {
-			state.getStepStates().get(step).failTask();
+			state.getStepStates().get(stepName).failTask();
 		}
 	}
 
-	public void addTasks(int step, int numTasks) {
-		state.getStepStates().get(step).addTasks(numTasks);
+	public void addTasks(String stepName, int numTasks) {
+		state.getStepStates().get(stepName).addTasks(numTasks);
 	}
 
+	public void addStep(String stepName) {
+		state.addStep(stepName);
+		result.addStep(stepName);
+	}
 }

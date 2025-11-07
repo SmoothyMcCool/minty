@@ -1,9 +1,5 @@
 import { test, expect } from '../../fixtures/auth.fixture';
 
-//let authToken: string;
-//let context: BrowserContext;
-//let page: Page;
-
 test.describe('Logout flow', () => {
 
 	test('should log out and redirect to login page', async ({ page }) => {

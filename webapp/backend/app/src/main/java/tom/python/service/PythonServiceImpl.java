@@ -1,6 +1,8 @@
 package tom.python.service;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -45,18 +47,25 @@ public class PythonServiceImpl implements PythonService {
 			ObjectMapper mapper = new ObjectMapper();
 
 			inputFilePath = Files.createTempFile(inputFilePath, "py-out-", ".tom");
-			String code = inputDictionary.remove("Code").toString();
 			Files.writeString(inputFilePath, mapper.writeValueAsString(inputDictionary));
-			inputDictionary.put("Code", code);
 
 			outputFilePath = Files.createTempFile(Paths.get(tempFileDir), "py-out-", ".tom");
 
-			ProcessBuilder processBuilder = new ProcessBuilder("python", pythonScripts + "/" + pythonFile,
-					inputFilePath.toString(), outputFilePath.toString());
+			ProcessBuilder processBuilder = new ProcessBuilder("python", pythonFile, inputFilePath.toString(),
+					outputFilePath.toString());
 			processBuilder.redirectErrorStream(true); // Merge error stream with standard output stream. Not that it
 														// matters because we are throwing the output on the floor.
 
 			Process process = processBuilder.start();
+
+			try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+
+				String line;
+				while ((line = reader.readLine()) != null) {
+					// Log each line from the Python process
+					logger.info("[Python:{}] {}", pythonFile, line);
+				}
+			}
 			int exitCode = process.waitFor();
 			if (exitCode != 0) {
 				logger.warn("Script " + pythonFile + " failed with exit code " + exitCode);
@@ -65,8 +74,17 @@ public class PythonServiceImpl implements PythonService {
 			Map<String, Object> result = fileToMap(outputFilePath);
 			return result;
 
-		} catch (IOException | InterruptedException e) {
+		} catch (IOException e) {
+			logger.warn("IOException while trying to run python file. ", e);
+			throw new RuntimeException("IOException while trying to run python file: ", e);
 
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			logger.warn("InterruptedException while trying to run python file. ", e);
+			throw new RuntimeException("InterruptedException while trying to run python file: ", e);
+
+		} catch (Exception e) {
+			Thread.currentThread().interrupt();
 			logger.warn("Exception while trying to run python file. ", e);
 			throw new RuntimeException("Exception while trying to run python file: ", e);
 
