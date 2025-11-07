@@ -8,7 +8,8 @@ export class FilterPipe implements PipeTransform {
 		if (!items || !filter) {
 			return items;
 		}
-		const result = items.filter(item => item.shared === filter.shared);
+		const keys = Object.keys(filter);
+		const result = items.filter(item => item[keys[0]] === filter[keys[0]]);
 		return result;
 	}
 

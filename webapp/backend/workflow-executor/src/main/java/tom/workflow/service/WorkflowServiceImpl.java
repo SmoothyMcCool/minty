@@ -12,14 +12,14 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import tom.api.UserId;
-import tom.conversation.service.ConversationServiceInternal;
 import tom.task.taskregistry.TaskRegistryService;
 import tom.workflow.controller.WorkflowRequest;
-import tom.workflow.model.ResultTemplate;
-import tom.workflow.model.Task;
+import tom.workflow.executor.TaskRequest;
+import tom.workflow.executor.WorkflowRunner;
 import tom.workflow.model.Workflow;
-import tom.workflow.repository.ResultTemplateRepository;
+import tom.workflow.model.ResultTemplate;
 import tom.workflow.repository.WorkflowRepository;
+import tom.workflow.repository.ResultTemplateRepository;
 import tom.workflow.tracking.service.WorkflowTrackingService;
 
 @Service
@@ -31,31 +31,30 @@ public class WorkflowServiceImpl implements WorkflowService {
 	private final ResultTemplateRepository resultTemplateRepository;
 	private final TaskRegistryService taskRegistryService;
 	private final WorkflowTrackingService workflowTrackingService;
-	private final ConversationServiceInternal conversationService;
 	private final AsyncTaskExecutor taskExecutor;
 
-	public WorkflowServiceImpl(WorkflowRepository workflowRepository, ResultTemplateRepository resultTemplateRepository,
-			TaskRegistryService taskRegistryService, WorkflowTrackingService workflowTrackingService,
-			ConversationServiceInternal conversationService,
+	public WorkflowServiceImpl(WorkflowRepository workflowRepository,
+			ResultTemplateRepository resultTemplateRepository, TaskRegistryService taskRegistryService,
+			WorkflowTrackingService workflowTrackingService,
 			@Qualifier("taskExecutor") ThreadPoolTaskExecutor taskExecutor) {
 		this.workflowRepository = workflowRepository;
 		this.resultTemplateRepository = resultTemplateRepository;
 		this.taskRegistryService = taskRegistryService;
 		this.workflowTrackingService = workflowTrackingService;
 		this.taskExecutor = taskExecutor;
-		this.conversationService = conversationService;
 	}
 
 	@Override
 	public String executeWorkflow(UserId userId, WorkflowRequest request) {
-		Optional<tom.workflow.repository.Workflow> maybeWorkflow = workflowRepository.findById(request.getId());
+		Optional<tom.workflow.repository.Workflow> maybeWorkflow = workflowRepository
+				.findById(request.getId());
 		if (maybeWorkflow.isEmpty()) {
 			logger.warn("Did not find workflow for ID " + request.getId() + ". Cannot run.");
 			return null;
 		}
 
 		Workflow workflow = maybeWorkflow.get().toModelWorkflow();
-		List<Task> steps = workflow.getWorkflowSteps();
+		List<TaskRequest> steps = workflow.getSteps();
 
 		if (steps.size() != request.getTaskConfigurationList().size()) {
 			logger.warn("Expected to get " + steps.size() + " configuration objects, but instead got "
@@ -68,12 +67,19 @@ public class WorkflowServiceImpl implements WorkflowService {
 		}
 		workflow.getOutputStep().setConfiguration(request.getOutputConfiguration());
 
-		WorkflowRunner runner = new WorkflowRunner(userId, workflow, taskRegistryService, conversationService,
+		WorkflowRunner runner = new WorkflowRunner(userId, workflow, taskRegistryService,
 				workflowTrackingService, taskExecutor);
-		workflowTrackingService.trackWorkflow(runner);
-		runner.runFirstTask();
 
-		return runner.getWorkflowName();
+		workflowTrackingService.trackWorkflow(runner);
+
+		try {
+			runner.start();
+			return runner.getWorkflowName();
+		} catch (Exception e) {
+			logger.warn("Failed to start workflow " + runner.getWorkflowName(), e);
+		}
+
+		return null;
 	}
 
 	@Override

@@ -6,10 +6,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import tom.task.TaskConfig;
+import tom.task.TaskConfigSpec;
 import tom.task.TaskConfigTypes;
 
-public class DataRenamerConfig implements TaskConfig {
+public class DataRenamerConfig implements TaskConfigSpec {
 
 	Map<String, String> renames = Map.of();
 

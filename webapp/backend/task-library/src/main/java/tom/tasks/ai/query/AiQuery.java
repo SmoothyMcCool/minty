@@ -1,7 +1,6 @@
 package tom.tasks.ai.query;
 
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -19,44 +18,53 @@ import tom.api.services.assistant.ConversationInUseException;
 import tom.api.services.assistant.QueueFullException;
 import tom.api.services.assistant.StringResult;
 import tom.model.AssistantQuery;
+import tom.task.TaskSpec;
 import tom.task.MintyTask;
+import tom.task.OutputPort;
+import tom.task.Packet;
 import tom.task.ServiceConsumer;
-import tom.task.annotations.PublicTask;
+import tom.task.TaskConfigSpec;
+import tom.task.annotation.RunnableTask;
 
-@PublicTask(name = "Converse with Robot", configClass = "tom.tasks.ai.query.AiQueryConfig")
+@RunnableTask
 public class AiQuery implements MintyTask, ServiceConsumer {
 
 	private final Logger logger = LogManager.getLogger(AiQuery.class);
 
 	private TaskServices taskServices;
-	private UUID uuid = UUID.randomUUID();
-	private AiQueryConfig config = new AiQueryConfig();
+	private AiQueryConfig config;
 	private UserId userId;
-	private Map<String, Object> result = new HashMap<>();
-	private Map<String, Object> input = Map.of();
-	private String error = null;
+	private Packet result;
+	private Packet input;
+	private String error;
+	private List<? extends OutputPort> outputs;
+	private String conversationId;
+	private boolean failed;
 
 	public AiQuery() {
-
+		taskServices = null;
+		config = new AiQueryConfig();
+		userId = new UserId("");
+		result = new Packet();
+		input = null;
+		error = null;
+		outputs = null;
+		conversationId = null;
+		failed = false;
 	}
 
 	public AiQuery(AiQueryConfig data) {
+		this();
 		config = data;
 	}
 
 	@Override
 	public void setTaskServices(TaskServices taskServices) {
 		this.taskServices = taskServices;
-		uuid = UUID.randomUUID();
 	}
 
 	@Override
-	public String taskName() {
-		return "AskAssistant-" + uuid;
-	}
-
-	@Override
-	public Map<String, Object> getResult() {
+	public Packet getResult() {
 		return result;
 	}
 
@@ -70,21 +78,44 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 		this.userId = userId;
 	}
 
-	@Override
-	public List<Map<String, Object>> runTask() {
+	private Packet parseResponse(String response) {
 
+		result.setText(response);
+		result.setId(input.getId());
+
+		if (response == null || response.isBlank()) {
+			return result;
+		}
+
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+
+			Map<String, Object> resultAsMap = mapper.readValue(response, new TypeReference<Map<String, Object>>() {
+			});
+			if (resultAsMap != null) {
+				result.setData(resultAsMap);
+			}
+			return result;
+
+		} catch (Exception e) {
+			return result;
+		}
+	}
+
+	@Override
+	public void run() {
 		AssistantQuery query = new AssistantQuery();
 		query.setAssistantId(config.getAssistant());
 
-		if (input.containsKey("Data")) {
-			query.setQuery(config.getQuery() + " " + input.get("Data"));
+		if (input.getText() != null && !input.getText().isBlank()) {
+			query.setQuery(config.getQuery() + " " + input.getText());
 		} else {
 			query.setQuery(config.getQuery());
 		}
 
-		if (input.containsKey("Conversation ID")
+		if (conversationId != null
 				&& taskServices.getAssistantManagementService().isAssistantConversational(query.getAssistantId())) {
-			query.setConversationId(new ConversationId(input.get("Conversation ID").toString()));
+			query.setConversationId(new ConversationId(conversationId));
 		} else {
 			query.setConversationId(new ConversationId(UUID.randomUUID()));
 		}
@@ -115,55 +146,101 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 			}
 
 			result = parseResponse(response);
-		} catch (InterruptedException e) {
-			throw new RuntimeException(
-					"Task " + taskName() + " got interrupted while waiting for its turn with the LLM.");
-		}
-
-		return List.of(result);
-	}
-
-	private Map<String, Object> parseResponse(String response) {
-
-		Map<String, Object> result = new HashMap<>();
-		result.put("Data", response);
-
-		if (response == null || response.isBlank()) {
-			return result;
-		}
-
-		try {
-			ObjectMapper mapper = new ObjectMapper();
-
-			Map<String, String> resultAsMap = mapper.readValue(response, new TypeReference<Map<String, String>>() {
-			});
-			if (resultAsMap != null) {
-				result.put("Data", resultAsMap);
+			if (conversationId != null) {
+				result.getData().put("Conversation ID", conversationId);
 			}
-			return result;
 
-		} catch (Exception e) {
-			return result;
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new RuntimeException("AiQuery Task got interrupted while waiting for its turn with the LLM.");
 		}
+
+		outputs.get(0).write(result);
 	}
 
 	@Override
-	public void setInput(Map<String, Object> input) {
-		config.updateFrom(input);
-		this.input = input;
+	public boolean giveInput(int inputNum, Packet dataPacket) {
+		if (inputNum != 0) {
+			failed = true;
+			throw new RuntimeException(
+					"Workflow misconfiguration detect. AiQuery should only ever have exactly one input!");
+		}
+		input = dataPacket;
+		if (dataPacket.getData().containsKey("Conversation ID")) {
+			conversationId = (String) dataPacket.getData().get("Conversation ID");
+		}
+		return true;
 	}
 
 	@Override
-	public String expects() {
-		return "This task appends the contents of \"data\" to the provided prompt. It will use the conversation defined by "
-				+ "the input \"Conversation ID\", provided by the workflow runner, that is used to continue an AI conversation. "
-				+ "NOTE!!! For this to work, you MUST choose an Assistant that has memory enabled!";
+	public void setOutputConnectors(List<? extends OutputPort> outputs) {
+		this.outputs = outputs;
 	}
 
 	@Override
-	public String produces() {
-		return "This task produces the response from the AI as an output to the next task, "
-				+ "in the form defined by the AI assistant. The response will be emitted as an Oject with a Single \"Data\" "
-				+ "key, with the value set to the response from the AI";
+	public boolean readyToRun() {
+		return input != null;
+	}
+
+	@Override
+	public TaskSpec getSpecification() {
+		return new TaskSpec() {
+
+			@Override
+			public String expects() {
+				return "This task appends the contents of \"text\" to the provided prompt. It will use the conversation defined by "
+						+ "the input \"data.Conversation ID\", provided by the workflow runner, that is used to continue an AI conversation. "
+						+ "NOTE!!! For this to work, you MUST choose an Assistant that has memory enabled!";
+			}
+
+			@Override
+			public String produces() {
+				return "This task produces the response from the AI as an output to the next task, "
+						+ "in the form defined by the AI assistant. The response will be emitted in the \"Text\" "
+						+ "field, with the value set to the response from the LLM. If the response can be mapped to "
+						+ "Map<String, Object> (e.g. JSON), that will be returned in \"Data\"";
+			}
+
+			@Override
+			public int numOutputs() {
+				return 1;
+			}
+
+			@Override
+			public int numInputs() {
+				return 1;
+			}
+
+			@Override
+			public TaskConfigSpec taskConfiguration() {
+				return new AiQueryConfig();
+			}
+
+			@Override
+			public TaskConfigSpec taskConfiguration(Map<String, String> configuration) {
+				return new AiQueryConfig(configuration);
+			}
+
+			@Override
+			public String taskName() {
+				return "Query LLM";
+			}
+
+			@Override
+			public String group() {
+				return "AI";
+			}
+
+		};
+	}
+
+	@Override
+	public void inputTerminated(int i) {
+		// Nothing to do, don't care.
+	}
+
+	@Override
+	public boolean failed() {
+		return failed;
 	}
 }

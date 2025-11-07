@@ -1,13 +1,11 @@
-<div class="well p-2 text-dark container-fluid">
-	<h2>Update Workflow</h2>
+<div class="p-2 text-dark">
+	<h2>Edit Workflow</h2>
 
-	<form role="form" (submit)="updateWorkflow()">
-		<minty-workflow-editor name="workflowEditor" [edit]="true" [taskTemplates]="taskTemplates"
-			[outputTaskTemplates]="outputTaskTemplates" [defaults]="defaults" [(ngModel)]="workflow"></minty-workflow-editor>
-
-		<div>
-			<button type="submit" id="submitButton" class="btn btn-primary">UPDATE</button>
-			<button type="button" id="cancelButton" class="btn btn-primary float-end" (click)="cancel()">CANCEL</button>
-		</div>
+	<form class="d-flex justify-content-end mb-2">
+		<button type="button" id="submitButton" class="btn btn-primary me-2" (click)="updateWorkflow()">UPDATE</button>
+		<button type="button" id="cancelButton" class="btn btn-danger" (click)="cancel()">CANCEL</button>
 	</form>
+
+	<minty-workflow-editor name="workflowEditor" [taskSpecifications]="taskSpecifications"
+		[outputTaskSpecifications]="outputTaskSpecifications" [defaults]="defaults" [(ngModel)]="workflow"></minty-workflow-editor>
 </div>

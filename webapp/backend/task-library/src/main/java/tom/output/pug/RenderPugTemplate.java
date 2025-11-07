@@ -1,20 +1,29 @@
 package tom.output.pug;
 
 import java.io.IOException;
+import java.util.Map;
 
 import tom.api.services.TaskServices;
-import tom.output.ExecutionResult;
-import tom.output.OutputTask;
-import tom.output.annotations.Output;
+import tom.task.ExecutionResult;
+import tom.task.OutputTask;
+import tom.task.OutputTaskSpec;
 import tom.task.ServiceConsumer;
+import tom.task.TaskConfigSpec;
+import tom.task.annotation.Output;
 
-@Output(name = "Render Pug Template", configClass = "tom.output.pug.RenderPugTemplateConfig")
+@Output
 public class RenderPugTemplate implements OutputTask, ServiceConsumer {
 
 	private TaskServices taskServices;
-	private final RenderPugTemplateConfig configuration;
+	private RenderPugTemplateConfig configuration;
+
+	public RenderPugTemplate() {
+		this.taskServices = null;
+		this.configuration = null;
+	}
 
 	public RenderPugTemplate(RenderPugTemplateConfig configuration) {
+		this();
 		this.configuration = configuration;
 	}
 
@@ -29,7 +38,29 @@ public class RenderPugTemplate implements OutputTask, ServiceConsumer {
 	}
 
 	@Override
-	public String getFormat() {
-		return "text/html";
+	public OutputTaskSpec getSpecification() {
+		return new OutputTaskSpec() {
+
+			@Override
+			public String getFormat() {
+				return "text/html";
+			}
+
+			@Override
+			public TaskConfigSpec taskConfiguration() {
+				return new RenderPugTemplateConfig();
+			}
+
+			@Override
+			public TaskConfigSpec taskConfiguration(Map<String, String> configuration) {
+				return new RenderPugTemplateConfig(configuration);
+			}
+
+			@Override
+			public String taskName() {
+				return "Render Pug HTML Template";
+			}
+
+		};
 	}
 }

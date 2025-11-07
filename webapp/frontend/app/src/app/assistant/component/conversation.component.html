@@ -7,10 +7,10 @@
 		<div class="row flex-row-reverse m-2">
 			<div class="col-11 well-user p-2">
 				<ng-container *ngIf="useMermaid; else noMermaid">
-					<markdown mermaid [data]="message.message"></markdown>
+					<markdown clipboard mermaid [data]="message.message" [clipboardButtonTemplate]="clipboardTemplate"></markdown>
 				</ng-container>
 				<ng-template #noMermaid>
-					<markdown [data]="message.message"></markdown>
+					<markdown clipboard [data]="message.message" [clipboardButtonTemplate]="clipboardTemplate"></markdown>
 				</ng-template>
 			</div>
 		</div>
@@ -20,8 +20,8 @@
 			<div class="col-11 well-bot p-2">
 				<div *ngIf="responsePending && i === 0">
 					<div class="spinner-grow spinner-grow-sm text-secondary me-1"></div>
-					<div class="spinner-grow spinner-grow-sm text-secondary me-1" style="animation-delay: 200ms;"></div>
-					<div class="spinner-grow spinner-grow-sm text-secondary me-1" style="animation-delay: 400ms;"></div>
+					<div class="spinner-grow spinner-grow-sm text-secondary me-1" style="animation-delay: 250ms;"></div>
+					<div class="spinner-grow spinner-grow-sm text-secondary me-1" style="animation-delay: 500ms;"></div>
 					<span *ngIf="queueDepth === 1; else depthOne">Waiting... You're next!</span>
 					<ng-template #depthOne>
 						<span *ngIf="queueDepth === 2; else depthLargerThanOne">Waiting... There is one task ahead of you.</span>
@@ -31,12 +31,21 @@
 					</ng-template>
 				</div>
 				<ng-container *ngIf="useMermaid; else noMermaid">
-					<markdown mermaid [data]="message.message"></markdown>
+					<markdown clipboard mermaid [data]="message.message" [clipboardButtonTemplate]="clipboardTemplate"></markdown>
 				</ng-container>
 				<ng-template #noMermaid>
-					<markdown [data]="message.message"></markdown>
+					<markdown clipboard [data]="message.message" [clipboardButtonTemplate]="clipboardTemplate"></markdown>
 				</ng-template>
 			</div>
 		</div>
 	</ng-template>
 </ng-container>
+
+<ng-template #clipboardTemplate>
+	<button class="btn btn-sm btn-light clipboard-button"
+		#copyButton
+		(click)="onCopyClick(copyButton)">
+		<i *ngIf="!isCopied(copyButton)" class="bi bi-copy"></i>
+		<i *ngIf="isCopied(copyButton)" class="bi bi-check-circle-fill text-success"></i>
+	</button>
+</ng-template>

@@ -4,10 +4,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import tom.task.TaskConfig;
+import tom.task.TaskConfigSpec;
 import tom.task.TaskConfigTypes;
 
-public class SleeperTaskConfig implements TaskConfig {
+public class SleeperTaskConfig implements TaskConfigSpec {
 
 	private int delay;
 

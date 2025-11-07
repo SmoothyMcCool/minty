@@ -14,15 +14,20 @@ import { AssistantsListComponent } from './app/assistant/component/assistants-li
 import { NewAssistantComponent } from './app/assistant/component/new-assistant.component';
 import { ViewStatisticsComponent } from './app/app/component/view-statistics.component';
 import { ViewWorkflowComponent } from './app/workflow/component/view-workflow.component';
-import { NewWorkflowComponent } from './app/workflow/component/new-workflow.component';
-import { WorkflowComponent } from './app/workflow/component/workflow.component';
 import { WorkflowListComponent } from './app/workflow/component/workflow-list.component';
-import { MERMAID_OPTIONS, provideMarkdown } from 'ngx-markdown';
+import { ClipboardOptions, MERMAID_OPTIONS, provideMarkdown } from 'ngx-markdown';
 import { EditAssistantComponent } from './app/assistant/component/edit-assistant.component';
-import { EditWorkflowComponent } from './app/workflow/component/edit-workflow.component';
 import { ViewDocumentsComponent } from './app/document/view-documents.component';
 import { ResponseInterceptor } from './app/response-interceptor';
 import { ViewDiagramsComponent } from './app/diagram/component/view-diagrams.component';
+import { EditWorkflowComponent } from './app/workflow/component/edit-workflow.component';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import { NewWorkflowComponent } from './app/workflow/component/new-workflow.component';
+import { RunWorkflowComponent } from './app/workflow/component/run-workflow.component';
+
+export function clipboardOptionsFactory(): ClipboardOptions {
+	return {};
+}
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -79,7 +84,7 @@ bootstrapApplication(AppComponent, {
 					},
 					{
 						path: ':id',
-						component: WorkflowComponent
+						component: RunWorkflowComponent
 					},
 					{
 						path: '',

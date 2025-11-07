@@ -78,14 +78,13 @@ CREATE TABLE IF NOT EXISTS DocumentAssistantLinks (
 );
 CREATE TABLE IF NOT EXISTS Workflow (
 	id UUID NOT NULL DEFAULT (UUID()),
+	ownerId UUID,
 	name VARCHAR(255),
 	description TEXT,
-	ownerId UUID,
 	shared BOOLEAN,
-	workflowSteps JSON NOT NULL,
-	outputStep JSON NOT NULL,
-	triggered BOOLEAN,
-	watchLocation TEXT,
+	steps JSON NOT NULL,
+	connections JSON NOT NULL,
+	outputStep JSON,
 	PRIMARY KEY (id)
 );
 CREATE TABLE IF NOT EXISTS ResultTemplate (

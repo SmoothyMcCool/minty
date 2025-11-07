@@ -11,8 +11,10 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import tom.api.UserId;
 import tom.repository.converter.UserIdConverter;
-import tom.workflow.converters.TaskConverter;
-import tom.workflow.model.Task;
+import tom.workflow.converters.TaskRequestConverter;
+import tom.workflow.converters.ConnectionConverter;
+import tom.workflow.executor.TaskRequest;
+import tom.workflow.executor.Connection;
 
 @Entity
 public class Workflow {
@@ -26,12 +28,12 @@ public class Workflow {
 	private UserId ownerId;
 	private boolean shared;
 	@Column(columnDefinition = "json")
-	@Convert(converter = TaskConverter.class)
-	private List<Task> workflowSteps;
-	@Convert(converter = TaskConverter.class)
-	private Task outputStep;
-	private boolean triggered;
-	private String watchLocation;
+	@Convert(converter = TaskRequestConverter.class)
+	private List<TaskRequest> steps;
+	@Convert(converter = TaskRequestConverter.class)
+	private TaskRequest outputStep;
+	@Convert(converter = ConnectionConverter.class)
+	private List<Connection> connections;
 
 	public Workflow() {
 	}
@@ -42,10 +44,9 @@ public class Workflow {
 		this.description = workflow.getDescription();
 		this.ownerId = workflow.getOwnerId();
 		this.shared = workflow.isShared();
-		this.workflowSteps = workflow.getWorkflowSteps();
+		this.connections = workflow.getConnections();
+		this.steps = workflow.getSteps();
 		this.outputStep = workflow.getOutputStep();
-		this.triggered = workflow.isTriggered();
-		this.watchLocation = workflow.getWatchLocation();
 	}
 
 	public UUID getId() {
@@ -88,49 +89,40 @@ public class Workflow {
 		this.shared = shared;
 	}
 
-	public List<Task> getWorkflowSteps() {
-		return workflowSteps;
+	public List<TaskRequest> getSteps() {
+		return steps;
 	}
 
-	public void setWorkflowSteps(List<Task> workflowSteps) {
-		this.workflowSteps = workflowSteps;
+	public void setSteps(List<TaskRequest> steps) {
+		this.steps = steps;
 	}
 
-	public Task getOutputStep() {
+	public TaskRequest getOutputStep() {
 		return outputStep;
 	}
 
-	public void setOutputStep(Task outputStep) {
+	public void setOutputStep(TaskRequest outputStep) {
 		this.outputStep = outputStep;
 	}
 
-	public boolean isTriggered() {
-		return triggered;
+	public List<Connection> getConnections() {
+		return connections;
 	}
 
-	public void setTriggered(boolean triggered) {
-		this.triggered = triggered;
-	}
-
-	public String getWatchLocation() {
-		return watchLocation;
-	}
-
-	public void setWatchLocation(String watchLocation) {
-		this.watchLocation = watchLocation;
+	public void setConnections(List<Connection> connections) {
+		this.connections = connections;
 	}
 
 	public tom.workflow.model.Workflow toModelWorkflow() {
 		tom.workflow.model.Workflow workflow = new tom.workflow.model.Workflow();
+		workflow.setConnections(getConnections());
 		workflow.setDescription(getDescription());
 		workflow.setId(getId());
 		workflow.setName(getName());
 		workflow.setOwnerId(getOwnerId());
 		workflow.setShared(isShared());
-		workflow.setWorkflowSteps(getWorkflowSteps());
 		workflow.setOutputStep(getOutputStep());
-		workflow.setTriggered(isTriggered());
-		workflow.setWatchLocation(getWatchLocation());
+		workflow.setSteps(getSteps());
 		return workflow;
 	}
 

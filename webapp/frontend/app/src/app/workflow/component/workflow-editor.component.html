@@ -1,69 +1,117 @@
-<ng-container *ngIf="edit; else ViewOnly">
-	<div class="mb-2 row">
-		<label for="name" class="col-3 col-form-label">Name</label>
-		<div class="col-9">
+<form *ngIf="workflow">
+	<div class="row mb-2">
+		<label for="workflowNameInput" class="col-2 col-form-label">Name</label>
+		<div class="col-10">
 			<input id="name" name="name" type="text" size="10" maxlength="50" class="form-control"
 				[(ngModel)]="workflow.name" autocomplete="off" required>
 		</div>
 	</div>
-
-	<div class="mb-2 row">
-		<label for="name" class="col-3 col-form-label">Description</label>
-		<div class="col-9">
-			<textarea id="name" name="name" type="text" style="height: 100px;" class="form-control" [(ngModel)]="workflow.description"
+	<div class="row mb-2">
+		<label for="description" class="col-2 col-form-label">Description</label>
+		<div class="col-10">
+			<textarea id="description" name="description" type="text" style="height: 100px;" class="form-control" [(ngModel)]="workflow.description"
 				autocomplete="off" required></textarea>
 		</div>
 	</div>
+</form>
 
-	<div class="form-group mb-2">
-		<input type="checkbox" class="form-check-input text-light" id="isShared" name="isShared"
-			[(ngModel)]="workflow.shared">
-		<label class="ms-1" for="isShared">Shared</label>
+<div class="canvas-container mb-2" (mousemove)="onMouseMove($event)" (mouseup)="cancelConnection()">
+
+	<div class="m-2 task-list-column overflow-auto" style="flex: 0 0 250px">
+		<div *ngIf="editTask; else noEdit">
+			<h3>Edit Task</h3>
+			<form>
+				<minty-task-editor name="{{editTask.stepName}}-editor"
+						[(ngModel)]="editTask"
+						[taskSpecification]="specFor(editTask)"
+						[defaults]="defaultsFor(editTask)"
+						[enumLists]="enumLists"
+						(taskNameChanged)="onTaskNameChanged($event)"></minty-task-editor>
+				<button type="button" class="btn btn-primary me-2" (click)="doneEditingTask()">Done</button>
+				<button type="button" class="btn btn-danger float-end" (click)="deleteTask()">Delete</button>
+			</form>
+		</div>
+		<ng-template #noEdit>
+			<h3>Add Task</h3>
+			<div class="accordion" id="task-accordion">
+				<div class="accordion-item" *ngFor="let group of specGroups">
+					<div class="accordion-header">
+						<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" [attr.data-bs-target]="'#' + getEscapedGroupId(group) + '-collapse'">
+							{{group}} Tasks
+						</button>
+					</div>
+					<div [id]="getEscapedGroupId(group) + '-collapse'" class="accordion-collapse collapse" data-bs-parent="#task-accordion">
+						<ul class="list-group">
+							<ng-container *ngFor="let spec of taskSpecifications | filter:{group: group}">
+								<li class="list-group-item">
+									<span class="text-truncate clickable-text" (click)="addStep(spec)">
+										{{spec.taskName}}
+									</span>
+								</li>
+							</ng-container>
+						</ul>
+					</div>
+				</div>
+				<div class="accordion-item">
+					<div class="accordion-header">
+						<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#output-collapse">
+							Output Tasks
+						</button>
+					</div>
+					<div id="output-collapse" class="accordion-collapse collapse" data-bs-parent="#task-accordion">
+						<ul class="list-group">
+							<ng-container *ngFor="let spec of outputTaskSpecifications">
+								<li class="list-group-item">
+									<span class="text-truncate clickable-text" (click)="addOutputStep(spec)">
+										{{spec.taskName}}
+									</span>
+								</li>
+							</ng-container>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</ng-template>
 	</div>
 
-	<div class="mb-2 row" *ngIf="isFileTriggered">
-		<label for="directory" class="col-3 col-form-label">Directory to monitor</label>
-		<div class="col-9">
-			<input id="directory" name="directory" type="text" size="10" maxlength="512"
-				placeholder="Folder to monitor. Must be accessible by the server." class="form-control"
-				[(ngModel)]="triggerDirectory">
-		</div>
-	</div>
-</ng-container>
-<ng-template #ViewOnly>
-	<h1>{{workflow.name}}</h1>
-	<p>{{workflow.description}}</p>
-</ng-template>
+	<!-- Canvas -->
+	<div #canvas class="canvas border border-success rounded flex-grow-1">
+		<!-- SVG for connections -->
+		<svg class="connections">
+			<!-- Existing connections -->
+			<line *ngFor="let c of workflow?.connections" [attr.x1]="getPortCenterX(c.writerId, c.writerPort, false)"
+				[attr.y1]="getPortCenterY(c.writerId, c.writerPort, false)"
+				[attr.x2]="getPortCenterX(c.readerId, c.readerPort, true)"
+				[attr.y2]="getPortCenterY(c.readerId, c.readerPort, true)" stroke="black" stroke-width="2" (click)="onConnectorClicked(c)">
+			</line>
 
+			<!-- Temporary connection -->
+			<line *ngIf="tempConnection" [attr.x1]="tempConnection.fromX" [attr.y1]="tempConnection.fromY"
+				[attr.x2]="tempConnection.toX" [attr.y2]="tempConnection.toY" stroke="gray" stroke-width="2"
+				stroke-dasharray="5,5">
+			</line>
+		</svg>
 
-<h3>Steps</h3>
-<ng-container *ngFor="let step of workflow.workflowSteps; let first = first; let last = last; let i = index">
-	<div>
-		<div class="m-2 p-2 row task-well">
-			<div class="col">
-				<button *ngIf="edit" type="button" class="bi bi-trash3"
-					style="font-size: 20px; color: red; float: right;" (click)="deleteStep(i)"></button>
-				<minty-task-editor name="{{step.name}}-editor-{{i}}" [edit]="edit" [taskTemplates]="taskTemplates"
-					[(ngModel)]="step" [defaults]="defaults"></minty-task-editor>
-			</div>
-		</div>
-		<div class="row" *ngIf="!last">
-			<div class="col-auto ms-3" *ngIf="edit">
-				<button type="button" class="bi bi-plus-circle" style="font-size: 20px; color: red; float: left"
-					(click)="addStep(i)"></button>
-			</div>
-			<div class="col fs-2 text-center">
-				<i class="bi bi-arrow-down-circle"></i>
-			</div>
-		</div>
+		<!-- Canvas elements -->
+		<minty-task-widget [task]="step" *ngFor="let step of workflow?.steps" cdkDrag cdkDragBoundary=".canvas"
+			(cdkDragMoved)="onDragMoved($event, step)" (cdkDragEnded)="onDragEnded($event, step)"
+			[cdkDragFreeDragPosition]="{ x: step.layout.x, y: step.layout.y }"
+			[id]="step.stepName"
+			(displayTask)="onDisplayTask(step)"
+			(startConnection)="onStartConnection(step, $event)"
+			(endConnection)="onEndConnection(step, $event)"
+			(hoverPort)="onHoverPort(step, $event)"></minty-task-widget>
+
+		<ng-container *ngIf="workflow?.outputStep">
+			<minty-task-widget [task]="workflow.outputStep" cdkDrag cdkDragBoundary=".canvas"
+				(cdkDragMoved)="onDragMoved($event, workflow.outputStep)" (cdkDragEnded)="onDragEnded($event, workflow.outputStep)"
+				[cdkDragFreeDragPosition]="{ x: workflow.outputStep.layout.x, y: workflow.outputStep.layout.y }"
+				[id]="workflow.outputStep.stepName"
+				(displayTask)="onDisplayTask(workflow.outputStep)"
+				(startConnection)="onStartConnection(workflow.outputStep, $event)"
+				(endConnection)="onEndConnection(workflow.outputStep, $event)"
+				(hoverPort)="onHoverPort(workflow.outputStep, $event)"></minty-task-widget>
+		</ng-container>
+
 	</div>
-</ng-container>
-<div class="row" *ngIf="edit">
-	<button type="button" class="col-auto ms-3 bi bi-plus-circle" style="font-size: 20px; color: red; float: left"
-		(click)="addStepAtEnd()"></button>
 </div>
-
-
-<h3>Output</h3>
-<minty-task-editor name="outputEditor" [edit]="edit" [taskTemplates]="outputTaskTemplates"
-	[(ngModel)]="workflow.outputStep" [defaults]="defaults"></minty-task-editor>

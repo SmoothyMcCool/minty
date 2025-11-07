@@ -3,8 +3,6 @@ package tom.task.taskregistry;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -29,18 +27,20 @@ import jakarta.annotation.PostConstruct;
 import tom.api.UserId;
 import tom.api.services.TaskServices;
 import tom.config.ExternalProperties;
-import tom.output.OutputTask;
-import tom.output.annotations.Output;
-import tom.output.noop.NullOutput;
 import tom.task.MintyTask;
-import tom.task.NullTask;
-import tom.task.NullTaskConfig;
+import tom.task.OutputTask;
+import tom.task.OutputTaskSpec;
 import tom.task.ServiceConsumer;
-import tom.task.TaskConfig;
+import tom.task.TaskConfigSpec;
 import tom.task.TaskConfigTypes;
-import tom.task.annotations.PublicTask;
-import tom.workflow.model.TaskDescription;
-import tom.workflow.model.TaskRequest;
+import tom.task.TaskSpec;
+import tom.task.annotation.Output;
+import tom.task.annotation.RunnableTask;
+import tom.task.enumspec.EnumSpec;
+import tom.task.enumspec.EnumSpecCreator;
+import tom.workflow.executor.TaskRequest;
+import tom.workflow.model.OutputTaskSpecDescription;
+import tom.workflow.model.TaskSpecDescription;
 
 @Service
 public class TaskRegistryServiceImpl implements TaskRegistryService {
@@ -49,17 +49,18 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 
 	private final String taskLibrary;
 
-	private final Map<String, ImmutablePair<Class<?>, Map<String, TaskConfigTypes>>> publicTasks;
-	private final Map<String, ImmutablePair<Class<?>, Map<String, TaskConfigTypes>>> publicOutputTasks;
+	private final Map<String, ImmutablePair<Class<?>, Map<String, TaskConfigTypes>>> runnableTasks;
+	private final Map<String, ImmutablePair<Class<?>, Map<String, TaskConfigTypes>>> outputTasks;
+	private final List<Class<? extends EnumSpecCreator>> enumSpecCreators;
 	private final Map<String, String> systemConfigs;
 	private final Map<String, String> userConfigs;
 	private final TaskServices taskServices;
 	private final ExternalProperties properties;
-	private URLClassLoader classLoader;
 
 	public TaskRegistryServiceImpl(TaskServices taskServices, ExternalProperties properties) {
-		publicTasks = new HashMap<>();
-		publicOutputTasks = new HashMap<>();
+		runnableTasks = new HashMap<>();
+		outputTasks = new HashMap<>();
+		enumSpecCreators = new ArrayList<>();
 		systemConfigs = new HashMap<>();
 		userConfigs = new HashMap<>();
 		this.properties = properties;
@@ -78,9 +79,10 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 			List<String> classes = new ArrayList<>();
 			for (Path path : paths) {
 				logger.info("Found library " + path.toString());
-				classes.addAll(getTaskClassesFrom(path));
+				classes.addAll(getClassesFrom(path));
 			}
 			findAndRegisterAllTaskClasses(classes, paths);
+			findAndRegisterAllEnumListClasses(classes, paths);
 
 		} catch (IOException e) {
 			logger.warn("initialize: failed to process libraries. ", e);
@@ -101,9 +103,6 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 		try (URLClassLoader classLoader = new URLClassLoader(urls.toArray(new URL[urls.size()]),
 				MintyTask.class.getClassLoader())) {
 
-			// Cache the classloader for later.
-			this.classLoader = classLoader;
-
 			for (String className : classNames) {
 				try {
 					className = className.replace("/", ".");
@@ -112,8 +111,8 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 
 					Class<?> loadedClass = classLoader.loadClass(className);
 
-					if (isValidPublicTask(loadedClass)) {
-						loadPublicTask(loadedClass);
+					if (isValidRunnableTask(loadedClass)) {
+						loadRunnableTask(loadedClass);
 
 					} else if (isValidOutputTask(loadedClass)) {
 						loadOutputTask(loadedClass);
@@ -133,62 +132,99 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 
 	}
 
+	private void findAndRegisterAllEnumListClasses(List<String> classNames, List<Path> jarPaths) {
+		List<URL> urls = new ArrayList<>();
+
+		try {
+			for (Path path : jarPaths) {
+				urls.add(path.toUri().toURL());
+			}
+		} catch (MalformedURLException e) {
+			logger.warn("findAndRegisterAllTaskClasses: Could not load URL. ", e);
+		}
+
+		try (URLClassLoader classLoader = new URLClassLoader(urls.toArray(new URL[urls.size()]),
+				EnumSpecCreator.class.getClassLoader())) {
+
+			for (String className : classNames) {
+				try {
+					className = className.replace("/", ".");
+					int suffixIdx = className.lastIndexOf(".");
+					className = className.substring(0, suffixIdx);
+
+					Class<?> loadedClass = classLoader.loadClass(className);
+
+					if (EnumSpecCreator.class.isAssignableFrom(loadedClass)) {
+						// Task must implement default constructor.
+						if (!implementsDefaultConstructor(loadedClass.getConstructors())) {
+							throw new RuntimeException(
+									"Class " + loadedClass.getName() + " does not implement default constructor.");
+						}
+						enumSpecCreators.add(loadedClass.asSubclass(EnumSpecCreator.class));
+						logger.info("Registered EnumSpecCreator " + loadedClass.getName());
+
+					}
+				} catch (Exception e) {
+					logger.warn("Failed to load EnumSpecCreator class: " + className, e);
+				}
+			}
+
+		} catch (IOException | IllegalArgumentException | SecurityException e) {
+			logger.warn("findAndRegisterAllTaskClasses: Failed to load class: ", e);
+		}
+
+	}
+
 	private void loadOutputTask(Class<?> loadedClass) throws ClassNotFoundException, InstantiationException,
 			IllegalAccessException, InvocationTargetException, NoSuchMethodException {
 
-		// Check if the annotated configuration class is valid.
-		Output annotation = loadedClass.getAnnotation(Output.class);
-		Class<?> configClass = classLoader.loadClass(annotation.configClass());
+		OutputTask bot = (OutputTask) loadedClass.getDeclaredConstructor().newInstance();
 
-		if (!isConfigClassValid(configClass, loadedClass)) {
-			return;
-		}
+		OutputTaskSpec taskSpec = bot.getSpecification();
+		String taskName = taskSpec.taskName();
 
-		if (publicOutputTasks.containsKey(annotation.name())) {
-			Class<?> conflictedClass = publicOutputTasks.get(annotation.name()).left;
-			logger.warn("Duplicate output task named " + annotation.name() + " found implemented by "
+		if (outputTasks.containsKey(taskName)) {
+			Class<?> conflictedClass = outputTasks.get(taskName).left;
+			logger.warn("Duplicate output task named " + taskName + " found implemented by "
 					+ conflictedClass.toString() + " and " + loadedClass.toString());
 			return;
 		}
 
-		TaskConfig taskCfg = (TaskConfig) configClass.getDeclaredConstructor().newInstance();
+		TaskConfigSpec taskCfg = taskSpec.taskConfiguration();
 
-		publicOutputTasks.put(annotation.name(), ImmutablePair.of(loadedClass, taskCfg.getConfig()));
-		logger.info("Registering output task " + annotation.name());
+		outputTasks.put(taskName, ImmutablePair.of(loadedClass, taskCfg.getConfig()));
+		logger.info("Registering output task " + taskName);
 	}
 
-	private void loadPublicTask(Class<?> loadedClass) throws ClassNotFoundException, InstantiationException,
+	private void loadRunnableTask(Class<?> loadedClass) throws ClassNotFoundException, InstantiationException,
 			IllegalAccessException, InvocationTargetException, NoSuchMethodException {
-		TaskConfig taskCfg;
-		// Check if the annotated configuration class is valid.
-		PublicTask annotation = loadedClass.getAnnotation(PublicTask.class);
-		Class<?> configClass = classLoader.loadClass(annotation.configClass());
 
-		if (!isConfigClassValid(configClass, loadedClass)) {
+		MintyTask mbt = (MintyTask) loadedClass.getDeclaredConstructor().newInstance();
+
+		TaskSpec taskSpec = mbt.getSpecification();
+		String taskName = taskSpec.taskName();
+
+		if (runnableTasks.containsKey(taskName)) {
+			Class<?> conflictedClass = runnableTasks.get(taskName).left;
+			logger.warn("Duplicate task named " + taskName + " found implemented by " + conflictedClass.toString()
+					+ " and " + loadedClass.toString());
 			return;
 		}
 
-		if (publicTasks.containsKey(annotation.name())) {
-			Class<?> conflictedClass = publicTasks.get(annotation.name()).left;
-			logger.warn("Duplicate task named " + annotation.name() + " found implemented by "
-					+ conflictedClass.toString() + " and " + loadedClass.toString());
-			return;
-		}
+		TaskConfigSpec tcs = taskSpec.taskConfiguration();
 
-		taskCfg = (TaskConfig) configClass.getDeclaredConstructor().newInstance();
+		runnableTasks.put(taskName, ImmutablePair.of(loadedClass, tcs.getConfig()));
 
-		publicTasks.put(annotation.name(), ImmutablePair.of(loadedClass, taskCfg.getConfig()));
+		List<String> taskSysCfgs = tcs.getSystemConfigVariables();
+		systemConfigs.putAll(addConfigurationValues(tcs, taskName, tcs.getClass().getName(), taskSysCfgs));
 
-		List<String> taskSysCfgs = taskCfg.getSystemConfigVariables();
-		systemConfigs.putAll(addConfigurationValues(taskCfg, annotation, configClass, taskSysCfgs));
+		List<String> taskUserCfgs = tcs.getUserConfigVariables();
+		userConfigs.putAll(addConfigurationValues(tcs, taskName, tcs.getClass().getName(), taskUserCfgs));
 
-		List<String> taskUserCfgs = taskCfg.getUserConfigVariables();
-		userConfigs.putAll(addConfigurationValues(taskCfg, annotation, configClass, taskUserCfgs));
-
-		logger.info("Registered task " + annotation.name());
+		logger.info("Registered task " + taskName);
 	}
 
-	private Map<String, String> addConfigurationValues(TaskConfig taskCfg, PublicTask annotation, Class<?> configClass,
+	private Map<String, String> addConfigurationValues(TaskConfigSpec taskCfg, String taskName, String configClassName,
 			List<String> taskConfigurationItems) {
 		Map<String, String> result = new HashMap<>();
 
@@ -206,9 +242,9 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 						&& taskCfg.getConfig().get(configKey).compareTo(TaskConfigTypes.Boolean) != 0) {
 					logger.warn(
 							"Cannot declare non-primitive (or String) types as system or user configuration items. Item is "
-									+ configClass.getName() + "." + configKey);
+									+ configClassName + "." + configKey);
 				} else {
-					result.put(annotation.name() + "::" + configKey, "");
+					result.put(taskName + "::" + configKey, "");
 				}
 			}
 		}
@@ -229,38 +265,6 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 		});
 	}
 
-	private boolean isConfigClassValid(Class<?> configClass, Class<?> loadedClass) {
-		Constructor<?>[] ctors = configClass.getDeclaredConstructors();
-
-		// The config class must implement a default constructor, and a constructor that
-		// takes a Map<String, String>
-		if (!implementsDefaultConstructor(ctors)) {
-			logger.warn("Found Public Task " + loadedClass.getName()
-					+ " declares an TaskConfig class that does not implement a default constructor.");
-			return false;
-		}
-
-		// The config class must implement a constructor that takes a Map<String,
-		// String>
-		if (!implementsMapConstructor(ctors)) {
-			logger.warn("Found Public Task " + loadedClass.getName()
-					+ " declares an TaskConfig class that does not implement a constructor that takes a Map<String, String> parameter.");
-			return false;
-		}
-
-		// If a config class is declared, the Task must implement a constructor
-		// that takes an instance of the specific class from the PublicTask
-		// annotation.
-		if (!configClass.equals(NullTaskConfig.class)
-				&& !implementsConfigConstructor(loadedClass.getDeclaredConstructors(), configClass)) {
-			logger.warn("Found Public Task " + loadedClass.getName()
-					+ " does not implement a constructor that takes an instance of TaskConfig or derived class.");
-			return false;
-		}
-
-		return true;
-	}
-
 	private boolean implementsDefaultConstructor(Constructor<?>[] ctors) {
 		for (Constructor<?> ctor : ctors) {
 			if (ctor.getParameterCount() == 0) {
@@ -271,37 +275,12 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 		return false;
 	}
 
-	private boolean implementsMapConstructor(Constructor<?>[] ctors) {
-		for (Constructor<?> ctor : ctors) {
-			if (ctor.getParameterCount() == 1) {
-				Type[] params = ctor.getGenericParameterTypes();
-				if (params != null) {
-					Type param = params[0];
-
-					if (param instanceof ParameterizedType) {
-						ParameterizedType type = (ParameterizedType) param;
-
-						if (type.getRawType().equals(Map.class)) {
-							Type[] mapTypes = type.getActualTypeArguments();
-
-							if (mapTypes.length == 2 && mapTypes[0].equals(String.class)
-									&& mapTypes[1].equals(String.class)) {
-								return true;
-							}
-						}
-					}
-				}
-			}
-		}
-
-		return false;
-	}
-
-	private boolean implementsConfigConstructor(Constructor<?>[] ctors, Class<?> configClass) {
+	private boolean implementsConfigurationClassConstructor(Constructor<?>[] ctors) {
 		boolean foundConstructor = false;
 		for (Constructor<?> ctor : ctors) {
 			if (ctor.getParameterCount() == 1) {
-				if (ctor.getParameters()[0].getType().equals(configClass)) {
+				Class<?> paramType = ctor.getParameterTypes()[0];
+				if (TaskConfigSpec.class.isAssignableFrom(paramType)) {
 					foundConstructor = true;
 					continue;
 				}
@@ -311,14 +290,10 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 		return foundConstructor;
 	}
 
-	private boolean isValidPublicTask(Class<?> loadedClass) throws ClassNotFoundException {
-		if (!MintyTask.class.isAssignableFrom(loadedClass) || !loadedClass.isAnnotationPresent(PublicTask.class)) {
+	private boolean isValidRunnableTask(Class<?> loadedClass) throws ClassNotFoundException {
+		if (!MintyTask.class.isAssignableFrom(loadedClass) || !loadedClass.isAnnotationPresent(RunnableTask.class)) {
 			return false;
 		}
-
-		PublicTask annotation = loadedClass.getAnnotation(PublicTask.class);
-
-		Class<?> configClass = classLoader.loadClass(annotation.configClass());
 
 		// Task must implement default constructor.
 		if (!implementsDefaultConstructor(loadedClass.getConstructors())) {
@@ -326,10 +301,11 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 			return false;
 		}
 
-		// Config class must implement the TaskConfig interface
-		if (!TaskConfig.class.isAssignableFrom(configClass)) {
-			logger.warn("Class " + loadedClass.getName() + " annotated configClass does not implement "
-					+ TaskConfig.class.getName());
+		// Task must implement a constructor that takes an instance of a Configuration
+		// class.
+		if (!implementsConfigurationClassConstructor(loadedClass.getConstructors())) {
+			logger.warn("Class " + loadedClass.getName()
+					+ " does not have a constructor that takes a TaskConfigSpec as a parameter.");
 			return false;
 		}
 
@@ -341,21 +317,24 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 			return false;
 		}
 
-		Output annotation = loadedClass.getAnnotation(Output.class);
+		// Task must implement default constructor.
+		if (!implementsDefaultConstructor(loadedClass.getConstructors())) {
+			logger.warn("Class " + loadedClass.getName() + " does not implement default constructor.");
+			return false;
+		}
 
-		Class<?> configClass = classLoader.loadClass(annotation.configClass());
-
-		// Class must implement the TaskConfig interface
-		if (!TaskConfig.class.isAssignableFrom(configClass)) {
-			logger.warn("Class " + loadedClass.getName() + " annotated configClass does not implement "
-					+ TaskConfig.class.getName());
+		// Task must implement a constructor that takes an instance of a Configuration
+		// class.
+		if (!implementsConfigurationClassConstructor(loadedClass.getConstructors())) {
+			logger.warn("Class " + loadedClass.getName()
+					+ " does not have a constructor that takes a TaskConfigSpec as a parameter.");
 			return false;
 		}
 
 		return true;
 	}
 
-	private List<String> getTaskClassesFrom(Path path) {
+	private List<String> getClassesFrom(Path path) {
 		List<String> classes = new ArrayList<>();
 
 		try (JarFile jarFile = new JarFile(path.toFile())) {
@@ -373,61 +352,31 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 		return classes;
 	}
 
-	@Override
 	public MintyTask newTask(UserId userId, TaskRequest request) {
-
 		if (request == null) {
 			throw new IllegalArgumentException("request cannot be null.");
 		}
 
-		MintyTask task = new NullTask();
+		MintyTask task = null;
 
-		if (!publicTasks.containsKey(request.getName())) {
-			logger.warn("Task " + request.getName() + " does not exist.");
+		if (!runnableTasks.containsKey(request.getTaskName())) {
+			logger.warn("Task " + request.getTaskName() + " does not exist.");
 			return task;
 		}
 
 		try {
-			Class<?> taskClass = publicTasks.get(request.getName()).left;
+			Class<?> taskClass = runnableTasks.get(request.getTaskName()).left;
+			Constructor<?> ctor = taskClass.getDeclaredConstructor();
 
-			PublicTask annotation = taskClass.getAnnotation(PublicTask.class);
-			Class<?> configClass = classLoader.loadClass(annotation.configClass());
+			MintyTask mbt = (MintyTask) ctor.newInstance();
+			TaskConfigSpec taskConfig = mbt.getSpecification().taskConfiguration(request.getConfiguration());
 
-			// First instantiate the config class with data.
+			Constructor<?>[] constructors = taskClass.getConstructors();
+			for (Constructor<?> constructor : constructors) {
+				if (constructor.getParameterCount() == 1
+						&& constructor.getParameterTypes()[0].isAssignableFrom(taskConfig.getClass())) {
 
-			TaskConfig taskConfig = new NullTaskConfig();
-
-			// If this request contains no config data, then just call the default
-			// constructor
-			if (request.getConfiguration().isEmpty()) {
-				Constructor<?> constructor = configClass.getDeclaredConstructor();
-				taskConfig = (TaskConfig) constructor.newInstance();
-			} else {
-				Constructor<?>[] constructors = configClass.getConstructors();
-				for (Constructor<?> constructor : constructors) {
-					if (constructor.getParameterCount() == 1
-							&& constructor.getParameterTypes()[0].isAssignableFrom(Map.class)) {
-						taskConfig = (TaskConfig) constructor.newInstance(request.getConfiguration());
-						break;
-					}
-				}
-			}
-
-			// Now instantiate the task, passing it the config object.
-
-			// If the configClass is the NullTaskConfig class, then just call the default
-			// constructor
-			if (configClass.equals(NullTaskConfig.class)) {
-				Constructor<?> constructor = taskClass.getDeclaredConstructor();
-				task = (MintyTask) constructor.newInstance();
-			} else {
-				Constructor<?>[] constructors = taskClass.getConstructors();
-				for (Constructor<?> constructor : constructors) {
-					if (constructor.getParameterCount() == 1
-							&& constructor.getParameterTypes()[0].isAssignableFrom(configClass)) {
-
-						task = (MintyTask) constructor.newInstance(configClass.cast(taskConfig));
-					}
+					task = (MintyTask) constructor.newInstance(taskConfig);
 				}
 			}
 
@@ -436,18 +385,12 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 				((ServiceConsumer) task).setUserId(userId);
 			}
 
-		} catch (SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException
-				| InvocationTargetException e) {
-			logger.warn("Failed to instantiate task for " + request.getName() + ": ", e);
+		} catch (Exception e) {
+			logger.warn("Failed to instantiate task for " + request.getTaskName() + ": ", e);
 			task = null;
-		} catch (ClassNotFoundException e) {
-			logger.warn("Failed to instantiate task for " + request.getName() + ". Class not found: ", e);
-		} catch (NoSuchMethodException e) {
-			logger.warn("Failed to instantiate class: ", e);
 		}
 
 		return task;
-
 	}
 
 	@Override
@@ -457,52 +400,25 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 			throw new IllegalArgumentException("request cannot be null.");
 		}
 
-		OutputTask task = new NullOutput();
+		OutputTask task = null;
 
-		if (!publicOutputTasks.containsKey(request.getName())) {
-			logger.warn("OutputTask " + request.getName() + " does not exist.");
+		if (!outputTasks.containsKey(request.getTaskName())) {
+			logger.warn("OutputTask " + request.getTaskName() + " does not exist.");
 			return task;
 		}
 
 		try {
-			Class<?> outputTaskClass = publicOutputTasks.get(request.getName()).left;
+			Class<?> outputTaskClass = outputTasks.get(request.getTaskName()).left;
 
-			Output annotation = outputTaskClass.getAnnotation(Output.class);
-			Class<?> configClass = classLoader.loadClass(annotation.configClass());
+			task = (OutputTask) outputTaskClass.getDeclaredConstructor().newInstance();
+			TaskConfigSpec taskConfig = task.getSpecification().taskConfiguration(request.getConfiguration());
 
-			// First instantiate the config class with data.
-			TaskConfig taskConfig = new NullTaskConfig();
+			Constructor<?>[] constructors = outputTaskClass.getConstructors();
+			for (Constructor<?> constructor : constructors) {
+				if (constructor.getParameterCount() == 1
+						&& constructor.getParameterTypes()[0].isAssignableFrom(taskConfig.getClass())) {
 
-			// If this out config contains no data, call the default constructor.
-			if (request.getConfiguration().isEmpty()) {
-				Constructor<?> constructor = configClass.getDeclaredConstructor();
-				taskConfig = (TaskConfig) constructor.newInstance();
-			} else {
-				Constructor<?>[] constructors = configClass.getConstructors();
-				for (Constructor<?> constructor : constructors) {
-					if (constructor.getParameterCount() == 1
-							&& constructor.getParameterTypes()[0].isAssignableFrom(Map.class)) {
-						taskConfig = (TaskConfig) constructor.newInstance(request.getConfiguration());
-						break;
-					}
-				}
-			}
-
-			// Now instantiate the output task, passing it the config object.
-
-			// If the configClass is the NullTaskConfig class, then just call the default
-			// constructor
-			if (configClass.equals(NullTaskConfig.class)) {
-				Constructor<?> constructor = outputTaskClass.getDeclaredConstructor();
-				task = (OutputTask) constructor.newInstance();
-			} else {
-				Constructor<?>[] constructors = outputTaskClass.getConstructors();
-				for (Constructor<?> constructor : constructors) {
-					if (constructor.getParameterCount() == 1
-							&& constructor.getParameterTypes()[0].isAssignableFrom(configClass)) {
-
-						task = (OutputTask) constructor.newInstance(configClass.cast(taskConfig));
-					}
+					task = (OutputTask) constructor.newInstance(taskConfig);
 				}
 			}
 
@@ -512,78 +428,119 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 			}
 
 		} catch (SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException
-				| InvocationTargetException e) {
-			logger.warn("Failed to instantiate task for " + request.getName() + ": ", e);
+				| InvocationTargetException | NoSuchMethodException e) {
+			logger.warn("Failed to instantiate output task for " + request.getTaskName() + ": ", e);
 			task = null;
-		} catch (ClassNotFoundException e) {
-			logger.warn("Failed to instantiate task for " + request.getName() + ". Class not found: ", e);
-		} catch (NoSuchMethodException e) {
-			logger.warn("Failed to instantiate class: ", e);
 		}
 
 		return task;
 	}
 
 	@Override
-	public List<TaskDescription> getTasks() {
-		return getTaskDescriptions(publicTasks);
-	}
-
-	@Override
 	public Map<String, String> getConfigForTask(String taskName) {
-		if (!publicTasks.containsKey(taskName)) {
+		if (!runnableTasks.containsKey(taskName)) {
 			logger.warn("Task " + taskName + " does not exist.");
 			return Map.of();
 		}
 
-		Class<?> taskClass = publicTasks.get(taskName).left;
-		PublicTask annotation = taskClass.getDeclaredAnnotation(PublicTask.class);
+		Class<?> taskClass = runnableTasks.get(taskName).left;
+		MintyTask mbt;
 
 		try {
-			Class<?> configClass = classLoader.loadClass(annotation.configClass());
-			TaskConfig taskCfg = (TaskConfig) configClass.getDeclaredConstructor().newInstance();
+
+			mbt = (MintyTask) taskClass.getDeclaredConstructor().newInstance();
+			TaskConfigSpec taskCfg = mbt.getSpecification().taskConfiguration();
 			return configMapToStringMap(taskCfg.getConfig());
 
-		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException
-				| InvocationTargetException | NoSuchMethodException | SecurityException e) {
-			logger.warn("getConfigForTask: Could not instantiate instance of " + annotation.configClass() + ": ", e);
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+				| NoSuchMethodException | SecurityException e) {
+			logger.warn("Failed to generate config for " + taskName + ": ", e);
 			return Map.of();
+		}
+
+	}
+
+	@Override
+	public TaskSpec getSpecForTask(String taskName) {
+		Class<?> taskClass = runnableTasks.get(taskName).left;
+
+		try {
+			MintyTask task = (MintyTask) taskClass.getDeclaredConstructor().newInstance();
+			return task.getSpecification();
+
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+				| NoSuchMethodException | SecurityException e) {
+			return null;
 		}
 	}
 
 	@Override
-	public List<TaskDescription> getOutputTaskTemplates() {
-		return getTaskDescriptions(publicOutputTasks);
-	}
+	public List<OutputTaskSpecDescription> getOutputTaskDescriptions() {
+		Set<Entry<String, ImmutablePair<Class<?>, Map<String, TaskConfigTypes>>>> entrySet = outputTasks.entrySet();
 
-	private List<TaskDescription> getTaskDescriptions(
-			Map<String, ImmutablePair<Class<?>, Map<String, TaskConfigTypes>>> taskMap) {
-		Set<Entry<String, ImmutablePair<Class<?>, Map<String, TaskConfigTypes>>>> entrySet = taskMap.entrySet();
-
-		final List<TaskDescription> result = new ArrayList<>();
+		final List<OutputTaskSpecDescription> result = new ArrayList<>();
 
 		entrySet.stream().forEach(entry -> {
 			Class<?> clazz = entry.getValue().left;
 			try {
-				TaskDescription td = new TaskDescription();
-				td.setName(entry.getKey());
+				OutputTaskSpecDescription td = new OutputTaskSpecDescription();
+				td.setTaskName(entry.getKey());
 				td.setConfiguration(configMapToStringMap(entry.getValue().right));
 
-				if (MintyTask.class.isAssignableFrom(clazz)) {
-					MintyTask task = (MintyTask) clazz.getDeclaredConstructor().newInstance();
+				if (OutputTask.class.isAssignableFrom(clazz)) {
+					OutputTask task = (OutputTask) clazz.getDeclaredConstructor().newInstance();
 
-					td.setInputs(task.expects());
-					td.setOutputs(task.produces());
+					td.setConfigSpec(task.getSpecification().taskConfiguration().getConfig());
+					td.setSystemConfigVariables(task.getSpecification().taskConfiguration().getSystemConfigVariables());
+					td.setUserConfigVariables(task.getSpecification().taskConfiguration().getUserConfigVariables());
 				} else {
-					td.setInputs("");
-					td.setOutputs("");
+					throw new RuntimeException("Class " + clazz.getName() + " is not derived from MintyTask.");
 				}
 
 				result.add(td);
 
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
 					| InvocationTargetException | NoSuchMethodException | SecurityException e) {
-				logger.warn("Failed to instantiate " + clazz.getName() + " when generating task descriptions.");
+				logger.warn("Failed to instantiate " + clazz.getName() + " when generating task descriptions.", e);
+			}
+		});
+
+		return result;
+	}
+
+	@Override
+	public List<TaskSpecDescription> getTaskDescriptions() {
+		Set<Entry<String, ImmutablePair<Class<?>, Map<String, TaskConfigTypes>>>> entrySet = runnableTasks.entrySet();
+
+		final List<TaskSpecDescription> result = new ArrayList<>();
+
+		entrySet.stream().forEach(entry -> {
+			Class<?> clazz = entry.getValue().left;
+			try {
+				TaskSpecDescription td = new TaskSpecDescription();
+				td.setTaskName(entry.getKey());
+				td.setConfiguration(configMapToStringMap(entry.getValue().right));
+
+				if (MintyTask.class.isAssignableFrom(clazz)) {
+					MintyTask task = (MintyTask) clazz.getDeclaredConstructor().newInstance();
+
+					td.setGroup(task.getSpecification().group());
+					td.setExpects(task.getSpecification().expects());
+					td.setProduces(task.getSpecification().produces());
+					td.setNumInputs(task.getSpecification().numInputs());
+					td.setNumOutputs(task.getSpecification().numOutputs());
+					td.setConfigSpec(task.getSpecification().taskConfiguration().getConfig());
+					td.setSystemConfigVariables(task.getSpecification().taskConfiguration().getSystemConfigVariables());
+					td.setUserConfigVariables(task.getSpecification().taskConfiguration().getUserConfigVariables());
+				} else {
+					throw new RuntimeException("Class " + clazz.getName() + " is not derived from MintyTask.");
+				}
+
+				result.add(td);
+
+			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+					| InvocationTargetException | NoSuchMethodException | SecurityException e) {
+				logger.warn("Failed to instantiate " + clazz.getName() + " when generating task descriptions.", e);
 			}
 		});
 
@@ -592,25 +549,24 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 
 	@Override
 	public Map<String, String> getConfigForOutputTask(String outputName) {
-		if (!publicOutputTasks.containsKey(outputName)) {
+		if (!outputTasks.containsKey(outputName)) {
 			logger.warn("Output task " + outputName + " does not exist.");
 			return Map.of();
 		}
 
-		Class<?> taskClass = publicOutputTasks.get(outputName).left;
-		Output annotation = taskClass.getDeclaredAnnotation(Output.class);
+		Class<?> taskClass = outputTasks.get(outputName).left;
+		MintyTask mbt;
 
 		try {
-			Class<?> configClass = classLoader.loadClass(annotation.configClass());
-			TaskConfig taskCfg = (TaskConfig) configClass.getDeclaredConstructor().newInstance();
+			mbt = (MintyTask) taskClass.getDeclaredConstructor().newInstance();
+			TaskConfigSpec taskCfg = mbt.getSpecification().taskConfiguration();
 			return configMapToStringMap(taskCfg.getConfig());
 
-		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException
-				| InvocationTargetException | NoSuchMethodException | SecurityException e) {
-			logger.warn("getConfigForRenderer: Could not instantiate instance of " + annotation.configClass() + ": ",
-					e);
-			return Map.of();
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+				| NoSuchMethodException | SecurityException e) {
+			logger.warn("Could not generate output task configuration map for task " + outputName + ": ", e);
 		}
+		return Map.of();
 	}
 
 	@Override
@@ -623,17 +579,36 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 		return userConfigs;
 	}
 
-	private Map<String, String> configMapToStringMap(Map<String, TaskConfigTypes> aiConfigMap) {
+	private Map<String, String> configMapToStringMap(Map<String, TaskConfigTypes> configMap) {
 
 		Map<String, String> taskCfg = new HashMap<>();
 
-		if (aiConfigMap != null) {
-			aiConfigMap.entrySet().stream().forEach(innerEntry -> {
+		if (configMap != null) {
+			configMap.entrySet().stream().forEach(innerEntry -> {
 				taskCfg.put(innerEntry.getKey(), innerEntry.getValue().toString());
 			});
 		}
 
 		return taskCfg;
+	}
+
+	@Override
+	public List<EnumSpec> getEnumerations(UserId userId) {
+		List<EnumSpec> specs = new ArrayList<>();
+
+		for (Class<? extends EnumSpecCreator> creatorClass : enumSpecCreators) {
+			try {
+				EnumSpecCreator creator = creatorClass.getDeclaredConstructor().newInstance();
+				creator.setTaskServices(taskServices);
+				specs.add(creator.getEnumList(userId));
+
+			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+					| InvocationTargetException | NoSuchMethodException | SecurityException e) {
+				logger.warn("Could not generate EnumSpecCreator for " + creatorClass + ": ", e);
+			}
+		}
+
+		return specs;
 	}
 
 }

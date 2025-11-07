@@ -46,8 +46,8 @@ public class ResultController {
 	}
 
 	@RequestMapping(value = { "" }, method = RequestMethod.GET)
-	public ResponseEntity<ResponseWrapper<WorkflowResult>> getResult(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam(value = "workflowId") UUID workflowId) {
+	public ResponseEntity<ResponseWrapper<WorkflowResult>> getResult(
+			@AuthenticationPrincipal UserDetailsUser user, @RequestParam(value = "workflowId") UUID workflowId) {
 		logger.info("/processor/getResult: " + workflowId);
 
 		HttpHeaders headers = new HttpHeaders();

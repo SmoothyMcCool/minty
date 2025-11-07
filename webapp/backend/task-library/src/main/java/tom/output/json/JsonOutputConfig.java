@@ -4,18 +4,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-
-import tom.task.TaskConfig;
+import tom.task.TaskConfigSpec;
 import tom.task.TaskConfigTypes;
 
-public class JsonOutputConfig implements TaskConfig {
+public class JsonOutputConfig implements TaskConfigSpec {
 
 	public JsonOutputConfig() {
 	}
 
-	public JsonOutputConfig(Map<String, String> config) throws JsonMappingException, JsonProcessingException {
+	public JsonOutputConfig(Map<String, String> config) {
 	}
 
 	@Override

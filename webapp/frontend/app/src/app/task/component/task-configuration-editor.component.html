@@ -1,105 +1,68 @@
-<ng-container *ngIf="taskConfiguration && config">
-	<div class="form-group mb-1" *ngFor="let item of taskConfiguration | keyvalue">
+<ng-container *ngIf="config && taskSpecification">
+	<div class="form-group mb-1" *ngFor="let item of taskSpecification.configSpec | keyvalue">
 		<ng-container [ngSwitch]="item.value">
 			<ng-container *ngSwitchCase="'Number'">
-				<div class="row g-1">
-					<div class="col-4">
-						<ng-container *ngIf="defaultFields?.includes(item.key); else notDefaultNumber">
-							<label for="numberInput-{{item.key}}">{{item.key}} (System or User Default)</label>
-						</ng-container>
-						<ng-template #notDefaultNumber>
-							<label for="numberInput-{{item.key}}">{{item.key}}</label>
-						</ng-template>
-					</div>
-					<div class="col-8">
-						<input type="number" step="1" class="form-control form-control-sm" id="numberInput-{{item.key}}"
-							name="numberInput-{{item.key}}" [ngModel]="getConfig(item.key)"
-							(ngModelChange)="valueChanged(item.key, $event)" [readonly]="defaultFields?.includes(item.key)">
-					</div>
+				<div class="mb-3">
+					<ng-container *ngIf="defaults?.includes(item.key); else notDefaultNumber">
+						<label for="numberInput-{{item.key}}">{{item.key}} (System or User Default)</label>
+					</ng-container>
+					<ng-template #notDefaultNumber>
+						<label for="numberInput-{{item.key}}">{{item.key}}</label>
+					</ng-template>
+					<input type="number" step="1" class="form-control form-control-sm" id="numberInput-{{item.key}}"
+						name="numberInput-{{item.key}}" [ngModel]="getConfig(item.key)"
+						(ngModelChange)="valueChanged(item.key, $event)" [readonly]="defaults?.includes(item.key)">
 				</div>
 			</ng-container>
 			<ng-container *ngSwitchCase="'Boolean'">
-				<div class="row g-1">
-					<div class="col-4">
-						<ng-container *ngIf="defaultFields && defaultFields.includes(item.key); else notDefaultNumber">
-							<label for="booleanInput-{{item.key}}">{{item.key}} (System or User Default)</label>
-						</ng-container>
-						<ng-template #notDefaultNumber>
-							<label for="booleanInput-{{item.key}}">{{item.key}}</label>
-						</ng-template>
-					</div>
-					<div class="col-8">
-						<div class="form-group mb-2">
-							<input type="checkbox" class="form-check-input me-2" id="booleanInput-{{item.key}}"
-								name="booleanInput-{{item.key}}" [checked]="getConfig(item.key)" [ngModel]="getConfig(item.key)"
-								(ngModelChange)="valueChanged(item.key, $event)" [disabled]="defaultFields?.includes(item.key)">
-						</div>
+				<div class="mb-3">
+					<ng-container *ngIf="defaults && defaults.includes(item.key); else notDefaultNumber">
+						<label for="booleanInput-{{item.key}}">{{item.key}} (System or User Default)</label>
+					</ng-container>
+					<ng-template #notDefaultNumber>
+						<label for="booleanInput-{{item.key}}">{{item.key}}</label>
+					</ng-template>
+					<div class="form-group mb-2">
+						<input type="checkbox" class="form-check-input me-2" id="booleanInput-{{item.key}}"
+							name="booleanInput-{{item.key}}" [checked]="getConfig(item.key)" [ngModel]="getConfig(item.key)"
+							(ngModelChange)="valueChanged(item.key, $event)" [disabled]="defaults?.includes(item.key)">
 					</div>
 				</div>
 			</ng-container>
 			<ng-container *ngSwitchCase="'String'">
-				<div class="row g-1">
-					<div class="col-4">
-						<ng-container *ngIf="defaultFields && defaultFields.includes(item.key); else notDefaultNumber">
-							<label for="stringInput-{{item.key}}">{{item.key}} (System or User Default)</label>
-						</ng-container>
-						<ng-template #notDefaultNumber>
-							<label for="stringInput-{{item.key}}">{{item.key}}</label>
-						</ng-template>
-					</div>
-					<div class="col-8">
-						<input [type]="(item.key || '').toLowerCase().includes('password') ? 'password' : 'text'" class="form-control form-control-sm" id="stringInput-{{item.key}}" name="stringInput-{{item.key}}"
-							[ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)" [readonly]="defaultFields?.includes(item.key)">
-					</div>
+				<div class="mb-3">
+					<ng-container *ngIf="defaults && defaults.includes(item.key); else notDefaultNumber">
+						<label for="stringInput-{{item.key}}">{{item.key}} (System or User Default)</label>
+					</ng-container>
+					<ng-template #notDefaultNumber>
+						<label for="stringInput-{{item.key}}">{{item.key}}</label>
+					</ng-template>
+					<input [type]="(item.key || '').toLowerCase().includes('password') ? 'password' : 'text'" class="form-control form-control-sm" id="stringInput-{{item.key}}" name="stringInput-{{item.key}}"
+						[ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)" [readonly]="defaults?.includes(item.key)">
 				</div>
 			</ng-container>
 			<ng-container *ngSwitchCase="'TextArea'">
-				<div class="row g-1">
-					<div class="col-4">
-						<label for="textInput-{{item.key}}">{{item.key}}</label>
-					</div>
-					<div class="col-8">
-						<textarea id="textInput-{{item.key}}" name="textInput-{{item.key}}" type="text" style="height: 100px;" class="form-control form-control-sm" [ngModel]="getConfig(item.key)"
-							(ngModelChange)="valueChanged(item.key, $event)" autocomplete="off" required></textarea>
-					</div>
+				<div class="mb-3">
+					<label for="textInput-{{item.key}}">{{item.key}}</label>
+					<textarea id="textInput-{{item.key}}" name="textInput-{{item.key}}" type="text" style="height: 100px;" class="form-control form-control-sm" [ngModel]="getConfig(item.key)"
+						(ngModelChange)="valueChanged(item.key, $event)" autocomplete="off" required></textarea>
 				</div>
 			</ng-container>
 			<ng-container *ngSwitchCase="'Map'">
-				<div class="row g-1">
+				<div class="mb-3">
 					<minty-map-editor name="mapInput" [ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)"></minty-map-editor>
 				</div>
 			</ng-container>
 			<ng-container *ngSwitchCase="'StringList'">
-				<div class="row g-1">
-					<div class="col-4">
-						<label for="stringListInput-{{item.key}}">{{item.key}}</label>
-					</div>
-					<div class="col-8 g-1">
-						<minty-stringlist-editor name="stringListInput-{{item.key}}" [ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)"></minty-stringlist-editor>
-					</div>
+				<div class="mb-3">
+					<label for="stringListInput-{{item.key}}">{{item.key}}</label>
+					<minty-stringlist-editor name="stringListInput-{{item.key}}" [ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)"></minty-stringlist-editor>
 				</div>
 			</ng-container>
 			<ng-container *ngSwitchCase="'EnumList'">
-				<div class="row g-1">
-					<div class="col-4">
-						<label for="enumListInput-{{item.key}}">{{item.key}}</label>
-					</div>
-					<div class="col-8 g-1">
-						<minty-enumlist-editor name="enumListInput-{{item.key}}" [choices]="getChoicesFor(item.key)" [ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)"></minty-enumlist-editor>
-					</div>
-				</div>
-			</ng-container>
-			<ng-container *ngSwitchCase="'AssistantIdentifier'">
-				<div class="row g-1">
-					<div class="col-4">
-						<label for="assistantList-{{item.key}}">{{item.key}}</label>
-					</div>
-					<div class="col-8">
-						<select class="form-select" name="assistantList-{{item.key}}" [ngModel]="getConfig(item.key)"
-							(ngModelChange)="valueChanged(item.key, $event)">
-							<option *ngFor="let assistant of assistants" [value]="assistant.id">{{assistant.name}}</option>
-						</select>
-					</div>
+				<div class="mb-3">
+					<label for="enumListInput-{{item.key}}">{{item.key}}</label>
+					<minty-enumlist-editor name="enumListInput-{{item.key}}" [choices]="getChoicesFor(item.key)" [ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)"></minty-enumlist-editor>
 				</div>
 			</ng-container>
 			<ng-container *ngSwitchDefault>

@@ -2,13 +2,14 @@
 	<h2>New Workflow</h2>
 
 	<form role="form" (submit)="createWorkflow()">
-		<minty-workflow-editor name="workflowEditor" [edit]="true" [taskTemplates]="taskTemplates"
-			[outputTaskTemplates]="outputTaskTemplates" [defaults]="defaults" [(ngModel)]="workflow"></minty-workflow-editor>
 
-		<div>
-			<button type="submit" id="submitButton" class="btn btn-primary">Create!</button>
-			<button type="button" id="cancelButton" class="btn btn-primary float-end" (click)="cancel()">Cancel</button>
+		<div class="d-flex justify-content-end mb-2">
+			<button type="submit" id="submitButton" class="btn btn-primary me-2">Create!</button>
+			<button type="button" id="cancelButton" class="btn btn-danger" (click)="cancel()">Cancel</button>
 		</div>
+
+		<minty-workflow-editor name="workflowEditor" [taskSpecifications]="taskSpecifications"
+			[outputTaskSpecifications]="outputTaskSpecifications" [defaults]="defaults" [(ngModel)]="workflow"></minty-workflow-editor>
 	</form>
 </div>
 <button class="btn btn-link mt-4" (click)="showTemplateUploader = true" *ngIf="!showTemplateUploader; else uploadTemplate">Add New Output Template</button>

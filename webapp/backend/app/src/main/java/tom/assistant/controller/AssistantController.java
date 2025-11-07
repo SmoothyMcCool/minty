@@ -195,6 +195,7 @@ public class AssistantController {
 				try {
 					chunk = streamResult.takeChunk();
 				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
 					throw new RuntimeException("Streaming thread got interrupted. Aborting.");
 				}
 				if (chunk == null) {

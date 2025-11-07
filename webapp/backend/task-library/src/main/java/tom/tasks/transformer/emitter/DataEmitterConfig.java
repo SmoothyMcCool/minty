@@ -8,13 +8,14 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import tom.task.TaskConfig;
+import tom.task.TaskConfigSpec;
 import tom.task.TaskConfigTypes;
 
-public class DataEmitterConfig implements TaskConfig {
+public class DataEmitterConfig implements TaskConfigSpec {
 
 	private static final Logger logger = LogManager.getLogger(DataEmitterConfig.class);
 
@@ -29,6 +30,7 @@ public class DataEmitterConfig implements TaskConfig {
 
 		String rawData = config.get("Data to Emit");
 		ObjectMapper mapper = new ObjectMapper();
+		mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
 
 		JsonNode root;
 		try {

@@ -4,8 +4,6 @@ import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { Router, RouterModule } from '@angular/router';
 import { ResultService } from 'src/app/workflow/result.service';
-import { WorkflowService } from '../workflow.service';
-import { Workflow } from 'src/app/model/workflow/workflow';
 import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
 import { UserService } from 'src/app/user.service';
 import { WorkflowState } from 'src/app/model/workflow/workflow-state';
@@ -14,6 +12,8 @@ import { WorkflowExecutionState } from 'src/app/model/workflow/workflow-executio
 import { animate, style, transition, trigger } from '@angular/animations';
 import { User } from 'src/app/model/user';
 import { AlertService } from 'src/app/alert.service';
+import { Workflow } from 'src/app/model/workflow/workflow';
+import { WorkflowService } from '../workflow.service';
 
 @Component({
 	selector: 'minty-workflow-list',
@@ -61,13 +61,25 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 	ngOnInit() {
 		this.userService.getUser().subscribe(user => {
 			this.user = user;
-		});
-		this.subscription = this.resultService.workflowResultList$.subscribe((value: WorkflowState[]) => {
-			this.results = value;
-		});
-		this.workflowService.listWorkflows().subscribe((workflows) => {
-			workflows.sort((left, right) => left.name.localeCompare(right.name));
-			this.workflows = workflows;
+
+			this.subscription = this.resultService.workflowResultList$.subscribe((value: WorkflowState[]) => {
+				this.results = value;
+			});
+			this.workflowService.listWorkflows().subscribe((workflows) => {
+				workflows.sort((left, right) => {
+					if (!left.name && !right.name) {
+						return left.id.localeCompare(right.id);
+					}
+					if (!left.name) {
+						return 1;
+					}
+					if (!right.name) {
+						return -1;
+					}
+					return left.name.localeCompare(right.name);
+					});
+				this.workflows = workflows;
+			});
 		});
 	}
 

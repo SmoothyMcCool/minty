@@ -1,5 +1,5 @@
 <div class="row g-1">
-	<select class="form-select" [ngModel]="selection" (ngModelChange)="valueChanged($event)">
-		<option *ngFor="let choice of choices" [value]="choice">{{choice}}</option>
+	<select class="form-select" [ngModel]="selection" (ngModelChange)="valueChanged($event)" *ngIf="choices">
+		<option *ngFor="let choice of choices.values" [value]="choice.value">{{choice.name}}</option>
 	</select>
 </div>

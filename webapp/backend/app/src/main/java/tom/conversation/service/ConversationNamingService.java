@@ -121,7 +121,9 @@ public class ConversationNamingService {
 							namingConversation.getConversationId());
 
 				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
 					logger.warn("Thread was interrupted while sleeping and waiting for my turn with the LLM!");
+					return;
 				}
 
 			}

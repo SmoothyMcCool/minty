@@ -1,46 +1,57 @@
 package tom.workflow.tracking.model;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class ExecutionStepState {
 
-	private int numTasks;
-	private int completedTasks;
-	private int failedTasks;
+	private AtomicInteger numTasks;
+	private AtomicInteger completedTasks;
+	private AtomicInteger failedTasks;
+
+	public ExecutionStepState() {
+		numTasks = new AtomicInteger();
+		completedTasks = new AtomicInteger();
+		failedTasks = new AtomicInteger();
+	}
 
 	public int getNumTasks() {
-		return numTasks;
+		return numTasks.get();
 	}
 
 	public void setNumTasks(int numTasks) {
-		this.numTasks = numTasks;
+		this.numTasks.set(numTasks);
 	}
 
 	public int getCompletedTasks() {
-		return completedTasks;
+		return completedTasks.get();
 	}
 
 	public void setCompletedTasks(int completedTasks) {
-		this.completedTasks = completedTasks;
+		this.completedTasks.set(completedTasks);
 	}
 
 	public int getFailedTasks() {
-		return failedTasks;
+		return failedTasks.get();
 	}
 
 	public void setFailedTasks(int failedTasks) {
-		this.failedTasks = failedTasks;
+		this.failedTasks.set(failedTasks);
+	}
+
+	public void addTask() {
+		numTasks.incrementAndGet();
 	}
 
 	public void addTasks(int numTasksInStep) {
-		numTasks += numTasksInStep;
+		numTasks.getAndAdd(numTasksInStep);
 	}
 
 	public void completeTask() {
-		completedTasks++;
+		completedTasks.getAndIncrement();
 	}
 
 	public void failTask() {
-		completeTask();
-		failedTasks++;
+		failedTasks.getAndIncrement();
 	}
 
 }
