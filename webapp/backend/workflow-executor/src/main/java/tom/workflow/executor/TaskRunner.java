@@ -5,19 +5,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.core.task.AsyncTaskExecutor;
 
 import tom.api.UserId;
 import tom.task.MintyTask;
 import tom.task.Packet;
-import tom.task.taskregistry.TaskRegistryService;
+import tom.task.TaskLogger;
+import tom.workflow.model.TaskRequest;
+import tom.workflow.taskregistry.TaskRegistryService;
 import tom.workflow.tracking.model.ExecutionStepState;
 
 public class TaskRunner {
-
-	private final Logger logger = LogManager.getLogger(TaskRunner.class);
 
 	private final AsyncTaskExecutor taskExecutor;
 	private final TaskRegistryService taskRegistryService;
@@ -31,9 +29,10 @@ public class TaskRunner {
 	private boolean done = false;
 	private final ExecutionStepState executionState;
 	private boolean failed;
+	private final TaskLogger logger;
 
-	public TaskRunner(UserId userId, TaskRegistryService taskRegistryService,
-			TaskRequest request, AsyncTaskExecutor taskExecutor) {
+	public TaskRunner(UserId userId, TaskRegistryService taskRegistryService, TaskRequest request,
+			AsyncTaskExecutor taskExecutor, TaskLogger workflowLogger) {
 		this.taskExecutor = taskExecutor;
 		this.taskRegistryService = taskRegistryService;
 		this.request = request;
@@ -43,6 +42,7 @@ public class TaskRunner {
 		this.userId = userId;
 		this.executionState = new ExecutionStepState();
 		this.failed = false;
+		this.logger = workflowLogger;
 	}
 
 	public String getName() {
@@ -89,6 +89,7 @@ public class TaskRunner {
 			}
 
 			task.setOutputConnectors(outputs);
+			task.setLogger(logger);
 
 			int numInputs = task.getSpecification().numInputs();
 
@@ -126,7 +127,7 @@ public class TaskRunner {
 					try {
 						task.run();
 					} catch (Exception e) {
-						logger.warn("Task failed due to exception: ", e);
+						logger.warn("TaskRunner: Task failed due to exception: ", e);
 						failed = true;
 					}
 

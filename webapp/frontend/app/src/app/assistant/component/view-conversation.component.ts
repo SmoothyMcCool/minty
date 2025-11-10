@@ -10,10 +10,11 @@ import { ConversationComponent } from './conversation.component';
 import { ChatMessage } from '../../model/chat-message';
 import { UserService } from 'src/app/user.service';
 import { DisplayMode, User } from 'src/app/model/user';
+import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
 
 @Component({
 	selector: 'minty-view-conversation',
-	imports: [CommonModule, FormsModule, ConversationComponent],
+	imports: [CommonModule, FormsModule, ConversationComponent, ConfirmationDialogComponent],
 	templateUrl: 'view-conversation.component.html',
 	styleUrls: ['view-assistants.component.css']
 })
@@ -33,13 +34,14 @@ export class ViewConversationComponent implements OnInit {
 		prompt: '',
 		model: '',
 		temperature: 0,
-		numFiles: 0,
+		topK: 5,
 		ownerId: '',
 		shared: false,
 		hasMemory: false,
 		documentIds: []
 	};
 	private conversationId: string = '';
+	confirmRestartConversationVisible: boolean = false;
 
 	constructor(private route: ActivatedRoute,
 		private userService: UserService,
@@ -116,8 +118,19 @@ export class ViewConversationComponent implements OnInit {
 	}
 
 	restart() {
-		this.conversationService.delete(this.conversationId).subscribe(() => {
+		this.conversationService.reset(this.conversationId).subscribe(() => {
 			this.chatHistory = [];
 		});
+	}
+
+	confirmRestartConversation() {
+		this.confirmRestartConversationVisible = false;
+		this.conversationService.reset(this.conversationId).subscribe(() => {
+			this.chatHistory = [];
+		});
+	}
+
+	restartConversation() {
+		this.confirmRestartConversationVisible = true;
 	}
 }

@@ -3,11 +3,12 @@ package tom.tasks.noop;
 import java.util.List;
 import java.util.Map;
 
-import tom.task.TaskSpec;
 import tom.task.MintyTask;
 import tom.task.OutputPort;
 import tom.task.Packet;
 import tom.task.TaskConfigSpec;
+import tom.task.TaskLogger;
+import tom.task.TaskSpec;
 
 public class NullTask implements MintyTask {
 
@@ -97,6 +98,10 @@ public class NullTask implements MintyTask {
 	@Override
 	public Packet getResult() {
 		return null;
+	}
+
+	@Override
+	public void setLogger(TaskLogger workflowLogger) {
 	}
 
 }

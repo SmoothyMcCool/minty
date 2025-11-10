@@ -12,14 +12,15 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import tom.api.UserId;
-import tom.task.taskregistry.TaskRegistryService;
+import tom.config.ExternalProperties;
 import tom.workflow.controller.WorkflowRequest;
-import tom.workflow.executor.TaskRequest;
 import tom.workflow.executor.WorkflowRunner;
-import tom.workflow.model.Workflow;
 import tom.workflow.model.ResultTemplate;
-import tom.workflow.repository.WorkflowRepository;
+import tom.workflow.model.TaskRequest;
+import tom.workflow.model.Workflow;
 import tom.workflow.repository.ResultTemplateRepository;
+import tom.workflow.repository.WorkflowRepository;
+import tom.workflow.taskregistry.TaskRegistryService;
 import tom.workflow.tracking.service.WorkflowTrackingService;
 
 @Service
@@ -32,22 +33,25 @@ public class WorkflowServiceImpl implements WorkflowService {
 	private final TaskRegistryService taskRegistryService;
 	private final WorkflowTrackingService workflowTrackingService;
 	private final AsyncTaskExecutor taskExecutor;
+	private final String workflowLoggingFolder;
 
-	public WorkflowServiceImpl(WorkflowRepository workflowRepository,
-			ResultTemplateRepository resultTemplateRepository, TaskRegistryService taskRegistryService,
-			WorkflowTrackingService workflowTrackingService,
-			@Qualifier("taskExecutor") ThreadPoolTaskExecutor taskExecutor) {
+	public WorkflowServiceImpl(WorkflowRepository workflowRepository, ResultTemplateRepository resultTemplateRepository,
+			TaskRegistryService taskRegistryService, WorkflowTrackingService workflowTrackingService,
+			@Qualifier("taskExecutor") ThreadPoolTaskExecutor taskExecutor, ExternalProperties properties) {
 		this.workflowRepository = workflowRepository;
 		this.resultTemplateRepository = resultTemplateRepository;
 		this.taskRegistryService = taskRegistryService;
 		this.workflowTrackingService = workflowTrackingService;
 		this.taskExecutor = taskExecutor;
+		workflowLoggingFolder = properties.get("workflowLogs");
+		if (workflowLoggingFolder == null) {
+			throw new RuntimeException("Workflow log folder location is not defined.");
+		}
 	}
 
 	@Override
 	public String executeWorkflow(UserId userId, WorkflowRequest request) {
-		Optional<tom.workflow.repository.Workflow> maybeWorkflow = workflowRepository
-				.findById(request.getId());
+		Optional<tom.workflow.repository.Workflow> maybeWorkflow = workflowRepository.findById(request.getId());
 		if (maybeWorkflow.isEmpty()) {
 			logger.warn("Did not find workflow for ID " + request.getId() + ". Cannot run.");
 			return null;
@@ -67,8 +71,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 		}
 		workflow.getOutputStep().setConfiguration(request.getOutputConfiguration());
 
-		WorkflowRunner runner = new WorkflowRunner(userId, workflow, taskRegistryService,
-				workflowTrackingService, taskExecutor);
+		WorkflowRunner runner = new WorkflowRunner(userId, workflow, taskRegistryService, workflowTrackingService,
+				taskExecutor, workflowLoggingFolder);
 
 		workflowTrackingService.trackWorkflow(runner);
 

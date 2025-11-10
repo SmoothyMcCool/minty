@@ -100,6 +100,11 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 		this.resultService.downloadWorkflowOutput(result.id);
 	}
 
+	downloadLogsFor(result: WorkflowState) {
+		this.currentResult = null;
+		this.resultService.downloadWorkflowLog(result.id);
+	}
+
 	deleteWorkflow(workflow: Workflow) {
 		this.workflowPendingDeletion = workflow;
 		this.confirmWorkflowDeleteVisible = true;

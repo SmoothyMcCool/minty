@@ -12,11 +12,29 @@ public class AssistantBuilder {
 	private String name;
 	private String model;
 	private Double temperature;
+	private Integer topK;
 	private String prompt;
 	private UserId ownerId;
 	private boolean shared;
 	private boolean hasMemory;
 	private List<DocumentId> documentIds;
+
+	public AssistantBuilder() {
+
+	}
+
+	public AssistantBuilder(Assistant assistant) {
+		id = assistant.id();
+		name = assistant.name();
+		model = assistant.model();
+		temperature = assistant.temperature();
+		topK = assistant.topK();
+		prompt = assistant.prompt();
+		ownerId = assistant.ownerId();
+		shared = assistant.shared();
+		hasMemory = assistant.hasMemory();
+		documentIds = assistant.documentIds();
+	}
 
 	public AssistantBuilder id(AssistantId id) {
 		this.id = id;
@@ -35,6 +53,11 @@ public class AssistantBuilder {
 
 	public AssistantBuilder temperature(Double temperature) {
 		this.temperature = temperature;
+		return this;
+	}
+
+	public AssistantBuilder topK(int topK) {
+		this.topK = topK;
 		return this;
 	}
 
@@ -68,8 +91,10 @@ public class AssistantBuilder {
 				Objects.requireNonNull(name, "name must not be null"),
 				Objects.requireNonNull(model, "model must not be null"),
 				Objects.requireNonNull(temperature, "temperature must not be null"),
+				Objects.requireNonNull(topK, "topK must not be null"),
 				Objects.requireNonNull(prompt, "prompt must not be null"),
 				Objects.requireNonNull(documentIds, "documentIds must not be null"),
 				Objects.requireNonNull(ownerId, "ownerId must not be null"), shared, hasMemory);
 	}
+
 }

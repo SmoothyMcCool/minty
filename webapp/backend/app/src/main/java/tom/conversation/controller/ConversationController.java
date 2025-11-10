@@ -76,6 +76,20 @@ public class ConversationController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
+	@RequestMapping(value = { "/reset" }, method = RequestMethod.DELETE)
+	public ResponseEntity<ResponseWrapper<String>> resetConversation(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("conversationId") ConversationId conversationId) {
+
+		if (!conversationService.resetConversation(user.getId(), conversationId)) {
+			ResponseWrapper<String> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
+					List.of(ApiError.NOT_OWNED));
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
+		ResponseWrapper<String> response = ResponseWrapper.SuccessResponse("success");
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
 	@RequestMapping(value = { "/rename" }, method = RequestMethod.GET)
 	public ResponseEntity<ResponseWrapper<Conversation>> renameConversation(
 			@AuthenticationPrincipal UserDetailsUser user,

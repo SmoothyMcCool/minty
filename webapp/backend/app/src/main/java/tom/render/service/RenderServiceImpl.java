@@ -75,7 +75,7 @@ public class RenderServiceImpl implements RenderService {
 
 			ResultTemplate resultTemplate = workflowService.getResultTemplate(template);
 			if (resultTemplate == null) {
-				throw new RuntimeException("resultTemplate is null!");
+				throw new NullPointerException("resultTemplate is null!");
 			}
 
 			tempFilePath = Files.createTempFile(Paths.get(tempFolder), "pug-" + UUID.randomUUID(), ".pug");

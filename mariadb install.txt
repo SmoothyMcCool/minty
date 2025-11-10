@@ -43,12 +43,11 @@ USE Minty;
 CREATE TABLE IF NOT EXISTS Assistant (
 	id UUID NOT NULL DEFAULT (UUID()),
 	name VARCHAR(50),
-	numFiles INTEGER,
-	processedFiles INTEGER,
 	state VARCHAR(20),
 	prompt TEXT,
 	model TEXT,
 	temperature DOUBLE,
+	topK INTEGER,
 	ownerId UUID,
 	shared BOOLEAN,
 	hasMemory BOOLEAN,

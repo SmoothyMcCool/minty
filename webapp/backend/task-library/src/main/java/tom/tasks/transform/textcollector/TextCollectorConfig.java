@@ -1,0 +1,34 @@
+package tom.tasks.transform.textcollector;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import tom.task.TaskConfigSpec;
+import tom.task.TaskConfigTypes;
+
+public class TextCollectorConfig implements TaskConfigSpec {
+
+	public TextCollectorConfig() {
+	}
+
+	public TextCollectorConfig(Map<String, String> config) {
+	}
+
+	@Override
+	public Map<String, TaskConfigTypes> getConfig() {
+		Map<String, TaskConfigTypes> config = new HashMap<>();
+		return config;
+	}
+
+	@Override
+	public List<String> getSystemConfigVariables() {
+		return List.of();
+	}
+
+	@Override
+	public List<String> getUserConfigVariables() {
+		return List.of();
+	}
+
+}

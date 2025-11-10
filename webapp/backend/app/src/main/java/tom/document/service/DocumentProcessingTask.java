@@ -23,11 +23,12 @@ public class DocumentProcessingTask implements Runnable {
 
 	@Override
 	public void run() {
+		MintyDoc doc = null;
 		try {
 			String filename = file.getName();
 			logger.info("Started processing " + filename);
 
-			MintyDoc doc = documentService.findByDocumentId(new DocumentId(UUID.fromString(filename)));
+			doc = documentService.findByDocumentId(new DocumentId(UUID.fromString(filename)));
 			if (doc != null) {
 				if (doc.getState() == DocumentState.READY) {
 					// No good, this document is already processed. Log a warning and delete this
@@ -68,6 +69,11 @@ public class DocumentProcessingTask implements Runnable {
 
 		} catch (Exception e) {
 			logger.error("File processing failed: ", e);
+			if (doc != null) {
+				documentService.markDocumentFailed(doc);
+			}
+		} finally {
+			file.delete();
 		}
 	}
 

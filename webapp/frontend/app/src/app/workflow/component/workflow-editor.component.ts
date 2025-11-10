@@ -322,4 +322,14 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 	getEscapedGroupId(group: string): string {
 		return group.replace(/[^a-zA-Z0-9_-]/g, '-');
 	}
+
+	sortandFilterSpecifications(group: string, specifications: TaskSpecification[]) {
+		if (!specifications) {
+			return;
+		}
+		if (!group) {
+			return specifications.sort((left, right) => left.taskName.localeCompare(right.taskName));
+		}
+		return specifications.filter(spec => spec.group === group).sort((left, right) => left.taskName.localeCompare(right.taskName));
+	}
 }

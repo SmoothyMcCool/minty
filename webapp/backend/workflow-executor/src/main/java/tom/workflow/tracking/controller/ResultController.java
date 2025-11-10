@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import tom.controller.ResponseWrapper;
 import tom.model.security.UserDetailsUser;
-import tom.workflow.tracking.model.controller.WorkflowResult;
-import tom.workflow.tracking.model.controller.WorkflowState;
+import tom.workflow.tracking.controller.model.WorkflowResult;
+import tom.workflow.tracking.controller.model.WorkflowState;
 import tom.workflow.tracking.service.WorkflowTrackingService;
 
 @Controller
@@ -46,9 +46,9 @@ public class ResultController {
 	}
 
 	@RequestMapping(value = { "" }, method = RequestMethod.GET)
-	public ResponseEntity<ResponseWrapper<WorkflowResult>> getResult(
-			@AuthenticationPrincipal UserDetailsUser user, @RequestParam(value = "workflowId") UUID workflowId) {
-		logger.info("/processor/getResult: " + workflowId);
+	public ResponseEntity<ResponseWrapper<WorkflowResult>> getResult(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam(value = "workflowId") UUID workflowId) {
+		logger.info("ResultController getResult: " + workflowId);
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
@@ -61,13 +61,26 @@ public class ResultController {
 	@RequestMapping(value = { "/output" }, method = RequestMethod.GET)
 	public ResponseEntity<ResponseWrapper<String>> getOutput(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestParam(value = "workflowId") UUID workflowId) {
-		logger.info("/processor/getOutput: " + workflowId);
+		logger.info("ResultController getOutput: " + workflowId);
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
 
 		ResponseWrapper<String> response = ResponseWrapper
 				.SuccessResponse(workflowTrackingService.getOutput(user.getId(), workflowId));
+		return new ResponseEntity<>(response, headers, HttpStatus.OK);
+	}
+
+	@RequestMapping(value = { "/log" }, method = RequestMethod.GET)
+	public ResponseEntity<ResponseWrapper<String>> getLog(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam(value = "workflowId") UUID workflowId) {
+		logger.info("ResultController getLog: " + workflowId);
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+
+		ResponseWrapper<String> response = ResponseWrapper
+				.SuccessResponse(workflowTrackingService.getLog(user.getId(), workflowId));
 		return new ResponseEntity<>(response, headers, HttpStatus.OK);
 	}
 

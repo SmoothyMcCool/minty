@@ -176,7 +176,7 @@ public class AssistantController {
 		LlmResult llmResult = assistantQueryService.getResultFor(streamId);
 		StreamResult streamResult = (StreamResult) llmResult;
 
-		if (streamResult == null) {
+		if (streamResult == null || streamResult == LlmResult.STREAM_IN_PROGRESS) {
 			int queuePosition = assistantQueryService.getQueuePositionFor(streamId);
 			return outputStream -> {
 				if (queuePosition == -1) {

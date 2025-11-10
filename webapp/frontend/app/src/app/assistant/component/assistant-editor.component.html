@@ -28,6 +28,11 @@
 			name="assistantTemperature" [(ngModel)]="assistant.temperature">
 	</div>
 	<div class="form-group mb-2">
+		<label for="assistantTopK">Top K (Number of Document chunks to use for RAG)</label>
+		<input type="number" step="1" min="0" max="99" class="form-control bg-opacity-75" id="assistantTopK"
+			name="assistantTopK" [(ngModel)]="assistant.topK">
+	</div>
+	<div class="form-group mb-2">
 		<label for="assistantPrompt">Prompt</label>
 		<textarea class="form-control bg-opacity-75" id="assistantPrompt" name="assistantPrompt" style="height: 200px;"
 			[(ngModel)]="assistant.prompt"></textarea>

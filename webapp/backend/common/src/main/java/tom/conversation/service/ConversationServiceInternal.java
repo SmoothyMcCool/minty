@@ -22,4 +22,6 @@ public interface ConversationServiceInternal extends ConversationService {
 
 	Conversation renameConversation(UserId userId, ConversationId conversationId, String title);
 
+	boolean resetConversation(UserId userId, ConversationId conversationId);
+
 }

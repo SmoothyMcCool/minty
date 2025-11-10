@@ -42,7 +42,7 @@
 					</div>
 					<div [id]="getEscapedGroupId(group) + '-collapse'" class="accordion-collapse collapse" data-bs-parent="#task-accordion">
 						<ul class="list-group">
-							<ng-container *ngFor="let spec of taskSpecifications | filter:{group: group}">
+							<ng-container *ngFor="let spec of sortandFilterSpecifications(group, taskSpecifications)">
 								<li class="list-group-item">
 									<span class="text-truncate clickable-text" (click)="addStep(spec)">
 										{{spec.taskName}}
@@ -60,7 +60,7 @@
 					</div>
 					<div id="output-collapse" class="accordion-collapse collapse" data-bs-parent="#task-accordion">
 						<ul class="list-group">
-							<ng-container *ngFor="let spec of outputTaskSpecifications">
+							<ng-container *ngFor="let spec of sortandFilterSpecifications(group, outputTaskSpecifications)">
 								<li class="list-group-item">
 									<span class="text-truncate clickable-text" (click)="addOutputStep(spec)">
 										{{spec.taskName}}

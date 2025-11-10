@@ -48,7 +48,7 @@
 		<tika.version>3.2.1</tika.version>
 
 		<spring.version>6.2.7</spring.version>
-		<spring.ai.version>1.0.0</spring.ai.version>
+		<spring.ai.version>1.0.3</spring.ai.version>
 		<spring.data.version>3.5.0</spring.data.version>
 		<spring.security.version>6.4.5</spring.security.version>
 		<spring.session.jdbc.version>3.4.3</spring.session.jdbc.version>
@@ -100,6 +100,11 @@
 			<dependency>
 				<groupId>com.fasterxml.jackson.dataformat</groupId>
 				<artifactId>jackson-dataformat-xml</artifactId>
+				<version>${jackson.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.fasterxml.jackson.dataformat</groupId>
+				<artifactId>jackson-dataformat-yaml</artifactId>
 				<version>${jackson.version}</version>
 			</dependency>
 			<dependency>

@@ -4,8 +4,6 @@ import java.util.List;
 import java.util.UUID;
 
 import tom.api.UserId;
-import tom.workflow.executor.TaskRequest;
-import tom.workflow.executor.Connection;
 
 public class Workflow {
 

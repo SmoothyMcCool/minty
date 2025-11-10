@@ -18,6 +18,7 @@ export class ConversationService {
 	private static readonly ListConversations = 'api/conversation/list';
 	private static readonly GetConversationHistory = 'api/conversation/history';
 	private static readonly DeleteConversation = 'api/conversation/delete';
+	private static readonly ResetConversation = 'api/conversation/reset';
 	private static readonly RenameConversation = 'api/conversation/rename';
 
 	constructor(private http: HttpClient, private alertService: AlertService) {
@@ -57,6 +58,22 @@ export class ConversationService {
 		params = params.append('conversationId', conversationId);
 
 		return this.http.delete<ApiResult>(ConversationService.DeleteConversation, { params: params })
+			.pipe(
+				catchError(error => {
+					this.alertService.postFailure(JSON.stringify(error));
+					return EMPTY;
+				}),
+				map((result: ApiResult) => {
+					return result.data as string;
+				})
+			);
+	}
+
+	reset(conversationId: string): Observable<string> {
+		let params: HttpParams = new HttpParams();
+		params = params.append('conversationId', conversationId);
+
+		return this.http.delete<ApiResult>(ConversationService.ResetConversation, { params: params })
 			.pipe(
 				catchError(error => {
 					this.alertService.postFailure(JSON.stringify(error));

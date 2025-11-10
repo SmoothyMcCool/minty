@@ -10,12 +10,14 @@ public class ExecutionResult {
 
 	private Instant startTime;
 	private Instant endTime;
+	private String logFile;
 	private Map<String, List<Map<String, Object>>> results;
 	private Map<String, List<String>> errors;
 
 	public ExecutionResult() {
 		startTime = Instant.now();
 		endTime = Instant.now();
+		logFile = "";
 		results = new HashMap<>();
 		errors = new HashMap<>();
 	}
@@ -43,6 +45,14 @@ public class ExecutionResult {
 
 	public void setEndTime(Instant endTime) {
 		this.endTime = endTime;
+	}
+
+	public String getLogFile() {
+		return logFile;
+	}
+
+	public void setLogFile(String logFile) {
+		this.logFile = logFile;
 	}
 
 	public Map<String, List<Map<String, Object>>> getResults() {
