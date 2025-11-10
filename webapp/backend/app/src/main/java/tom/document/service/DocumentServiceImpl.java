@@ -48,6 +48,7 @@ public class DocumentServiceImpl implements DocumentService {
 	private final OllamaApi ollamaApi;
 	private final DocumentRepository documentRepository;
 	private final int keywordsPerDocument;
+	private final int targetChunkSize;
 
 	private final String docFileStore;
 	private final String summarizingModel;
@@ -64,6 +65,7 @@ public class DocumentServiceImpl implements DocumentService {
 		summarizingModel = properties.get("ollamaSummarizingModel");
 		docFileStore = properties.get("docFileStore");
 		keywordsPerDocument = properties.getInt("keywordsPerDocument", 5);
+		targetChunkSize = properties.getInt("targetChunkSize", 800);
 	}
 
 	@PostConstruct
@@ -129,7 +131,7 @@ public class DocumentServiceImpl implements DocumentService {
 	}
 
 	private List<Document> split(List<Document> documents) {
-		TokenTextSplitter splitter = new TokenTextSplitter();
+		TokenTextSplitter splitter = TokenTextSplitter.builder().withChunkSize(targetChunkSize).build();
 		return splitter.apply(documents);
 	}
 
@@ -194,6 +196,12 @@ public class DocumentServiceImpl implements DocumentService {
 	@Override
 	public void markDocumentComplete(MintyDoc doc) {
 		doc.setState(DocumentState.READY);
+		documentRepository.save(doc);
+	}
+
+	@Override
+	public void markDocumentFailed(MintyDoc doc) {
+		doc.setState(DocumentState.FAILED);
 		documentRepository.save(doc);
 	}
 

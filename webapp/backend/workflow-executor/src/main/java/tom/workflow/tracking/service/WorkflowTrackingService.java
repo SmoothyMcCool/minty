@@ -5,8 +5,8 @@ import java.util.UUID;
 
 import tom.api.UserId;
 import tom.workflow.executor.WorkflowRunner;
-import tom.workflow.tracking.model.controller.WorkflowResult;
-import tom.workflow.tracking.model.controller.WorkflowState;
+import tom.workflow.tracking.controller.model.WorkflowResult;
+import tom.workflow.tracking.controller.model.WorkflowState;
 
 public interface WorkflowTrackingService {
 
@@ -21,4 +21,6 @@ public interface WorkflowTrackingService {
 	List<WorkflowState> getWorkflowList(UserId userId);
 
 	WorkflowResult getResult(UserId userId, UUID workflowId);
+
+	String getLog(UserId userId, UUID workflowId);
 }

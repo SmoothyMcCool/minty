@@ -31,6 +31,7 @@
 				<li class="list-group-item p-2 bd-highlight opacity-75" *ngFor="let document of displayDocuments">
 					<div class="d-flex align-items-center">
 						<div class="p-1" *ngIf="document.state === 'NO_CONTENT'"><strong class="text-danger">Processing...</strong></div>
+						<div class="p-1" *ngIf="document.state === 'FAILED'"><strong class="text-danger">Document Failed to Process!</strong><i class="bi bi-exclamation-triangle"></i></div>
 						<div class="p-1"><strong>Title: </strong>{{document.title}}</div>
 						<ng-container *ngIf="document.associatedAssistantIds && document.associatedAssistantIds.length > 0">
 							<div class="p-1 ms-2"><strong>Used in Assistants: </strong></div>

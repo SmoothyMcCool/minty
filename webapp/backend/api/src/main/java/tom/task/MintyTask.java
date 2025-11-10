@@ -13,6 +13,16 @@ public interface MintyTask extends Runnable {
 	// If any error occured, output it here to aid in debugging.
 	String getError();
 
+	// Returns true if this task will consume the packet if provided, false
+	// otherwise.
+	// This is to accomodate use cases such as grouping, where if a key does not
+	// match the current group, we might not want the packet. Rejecting a packet
+	// will cause the workflow to assume that this task does not want more packets
+	// on the given input.
+	default boolean wantsInput(int inputNum, Packet dataPacket) {
+		return true;
+	}
+
 	// Provide a piece of input to the task. The task should return false if it does
 	// not yet have all the input it needs for that input number, true if it does.
 	boolean giveInput(int inputNum, Packet dataPacket);
@@ -29,4 +39,6 @@ public interface MintyTask extends Runnable {
 	void inputTerminated(int i);
 
 	boolean failed();
+
+	void setLogger(TaskLogger workflowLogger);
 }

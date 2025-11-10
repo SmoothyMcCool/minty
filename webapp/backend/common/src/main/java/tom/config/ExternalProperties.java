@@ -1,5 +1,6 @@
 package tom.config;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -23,7 +24,7 @@ public class ExternalProperties {
 		try {
 			FileSystemResource resource = new FileSystemResource(path);
 			if (!resource.exists()) {
-				throw new RuntimeException("External properties file not found at: " + path);
+				throw new FileNotFoundException("External properties file not found at: " + path);
 			}
 			properties = PropertiesLoaderUtils.loadProperties(resource);
 

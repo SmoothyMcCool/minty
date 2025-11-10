@@ -13,8 +13,8 @@ import tom.api.UserId;
 import tom.repository.converter.UserIdConverter;
 import tom.workflow.converters.TaskRequestConverter;
 import tom.workflow.converters.ConnectionConverter;
-import tom.workflow.executor.TaskRequest;
-import tom.workflow.executor.Connection;
+import tom.workflow.model.Connection;
+import tom.workflow.model.TaskRequest;
 
 @Entity
 public class Workflow {

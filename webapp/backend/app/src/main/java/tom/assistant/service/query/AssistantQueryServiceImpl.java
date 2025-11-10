@@ -58,8 +58,6 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	private final ThreadPoolTaskExecutor llmExecutor;
 	private final Map<ConversationId, LlmResult> results;
 
-	private final int maxResults;
-
 	public AssistantQueryServiceImpl(AssistantManagementService assistantManagementService, OllamaService ollamaService,
 			OllamaApi ollamaApi, UserServiceInternal userService,
 			@Qualifier("llmExecutor") ThreadPoolTaskExecutor llmExecutor, ExternalProperties properties) {
@@ -69,7 +67,6 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		this.assistantManagementService = assistantManagementService;
 		this.llmExecutor = llmExecutor;
 		this.results = new ConcurrentHashMap<>();
-		this.maxResults = properties.getInt("documentRagLimit", 2);
 	}
 
 	@PreDestroy
@@ -140,6 +137,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			llmExecutor.execute(request);
 			logger.info("Enqueued task for conversation " + query.getConversationId());
 
+			results.put(request.getQuery().getConversationId(), LlmResult.STREAM_IN_PROGRESS);
 			return request.getQuery().getConversationId();
 
 		} catch (TaskRejectedException tre) {
@@ -150,28 +148,32 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	}
 
 	@Override
-	public synchronized LlmResult getResultFor(ConversationId requestId) {
+	public LlmResult getResultFor(ConversationId requestId) {
 		if (!results.containsKey(requestId)) {
 			return null;
 		}
 
-		LlmResult result = results.get(requestId);
+		LlmResult result = null;
 
-		// We can't actually put null into the concurrent hashmap so we fake it.
-		if (result == LlmResult.IN_PROGRESS) {
-			return result;
-		}
+		synchronized (results) {
+			result = results.get(requestId);
 
-		if (result instanceof StringResult) {
-			results.remove(requestId);
-		} else {
-			StreamResult sr = (StreamResult) result;
-			if (sr == null) {
-				logger.warn("StreamResult is null!");
-				return null;
+			// We can't actually put null into the concurrent hashmap so we fake it.
+			if (result == LlmResult.IN_PROGRESS) {
+				return result;
 			}
-			if (sr.isComplete()) {
+
+			if (result instanceof StringResult) {
 				results.remove(requestId);
+			} else {
+				StreamResult sr = (StreamResult) result;
+				if (sr == null) {
+					logger.warn("StreamResult is null!");
+					return null;
+				}
+				if (sr.isComplete()) {
+					results.remove(requestId);
+				}
 			}
 		}
 
@@ -200,34 +202,45 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	}
 
 	private void askStreamingInternal(LlmRequest request) {
-		Stream<String> result = null;
-		User user = userService.getUserFromId(request.getUserId()).get();
+		try {
+			User user = userService.getUserFromId(request.getUserId()).get();
 
-		StreamResult sr = new StreamResult();
-		results.put(request.getQuery().getConversationId(), sr);
+			StreamResult sr = new StreamResult();
+			results.put(request.getQuery().getConversationId(), sr);
 
-		ChatClientRequestSpec spec = prepareFromQuery(user, request.getQuery());
-		if (spec == null) {
-			logger.warn("askStreaming: failed to generate chat request");
-			sr.addChunk("Failed to generate response.");
+			ChatClientRequestSpec spec = prepareFromQuery(user, request.getQuery());
+			if (spec == null) {
+				logger.warn("askStreaming: failed to generate chat request");
+				sr.addChunk("Failed to generate response.");
+				sr.markComplete();
+				return;
+			}
+
+			Stream<String> result = spec.stream().content().toStream();
+
+			if (result == null) {
+				sr.addChunk("Failed to generate response.");
+				sr.markComplete();
+				return;
+			}
+
+			result.forEach(chunk -> {
+				sr.addChunk(chunk);
+			});
+
 			sr.markComplete();
-			return;
+			results.remove(request.getQuery().getConversationId());
+
+		} catch (Exception e) {
+			if (results.containsKey(request.getQuery().getConversationId())) {
+				logger.warn("Caught exception while attempting to stream response: ", e);
+				StreamResult sr = (StreamResult) results.get(request.getQuery().getConversationId());
+				sr.addChunk("Failed to generate response.");
+				sr.markComplete();
+				return;
+			}
 		}
 
-		result = spec.stream().content().toStream();
-
-		if (result == null) {
-			sr.addChunk("Failed to generate response.");
-			sr.markComplete();
-			return;
-		}
-
-		result.forEach(chunk -> {
-			sr.addChunk(chunk);
-		});
-
-		sr.markComplete();
-		results.remove(request.getQuery().getConversationId());
 	}
 
 	private ChatClientRequestSpec prepareFromQuery(User user, AssistantQuery query) {
@@ -246,9 +259,8 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 
 		String model = assistant.model();
 
-		OllamaChatModel chatModel = OllamaChatModel.builder().ollamaApi(ollamaApi)
-				.defaultOptions(OllamaOptions.builder().model(model).temperature(assistant.temperature()).build())
-				.build();
+		OllamaChatModel chatModel = OllamaChatModel.builder().ollamaApi(ollamaApi).defaultOptions(OllamaOptions
+				.builder().model(model).temperature(assistant.temperature()).topK(assistant.topK()).build()).build();
 
 		List<Advisor> advisors = new ArrayList<>();
 
@@ -267,7 +279,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			if (documentList.length() > 0) {
 				searchRequestBuilder = searchRequestBuilder.filterExpression(" documentId IN " + documentList);
 			}
-			SearchRequest searchRequest = searchRequestBuilder.topK(maxResults).build();
+			SearchRequest searchRequest = searchRequestBuilder.topK(assistant.topK()).build();
 
 			Advisor ragAdvisor = QuestionAnswerAdvisor.builder(vectorStore).searchRequest(searchRequest).build();
 			advisors.add(ragAdvisor);

@@ -15,6 +15,8 @@ public interface DocumentService {
 
 	void markDocumentComplete(MintyDoc doc);
 
+	void markDocumentFailed(MintyDoc doc);
+
 	List<MintyDoc> listDocuments();
 
 	boolean documentExists(MintyDoc document);

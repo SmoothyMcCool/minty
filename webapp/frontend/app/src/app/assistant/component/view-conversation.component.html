@@ -1,10 +1,10 @@
-<div [ngClass]="{ 'bg-image img-assistant': user.displayMode === DisplayMode.Fun }">
+<div [ngClass]="{ 'bg-image img-assistant': user?.displayMode === DisplayMode.Fun }">
 	<div class="container">
 		<h1>{{assistant.name}}</h1>
 		<div class="row mb-2">
 			<div class="col-2">
-				<h2 class="row">Prompt</h2>
-				<div class="row" *ngIf="!assistant.hasMemory">
+				<h2>Prompt</h2>
+				<div *ngIf="!assistant.hasMemory">
 					<i class="bi bi-exclamation-triangle">
 						This assistant has no conversation history!
 						It will only respond to the last message you send,
@@ -19,15 +19,17 @@
 			</div>
 		</div>
 		<div class="row mb-2 form-floating">
-			<textarea style="height: 100px;" class="form-control" id="aiQuery" name="aiQuery" [(ngModel)]="userText"></textarea>
-			<label class="ms-3" for="aiQuery">Put your input here</label>
+			<div class="col">
+				<textarea style="height: 100px;" class="form-control" id="aiQuery" name="aiQuery" [(ngModel)]="userText"></textarea>
+				<label class="ms-3" for="aiQuery">Put your input here</label>
+			</div>
 		</div>
 		<div class="row mb-2">
 			<div class="col me-auto">
 				<button class="btn btn-primary mb-2" (click)="submit(userText)" [disabled]="!userText || waitingForResponse">Okey Dokey</button>
 			</div>
 			<div class="col-auto">
-				<button class="btn btn-primary" (click)="restart()">Start over</button>
+				<button class="btn btn-danger" (click)="restartConversation()">Start over</button>
 			</div>
 		</div>
 		<div class="overflow-auto">
@@ -35,3 +37,9 @@
 		</div>
 	</div>
 </div>
+
+<minty-confirmation-dialog [title]="'Restart Conversation'"
+	[message]="'Are you sure you want to start over? You conversation history will be irretrievably lost.'" [visible]="confirmRestartConversationVisible"
+	(confirm)="confirmRestartConversation()"
+	(cancel)="confirmRestartConversationVisible = false">
+</minty-confirmation-dialog>

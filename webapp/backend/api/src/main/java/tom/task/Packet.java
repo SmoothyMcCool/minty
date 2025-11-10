@@ -1,18 +1,24 @@
 package tom.task;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
 public class Packet {
 
 	private String id;
 	private String text;
-	private Map<String, Object> data;
+	private List<Map<String, Object>> data;
 
 	public Packet() {
 		id = "";
 		text = "";
-		data = Map.of();
+		data = new ArrayList<>();
 	}
 
 	public String getId() {
@@ -31,12 +37,23 @@ public class Packet {
 		this.text = text;
 	}
 
-	public Map<String, Object> getData() {
+	public List<Map<String, Object>> getDataList() {
 		return data;
 	}
 
-	public void setData(Map<String, Object> data) {
+	public Map<String, Object> getData() {
+		if (data.size() > 0) {
+			return data.get(0);
+		}
+		return null;
+	}
+
+	public void setData(List<Map<String, Object>> data) {
 		this.data = data;
+	}
+
+	public void addData(Map<String, Object> data) {
+		this.data.add(data);
 	}
 
 	public Map<String, Object> toMap() {
@@ -53,6 +70,16 @@ public class Packet {
 
 	@Override
 	public String toString() {
-		return "Packet [id=" + id + ", text=" + text + ", data=" + data + "]";
+		String dataStr;
+		try {
+			dataStr = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT).writeValueAsString(data);
+		} catch (JsonProcessingException e) {
+			dataStr = "<<Failed to stringify data>>";
+		}
+		return "Packet [id=" + id + ", text=" + text + ", data=" + dataStr + "]";
+	}
+
+	public void addDataList(List<Map<String, Object>> dataList) {
+		data.addAll(dataList);
 	}
 }

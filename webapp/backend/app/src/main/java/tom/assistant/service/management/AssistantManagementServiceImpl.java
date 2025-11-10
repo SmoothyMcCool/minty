@@ -14,6 +14,7 @@ import tom.api.AssistantId;
 import tom.api.DocumentId;
 import tom.api.UserId;
 import tom.api.services.assistant.AssistantManagementService;
+import tom.api.services.assistant.AssistantRegistryService;
 import tom.assistant.repository.AssistantRepository;
 import tom.config.ExternalProperties;
 import tom.conversation.service.ConversationServiceInternal;
@@ -28,15 +29,18 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 
 	private final AssistantRepository assistantRepository;
 	private final AssistantDocumentLinkService assistantDocumentLinkService;
+	private final AssistantRegistryService assistantRegistryService;
 	private ConversationServiceInternal conversationService;
 	private final OllamaService ollamaService;
 	private final ExternalProperties properties;
 
 	public AssistantManagementServiceImpl(AssistantRepository assistantRepository,
-			AssistantDocumentLinkService assistantDocumentLinkService, OllamaService ollamaService,
+			AssistantDocumentLinkService assistantDocumentLinkService,
+			AssistantRegistryService assistantRegistryService, OllamaService ollamaService,
 			ExternalProperties properties) {
 		this.assistantRepository = assistantRepository;
 		this.assistantDocumentLinkService = assistantDocumentLinkService;
+		this.assistantRegistryService = assistantRegistryService;
 		this.ollamaService = ollamaService;
 		this.properties = properties;
 	}
@@ -102,11 +106,12 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 	@Transactional
 	public Assistant findAssistant(UserId userId, AssistantId assistantId) {
 		if (assistantId.equals(AssistantManagementService.DefaultAssistantId)) {
-			return Assistant.CreateDefaultAssistant(ollamaService.getDefaultModel().toString());
+			return assistantRegistryService.createDefaultAssistant(ollamaService.getDefaultModel().toString());
 		} else if (assistantId.equals(AssistantManagementService.ConversationNamingAssistantId)) {
-			return Assistant.CreateConversationNamingAssistant(properties.get("conversationNamingModel"));
+			return assistantRegistryService
+					.createConversationNamingAssistant(properties.get("conversationNamingModel"));
 		} else if (assistantId.equals(AssistantManagementService.DiagrammingAssistantId)) {
-			return Assistant.CreateDiagrammingAssistant(properties.get("diagrammingModel"));
+			return assistantRegistryService.createDiagrammingAssistant(properties.get("diagrammingModel"));
 		}
 
 		try {

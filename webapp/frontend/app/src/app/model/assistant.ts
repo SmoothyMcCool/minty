@@ -4,7 +4,7 @@ export interface Assistant {
 	prompt: string;
 	model: string;
 	temperature: number;
-	numFiles: number;
+	topK: number;
 	ownerId: string;
 	shared: boolean;
 	hasMemory: boolean;

@@ -10,24 +10,22 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.core.task.AsyncTaskExecutor;
 
 import tom.api.UserId;
 import tom.task.OutputTask;
 import tom.task.TaskSpec;
-import tom.task.taskregistry.TaskRegistryService;
 import tom.util.StackTraceUtilities;
+import tom.workflow.model.Connection;
+import tom.workflow.model.TaskRequest;
 import tom.workflow.model.Workflow;
+import tom.workflow.taskregistry.TaskRegistryService;
 import tom.workflow.tracking.model.WorkflowExecution;
 import tom.workflow.tracking.service.WorkflowTrackingService;
 
 public class WorkflowRunner {
 
 	private static final ExecutorService Executor = Executors.newVirtualThreadPerTaskExecutor();
-
-	private final Logger logger = LogManager.getLogger(WorkflowRunner.class);
 
 	private final TaskRegistryService taskRegistryService;
 	private final WorkflowTrackingService workflowTrackingService;
@@ -36,10 +34,12 @@ public class WorkflowRunner {
 	private boolean workflowComplete;
 	private UserId userId;
 	private WorkflowExecution executionState;
+	private WorkflowLoggerImpl logger;
+	private String logFolder;
 
-	public WorkflowRunner(UserId userId, Workflow workflow,
-			TaskRegistryService taskRegistryService, WorkflowTrackingService workflowTrackingService,
-			AsyncTaskExecutor taskExecutor) {
+	public WorkflowRunner(UserId userId, Workflow workflow, TaskRegistryService taskRegistryService,
+			WorkflowTrackingService workflowTrackingService, AsyncTaskExecutor taskExecutor,
+			String workflowLoggingFolder) {
 		workflowComplete = false;
 		this.userId = userId;
 		this.workflow = workflow;
@@ -47,6 +47,7 @@ public class WorkflowRunner {
 		this.workflowTrackingService = workflowTrackingService;
 		this.taskExecutor = taskExecutor;
 		this.executionState = null;
+		logFolder = workflowLoggingFolder;
 	}
 
 	public WorkflowExecution getExecutionState() {
@@ -82,6 +83,7 @@ public class WorkflowRunner {
 		} finally {
 			executionState.setName(getWorkflowName());
 			workflowTrackingService.workflowCompleted(this);
+			logger.close();
 		}
 	}
 
@@ -97,77 +99,89 @@ public class WorkflowRunner {
 		executionState.setOwnerId(userId);
 		executionState.getResult().start();
 
-		// Instantiate all our connectors;
-		List<ImmutablePair<Connection, Connector>> connectors = new ArrayList<>();
-		for (int i = 0; i < workflow.getConnections().size(); i++) {
-			connectors.add(ImmutablePair.of(workflow.getConnections().get(i), new Connector()));
-		}
+		String logFile = getWorkflowName() + ".log";
+		logger = new WorkflowLoggerImpl(logFolder, logFile);
+		logFile = logger.getFileName();
+		executionState.getResult().setLogFile(logFile);
 
-		for (TaskRequest request : workflow.getSteps()) {
+		try {
+			// Instantiate all our connectors;
+			List<ImmutablePair<Connection, Connector>> connectors = new ArrayList<>();
+			for (int i = 0; i < workflow.getConnections().size(); i++) {
+				connectors.add(ImmutablePair.of(workflow.getConnections().get(i), new Connector()));
+			}
 
-			TaskRunner runner = new TaskRunner(userId, taskRegistryService, request, taskExecutor);
-			executionState.addStep(request.getStepName());
+			for (TaskRequest request : workflow.getSteps()) {
 
-			// Fetch and store the state now, so we can get live updates as the workflow
-			// progresses.
-			executionState.getState().getStepStates().put(request.getStepName(), runner.getState());
+				TaskRunner runner = new TaskRunner(userId, taskRegistryService, request, taskExecutor, logger);
+				executionState.addStep(request.getStepName());
 
-			List<Connector> inputs = connectors.stream().filter((item) -> {
-				return item.left.getReaderId().equals(request.getId());
-			}).sorted((first, second) -> {
-				return first.left.getReaderPort() - second.left.getReaderPort();
-			}).map(item -> item.right).toList();
-			runner.setInputConnectors(inputs);
+				// Fetch and store the state now, so we can get live updates as the workflow
+				// progresses.
+				executionState.getState().getStepStates().put(request.getStepName(), runner.getState());
 
-			List<Connector> outputs = connectors.stream().filter((item) -> {
-				return item.left.getWriterId().equals(request.getId());
-			}).sorted((first, second) -> {
-				return first.left.getWriterPort() - second.left.getWriterPort();
-			}).collect(Collectors.collectingAndThen(Collectors.toList(), list -> {
+				List<Connector> inputs = connectors.stream().filter((item) -> {
+					return item.left.getReaderId().equals(request.getId());
+				}).sorted((first, second) -> {
+					return first.left.getReaderPort() - second.left.getReaderPort();
+				}).map(item -> item.right).toList();
+				runner.setInputConnectors(inputs);
 
-				TaskSpec spec = taskRegistryService.getSpecForTask(request.getTaskName());
-				if (spec == null) {
-					throw new RuntimeException("Invalid task specified! " + request.getTaskName());
-				}
+				List<Connector> outputs = connectors.stream().filter((item) -> {
+					return item.left.getWriterId().equals(request.getId());
+				}).sorted((first, second) -> {
+					return first.left.getWriterPort() - second.left.getWriterPort();
+				}).collect(Collectors.collectingAndThen(Collectors.toList(), list -> {
 
-				List<Connector> connectorList = new ArrayList<>(
-						Collections.nCopies(spec.numOutputs(), new NullConnector()));
-
-				for (ImmutablePair<Connection, Connector> c : list) {
-					connectorList.set(c.left.getWriterPort(), c.right);
-				}
-
-				return connectorList;
-			}));
-
-			runner.setOutputConnectors(outputs);
-
-			CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> {
-				try {
-					runner.run();
-					executionState.getResult().getErrors().put(runner.getName(), runner.getErrors());
-					executionState.getResult().getResults().put(runner.getName(), runner.getResults());
-
-					if (runner.failed()) {
-						throw new RuntimeException("Runner " + runner.getName() + " failed.");
+					TaskSpec spec = taskRegistryService.getSpecForTask(request.getTaskName());
+					if (spec == null) {
+						throw new RuntimeException("Invalid task specified! " + request.getTaskName());
 					}
 
-				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
-				}
-				return null;
-			}, Executor);
+					List<Connector> connectorList = new ArrayList<>(
+							Collections.nCopies(spec.numOutputs(), new NullConnector()));
 
-			tasks.add(future);
-		}
+					for (ImmutablePair<Connection, Connector> c : list) {
+						connectorList.set(c.left.getWriterPort(), c.right);
+					}
 
-		CompletableFuture<Void> allDone = allOfFailFast(tasks);
-		allDone.whenComplete((r, ex) -> {
-			if (ex != null) {
-				logger.warn("A task failed with exception: ", ex);
+					return connectorList;
+				}));
+
+				runner.setOutputConnectors(outputs);
+
+				CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> {
+					try {
+						runner.run();
+						executionState.getResult().getErrors().put(runner.getName(), runner.getErrors());
+						executionState.getResult().getResults().put(runner.getName(), runner.getResults());
+
+						if (runner.failed()) {
+							throw new WorkflowRunnerException("Runner " + runner.getName() + " failed.");
+						}
+
+					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
+					} catch (Exception e) {
+						throw new WorkflowRunnerException("Runner " + runner.getName() + " failed.", e);
+					}
+					return null;
+				}, Executor);
+
+				tasks.add(future);
 			}
-			workflowComplete();
-		});
+
+			CompletableFuture<Void> allDone = allOfFailFast(tasks);
+			allDone.whenComplete((r, ex) -> {
+				if (ex != null) {
+					logger.warn("A task failed with exception: ", ex);
+				}
+				workflowComplete();
+			});
+		} catch (Exception e) {
+			logger.warn("Workflow failed with exception: ", e);
+			logger.close();
+		}
 
 	}
 
@@ -175,13 +189,13 @@ public class WorkflowRunner {
 		return userId;
 	}
 
-	private static <T> CompletableFuture<Void> allOfFailFast(
-			Collection<? extends CompletableFuture<? extends T>> futures) {
+	private <T> CompletableFuture<Void> allOfFailFast(Collection<? extends CompletableFuture<? extends T>> futures) {
 		CompletableFuture<Void> failFast = new CompletableFuture<>();
 
 		for (CompletableFuture<? extends T> f : futures) {
 			f.whenComplete((r, ex) -> {
 				if (ex != null) {
+					logger.warn("Future ended with exception!", ex);
 					failFast.completeExceptionally(ex);
 				}
 			});

@@ -1,0 +1,51 @@
+assistants:
+    - name: Default
+      model: gpt-oss:20b
+      temperature: 0.7
+      topK: 5
+      shared: false
+      hasMemory: true
+      prompt: ""
+
+    - name: Conversation Naming Bot
+      model: gpt-oss:20b
+      temperature: 0.7
+      topK: 5
+      shared: false
+      hasMemory: false
+      prompt: |
+           You are not allowed to answer any questions from the conversation.
+           Your ONLY job is to summarize it in at most 50 characters.
+           Respond with only the summary, at most 50 characters in length.
+           Do not add punctuation unless it is part of the conversation."
+           Do not add extra words like "Summary:" or explanations." + "Conversation:
+
+
+
+    - name: Diagramming Bot
+      model: gpt-oss:20b
+      temperature: 0.7
+      topK: 5
+      shared: false
+      hasMemory: true
+      prompt: |
+           You are an expert in creating and refining Mermaid.js diagrams.
+
+           Workflow:
+           1. When given a request, first determine if it is clear enough to produce a correct diagram.
+           2. If it is unclear, ask concise clarifying questions to gather the missing details.
+           3. Once enough information is provided, generate or refine the Mermaid diagram.
+           4. If an existing diagram is provided, modify it according to the clarified instructions.
+
+           Diagram Rules:
+           - Pick the most appropriate Mermaid diagram type (flowchart, sequence, class, state, ER, etc.).
+           - Ensure syntax is valid and will render without changes.
+           - Do not use parenthesis in the diagrams.
+           - Keep labels concise and the diagram visually balanced.\n" + "\n" + "Output Format:
+           - If clarification is needed: output only the questions, nothing else.
+           - If ready to generate: output only the Markdown Mermaid code block.
+           - Do not include any commentary, explanations, or HTML.
+
+           Input:
+
+

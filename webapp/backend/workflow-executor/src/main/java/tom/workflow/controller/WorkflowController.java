@@ -24,12 +24,12 @@ import tom.controller.ResponseWrapper;
 import tom.meta.service.MetadataService;
 import tom.model.security.UserDetailsUser;
 import tom.task.enumspec.EnumSpec;
-import tom.task.taskregistry.TaskRegistryService;
 import tom.workflow.model.OutputTaskSpecDescription;
 import tom.workflow.model.ResultTemplate;
 import tom.workflow.model.TaskSpecDescription;
 import tom.workflow.model.Workflow;
 import tom.workflow.service.WorkflowService;
+import tom.workflow.taskregistry.TaskRegistryService;
 
 @Controller
 @RequestMapping("/api/workflow")

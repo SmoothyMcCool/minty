@@ -25,11 +25,11 @@ import tom.ApiException;
 import tom.controller.ResponseWrapper;
 import tom.meta.service.MetadataService;
 import tom.model.security.UserDetailsUser;
-import tom.task.taskregistry.TaskRegistryService;
 import tom.user.model.User;
 import tom.user.repository.EncryptedUser;
 import tom.user.repository.UserRepository;
 import tom.user.service.UserServiceInternal;
+import tom.workflow.taskregistry.TaskRegistryService;
 
 @RestController
 @RequestMapping("/api/user")

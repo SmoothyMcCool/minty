@@ -128,8 +128,24 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 
 		ChatMemory chatMemory = ollamaService.getChatMemory();
 
-		chatMemory.clear(conversationId.toString());
+		chatMemory.clear(conversationId.value().toString());
 		conversationRepository.deleteById(conversationId.value());
+
+		return true;
+	}
+
+	@Override
+	@Transactional
+	public boolean resetConversation(UserId userId, ConversationId conversationId) {
+		Optional<ConversationEntity> conversation = conversationRepository.findById(conversationId.value());
+		if (conversation.isPresent() && !conversation.get().getOwnerId().equals(userId)) {
+			logger.warn("Conversation " + conversationId + " not owned by " + userId);
+			return false;
+		}
+
+		ChatMemory chatMemory = ollamaService.getChatMemory();
+
+		chatMemory.clear(conversationId.value().toString());
 
 		return true;
 	}

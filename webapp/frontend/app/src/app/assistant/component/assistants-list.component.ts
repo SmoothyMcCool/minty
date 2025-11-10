@@ -31,7 +31,7 @@ export class AssistantsListComponent implements OnInit {
 		prompt: '',
 		model: '',
 		temperature: 0,
-		numFiles: 0,
+		topK: 5,
 		ownerId: '',
 		shared: false,
 		hasMemory: false,

@@ -14,6 +14,7 @@ import tom.api.ConversationId;
 import tom.api.services.UserService;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
+import tom.api.services.assistant.AssistantRegistryService;
 import tom.api.services.assistant.ConversationInUseException;
 import tom.api.services.assistant.QueueFullException;
 import tom.api.services.assistant.StringResult;
@@ -21,7 +22,6 @@ import tom.config.ExternalProperties;
 import tom.conversation.model.Conversation;
 import tom.conversation.model.ConversationEntity;
 import tom.conversation.repository.ConversationRepository;
-import tom.model.Assistant;
 import tom.model.AssistantQuery;
 import tom.ollama.service.OllamaService;
 
@@ -34,14 +34,17 @@ public class ConversationNamingService {
 
 	private final ConversationRepository conversationRepository;
 	private final AssistantQueryService assistantQueryService;
+	private final AssistantRegistryService assistantRegistryService;
 	private final OllamaService ollamaService;
 	private final ConversationServiceInternal conversationService;
 
 	public ConversationNamingService(ConversationRepository conversationRepository,
-			AssistantQueryService assistantQueryService, ConversationServiceInternal conversationService,
-			OllamaService ollamaService, ExternalProperties properties) {
+			AssistantQueryService assistantQueryService, AssistantRegistryService assistantRegistryService,
+			ConversationServiceInternal conversationService, OllamaService ollamaService,
+			ExternalProperties properties) {
 		this.conversationRepository = conversationRepository;
 		this.assistantQueryService = assistantQueryService;
+		this.assistantRegistryService = assistantRegistryService;
 		this.ollamaService = ollamaService;
 		this.conversationService = conversationService;
 		conversationNamingModel = properties.get("conversationNamingModel");
@@ -50,7 +53,7 @@ public class ConversationNamingService {
 	@Scheduled(fixedDelay = 5000)
 	@Transactional
 	void nameConversations() {
-		Assistant.CreateConversationNamingAssistant(conversationNamingModel);
+		assistantRegistryService.createConversationNamingAssistant(conversationNamingModel);
 		List<ConversationEntity> conversations = conversationRepository.findAllByTitle(null);
 
 		// Ignore all conversations internal to workflows.

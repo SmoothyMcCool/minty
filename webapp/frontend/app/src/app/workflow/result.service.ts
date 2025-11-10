@@ -24,7 +24,7 @@ export class ResultService {
 
 	private static readonly GetWorkflowResultList = 'api/result/list';
 	private static readonly GetWorkflowResult = 'api/result';
-	private static readonly GetWorkflowOutput = 'api/result/output';
+	private static readonly GetWorkflowLog = 'api/result/log';
 	private static readonly DeleteWorkflowResult = 'api/result';
 
 	constructor(private http: HttpClient, private alertService: AlertService) {
@@ -86,6 +86,22 @@ export class ResultService {
 			);
 	}
 
+	getWorkflowLog(workflowId: string): Observable<string> {
+		let params: HttpParams = new HttpParams();
+		params = params.append('workflowId', workflowId);
+
+		return this.http.get<ApiResult>(ResultService.GetWorkflowLog, { params: params })
+			.pipe(
+				catchError(error => {
+					this.alertService.postFailure(JSON.stringify(error));
+					return EMPTY;
+				}),
+				map((result: ApiResult) => {
+					return result.data as string;
+				})
+			);
+	}
+
 	openWorkflowOutput(workflowId: string) {
 		this.getWorkflowResult(workflowId).subscribe(result => {
 			const blob = new Blob([result.output], { type: result.outputFormat });
@@ -102,6 +118,21 @@ export class ResultService {
 			const link = document.createElement('a');
 			link.href = url;
 			link.download = result.name + '.' + ResultService.mimeToExtension[result.outputFormat];
+			link.style.display = 'none';
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			window.URL.revokeObjectURL(url);
+		});
+	}
+
+	downloadWorkflowLog(workflowId: string) {
+		this.getWorkflowLog(workflowId).subscribe(result => {
+			const blob = new Blob([result], { type: 'text/plain' });
+			const url = URL.createObjectURL(blob);
+			const link = document.createElement('a');
+			link.href = url;
+			link.download = workflowId + '.txt';
 			link.style.display = 'none';
 			document.body.appendChild(link);
 			link.click();

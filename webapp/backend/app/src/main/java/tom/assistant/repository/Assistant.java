@@ -23,6 +23,7 @@ public class Assistant {
 	private String prompt;
 	private String model;
 	private Double temperature;
+	private Integer topK;
 	private UserId ownerId;
 	private boolean shared;
 	private boolean hasMemory;
@@ -38,6 +39,7 @@ public class Assistant {
 		this.prompt = assistant.prompt();
 		this.model = assistant.model();
 		this.temperature = assistant.temperature();
+		this.topK = assistant.topK();
 		this.ownerId = assistant.ownerId();
 		this.shared = assistant.shared();
 		this.hasMemory = assistant.hasMemory();
@@ -45,7 +47,7 @@ public class Assistant {
 	}
 
 	public tom.model.Assistant toTaskAssistant() {
-		return new tom.model.Assistant(new AssistantId(id), name, model.toString(), temperature, prompt,
+		return new tom.model.Assistant(new AssistantId(id), name, model.toString(), temperature, topK, prompt,
 				associatedDocumentIds, ownerId, shared, hasMemory);
 	}
 
@@ -54,6 +56,7 @@ public class Assistant {
 		setPrompt(assistant.prompt());
 		setModel(assistant.model());
 		setTemperature(assistant.temperature());
+		setTopK(assistant.topK());
 		setShared(assistant.shared());
 		setHasMemory(assistant.hasMemory());
 		setAssociatedDocuments(assistant.documentIds());
@@ -98,6 +101,14 @@ public class Assistant {
 
 	public void setTemperature(Double temperature) {
 		this.temperature = temperature;
+	}
+
+	public Integer getTopK() {
+		return topK;
+	}
+
+	public void setTopK(Integer topK) {
+		this.topK = topK;
 	}
 
 	public UserId getOwnerId() {
