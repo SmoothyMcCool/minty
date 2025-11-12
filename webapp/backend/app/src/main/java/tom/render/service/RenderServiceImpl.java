@@ -23,7 +23,6 @@ import tom.api.services.RenderService;
 import tom.config.ExternalProperties;
 import tom.task.ExecutionResult;
 import tom.task.Packet;
-import tom.workflow.model.ResultTemplate;
 import tom.workflow.service.WorkflowService;
 
 @Service
@@ -73,13 +72,8 @@ public class RenderServiceImpl implements RenderService {
 
 		try (StringWriter writer = new StringWriter()) {
 
-			ResultTemplate resultTemplate = workflowService.getResultTemplate(template);
-			if (resultTemplate == null) {
-				throw new NullPointerException("resultTemplate is null!");
-			}
-
 			tempFilePath = Files.createTempFile(Paths.get(tempFolder), "pug-" + UUID.randomUUID(), ".pug");
-			Files.write(tempFilePath, resultTemplate.getContent().getBytes(StandardCharsets.UTF_8));
+			Files.write(tempFilePath, template.getBytes(StandardCharsets.UTF_8));
 
 			PugTemplate pugTemplate = pugConfiguration.getTemplate(tempFilePath.toString());
 

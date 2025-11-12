@@ -58,7 +58,7 @@ public class RenderPugTemplate implements OutputTask, ServiceConsumer {
 
 			@Override
 			public String taskName() {
-				return "Render Pug HTML Template";
+				return "Render Pug Template";
 			}
 
 		};

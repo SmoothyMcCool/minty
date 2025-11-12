@@ -1,146 +1,148 @@
-<h2 class="text-secondary">Runnable Workflows</h2>
-<div class="row">
-	<div class="col-4" *ngFor="let workflow of workflows">
-		<div class="card">
-			<div class="card-body">
-				<div class="position-absolute top-0 end-0">
-					<button
-						*ngIf="isOwned(workflow)"
-						class="btn btn-sm"
-						style="font-size: 14px;"
-						(click)="duplicateWorkflow(workflow.id)">
-						<i class="bi bi-copy"></i>
-					</button>
-					<button
-						*ngIf="isOwned(workflow)"
-						class="btn btn-sm"
-						style="font-size: 14px;"
-						(click)="editWorkflow(workflow.id)">
-						<i class="bi bi-pencil-square"></i>
-					</button>
-					<button *ngIf="isOwned(workflow)"
-						type="button"
-						class="btn btn-sm"
-						style="font-size: 14px; color: red;"
-						(click)="deleteWorkflow(workflow)">
-						<i class="bi bi-trash3"></i>
-					</button>
+<div class="container">
+	<h2 class="text-secondary">Runnable Workflows</h2>
+	<div class="row">
+		<div class="col-4" *ngFor="let workflow of workflows">
+			<div class="card">
+				<div class="card-body">
+					<div class="position-absolute top-0 end-0">
+						<button
+							*ngIf="isOwned(workflow)"
+							class="btn btn-sm"
+							style="font-size: 14px;"
+							(click)="duplicateWorkflow(workflow.id)">
+							<i class="bi bi-copy"></i>
+						</button>
+						<button
+							*ngIf="isOwned(workflow)"
+							class="btn btn-sm"
+							style="font-size: 14px;"
+							(click)="editWorkflow(workflow.id)">
+							<i class="bi bi-pencil-square"></i>
+						</button>
+						<button *ngIf="isOwned(workflow)"
+							type="button"
+							class="btn btn-sm"
+							style="font-size: 14px; color: red;"
+							(click)="deleteWorkflow(workflow)">
+							<i class="bi bi-trash3"></i>
+						</button>
+					</div>
+					<h5 class="card-title">{{workflow.name}}</h5>
+					<p class="card-text">{{workflow.description}}</p>
+					<button class="btn btn-primary" (click)="navigateToWorkflow(workflow.id)">Low-key stoked!</button>
 				</div>
-				<h5 class="card-title">{{workflow.name}}</h5>
-				<p class="card-text">{{workflow.description}}</p>
-				<button class="btn btn-primary" (click)="navigateToWorkflow(workflow.id)">Low-key stoked!</button>
 			</div>
 		</div>
 	</div>
-</div>
-<div class="row">
-	<div class="col-4" *ngFor="let workflow of branchingWorkflows">
-		<div class="card">
-			<div class="card-body">
-				<div class="position-absolute top-0 end-0">
-					<button
-						*ngIf="isOwned(workflow)"
-						class="btn btn-sm"
-						style="font-size: 14px;"
-						(click)="duplicateWorkflow(workflow.id)">
-						<i class="bi bi-copy"></i>
-					</button>
-					<button
-						*ngIf="isOwned(workflow)"
-						class="btn btn-sm"
-						style="font-size: 14px;"
-						(click)="editWorkflow(workflow.id)">
-						<i class="bi bi-pencil-square"></i>
-					</button>
-					<button *ngIf="isOwned(workflow)"
-						type="button"
-						class="btn btn-sm"
-						style="font-size: 14px; color: red;"
-						(click)="deleteWorkflow(workflow)">
-						<i class="bi bi-trash3"></i>
-					</button>
+	<div class="row">
+		<div class="col-4" *ngFor="let workflow of branchingWorkflows">
+			<div class="card">
+				<div class="card-body">
+					<div class="position-absolute top-0 end-0">
+						<button
+							*ngIf="isOwned(workflow)"
+							class="btn btn-sm"
+							style="font-size: 14px;"
+							(click)="duplicateWorkflow(workflow.id)">
+							<i class="bi bi-copy"></i>
+						</button>
+						<button
+							*ngIf="isOwned(workflow)"
+							class="btn btn-sm"
+							style="font-size: 14px;"
+							(click)="editWorkflow(workflow.id)">
+							<i class="bi bi-pencil-square"></i>
+						</button>
+						<button *ngIf="isOwned(workflow)"
+							type="button"
+							class="btn btn-sm"
+							style="font-size: 14px; color: red;"
+							(click)="deleteWorkflow(workflow)">
+							<i class="bi bi-trash3"></i>
+						</button>
+					</div>
+					<h5 class="card-title">{{workflow.name}}</h5>
+					<p class="card-text">{{workflow.description}}</p>
+					<button class="btn btn-primary" (click)="editBranchingWorkflow(workflow.id)">Edut!</button>
+					<button class="btn btn-primary" (click)="runBranchingWorkflow(workflow)">OMG MAYBE????</button>
 				</div>
-				<h5 class="card-title">{{workflow.name}}</h5>
-				<p class="card-text">{{workflow.description}}</p>
-				<button class="btn btn-primary" (click)="editBranchingWorkflow(workflow.id)">Edut!</button>
-				<button class="btn btn-primary" (click)="runBranchingWorkflow(workflow)">OMG MAYBE????</button>
 			</div>
 		</div>
 	</div>
-</div>
 
-<div class="row well p-2 mx-1 my-2" style="overflow: hidden;">
-	<div class="col">
-		This list refreshes every five seconds.
-		<ul class="list-group">
-			<li class="list-group-item list-group-item-action position-relative text-bg-light bg-opacity-75" *ngFor="let result of results">
-				<div class="d-flex align-items-center h-100">
-					<!-- If the ID is null, the task is still in progress-->
-					<span
-						class="text-truncate clickable-text"
-						(click)="result.id && displayResultsFor(result)">
-						{{result.name}}
-					</span>
-					<button
-						type="button"
-						*ngIf="result.id"
-						class="btn btn-sm ms-1 pe-3"
-						style="font-size: 20px"
-						(click)="downloadResultsFor(result)">
-						<i class="bi bi-download"></i>
-					</button>
-					<button
-						type="button"
-						*ngIf="result.id"
-						class="btn btn-sm ms-1 pe-3"
-						style="font-size: 20px"
-						(click)="downloadLogsFor(result)">
-						<i class="bi bi-file-earmark-text"></i>
-					</button>
-					<span class="flex-grow-1"></span>
-					<button
-						type="button"
-						class="btn btn-sm pe-3"
-						style="font-size: 20px; color: saddlebrown;"
-						(click)="displayProgress(result)">
-						<i class="bi bi-pie-chart-fill"></i>
-					</button>
-					<span *ngIf="!result.id" class="badge text-bg-secondary mx-2">Result Not Ready</span>
-					<button
-						type="button"
-						class="btn btn-sm p-0"
-						style="font-size: 20px; color: red;"
-						(click)="result.id && deleteResult($event, result)">
-						<i class="bi bi-trash3"></i>
-					</button>
+	<div class="row well p-2 mx-1 my-2" style="overflow: hidden;">
+		<div class="col">
+			This list refreshes every five seconds.
+			<ul class="list-group">
+				<li class="list-group-item list-group-item-action position-relative text-bg-light bg-opacity-75" *ngFor="let result of results">
+					<div class="d-flex align-items-center h-100">
+						<!-- If the ID is null, the task is still in progress-->
+						<span
+							class="text-truncate clickable-text"
+							(click)="result.id && displayResultsFor(result)">
+							{{result.name}}
+						</span>
+						<button
+							type="button"
+							*ngIf="result.id"
+							class="btn btn-sm ms-1 pe-3"
+							style="font-size: 20px"
+							(click)="downloadResultsFor(result)">
+							<i class="bi bi-download"></i>
+						</button>
+						<button
+							type="button"
+							*ngIf="result.id"
+							class="btn btn-sm ms-1 pe-3"
+							style="font-size: 20px"
+							(click)="downloadLogsFor(result)">
+							<i class="bi bi-file-earmark-text"></i>
+						</button>
+						<span class="flex-grow-1"></span>
+						<button
+							type="button"
+							class="btn btn-sm pe-3"
+							style="font-size: 20px; color: saddlebrown;"
+							(click)="displayProgress(result)">
+							<i class="bi bi-pie-chart-fill"></i>
+						</button>
+						<span *ngIf="!result.id" class="badge text-bg-secondary mx-2">Result Not Ready</span>
+						<button
+							type="button"
+							class="btn btn-sm p-0"
+							style="font-size: 20px; color: red;"
+							(click)="result.id && deleteResult($event, result)">
+							<i class="bi bi-trash3"></i>
+						</button>
+					</div>
+				</li>
+			</ul>
+		</div>
+		<div class="col" *ngIf="workflowStatus" @slideInOut>
+			<button
+				type="button"
+				class="btn btn-sm pe-3"
+				style="font-size: 20px; color: saddlebrown;"
+				(click)="hideProgress()">
+				<i class="bi bi-box-arrow-left"></i>
+			</button>
+			<i style="font-size: 20px;
+				color: orange;
+				text-shadow: 1px 1px 0 black, -1px -1px 0 black, 1px -1px 0 black, -1px 1px 0 black;"
+				class="bi bi-exclamation-triangle-fill me-2">
+			</i>
+			These numbers don't auto-refresh!
+			<div *ngFor="let stepState of workflowStatus.stepStates | keyvalue">
+				<h5>Step {{stepState.key}}</h5>
+				<div *ngIf="stepState.totalTasks != 0; else notStarted">
+					<p>Total Tasks: {{stepState.value.numTasks}}
+					Completed Tasks: {{stepState.value.completedTasks}}
+					Failed Tasks: {{stepState.value.failedTasks}}</p>
 				</div>
-			</li>
-		</ul>
-	</div>
-	<div class="col" *ngIf="workflowStatus" @slideInOut>
-		<button
-			type="button"
-			class="btn btn-sm pe-3"
-			style="font-size: 20px; color: saddlebrown;"
-			(click)="hideProgress()">
-			<i class="bi bi-box-arrow-left"></i>
-		</button>
-		<i style="font-size: 20px;
-			color: orange;
-			text-shadow: 1px 1px 0 black, -1px -1px 0 black, 1px -1px 0 black, -1px 1px 0 black;"
-			class="bi bi-exclamation-triangle-fill me-2">
-		</i>
-		These numbers don't auto-refresh!
-		<div *ngFor="let stepState of workflowStatus.stepStates | keyvalue">
-			<h5>Step {{stepState.key}}</h5>
-			<div *ngIf="stepState.totalTasks != 0; else notStarted">
-				<p>Total Tasks: {{stepState.value.numTasks}}
-				Completed Tasks: {{stepState.value.completedTasks}}
-				Failed Tasks: {{stepState.value.failedTasks}}</p>
+				<ng-template #notStarted>
+					Step not started yet.
+				</ng-template>
 			</div>
-			<ng-template #notStarted>
-				Step not started yet.
-			</ng-template>
 		</div>
 	</div>
 </div>
@@ -150,6 +152,6 @@
 <minty-confirmation-dialog [title]="'Delete Result'" [message]="'Are you sure you want to delete this result?'"
 	[visible]="confirmResultDeleteVisible" (confirm)="confirmDeleteResult()"
 	(cancel)="confirmResultDeleteVisible = false"></minty-confirmation-dialog>
-<minty-confirmation-dialog [title]="'Delete Result'" [message]="'Are you sure you want to duplicate this workflow?'"
+<minty-confirmation-dialog [title]="'Duplicate Workflow'" [message]="'Are you sure you want to duplicate this workflow?'"
 	[visible]="confirmResultDuplicateWorkflowVisible" (confirm)="confirmDuplicateWorkflow()"
 	(cancel)="confirmResultDuplicateWorkflowVisible = false"></minty-confirmation-dialog>
