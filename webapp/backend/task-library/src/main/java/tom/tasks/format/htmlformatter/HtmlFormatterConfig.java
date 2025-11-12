@@ -21,7 +21,7 @@ public class HtmlFormatterConfig implements TaskConfigSpec {
 	@Override
 	public Map<String, TaskConfigTypes> getConfig() {
 		Map<String, TaskConfigTypes> config = new HashMap<>();
-		config.put("Pug Template", TaskConfigTypes.EnumList);
+		config.put("Pug Template", TaskConfigTypes.TextArea);
 		return config;
 	}
 

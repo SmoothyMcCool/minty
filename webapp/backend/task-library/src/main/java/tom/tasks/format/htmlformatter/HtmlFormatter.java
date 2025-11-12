@@ -23,15 +23,13 @@ public class HtmlFormatter implements MintyTask, ServiceConsumer {
 	private HtmlFormatterConfig config;
 	private Packet input;
 	private TaskServices taskServices;
-	private boolean allInputReceived;
 	private boolean failed;
 	private String error;
 	private Packet result;
 
 	public HtmlFormatter() {
-		input = new Packet();
+		input = null;
 		outputs = null;
-		allInputReceived = false;
 		failed = false;
 		error = null;
 		result = null;
@@ -96,7 +94,7 @@ public class HtmlFormatter implements MintyTask, ServiceConsumer {
 
 	@Override
 	public boolean readyToRun() {
-		return allInputReceived;
+		return input != null;
 	}
 
 	@Override
@@ -148,7 +146,6 @@ public class HtmlFormatter implements MintyTask, ServiceConsumer {
 
 	@Override
 	public void inputTerminated(int i) {
-		allInputReceived = true;
 	}
 
 	@Override

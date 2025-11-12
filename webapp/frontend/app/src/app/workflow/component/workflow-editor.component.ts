@@ -9,10 +9,11 @@ import { FilterPipe } from 'src/app/pipe/filter-pipe';
 import { TaskEditorComponent } from 'src/app/task/component/task-editor.component';
 import { WorkflowService } from '../workflow.service';
 import { EnumList } from 'src/app/model/workflow/enum-list';
+import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
 
 @Component({
 	selector: 'minty-workflow-editor',
-	imports: [CommonModule, DragDropModule, FormsModule, TaskEditorComponent, TaskWidgetComponent, FilterPipe],
+	imports: [CommonModule, DragDropModule, FormsModule, TaskEditorComponent, TaskWidgetComponent, FilterPipe, ConfirmationDialogComponent],
 	templateUrl: 'workflow-editor.component.html',
 	styleUrls: ['workflow.component.css', 'workflow-editor.component.css'],
 	providers: [
@@ -53,6 +54,8 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 	editTask: TaskRequest = undefined;
 	specGroups: string[] = [];
 	enumLists: EnumList[];
+
+	confirmDeleteStepVisible: boolean = false;
 
 	constructor(private workflowService: WorkflowService) {
 	}
@@ -241,14 +244,22 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 		this.editTask = task;
 	}
 
-	doneEditingTask() {
+	doneEditingStep() {
 		this.editTask = null;
 	}
 
-	deleteTask() {
+	deleteStep() {
+		this.confirmDeleteStepVisible = true;
+	}
+
+	confirmDeleteStep() {
 		this.workflow.connections = this.workflow.connections.filter(conn => conn.readerId !== this.editTask.id && conn.writerId != this.editTask.id);
 		this.workflow.steps = this.workflow.steps.filter(step => step.id !== this.editTask.id)
-		this.doneEditingTask();
+		if (this.workflow.outputStep.id === this.editTask.id) {
+			this.workflow.outputStep = null;
+		}
+		this.doneEditingStep();
+
 	}
 
 	onConnectorClicked(c) {
@@ -292,10 +303,14 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 	}
 
 	specFor(task: TaskRequest): TaskSpecification {
-		return this._taskSpecifications.find(spec => spec.taskName === task.taskName);
+		let result = this._taskSpecifications.find(spec => spec.taskName === task.taskName);
+		if (!result) {
+			result = this.outputTaskSpecifications.find(spec => spec.taskName === task.taskName);
+		}
+		return result;
 	}
 
-	onTaskNameChanged(data: {oldId: string, newId: string}) {
+	onStepNameChanged(data: {oldId: string, newId: string}) {
 		this.workflow.connections.forEach(connection => {
 			if (connection.readerId === data.oldId) {
 				connection.readerId = data.newId;
