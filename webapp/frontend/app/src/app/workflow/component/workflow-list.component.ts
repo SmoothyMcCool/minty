@@ -63,8 +63,20 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 			this.user = user;
 
 			this.subscription = this.resultService.workflowResultList$.subscribe((value: WorkflowState[]) => {
-				this.results = value;
+				const map = new Map(value.map(i => [i.id, i]));
+
+				for (const [id, item] of map) {
+					const index = this.results.findIndex(i => i.id === id);
+					if (index !== -1) {
+						this.results[index] = item;
+					} else {
+						this.results.push(item);
+					}
+				}
+
+				this.results = this.results.filter(i => map.has(i.id));
 			});
+
 			this.workflowService.listWorkflows().subscribe((workflows) => {
 				workflows.sort((left, right) => {
 					if (!left.name && !right.name) {

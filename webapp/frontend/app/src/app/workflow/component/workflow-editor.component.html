@@ -93,7 +93,7 @@
 		</svg>
 
 		<!-- Canvas elements -->
-		<minty-task-widget [task]="step" *ngFor="let step of workflow?.steps" cdkDrag cdkDragBoundary=".canvas"
+		<minty-task-widget [task]="step" *ngFor="let step of workflow?.steps ; trackBy: trackStepById" cdkDrag cdkDragBoundary=".canvas"
 			(cdkDragMoved)="onDragMoved($event, step)" (cdkDragEnded)="onDragEnded($event, step)"
 			[cdkDragFreeDragPosition]="{ x: step.layout.x, y: step.layout.y }"
 			[id]="step.stepName"

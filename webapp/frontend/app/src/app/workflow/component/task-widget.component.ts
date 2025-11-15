@@ -13,7 +13,15 @@ import {TaskRequest } from 'src/app/model/workflow/task-specification';
 })
 export class TaskWidgetComponent implements OnInit {
 
-	@Input() task: TaskRequest = null;
+	_task: TaskRequest = null;
+	@Input()
+		set task(value: TaskRequest){
+			this._task = value;
+			this.recalc();
+		}
+		get task(): TaskRequest {
+			return this._task;
+		}
 	@Output() startConnection = new EventEmitter<{ portIndex: number; isInput: boolean; event: MouseEvent }>();
 	@Output() endConnection = new EventEmitter<{ portIndex: number; isInput: boolean; event: MouseEvent }>();
 	@Output() hoverPort = new EventEmitter<{ portIndex: number; isInput: boolean; entering: boolean }>();
@@ -34,8 +42,11 @@ export class TaskWidgetComponent implements OnInit {
 	}
 
 	recalc() {
-		this.topPorts = this.calculatePorts(this.task.layout.numInputs, this.rect.y);
-		this.bottomPorts = this.calculatePorts(this.task.layout.numOutputs, this.rect.y + this.rect.height);
+		const numTopPorts = this.task.configuration.has('Number of Inputs') ? Number(this.task.configuration.get('Number of Inputs')) : this.task.layout.numInputs;
+		const numBottomPorts = this.task.configuration.has('Number of Outputs') ? Number(this.task.configuration.get('Number of Outputs')) : this.task.layout.numOutputs;
+
+		this.topPorts = this.calculatePorts(numTopPorts, this.rect.y);
+		this.bottomPorts = this.calculatePorts(numBottomPorts, this.rect.y + this.rect.height);
 	}
 
 	calculatePorts(n: number, y: number): { x: number; y: number; size: number }[] {
