@@ -67,22 +67,23 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 	}
 
 	addStep(taskSpecification: TaskSpecification) {
-		const config = taskSpecification.configuration;
 
-		config.forEach((_value, key) => {
+		const updated = new Map<string, string>();
+		taskSpecification.configuration.forEach((_value, key) => {
 			// System and user defaults are stored in the form "Task Name::Property Name", so
 			// we need to build that up to find our keys.
 			const fullKey = taskSpecification.taskName + '::' + key;
 			if (this.defaults?.has(fullKey)) {
-				config.set(key, this.defaults.get(fullKey));
+				updated.set(key, this.defaults.get(fullKey));
 			}
 		});
+		taskSpecification.configuration = updated;
 
 		const task: TaskRequest = {
 			taskName: taskSpecification.taskName,
 			stepName: taskSpecification.taskName,
 			id: crypto.randomUUID(),
-			configuration: config,
+			configuration: taskSpecification.configuration,
 			layout: {
 				x: 0,
 				y: 0,
@@ -95,22 +96,22 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 	}
 
 	addOutputStep(taskSpecification: OutputTaskSpecification) {
-		const config = taskSpecification.configuration;
-
-		config.forEach((_value, key) => {
+		const updated = new Map<string, string>();
+		taskSpecification.configuration.forEach((_value, key) => {
 			// System and user defaults are stored in the form "Task Name::Property Name", so
 			// we need to build that up to find our keys.
 			const fullKey = taskSpecification.taskName + '::' + key;
 			if (this.defaults?.has(fullKey)) {
-				config.set(key, this.defaults.get(fullKey));
+				updated.set(key, this.defaults.get(fullKey));
 			}
 		});
+		taskSpecification.configuration = updated;
 
 		const task: TaskRequest = {
 			taskName: taskSpecification.taskName,
 			stepName: taskSpecification.taskName,
 			id: crypto.randomUUID(),
-			configuration: config,
+			configuration: taskSpecification.configuration,
 			layout: {
 				x: 0,
 				y: 0,
@@ -245,6 +246,24 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 	}
 
 	doneEditingStep() {
+		// Trigger change detections for the changed step.
+		this.workflow.steps = this.workflow.steps.map(step =>
+			step.id === this.editTask.id ? { ...step, ...this.editTask } : step
+		);
+
+		// If the number of inputs or outputs changed, we need to remove any invalid connections now.
+		this.workflow.connections = this.workflow.connections.filter(connection => {
+			if (connection.readerId !== this.editTask.id && connection.writerId !== this.editTask.id) {
+				return true;
+			}
+			if (connection.readerId === this.editTask.id) {
+				const numInputPorts = this.editTask.configuration.has('Number of Inputs') ? Number(this.editTask.configuration.get('Number of Inputs')) : this.editTask.layout.numInputs;
+				return connection.readerPort < numInputPorts;
+			}
+			const numOutputPorts = this.editTask.configuration.has('Number of Outputs') ? Number(this.editTask.configuration.get('Number of Outputs')) : this.editTask.layout.numOutputs;
+			return connection.writerPort < numOutputPorts;
+		});
+
 		this.editTask = null;
 	}
 
@@ -255,7 +274,7 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 	confirmDeleteStep() {
 		this.workflow.connections = this.workflow.connections.filter(conn => conn.readerId !== this.editTask.id && conn.writerId != this.editTask.id);
 		this.workflow.steps = this.workflow.steps.filter(step => step.id !== this.editTask.id)
-		if (this.workflow.outputStep.id === this.editTask.id) {
+		if (this.workflow.outputStep?.id === this.editTask.id) {
 			this.workflow.outputStep = null;
 		}
 		this.doneEditingStep();
@@ -346,5 +365,9 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 			return specifications.sort((left, right) => left.taskName.localeCompare(right.taskName));
 		}
 		return specifications.filter(spec => spec.group === group).sort((left, right) => left.taskName.localeCompare(right.taskName));
+	}
+
+	trackStepById(_index: number, step: TaskRequest) {
+		return step.id;
 	}
 }
