@@ -46,6 +46,18 @@ export class RunWorkflowComponent implements OnInit {
 
 				// This is nested inside to ensure that all required information is loaded before the actual workflow.
 				this.workflowService.getWorkflow(params['id']).subscribe((workflow: Workflow) => {
+					workflow.steps.forEach(step => {
+						const updated = new Map<string, string>(step.configuration);
+						step.configuration.forEach((_value, key) => {
+							// System and user defaults are stored in the form "Task Name::Property Name", so
+							// we need to build that up to find our keys.
+							const fullKey = step.taskName + '::' + key;
+							if (this.defaults?.has(fullKey)) {
+								updated.set(key, this.defaults.get(fullKey));
+							}
+						});
+						step.configuration = updated;
+					});
 					this.workflow = workflow;
 				});
 

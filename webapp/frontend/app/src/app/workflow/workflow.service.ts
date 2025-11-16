@@ -215,7 +215,7 @@ export class WorkflowService {
 		const body = {
 			id: workflow.id,
 			taskConfigurationList: workflow.steps.map(step => Object.fromEntries(step.configuration)),
-			outputConfiguration: Object.fromEntries(workflow.outputStep.configuration)
+			outputConfiguration: workflow.outputStep ? Object.fromEntries(workflow.outputStep.configuration) : null
 		};
 
 		return this.http.post<ApiResult>(WorkflowService.ExecuteWorkflow, body)
@@ -303,11 +303,6 @@ export class WorkflowService {
 				step.configuration = sanitizedConfig;
 			}
 		});
-		if (workflow.outputStep) {
-
-		} else {
-
-		}
 	}
 
 	private objectify(workflow: any): Workflow {

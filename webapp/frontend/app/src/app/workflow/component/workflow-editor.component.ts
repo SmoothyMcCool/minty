@@ -68,7 +68,7 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 
 	addStep(taskSpecification: TaskSpecification) {
 
-		const updated = new Map<string, string>();
+		const updated = new Map<string, string>(taskSpecification.configuration);
 		taskSpecification.configuration.forEach((_value, key) => {
 			// System and user defaults are stored in the form "Task Name::Property Name", so
 			// we need to build that up to find our keys.
@@ -96,7 +96,7 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 	}
 
 	addOutputStep(taskSpecification: OutputTaskSpecification) {
-		const updated = new Map<string, string>();
+		const updated = new Map<string, string>(taskSpecification.configuration);
 		taskSpecification.configuration.forEach((_value, key) => {
 			// System and user defaults are stored in the form "Task Name::Property Name", so
 			// we need to build that up to find our keys.

@@ -38,6 +38,8 @@ import tom.task.annotation.Output;
 import tom.task.annotation.RunnableTask;
 import tom.task.enumspec.EnumSpec;
 import tom.task.enumspec.EnumSpecCreator;
+import tom.user.model.User;
+import tom.user.service.UserServiceInternal;
 import tom.workflow.model.OutputTaskSpecDescription;
 import tom.workflow.model.TaskRequest;
 import tom.workflow.model.TaskSpecDescription;
@@ -55,9 +57,11 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 	private final Map<String, String> systemConfigs;
 	private final Map<String, String> userConfigs;
 	private final TaskServices taskServices;
+	private final UserServiceInternal userService;
 	private final ExternalProperties properties;
 
-	public TaskRegistryServiceImpl(TaskServices taskServices, ExternalProperties properties) {
+	public TaskRegistryServiceImpl(TaskServices taskServices, UserServiceInternal userService,
+			ExternalProperties properties) {
 		runnableTasks = new HashMap<>();
 		outputTasks = new HashMap<>();
 		enumSpecCreators = new ArrayList<>();
@@ -66,6 +70,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 		this.properties = properties;
 
 		this.taskServices = taskServices;
+		this.userService = userService;
 		taskLibrary = properties.get("taskLibrary");
 	}
 
@@ -360,8 +365,20 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 			Class<?> taskClass = runnableTasks.get(request.getTaskName()).left;
 			Constructor<?> ctor = taskClass.getDeclaredConstructor();
 
-			MintyTask mbt = (MintyTask) ctor.newInstance();
-			TaskConfigSpec taskConfig = mbt.getSpecification().taskConfiguration(request.getConfiguration());
+			MintyTask mt = (MintyTask) ctor.newInstance();
+
+			User user = userService.getUserFromId(userId).get();
+			List<String> sysCfgVars = mt.getSpecification().taskConfiguration().getSystemConfigVariables();
+			List<String> userCfgVars = mt.getSpecification().taskConfiguration().getUserConfigVariables();
+
+			for (String cfgVar : sysCfgVars) {
+				request.getConfiguration().put(cfgVar, properties.get(request.getTaskName() + "::" + cfgVar));
+			}
+			for (String cfgVar : userCfgVars) {
+				request.getConfiguration().put(cfgVar, user.getDefaults().get(request.getTaskName() + "::" + cfgVar));
+			}
+
+			TaskConfigSpec taskConfig = mt.getSpecification().taskConfiguration(request.getConfiguration());
 
 			Constructor<?>[] constructors = taskClass.getConstructors();
 			for (Constructor<?> constructor : constructors) {
