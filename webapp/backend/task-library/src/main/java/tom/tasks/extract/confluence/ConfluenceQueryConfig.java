@@ -76,8 +76,8 @@ public class ConfluenceQueryConfig implements TaskConfigSpec {
 
 	public void updateFrom(Map<String, Object> obj) throws JsonMappingException, JsonProcessingException {
 		if (obj.containsKey("Pages")) {
-			pages = TaskUtils.safeConvert(obj.containsKey("Pages"), new TypeReference<List<String>>() {
-			});
+			pages.addAll(TaskUtils.safeConvert(obj.get("Pages"), new TypeReference<List<String>>() {
+			}));
 		}
 	}
 

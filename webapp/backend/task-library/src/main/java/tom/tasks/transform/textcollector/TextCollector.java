@@ -30,7 +30,7 @@ public class TextCollector implements MintyTask {
 	@Override
 	public Packet getResult() {
 		Packet packet = new Packet();
-		packet.setText(result);
+		packet.addText(result);
 		return packet;
 	}
 
@@ -50,8 +50,8 @@ public class TextCollector implements MintyTask {
 			logger.warn(
 					"TextCollector: Workflow misconfiguration detect. TextCollector should only ever have exactly one input!");
 		}
-		result = result + "\n\n" + dataPacket.getText();
-		return true;
+		result = result + "\n\n" + dataPacket.getText().toString();
+		return inputCollected;
 	}
 
 	@Override

@@ -17,21 +17,21 @@ import tom.task.TaskSpec;
 import tom.task.annotation.RunnableTask;
 
 @RunnableTask
-public class RecordEmitter implements MintyTask {
+public class PacketEmitter implements MintyTask {
 
 	private TaskLogger logger;
-	private RecordEmitterConfig config;
+	private PacketEmitterConfig config;
 	private List<? extends OutputPort> outputs;
 	private boolean readyToRun;
 	private boolean failed;
 
-	public RecordEmitter() {
+	public PacketEmitter() {
 		outputs = new ArrayList<>();
 		readyToRun = true; // Starts as true since this task takes no input.
 		failed = false;
 	}
 
-	public RecordEmitter(RecordEmitterConfig config) {
+	public PacketEmitter(PacketEmitterConfig config) {
 		this();
 		this.config = config;
 	}
@@ -62,19 +62,19 @@ public class RecordEmitter implements MintyTask {
 					data.add(p);
 				} catch (Exception e) {
 					failed = true;
-					throw new RecordEmitterException(
-							"RecordEmitter: Contains malformed data. Record is: " + node.toString(), e);
+					throw new PacketEmitterException(
+							"PacketEmitter: Contains malformed data. Record is: " + node.toString(), e);
 				}
 			}
 
 		} catch (Exception e) {
 			failed = true;
-			logger.warn("RecordEmitter: Data is not valid JSON list.");
+			logger.warn("PacketEmitter: Data is not valid JSON list.");
 			throw new RuntimeException(e);
 		}
 
 		for (Packet p : data) {
-			logger.debug("RecordEmitter: Emitting " + p.toString());
+			logger.debug("PacketEmitter: Emitting " + p.toString());
 			outputs.get(0).write(p);
 		}
 	}
@@ -83,7 +83,7 @@ public class RecordEmitter implements MintyTask {
 	public boolean giveInput(int inputNum, Packet dataPacket) {
 		// This task should never receive input. If we ever do, log the error, but
 		// signal that we have all the input we need.
-		logger.warn("Workflow misconfiguration detect. Record Emitter should never receive input!");
+		logger.warn("Workflow misconfiguration detect. Packet Emitter should never receive input!");
 		return true;
 	}
 
@@ -106,12 +106,12 @@ public class RecordEmitter implements MintyTask {
 
 			@Override
 			public String expects() {
-				return "This task does not receive any data. It runs once when the workflow starts, emitting records as specified.";
+				return "This task does not receive any data. It runs once when the workflow starts, emitting Packet as specified.";
 			}
 
 			@Override
 			public String produces() {
-				return "An array of the items set in the configuration. Format the data as follows: [ { \"id\": \"string ID\", \"text\": \"Any text\", \"data\": {arbitrary JSON data} ]";
+				return "An array of the items set in the configuration. Format the data as follows: [ { \"id\": \"string ID\", \"text\": \"Any text\", \"data\": [ {arbitrary JSON data} ] ]";
 			}
 
 			@Override
@@ -126,17 +126,17 @@ public class RecordEmitter implements MintyTask {
 
 			@Override
 			public TaskConfigSpec taskConfiguration() {
-				return new RecordEmitterConfig();
+				return new PacketEmitterConfig();
 			}
 
 			@Override
 			public TaskConfigSpec taskConfiguration(Map<String, String> configuration) {
-				return new RecordEmitterConfig(configuration);
+				return new PacketEmitterConfig(configuration);
 			}
 
 			@Override
 			public String taskName() {
-				return "Record Emitter";
+				return "Packet Emitter";
 			}
 
 			@Override

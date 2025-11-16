@@ -111,7 +111,7 @@ public class ConfluenceQuery implements MintyTask {
 				pageText = clean(pageText);
 
 				Packet output = new Packet();
-				output.setText(pageText);
+				output.addText(pageText);
 				output.addDataList(input.getDataList());
 				output.setId(input.getId());
 				outputs.get(0).write(output);
@@ -136,7 +136,10 @@ public class ConfluenceQuery implements MintyTask {
 			throw new RuntimeException("Packet must contain exactly one data element.");
 		}
 		try {
-			config.updateFrom(dataPacket.getData());
+			List<Map<String, Object>> dataList = dataPacket.getDataList();
+			for (Map<String, Object> data : dataList) {
+				config.updateFrom(data);
+			}
 			input = dataPacket;
 		} catch (JsonProcessingException e) {
 			throw new RuntimeException("Received malformed data as input.");
@@ -160,13 +163,13 @@ public class ConfluenceQuery implements MintyTask {
 
 			@Override
 			public String expects() {
-				return "If the \"Data\" contains a \"Pages\" consisting of a list of pageIds, those Page IDs "
+				return "If the \"Data\" contains a \"Pages\" key consisting of a list of pageIds, those Page IDs "
 						+ "will be used instead of those provided in the config.\n\nData must contain exactly one element.";
 			}
 
 			@Override
 			public String produces() {
-				return "For each URL processed, emits a record with the \"Tex\" set to the HTML body of the page.";
+				return "For each URL processed, emits a Packet with the \"Text\" set to the HTML body of the page.";
 			}
 
 			@Override

@@ -57,39 +57,46 @@ public class TextFormatter implements MintyTask {
 	@Override
 	public void run() {
 		Matcher matcher = PLACEHOLDER_PATTERN.matcher(config.getFormat());
-		StringBuffer sb = new StringBuffer();
+		StringBuffer sb = null;
 
 		// Make sure input.data is a JSON object.
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
 
-		JsonNode root;
-		try {
-			root = mapper.convertValue(input.getData(), JsonNode.class);
-		} catch (Exception e) {
-			logger.warn("TextFormatter: Could not parse input into JSON object.");
-			return;
-		}
-
-		while (matcher.find()) {
-			String placeholder = matcher.group(0); // e.g. "{user.name}"
-			String path = matcher.group(1).trim(); // e.g. "user.name"
-
-			JsonNode valueNode = resolvePath(root, path);
-
-			if (valueNode != null && !valueNode.isMissingNode() && !valueNode.isNull()) {
-				matcher.appendReplacement(sb, Matcher.quoteReplacement(valueNode.asText()));
-			} else {
-				// leave placeholder as-is
-				matcher.appendReplacement(sb, Matcher.quoteReplacement(placeholder));
-			}
-		}
-		matcher.appendTail(sb);
-
+		List<Map<String, Object>> dataList = input.getDataList();
 		result = new Packet();
-		result.setText(sb.toString());
 		result.setId(input.getId());
-		logger.info("TextFormatter: Outputting: " + result.getText());
+		result.setData(input.getDataList());
+
+		for (Map<String, Object> data : dataList) {
+			JsonNode root;
+			try {
+				root = mapper.valueToTree(data);
+			} catch (Exception e) {
+				logger.warn("TextFormatter: Could not parse input into JSON object.");
+				return;
+			}
+
+			matcher.reset();
+			sb = new StringBuffer();
+			while (matcher.find()) {
+				String placeholder = matcher.group(0); // e.g. "{user.name}"
+				String path = matcher.group(1).trim(); // e.g. "user.name"
+
+				JsonNode valueNode = resolvePath(root, path);
+
+				if (valueNode != null && !valueNode.isMissingNode() && !valueNode.isNull()) {
+					matcher.appendReplacement(sb, Matcher.quoteReplacement(valueNode.asText()));
+				} else {
+					// leave placeholder as-is
+					matcher.appendReplacement(sb, Matcher.quoteReplacement(placeholder));
+				}
+			}
+			matcher.appendTail(sb);
+
+			result.addText(sb.toString());
+		}
+
 		outputs.get(0).write(result);
 	}
 
@@ -131,7 +138,8 @@ public class TextFormatter implements MintyTask {
 
 			@Override
 			public String produces() {
-				return "The provided config template with substitutions made from the received input. The result is returned in \"Text\".";
+				return "The provided config template with substitutions made from the received input. The result is returned in \"Text\".\n"
+						+ "If data contains an array, the outputt \"Text\" element will contain a corresponding array of text.";
 			}
 
 			@Override
