@@ -12,12 +12,12 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 public class Packet {
 
 	private String id;
-	private String text;
+	private List<String> text;
 	private List<Map<String, Object>> data;
 
 	public Packet() {
 		id = "";
-		text = "";
+		text = new ArrayList<>();
 		data = new ArrayList<>();
 	}
 
@@ -29,12 +29,16 @@ public class Packet {
 		this.id = id;
 	}
 
-	public String getText() {
+	public List<String> getText() {
 		return text;
 	}
 
-	public void setText(String text) {
+	public void setText(List<String> text) {
 		this.text = text;
+	}
+
+	public void addText(String text) {
+		this.text.add(text);
 	}
 
 	public List<Map<String, Object>> getDataList() {
@@ -42,6 +46,7 @@ public class Packet {
 	}
 
 	public Map<String, Object> getData() {
+
 		if (data.size() > 0) {
 			return data.get(0);
 		}
@@ -59,7 +64,7 @@ public class Packet {
 	public Map<String, Object> toMap() {
 		Map<String, Object> map = new HashMap<>();
 		map.put("id", id);
-		if (!text.isBlank()) {
+		if (!text.isEmpty()) {
 			map.put("text", text);
 		}
 		if (!data.isEmpty()) {
