@@ -69,7 +69,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 		for (int i = 0; i < steps.size(); i++) {
 			steps.get(i).setConfiguration(request.getTaskConfigurationList().get(i));
 		}
-		workflow.getOutputStep().setConfiguration(request.getOutputConfiguration());
+
+		if (workflow.getOutputStep() != null) {
+			workflow.getOutputStep().setConfiguration(request.getOutputConfiguration());
+		}
 
 		WorkflowRunner runner = new WorkflowRunner(userId, workflow, taskRegistryService, workflowTrackingService,
 				taskExecutor, workflowLoggingFolder);

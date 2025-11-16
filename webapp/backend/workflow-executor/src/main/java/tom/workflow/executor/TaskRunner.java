@@ -102,7 +102,16 @@ public class TaskRunner {
 				for (int i = 0; i < numInputs; i++) {
 					boolean inputDone = false;
 					while (!inputDone) {
-						Packet packet = inputs.get(i).read();
+						Packet packet = null;
+						try {
+							packet = inputs.get(i).read();
+						} catch (Exception e) {
+							logger.error("TaskRunner for " + request.getStepName() + " failed to read from input " + i
+									+ ". Cannot continue.");
+							failed = true;
+							return;
+						}
+
 						if (packet != null) {
 							inputDone = task.giveInput(i, packet);
 						} else {

@@ -189,8 +189,7 @@ public class ConfluenceQuery implements MintyTask {
 				try {
 					return new ConfluenceQueryConfig(configuration);
 				} catch (JsonProcessingException e) {
-					logger.warn("ConfluenceQuery: Failed to read configuration.", e);
-					throw new RuntimeException("Failed to read configuration.");
+					throw new RuntimeException("Failed to read configuration.", e);
 				}
 			}
 

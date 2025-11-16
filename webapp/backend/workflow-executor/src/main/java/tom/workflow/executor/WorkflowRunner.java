@@ -67,13 +67,17 @@ public class WorkflowRunner {
 		logger.info("Workflow " + getWorkflowName() + " is complete.");
 
 		try {
-			TaskRequest outputTaskRequest = new TaskRequest();
-			outputTaskRequest.setTaskName(workflow.getOutputStep().getTaskName());
-			outputTaskRequest.setConfiguration(workflow.getOutputStep().getConfiguration());
-			OutputTask outputTask = taskRegistryService.newOutputTask(userId, outputTaskRequest);
+			if (workflow.getOutputStep() != null) {
+				TaskRequest outputTaskRequest = new TaskRequest();
+				outputTaskRequest.setTaskName(workflow.getOutputStep().getTaskName());
+				outputTaskRequest.setConfiguration(workflow.getOutputStep().getConfiguration());
+				OutputTask outputTask = taskRegistryService.newOutputTask(userId, outputTaskRequest);
 
-			executionState.setOutput(outputTask.execute(executionState.getResult().toApiResult()));
-			executionState.setOutputFormat(outputTask.getSpecification().getFormat());
+				executionState.setOutput(outputTask.execute(executionState.getResult().toApiResult()));
+				executionState.setOutputFormat(outputTask.getSpecification().getFormat());
+			} else {
+				logger.warn("This workflow has no output task set. Cannot produce any output.");
+			}
 
 		} catch (Exception e) {
 			executionState.setOutput(StackTraceUtilities.StackTrace(e));
@@ -124,7 +128,22 @@ public class WorkflowRunner {
 					return item.left.getReaderId().equals(request.getId());
 				}).sorted((first, second) -> {
 					return first.left.getReaderPort() - second.left.getReaderPort();
-				}).map(item -> item.right).toList();
+				}).collect(Collectors.collectingAndThen(Collectors.toList(), list -> {
+
+					TaskSpec spec = taskRegistryService.getSpecForTask(request.getTaskName());
+					if (spec == null) {
+						throw new RuntimeException("Invalid task specified! " + request.getTaskName());
+					}
+
+					List<Connector> connectorList = new ArrayList<>(
+							Collections.nCopies(spec.numInputs(), new NullConnector()));
+
+					for (ImmutablePair<Connection, Connector> c : list) {
+						connectorList.set(c.left.getReaderPort(), c.right);
+					}
+
+					return connectorList;
+				}));
 				runner.setInputConnectors(inputs);
 
 				List<Connector> outputs = connectors.stream().filter((item) -> {

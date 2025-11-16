@@ -83,8 +83,13 @@ public class ConfluenceQueryConfig implements TaskConfigSpec {
 
 	private List<String> stringToList(String pagesStr) throws JsonMappingException, JsonProcessingException {
 		ObjectMapper mapper = new ObjectMapper();
-		return mapper.readValue(pagesStr, new TypeReference<List<String>>() {
-		});
+		try {
+			return mapper.readValue(pagesStr, new TypeReference<List<String>>() {
+			});
+		} catch (Exception e) {
+			throw new StringListFormatException("Could not read list of page IDs", e);
+		}
+
 	}
 
 }
