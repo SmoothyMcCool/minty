@@ -113,7 +113,11 @@ public class TaskRunner {
 						}
 
 						if (packet != null) {
-							inputDone = task.giveInput(i, packet);
+							if (task.wantsInput(i, packet)) {
+								inputDone = task.giveInput(i, packet);
+							} else {
+								inputDone = true;
+							}
 						} else {
 							task.inputTerminated(i);
 							inputDone = true;

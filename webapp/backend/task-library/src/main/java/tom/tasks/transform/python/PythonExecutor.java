@@ -147,16 +147,13 @@ public class PythonExecutor implements MintyTask, ServiceConsumer {
 			public String expects() {
 				return "This task simply provides whatever input and configuration"
 						+ " is provided as a map to the associated Python file when it is run. "
-						+ "What is expected is entirely up to the python you write.\n\nThe one "
-						+ "exception is that if the input contains a key \"Code\", that will be "
-						+ "interpretted as the code to run, overriding any code provided in configuration. "
-						+ "\n\nThis task must contain exactly one item in the data list.";
+						+ "What is expected is entirely up to the python you provide.";
 			}
 
 			@Override
 			public String produces() {
 				return "The output of the python. If the input contained a ConversationId, that "
-						+ "is propagated out, for further AI processing fun.";
+						+ "is propagated out, for further processing fun.";
 			}
 
 			@Override

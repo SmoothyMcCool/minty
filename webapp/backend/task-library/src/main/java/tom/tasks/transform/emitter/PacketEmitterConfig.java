@@ -7,17 +7,17 @@ import java.util.Map;
 import tom.task.TaskConfigSpec;
 import tom.task.TaskConfigTypes;
 
-public class RecordEmitterConfig implements TaskConfigSpec {
+public class PacketEmitterConfig implements TaskConfigSpec {
 
 	String keyName;
 	String data;
 
-	public RecordEmitterConfig() {
+	public PacketEmitterConfig() {
 		keyName = null;
 		data = null;
 	}
 
-	public RecordEmitterConfig(Map<String, String> config) {
+	public PacketEmitterConfig(Map<String, String> config) {
 		data = config.get("Data to Emit");
 	}
 

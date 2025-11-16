@@ -61,7 +61,7 @@ public class HtmlFormatter implements MintyTask, ServiceConsumer {
 		try {
 			resultStr = taskServices.getRenderService().renderPug(config.getTemplate(), input);
 			result = new Packet();
-			result.setText(resultStr);
+			result.addText(resultStr);
 			result.setId(input.getId());
 			outputs.get(0).write(result);
 		} catch (IOException e) {
@@ -103,8 +103,8 @@ public class HtmlFormatter implements MintyTask, ServiceConsumer {
 
 			@Override
 			public String expects() {
-				return "This task produces text output based on the configuration provided. "
-						+ "It amalgamates all received input into a single record, and passes that to a pug template for rendering.";
+				return "This task produces HTML output based on the configuration provided. "
+						+ "This task will pass the entirety of the data to the templating engine. It will not iterate over the array in data.";
 			}
 
 			@Override

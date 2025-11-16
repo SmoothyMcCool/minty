@@ -77,9 +77,6 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 
 	private Packet parseResponse(String response) {
 
-		result.setText(response);
-		result.setId(input.getId());
-
 		if (response == null || response.isBlank()) {
 			return result;
 		}
@@ -91,6 +88,8 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 			});
 			if (resultAsMap != null) {
 				result.addData(resultAsMap);
+			} else {
+				result.addText(response);
 			}
 			return result;
 
@@ -102,57 +101,61 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 	@Override
 	public void run() {
 		result = new Packet();
+		result.setId(input.getId());
 
 		AssistantQuery query = new AssistantQuery();
 		query.setAssistantId(config.getAssistant());
 
-		if (input.getText() != null && !input.getText().isBlank()) {
-			query.setQuery(config.getQuery() + " " + input.getText());
-		} else {
-			query.setQuery(config.getQuery());
-		}
+		for (String text : input.getText()) {
+			if (text != null && !text.isBlank()) {
+				query.setQuery(config.getQuery() + " " + text);
+			} else {
+				query.setQuery(config.getQuery());
+			}
 
-		if (conversationId != null
-				&& taskServices.getAssistantManagementService().isAssistantConversational(query.getAssistantId())) {
-			query.setConversationId(new ConversationId(conversationId));
-		} else {
-			query.setConversationId(new ConversationId(UUID.randomUUID()));
-		}
+			if (conversationId != null
+					&& taskServices.getAssistantManagementService().isAssistantConversational(query.getAssistantId())) {
+				query.setConversationId(new ConversationId(conversationId));
+			} else {
+				query.setConversationId(new ConversationId(UUID.randomUUID()));
+			}
 
-		try {
-			ConversationId requestId = null;
-			while (true) {
-				try {
-					requestId = taskServices.getAssistantQueryService().ask(userId, query);
-					break;
+			try {
+				ConversationId requestId = null;
+				while (true) {
+					try {
+						requestId = taskServices.getAssistantQueryService().ask(userId, query);
+						break;
 
-				} catch (QueueFullException | ConversationInUseException e) {
-					logger.warn(
-							"AiQuery: LLM queue is full or conversation in use. Sleeping for 5 seconds before trying again.",
-							e);
+					} catch (QueueFullException | ConversationInUseException e) {
+						logger.warn(
+								"AiQuery: LLM queue is full or conversation in use. Sleeping for 5 seconds before trying again.",
+								e);
+						Thread.sleep(Duration.ofSeconds(5));
+					}
+				}
+
+				String response = null;
+				while (true) {
+					StringResult llmResult = (StringResult) taskServices.getAssistantQueryService()
+							.getResultFor(requestId);
+					if (llmResult != null && llmResult.isComplete()) {
+						response = llmResult instanceof StringResult ? ((StringResult) llmResult).getValue() : null;
+						break;
+					}
+					logger.warn("AiQuery: LLM response not ready. Sleeping for 5 seconds before trying again.");
 					Thread.sleep(Duration.ofSeconds(5));
 				}
-			}
 
-			String response = null;
-			while (true) {
-				StringResult llmResult = (StringResult) taskServices.getAssistantQueryService().getResultFor(requestId);
-				if (llmResult != null && llmResult.isComplete()) {
-					response = llmResult instanceof StringResult ? ((StringResult) llmResult).getValue() : null;
-					break;
+				result = parseResponse(response);
+				if (conversationId != null) {
+					result.getData().put("Conversation ID", conversationId);
 				}
-				logger.warn("AiQuery: LLM response not ready. Sleeping for 5 seconds before trying again.");
-				Thread.sleep(Duration.ofSeconds(5));
-			}
 
-			result = parseResponse(response);
-			if (conversationId != null) {
-				result.getData().put("Conversation ID", conversationId);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				throw new RuntimeException("AiQuery Task got interrupted while waiting for its turn with the LLM.");
 			}
-
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-			throw new RuntimeException("AiQuery Task got interrupted while waiting for its turn with the LLM.");
 		}
 
 		outputs.get(0).write(result);

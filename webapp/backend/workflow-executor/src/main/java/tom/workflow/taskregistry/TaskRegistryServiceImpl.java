@@ -594,7 +594,18 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 
 		if (configMap != null) {
 			configMap.entrySet().stream().forEach(innerEntry -> {
-				taskCfg.put(innerEntry.getKey(), innerEntry.getValue().toString());
+				TaskConfigTypes type = innerEntry.getValue();
+				String value = switch (type) {
+				case TaskConfigTypes.Boolean -> "false";
+				case TaskConfigTypes.Number -> "";
+				case TaskConfigTypes.String -> "";
+				case TaskConfigTypes.StringList -> "[]";
+				case TaskConfigTypes.Map -> "{}";
+				case TaskConfigTypes.TextArea -> "";
+				case TaskConfigTypes.EnumList -> "";
+				};
+
+				taskCfg.put(innerEntry.getKey(), value);
 			});
 		}
 

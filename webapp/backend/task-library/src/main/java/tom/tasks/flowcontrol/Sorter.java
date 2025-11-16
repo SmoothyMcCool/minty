@@ -20,12 +20,12 @@ public class Sorter implements MintyTask {
 
 	private TaskLogger logger;
 	private List<Packet> input;
-	private boolean allInputRecevied;
+	private boolean allInputReceived;
 	private boolean failed;
 
 	public Sorter() {
 		input = new ArrayList<>();
-		allInputRecevied = false;
+		allInputReceived = false;
 		failed = false;
 	}
 
@@ -69,7 +69,7 @@ public class Sorter implements MintyTask {
 
 	@Override
 	public boolean readyToRun() {
-		return allInputRecevied;
+		return allInputReceived;
 	}
 
 	@Override
@@ -120,7 +120,7 @@ public class Sorter implements MintyTask {
 
 	@Override
 	public void inputTerminated(int i) {
-		allInputRecevied = true;
+		allInputReceived = true;
 	}
 
 	@Override
