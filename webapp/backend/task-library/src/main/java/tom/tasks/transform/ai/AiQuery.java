@@ -94,6 +94,8 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 			return result;
 
 		} catch (Exception e) {
+			// If we catch an exception it probably wasn't valid JSON :)
+			result.addText(response);
 			return result;
 		}
 	}

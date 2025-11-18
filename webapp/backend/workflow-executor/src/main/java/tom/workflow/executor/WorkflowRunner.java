@@ -25,7 +25,9 @@ import tom.workflow.tracking.service.WorkflowTrackingService;
 
 public class WorkflowRunner {
 
-	private static final ExecutorService Executor = Executors.newVirtualThreadPerTaskExecutor();
+	private static final ExecutorService Executor = Executors.newThreadPerTaskExecutor(runnable -> {
+		return new Thread(runnable);
+	});
 
 	private final TaskRegistryService taskRegistryService;
 	private final WorkflowTrackingService workflowTrackingService;

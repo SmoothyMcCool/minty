@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import tom.task.MintyTask;
@@ -54,17 +54,11 @@ public class PacketEmitter implements MintyTask {
 
 		List<Packet> data = new ArrayList<>();
 		try {
-			JsonNode root = mapper.readTree(rawData);
+			List<Packet> packets = mapper.readValue(rawData, new TypeReference<List<Packet>>() {
+			});
 
-			for (JsonNode node : root) {
-				try {
-					Packet p = mapper.treeToValue(node, Packet.class);
-					data.add(p);
-				} catch (Exception e) {
-					failed = true;
-					throw new PacketEmitterException(
-							"PacketEmitter: Contains malformed data. Record is: " + node.toString(), e);
-				}
+			for (Packet packet : packets) {
+				data.add(packet);
 			}
 
 		} catch (Exception e) {
