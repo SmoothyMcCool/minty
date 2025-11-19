@@ -10,7 +10,7 @@ import tom.task.TaskConfigSpec;
 import tom.task.TaskLogger;
 import tom.task.TaskSpec;
 import tom.task.annotation.RunnableTask;
-import tom.tasks.flowcontrol.JoinerConfig;
+import tom.tasks.noop.NullTaskConfig;
 
 @RunnableTask
 public class GroupBy implements MintyTask {
@@ -47,7 +47,7 @@ public class GroupBy implements MintyTask {
 	@Override
 	public void run() {
 		for (OutputPort output : outputs) {
-			logger.debug("GroupBy: Writing out " + result.getDataList().size() + " items for key " + keyPacket.getId());
+			logger.debug("GroupBy: Writing out items for key " + keyPacket.getId());
 			output.write(result);
 		}
 	}
@@ -55,11 +55,14 @@ public class GroupBy implements MintyTask {
 	@Override
 	public boolean wantsInput(int inputNum, Packet dataPacket) {
 		if (inputNum == 0 && keyPacket == null) {
+			readyToRun = false;
 			return true;
 		}
 		if (inputNum == 1 && keyPacket.getId().equals(dataPacket.getId())) {
+			readyToRun = false;
 			return true;
 		}
+		readyToRun = true;
 		return false;
 	}
 
@@ -67,6 +70,7 @@ public class GroupBy implements MintyTask {
 	public boolean giveInput(int inputNum, Packet dataPacket) {
 		if (inputNum == 0) {
 			if (keyPacket == null) {
+				logger.debug("GroupBy: Setting key with Id " + dataPacket.getId());
 				keyPacket = dataPacket;
 			} else {
 				throw new RuntimeException("GroupBy: key Packet already received!");
@@ -74,12 +78,10 @@ public class GroupBy implements MintyTask {
 			return true;
 		}
 		if (inputNum == 1) {
-			if (keyPacket.getId().equals(dataPacket.getId())) {
-				result.addDataList(dataPacket.getDataList());
-				return false;
-			}
-			readyToRun = true;
-			return true;
+			logger.debug("GroupBy: Adding packet with Id " + dataPacket.getId());
+			result.addDataList(dataPacket.getDataList());
+			result.addTextList(dataPacket.getText());
+			return false;
 		}
 		failed = true;
 		throw new RuntimeException(
@@ -122,12 +124,12 @@ public class GroupBy implements MintyTask {
 
 			@Override
 			public TaskConfigSpec taskConfiguration() {
-				return new JoinerConfig();
+				return new NullTaskConfig();
 			}
 
 			@Override
 			public TaskConfigSpec taskConfiguration(Map<String, String> configuration) {
-				return new JoinerConfig(configuration);
+				return new NullTaskConfig(configuration);
 			}
 
 			@Override
@@ -144,7 +146,9 @@ public class GroupBy implements MintyTask {
 
 	@Override
 	public void inputTerminated(int i) {
-		// Nothing to do.
+		if (keyPacket != null && i == 1) {
+			readyToRun = true;
+		}
 	}
 
 	@Override
