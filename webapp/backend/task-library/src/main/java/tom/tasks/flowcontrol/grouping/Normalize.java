@@ -43,20 +43,27 @@ public class Normalize implements MintyTask {
 	@Override
 	public void run() {
 		for (OutputPort output : outputs) {
-			input.getDataList().forEach(item -> {
+			int dataLength = input.getDataList().size();
+			int textLength = input.getText().size();
+			int maxLength = dataLength > textLength ? dataLength : textLength;
+
+			for (int i = 0; i < maxLength; i++) {
 				Packet out = new Packet();
 				out.setId(input.getId());
-				out.setText(input.getText());
-				out.addData(item);
+				if (i < dataLength) {
+					out.addData(input.getDataList().get(i));
+				}
+				if (i < textLength) {
+					out.addText(input.getText().get(i));
+				}
 				output.write(out);
-			});
-
+			}
 		}
 	}
 
 	@Override
 	public boolean giveInput(int inputNum, Packet dataPacket) {
-		logger.info("Joiner: input " + inputNum + " got " + dataPacket);
+		logger.info("Normalize: input " + inputNum + " got " + dataPacket);
 		input = dataPacket;
 		return true;
 	}

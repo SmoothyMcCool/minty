@@ -87,4 +87,8 @@ public class Packet {
 	public void addDataList(List<Map<String, Object>> dataList) {
 		data.addAll(dataList);
 	}
+
+	public void addTextList(List<String> textList) {
+		this.text.addAll(textList);
+	}
 }

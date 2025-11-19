@@ -102,25 +102,26 @@ public class TaskRunner {
 				for (int i = 0; i < numInputs; i++) {
 					boolean inputDone = false;
 					while (!inputDone) {
-						Packet packet = null;
 						try {
-							packet = inputs.get(i).read();
+							Packet packet = inputs.get(i).read();
+
+							if (packet != null) {
+								if (task.wantsInput(i, packet)) {
+									inputDone = task.giveInput(i, packet);
+								} else {
+									inputs.get(i).replace(packet);
+									inputDone = true;
+								}
+							} else {
+								task.inputTerminated(i);
+								inputDone = true;
+							}
+
 						} catch (Exception e) {
 							logger.error("TaskRunner for " + request.getStepName() + " failed to read from input " + i
 									+ ". Cannot continue.");
 							failed = true;
 							return;
-						}
-
-						if (packet != null) {
-							if (task.wantsInput(i, packet)) {
-								inputDone = task.giveInput(i, packet);
-							} else {
-								inputDone = true;
-							}
-						} else {
-							task.inputTerminated(i);
-							inputDone = true;
 						}
 					}
 					// Some tasks might not require inputs on all ports. Check if the task is ready
