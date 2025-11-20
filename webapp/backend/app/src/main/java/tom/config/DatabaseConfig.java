@@ -35,6 +35,8 @@ public class DatabaseConfig {
 		config.setUsername(props.get("applicationDbUser"));
 		config.setPassword(props.get("applicationDbPassword"));
 		config.setDriverClassName("org.mariadb.jdbc.Driver");
+		config.addDataSourceProperty("maxAllowedPacket", props.get("applicationDbMaxAllowedPacket"));
+		config.addDataSourceProperty("compress", props.get("applicationDbCompress"));
 		config.setMaximumPoolSize(20);
 
 		return new HikariDataSource(config);

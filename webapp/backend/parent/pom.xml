@@ -54,7 +54,7 @@
 		<spring.session.jdbc.version>3.4.3</spring.session.jdbc.version>
 
 		<junit.jupiter.version>5.12.2</junit.jupiter.version>
-		<mockito.junit.jupiter.version>5.17.0</mockito.junit.jupiter.version>
+		<mockito.junit.jupiter.version>5.20.0</mockito.junit.jupiter.version>
 	</properties>
 
 	<dependencyManagement>
@@ -240,6 +240,26 @@
 				<groupId>org.apache.logging.log4j</groupId>
 				<artifactId>log4j-slf4j2-impl</artifactId>
 				<version>${log4j.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.junit</groupId>
+				<artifactId>junit-bom</artifactId>
+				<version>${junit.jupiter.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.mockito</groupId>
+				<artifactId>mockito-core</artifactId>
+				<version>${mockito.junit.jupiter.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.mockito</groupId>
+				<artifactId>mockito-junit-jupiter</artifactId>
+				<version>${mockito.junit.jupiter.version}</version>
+				<scope>test</scope>
 			</dependency>
 
 		</dependencies>
