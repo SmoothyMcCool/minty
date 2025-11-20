@@ -23,6 +23,15 @@ Components: main main/debug
 Signed-By: /etc/apt/keyrings/mariadb-keyring.pgp
 ===========================
 
+Edit config file:
+C:\ProgramData\MySQL\MySQL Server X.X\my.ini
+/etc/mysql/my.cnf, /etc/my.cnf, /usr/local/etc/my.cnf
+
+[mysqld]
+max_allowed_packet = 1073741824  # 1GB
+
+
+
 sudo apt update
 sudo apt install mariadb-server
 sudo systemctl enable mariadb
