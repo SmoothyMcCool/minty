@@ -12,8 +12,7 @@ import { AssistantEditorComponent } from './assistant-editor.component';
 @Component({
 	selector: 'minty-new-assistant',
 	imports: [CommonModule, FormsModule, RouterModule, FilterPipe, AssistantEditorComponent],
-	templateUrl: 'new-assistant.component.html',
-	styleUrls: ['new-assistant.component.css']
+	templateUrl: 'new-assistant.component.html'
 })
 export class NewAssistantComponent implements OnInit {
 

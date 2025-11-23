@@ -8,8 +8,7 @@ import { DisplayMode, User } from 'src/app/model/user';
 @Component({
 	selector: 'minty-view-statistics',
 	imports: [CommonModule, DatePipe],
-	templateUrl: 'view-statistics.component.html',
-	styleUrls: ['./view-statistics.component.css']
+	templateUrl: 'view-statistics.component.html'
 })
 export class ViewStatisticsComponent implements OnInit {
 	metadata: UserMeta[];

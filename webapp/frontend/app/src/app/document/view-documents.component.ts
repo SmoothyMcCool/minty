@@ -16,8 +16,7 @@ import { DisplayMode, User } from '../model/user';
 @Component({
 	selector: 'minty-view-documents',
 	imports: [CommonModule, FormsModule, RouterModule, ConfirmationDialogComponent, DocumentEditorComponent],
-	templateUrl: 'view-documents.component.html',
-	styleUrls: ['view-documents.component.css']
+	templateUrl: 'view-documents.component.html'
 })
 export class ViewDocumentsComponent implements OnInit, OnDestroy {
 
@@ -140,7 +139,7 @@ export class ViewDocumentsComponent implements OnInit, OnDestroy {
 	}
 
 	isOwned(ownerId: string) {
-		return this.user.id == ownerId;
+		return this.user?.id == ownerId;
 	}
 
 	findAssistant(assistantId: string): Assistant {

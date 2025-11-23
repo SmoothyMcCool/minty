@@ -1,6 +1,6 @@
-<div [ngClass]="{ 'bg-image img-assistant': user?.displayMode === DisplayMode.Fun }">
+<div>
 	<div class="container">
-		<h1>{{assistant.name}}</h1>
+		<h1>{{assistant.name}}<ng-container *ngIf="conversation && conversation.title"> - {{conversation.title}}</ng-container></h1>
 		<div class="row mb-2">
 			<div class="col-2">
 				<h2>Prompt</h2>

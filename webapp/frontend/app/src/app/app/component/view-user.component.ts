@@ -8,14 +8,14 @@ import { UserService } from '../../user.service';
 @Component({
 	selector: 'minty-user',
 	imports: [CommonModule, FormsModule],
-	templateUrl: 'view-user.component.html',
-	styleUrls: ['./view-user.component.css']
+	templateUrl: 'view-user.component.html'
 })
 export class ViewUserComponent implements OnInit {
 	user: User;
 	DisplayMode = DisplayMode;
 	repeatPassword = '';
 	passwordMismatch = true;
+	updatePassword = false;
 	messages: string[] = [];
 	defaultValues: { key: string, value: string }[] = [];
 
@@ -63,7 +63,7 @@ export class ViewUserComponent implements OnInit {
 	}
 
 	formValid(): boolean {
-		return !(this.passwordMismatch || this.user.name.length === 0);
+		return !((this.updatePassword && this.passwordMismatch) || this.user.name.length === 0);
 	}
 
 	updateConfig(key: string , value: string) {
@@ -74,7 +74,4 @@ export class ViewUserComponent implements OnInit {
 		return (!str || /^\s*$/.test(str));
 	}
 
-	displayModeChanged(event: boolean) {
-		this.user.displayMode = event ? DisplayMode.Fun : DisplayMode.Boring;
-	}
 }

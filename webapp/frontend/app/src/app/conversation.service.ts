@@ -16,6 +16,7 @@ export class ConversationService {
 
 	private static readonly NewConversation = 'api/conversation/new';
 	private static readonly ListConversations = 'api/conversation/list';
+	private static readonly GetConversation = 'api/conversation';
 	private static readonly GetConversationHistory = 'api/conversation/history';
 	private static readonly DeleteConversation = 'api/conversation/delete';
 	private static readonly ResetConversation = 'api/conversation/reset';
@@ -49,6 +50,22 @@ export class ConversationService {
 				}),
 				map((result: ApiResult) => {
 					return result.data as Conversation[];
+				})
+			);
+	}
+
+	getConversation(conversationId: string) : Observable<Conversation> {
+		let params: HttpParams = new HttpParams();
+		params = params.append('conversationId', conversationId);
+
+		return this.http.get<ApiResult>(ConversationService.GetConversation, { params: params })
+			.pipe(
+				catchError(error => {
+					this.alertService.postFailure(JSON.stringify(error));
+					return EMPTY;
+				}),
+				map((result: ApiResult) => {
+					return result.data as Conversation;
 				})
 			);
 	}

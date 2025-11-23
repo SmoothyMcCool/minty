@@ -1,4 +1,4 @@
-<div [ngClass]="{ 'bg-image img-document': user.displayMode === DisplayMode.Fun }" class="text-dark">
+<div class="text-dark">
 	<div class="container">
 		<h1>Documents</h1>
 
@@ -23,7 +23,7 @@
 			<div class="form-group well mb-2 p-2">
 				<label class="" for="docFilter">Filter</label>
 				<input type="text" class="form-control" id="docFilter" name="docFilter"
-					[ngModel]="filterString" (ngModelChange)="filterChanged($event)">
+					[ngModel]="filter" (ngModelChange)="filterChanged($event)">
 			</div>
 		</form>
 		<div class="d-flex flex-column bd-highlight">

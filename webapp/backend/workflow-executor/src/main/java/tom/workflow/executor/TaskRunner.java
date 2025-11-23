@@ -88,8 +88,8 @@ public class TaskRunner {
 				return;
 			}
 
-			task.setOutputConnectors(outputs);
 			task.setLogger(logger);
+			task.setOutputConnectors(outputs);
 
 			int numInputs = task.getSpecification().numInputs();
 

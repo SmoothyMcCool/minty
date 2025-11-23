@@ -2,10 +2,6 @@
 	float: right;
 	margin: 5px 5px 5px 5px;
 }
-.img-signup {
-	background-image: url('../../../assets/signup.jpg');
-
-}
 body, html {
 	height: 100%;
 	margin: 0px;

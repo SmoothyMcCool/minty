@@ -73,8 +73,18 @@
 	<div class="row well p-2 mx-1 my-2" style="overflow: hidden;">
 		<div class="col">
 			This list refreshes every five seconds.
+			<form class="row">
+				<div class="form-group well mb-2 p-2 col-11">
+					<label class="" for="resultFilter">Filter</label>
+					<input type="text" class="form-control" id="resultFilter" name="resultFilter"
+						[ngModel]="filter" (ngModelChange)="filterChanged($event)">
+				</div>
+				<div class="col">
+					<button class="btn btn-danger" (click)="deleteAllVisibleResults($event)">Delete All</button>
+				</div>
+			</form>
 			<ul class="list-group">
-				<li class="list-group-item list-group-item-action position-relative text-bg-light bg-opacity-75" *ngFor="let result of results">
+				<li class="list-group-item list-group-item-action position-relative text-bg-light bg-opacity-75" *ngFor="let result of displayResults">
 					<div class="d-flex align-items-center h-100">
 						<!-- If the ID is null, the task is still in progress-->
 						<span
@@ -155,3 +165,6 @@
 <minty-confirmation-dialog [title]="'Duplicate Workflow'" [message]="'Are you sure you want to duplicate this workflow?'"
 	[visible]="confirmResultDuplicateWorkflowVisible" (confirm)="confirmDuplicateWorkflow()"
 	(cancel)="confirmResultDuplicateWorkflowVisible = false"></minty-confirmation-dialog>
+<minty-confirmation-dialog [title]="'Delete All Results'" [message]="'This will delete all currently displayed results. Are you sure?'"
+	[visible]="confirmDeleteAllResultsVisible" (confirm)="confirmDeleteAllVisibleResults()"
+	(cancel)="confirmDeleteAllResultsVisible = false"></minty-confirmation-dialog>

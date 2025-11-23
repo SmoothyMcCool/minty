@@ -7,8 +7,7 @@ import { UserService } from 'src/app/user.service';
 @Component({
 	selector: 'minty-view-assistants',
 	imports: [CommonModule, RouterModule],
-	templateUrl: 'view-assistants.component.html',
-	styleUrls: ['view-assistants.component.css']
+	templateUrl: 'view-assistants.component.html'
 })
 export class ViewAssistantsComponent {
 

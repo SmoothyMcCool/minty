@@ -62,7 +62,8 @@ public class UserController {
 
 		User user;
 		try {
-			user = userService.decrypt(userRepository.save(encryptedUser));
+			user = userService.decrypt(encryptedUser);
+			user.setPassword("");
 		} catch (Exception e) {
 			ResponseWrapper<User> response = ResponseWrapper.ApiFailureResponse(HttpStatus.BAD_REQUEST.value(),
 					List.of(ApiError.FAILED_TO_DECRYPT_USER));
@@ -143,8 +144,12 @@ public class UserController {
 		}
 
 		// Update the user.
-		String hash = BCrypt.hashpw(user.getPassword(), BCrypt.gensalt());
-		user.setPassword(hash);
+		if (user.getPassword() != null && !user.getPassword().isBlank()) {
+			String hash = BCrypt.hashpw(user.getPassword(), BCrypt.gensalt());
+			user.setPassword(hash);
+		} else {
+			user.setPassword(userDetails.getPassword());
+		}
 		try {
 			EncryptedUser updatedUser = userService.encrypt(user);
 			user = userService.decrypt(userRepository.save(updatedUser));

@@ -10,8 +10,7 @@ import { MarkdownModule } from 'ngx-markdown';
 @Component({
 	selector: 'minty-view-diagrams',
 	imports: [CommonModule, MarkdownModule],
-	templateUrl: 'view-diagrams.component.html',
-	//styleUrls: ['view-diagrams.component.css']
+	templateUrl: 'view-diagrams.component.html'
 })
 export class ViewDiagramsComponent implements OnInit {
 

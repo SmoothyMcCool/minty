@@ -9,12 +9,14 @@ import tom.task.TaskConfigTypes;
 
 public class TextFormatterConfig implements TaskConfigSpec {
 
-	String formatStr = "";
+	private String formatStr;
 
 	public TextFormatterConfig() {
+		formatStr = "";
 	}
 
 	public TextFormatterConfig(Map<String, String> config) {
+		this();
 		formatStr = config.get("Format");
 
 		if (formatStr == null || formatStr.isBlank()) {

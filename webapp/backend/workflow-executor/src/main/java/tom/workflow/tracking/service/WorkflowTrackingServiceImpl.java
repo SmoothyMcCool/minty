@@ -65,6 +65,7 @@ public class WorkflowTrackingServiceImpl implements WorkflowTrackingService {
 	}
 
 	@Override
+	@Transactional
 	public WorkflowResult getResult(UserId userId, UUID resultId) {
 		Optional<WorkflowExecution> execution = workflowExecutionRepository.findById(resultId);
 
@@ -79,7 +80,8 @@ public class WorkflowTrackingServiceImpl implements WorkflowTrackingService {
 		}
 
 		WorkflowExecution we = execution.get();
-		return new WorkflowResult(we.getId(), we.getName(), we.getResult(), we.getOutput(), we.getOutputFormat());
+		return new WorkflowResult(we.getId(), we.getName(), we.getExecutionRecord().getResult(),
+				we.getExecutionRecord().getOutput(), we.getExecutionRecord().getOutputFormat());
 	}
 
 	@Override
@@ -96,11 +98,12 @@ public class WorkflowTrackingServiceImpl implements WorkflowTrackingService {
 			return "";
 		}
 
-		return execution.get().getOutput();
+		return execution.get().getExecutionRecord().getOutput();
 
 	}
 
 	@Override
+	@Transactional
 	public String getLog(UserId userId, UUID resultId) {
 		Optional<WorkflowExecution> execution = workflowExecutionRepository.findById(resultId);
 

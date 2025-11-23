@@ -23,14 +23,6 @@ Components: main main/debug
 Signed-By: /etc/apt/keyrings/mariadb-keyring.pgp
 ===========================
 
-Edit config file:
-C:\ProgramData\MySQL\MySQL Server X.X\my.ini
-/etc/mysql/my.cnf, /etc/my.cnf, /usr/local/etc/my.cnf
-
-[mysqld]
-max_allowed_packet = 1073741824  # 1GB
-
-
 
 sudo apt update
 sudo apt install mariadb-server
@@ -43,6 +35,15 @@ sudo mysql_service_installation
 sudo mariadb -u root -p -h localhost
 >>>Default password is just blank
 
+
+Edit config file:
+C:\ProgramData\MySQL\MySQL Server X.X\my.ini
+/etc/mysql/my.cnf, /etc/my.cnf, /usr/local/etc/my.cnf
+
+[mysqld]
+max_allowed_packet = 1073741824  # 1GB
+
+
 >>> Make the database;
 CREATE DATABASE Minty;
 
@@ -50,7 +51,7 @@ CREATE DATABASE Minty;
 >>> Create the tables for Minty Assistants
 USE Minty;
 CREATE TABLE IF NOT EXISTS Assistant (
-	id UUID NOT NULL DEFAULT (UUID()),
+	id UUID NOT NULL,
 	name VARCHAR(50),
 	state VARCHAR(20),
 	prompt TEXT,
@@ -64,14 +65,14 @@ CREATE TABLE IF NOT EXISTS Assistant (
 );
 CREATE TABLE IF NOT EXISTS Conversation (
 	title TEXT,
-	conversationId UUID NOT NULL DEFAULT (UUID()),
+	conversationId UUID NOT NULL,
 	ownerId UUID,
 	associatedAssistantId UUID,
 	associatedWorkflow TEXT,
 	PRIMARY KEY (conversationId)
 );
 CREATE TABLE IF NOT EXISTS Document (
-    documentId UUID NOT NULL DEFAULT (UUID()),
+    documentId UUID NOT NULL,
 	title TEXT,
 	state INTEGER,
 	ownerId UUID,
@@ -85,7 +86,7 @@ CREATE TABLE IF NOT EXISTS DocumentAssistantLinks (
 	FOREIGN KEY (documentId) REFERENCES Document(documentId)
 );
 CREATE TABLE IF NOT EXISTS Workflow (
-	id UUID NOT NULL DEFAULT (UUID()),
+	id UUID NOT NULL,
 	ownerId UUID,
 	name VARCHAR(255),
 	description TEXT,
@@ -96,22 +97,33 @@ CREATE TABLE IF NOT EXISTS Workflow (
 	PRIMARY KEY (id)
 );
 CREATE TABLE IF NOT EXISTS ResultTemplate (
-	id UUID NOT NULL DEFAULT (UUID()),
+	id UUID NOT NULL,
 	ownerId UUID,
 	name TEXT,
 	content LONGTEXT
 );
+CREATE TABLE IF NOT EXISTS WorkflowRecord (
+	id UUID NOT NULL,
+	result JSON,
+	output LONGTEXT,
+	outputFormat TEXT,
+	PRIMARY KEY (id)
+);
 CREATE TABLE IF NOT EXISTS WorkflowExecution (
-	id UUID NOT NULL DEFAULT (UUID()),
+	id UUID NOT NULL,
 	ownerId UUID,
 	name TEXT,
 	state JSON,
-	result JSON,
-	output LONGTEXT,
-	outputFormat TEXT
+	recordId UUID,
+	PRIMARY KEY (id),
+	CONSTRAINT fk_workflow_execution_workflow_record
+		FOREIGN KEY (recordId)
+		REFERENCES WorkflowRecord(id)
+		ON DELETE CASCADE
+		ON UPDATE CASCADE
 );
 CREATE TABLE IF NOT EXISTS User (
-	id UUID NOT NULL DEFAULT (UUID()),
+	id UUID NOT NULL,
 	account VARCHAR(50),
 	password VARCHAR(100),
 	crypt TEXT,
