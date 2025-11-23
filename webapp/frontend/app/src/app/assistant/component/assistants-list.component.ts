@@ -123,16 +123,20 @@ export class AssistantsListComponent implements OnInit {
 		this.assistantService.delete(this.assistantPendingDeletion).subscribe(() => {
 			this.assistantService.list().subscribe(assistants => {
 				this.assistants = assistants;
-				this.sharedAssistants = assistants.filter(assistant => assistant.shared === true);
+				this.sortAssistants(this.assistants);
+				this.sharedAssistants = this.assistants.filter(assistant => assistant.shared === true);
 				this.deleteInProgress = false;
 			});
 			this.conversationService.list().subscribe(conversations => {
 				this.conversations = conversations;
+				this.sortConversations(this.conversations);
 			});
 		});
+
 		this.sortAssistants(this.assistants);
 		this.assistants = this.assistants.filter(item => item.id === this.assistantPendingDeletion.id);
 		this.sharedAssistants = this.assistants.filter(assistant => assistant.shared === true);
+
 	}
 
 	startConversation(assistant: Assistant): void {
@@ -158,10 +162,10 @@ export class AssistantsListComponent implements OnInit {
 			});
 			this.conversationService.list().subscribe(conversations => {
 				this.conversations = conversations;
+				this.sortConversations(this.conversations);
 			});
 		});
 		this.conversations = this.conversations.filter(item => item.conversationId === this.conversationPendingDeletionId);
-		this.sortConversations(this.conversations);
 	}
 
 	fileListChanged(event: Event) {

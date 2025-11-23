@@ -9,6 +9,8 @@ public interface EnumSpecCreator {
 
 	String getName();
 
-	void setTaskServices(TaskServices taskServices);
+	default void setTaskServices(TaskServices taskServices) {
+
+	}
 
 }

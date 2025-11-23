@@ -48,8 +48,12 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 	workflowPendingDeletion: Workflow;
 	resultPendingDeletionId: string;
 	workflowPendingDuplicationId: string;
+	confirmDeleteAllResultsVisible = false;
 
 	user: User;
+
+	filter: string;
+	displayResults: WorkflowState[] = [];
 
 	constructor(private router: Router,
 		private alertService: AlertService,
@@ -75,6 +79,7 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 				}
 
 				this.results = this.results.filter(i => map.has(i.id));
+				this.filterChanged(this.filter);
 			});
 
 			this.workflowService.listWorkflows().subscribe((workflows) => {
@@ -150,6 +155,23 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 		this.confirmResultDeleteVisible = false;
 		this.resultService.deleteWorkflowResult(this.resultPendingDeletionId).subscribe();
 		this.results = this.results.filter(item => item.id != this.resultPendingDeletionId);
+		this.filterChanged(this.filter);
+	}
+
+	deleteAllVisibleResults(event: MouseEvent) {
+		event.stopPropagation();
+		this.confirmDeleteAllResultsVisible = true;
+	}
+
+	confirmDeleteAllVisibleResults() {
+		this.confirmDeleteAllResultsVisible = false;
+		const resultsToDelete = this.displayResults;
+		for (const result of resultsToDelete) {
+			this.resultPendingDeletionId = result.id;
+			this.resultService.deleteWorkflowResult(result.id).subscribe();
+			this.results = this.results.filter(item => item.id != this.resultPendingDeletionId);
+			this.filterChanged(this.filter);
+		}
 	}
 
 	copyToClipboard() {
@@ -193,6 +215,15 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 			});
 		} else {
 			this.alertService.postFailure("Failed to duplicate workflow.");
+		}
+	}
+
+	filterChanged(filter: string) {
+		this.filter = filter;
+		if (this.filter) {
+			this.displayResults = this.results.filter(result => result.name.includes(filter));
+		} else {
+			this.displayResults = this.results;
 		}
 	}
 }

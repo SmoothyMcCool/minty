@@ -32,6 +32,21 @@ public class ConversationController {
 		this.metadataService = metadataService;
 	}
 
+	@RequestMapping(value = { "" }, method = RequestMethod.GET)
+	public ResponseEntity<ResponseWrapper<Conversation>> getConversation(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("conversationId") ConversationId conversationId) {
+
+		Conversation conversation = conversationService.getConversation(user.getId(), conversationId);
+		if (conversation == null) {
+			ResponseWrapper<Conversation> response = ResponseWrapper.ApiFailureResponse(HttpStatus.NOT_FOUND.value(),
+					List.of(ApiError.NOT_FOUND));
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
+		ResponseWrapper<Conversation> response = ResponseWrapper.SuccessResponse(conversation);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
 	@RequestMapping(value = { "new" }, method = RequestMethod.GET)
 	public ResponseEntity<ResponseWrapper<Conversation>> startNewConversation(
 			@AuthenticationPrincipal UserDetailsUser user, @RequestParam("assistantId") AssistantId assistantId) {

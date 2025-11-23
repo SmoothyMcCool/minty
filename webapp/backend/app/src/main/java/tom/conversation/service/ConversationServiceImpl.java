@@ -53,6 +53,18 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 	}
 
 	@Override
+	public Conversation getConversation(UserId userId, ConversationId conversationId) {
+		Optional<ConversationEntity> ce = conversationRepository.findById(conversationId.value());
+		if (ce.isPresent()) {
+			Conversation c = ce.get().fromEntity();
+			if (c.getOwnerId().equals(userId)) {
+				return c;
+			}
+		}
+		return null;
+	}
+
+	@Override
 	@Transactional
 	public void deleteConversationsForAssistant(UserId userId, AssistantId assistantId) {
 		List<ConversationEntity> conversations = conversationRepository.findAllByOwnerIdAndAssociatedAssistantId(userId,

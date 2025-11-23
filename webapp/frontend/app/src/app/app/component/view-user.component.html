@@ -1,4 +1,4 @@
-<div [ngClass]="{ 'bg-image img-settings': user.displayMode === DisplayMode.Fun }">
+<div>
 	<div class="container">
 		<div *ngIf="messages.length > 0" class="alert alert-danger container">
 			<div class="row">
@@ -22,27 +22,28 @@
 							[(ngModel)]="user.name" required>
 					</div>
 				</div>
-				<div class="mb-3 row">
-					<label for="password" class="col-sm-6 col-form-label">Password</label>
-					<div class="col-sm-6" required>
-						<input id="password" name="password" type="password" size="10" maxlength="50"
-							placeholder="Password" class="form-control opacity-75" [class.is-invalid]="passwordMismatch"
-							[(ngModel)]="user.password" (input)="passwordUpdated()" required>
+				<ng-container *ngIf="updatePassword; else noPassword">
+					<div class="mb-3 row">
+						<label for="password" class="col-sm-6 col-form-label">Password</label>
+						<div class="col-sm-6" required>
+							<input id="password" name="password" type="password" size="10" maxlength="50"
+								placeholder="Password" class="form-control opacity-75" [class.is-invalid]="passwordMismatch"
+								[(ngModel)]="user.password" (input)="passwordUpdated()" required>
+						</div>
 					</div>
-				</div>
-				<div class="mb-3 row">
-					<label for="password" class="col-sm-6 col-form-label">Type It
-						Again.</label>
-					<div class="col-sm-6" required>
-						<input id="passwordRepeated" name="password" type="password" size="10" maxlength="50"
-							placeholder="Password" class="form-control opacity-75" [class.is-invalid]="passwordMismatch"
-							[(ngModel)]="repeatPassword" (input)="passwordUpdated()" required>
+					<div class="mb-3 row">
+						<label for="password" class="col-sm-6 col-form-label">Type It
+							Again.</label>
+						<div class="col-sm-6" required>
+							<input id="passwordRepeated" name="password" type="password" size="10" maxlength="50"
+								placeholder="Password" class="form-control opacity-75" [class.is-invalid]="passwordMismatch"
+								[(ngModel)]="repeatPassword" (input)="passwordUpdated()" required>
+						</div>
 					</div>
-				</div>
-				<div class="form-check form-switch">
-					<input class="form-check-input" type="checkbox" id="displayMode" name="displayMode" [ngModel]="user.displayMode === DisplayMode.Fun" (ngModelChange)="displayModeChanged($event)">
-					<label class="form-check-label" for="displayMode">I like fun</label>
-				</div>
+				</ng-container>
+				<ng-template #noPassword>
+					<button class="btn btn-primary mb-3" (click)="updatePassword = true">Update Password</button>
+				</ng-template>
 				<div class="mb-3 row">
 					<table class="table table-bordered table-sm align-middle">
 						<thead class="table-light">

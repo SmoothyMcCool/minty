@@ -10,27 +10,39 @@ import tom.task.TaskConfigSpec;
 import tom.task.TaskLogger;
 import tom.task.TaskSpec;
 import tom.task.annotation.RunnableTask;
+import tom.tasks.Grouping;
 
 @RunnableTask
 public class TextCollector implements MintyTask {
 
+	private List<? extends OutputPort> outputs;
+
 	private TaskLogger logger;
-	private String result;
-	private boolean inputCollected;
+	private StringBuilder result;
+	private boolean readyToRun;
+	private Grouping grouping;
+	private String separator;
+	private String groupingId;
 
 	public TextCollector() {
-		result = "";
-		inputCollected = false;
+		result = new StringBuilder();
+		readyToRun = false;
+		grouping = Grouping.All;
+		separator = "";
+		groupingId = null;
+		outputs = null;
 	}
 
 	public TextCollector(TextCollectorConfig config) {
 		this();
+		grouping = config.getGrouping();
+		separator = config.getSeparator();
 	}
 
 	@Override
 	public Packet getResult() {
 		Packet packet = new Packet();
-		packet.addText(result);
+		packet.addText(result.toString());
 		return packet;
 	}
 
@@ -41,7 +53,27 @@ public class TextCollector implements MintyTask {
 
 	@Override
 	public void run() {
-		// Doesn't have to do anything!
+		Packet results = new Packet();
+		results.setId(groupingId);
+		results.addText(result.toString());
+		for (OutputPort output : outputs) {
+			output.write(results);
+		}
+	}
+
+	@Override
+	public boolean wantsInput(int inputNum, Packet dataPacket) {
+		if (grouping == Grouping.ById) {
+			if (groupingId == null) {
+				return true;
+			}
+			if (!groupingId.equals(dataPacket.getId())) {
+				readyToRun = true;
+			}
+			return groupingId.equals(dataPacket.getId());
+		}
+
+		return true;
 	}
 
 	@Override
@@ -50,20 +82,28 @@ public class TextCollector implements MintyTask {
 			logger.warn(
 					"TextCollector: Workflow misconfiguration detect. TextCollector should only ever have exactly one input!");
 		}
-		result = result + "\n\n" + dataPacket.getText().toString();
-		return inputCollected;
+
+		if (groupingId == null) {
+			groupingId = dataPacket.getId();
+		}
+
+		for (String str : dataPacket.getText()) {
+			if (!result.isEmpty()) {
+				result.append(separator);
+			}
+			result.append(str);
+		}
+		return false;
 	}
 
 	@Override
 	public void setOutputConnectors(List<? extends OutputPort> outputs) {
-		if (outputs.size() != 0) {
-			logger.warn("TextCollector: Workflow misconfiguration detect. TextCollector should have no outputs!");
-		}
+		this.outputs = outputs;
 	}
 
 	@Override
 	public boolean readyToRun() {
-		return inputCollected;
+		return readyToRun;
 	}
 
 	@Override
@@ -72,7 +112,9 @@ public class TextCollector implements MintyTask {
 
 			@Override
 			public String expects() {
-				return "This task collects the Text elements of Packets it receives and joins them together.";
+				return "This task collects the Text elements of Packets it receives and joins them together. "
+						+ "It will either group all records received into a single output, or can be configured "
+						+ "to group elements of the same key.";
 			}
 
 			@Override
@@ -82,7 +124,7 @@ public class TextCollector implements MintyTask {
 
 			@Override
 			public int numOutputs() {
-				return 0;
+				return 1;
 			}
 
 			@Override
@@ -114,7 +156,7 @@ public class TextCollector implements MintyTask {
 
 	@Override
 	public void inputTerminated(int i) {
-		inputCollected = true;
+		readyToRun = true;
 	}
 
 	@Override

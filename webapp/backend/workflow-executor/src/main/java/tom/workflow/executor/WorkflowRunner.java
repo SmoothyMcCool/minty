@@ -10,6 +10,8 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.core.task.AsyncTaskExecutor;
 
 import tom.api.UserId;
@@ -24,6 +26,8 @@ import tom.workflow.tracking.model.WorkflowExecution;
 import tom.workflow.tracking.service.WorkflowTrackingService;
 
 public class WorkflowRunner {
+
+	private final Logger stdLogger = LogManager.getLogger(WorkflowRunner.class);
 
 	private static final ExecutorService Executor = Executors.newThreadPerTaskExecutor(runnable -> {
 		return new Thread(runnable);
@@ -75,16 +79,18 @@ public class WorkflowRunner {
 				outputTaskRequest.setConfiguration(workflow.getOutputStep().getConfiguration());
 				OutputTask outputTask = taskRegistryService.newOutputTask(userId, outputTaskRequest);
 
-				executionState.setOutput(outputTask.execute(executionState.getResult().toApiResult()));
-				executionState.setOutputFormat(outputTask.getSpecification().getFormat());
+				executionState.getExecutionRecord()
+						.setOutput(outputTask.execute(executionState.getResult().toApiResult()));
+				executionState.getExecutionRecord().setOutputFormat(outputTask.getSpecification().getFormat());
 			} else {
 				logger.warn("This workflow has no output task set. Cannot produce any output.");
 			}
 
 		} catch (Exception e) {
-			executionState.setOutput(StackTraceUtilities.StackTrace(e));
-			executionState.setOutputFormat("text/plain");
+			executionState.getExecutionRecord().setOutput(StackTraceUtilities.StackTrace(e));
+			executionState.getExecutionRecord().setOutputFormat("text/plain");
 
+			stdLogger.error("Failed to generate output for " + workflow.getName() + " with exception ", e);
 			logger.error("Failed to generate output for " + workflow.getName() + " with exception ", e);
 		} finally {
 			executionState.setName(getWorkflowName());
@@ -200,6 +206,7 @@ public class WorkflowRunner {
 				workflowComplete();
 			});
 		} catch (Exception e) {
+			stdLogger.warn("Workflow failed with exception: ", e);
 			logger.warn("Workflow failed with exception: ", e);
 			logger.close();
 		}

@@ -4,14 +4,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Transient;
 import tom.api.UserId;
 import tom.task.ExecutionResult;
-import tom.workflow.converters.ExecutionResultConverter;
 import tom.workflow.converters.ExecutionStateConverter;
 
 @Entity
@@ -24,19 +28,16 @@ public class WorkflowExecution {
 	private String name;
 	@Convert(converter = ExecutionStateConverter.class)
 	private ExecutionState state;
-	@Convert(converter = ExecutionResultConverter.class)
-	private ExecutionResult result;
-	private String output;
-	private String outputFormat;
+	@OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@JoinColumn(name = "recordId", unique = true)
+	private ExecutionRecord executionRecord;
 
 	public WorkflowExecution() {
 		id = null;
 		this.ownerId = null;
 		this.name = "";
 		state = new ExecutionState();
-		result = new ExecutionResult();
-		output = "";
-		outputFormat = "";
+		executionRecord = new ExecutionRecord();
 	}
 
 	public WorkflowExecution(List<String> stepNames, UserId ownerId) {
@@ -44,8 +45,7 @@ public class WorkflowExecution {
 		id = null;
 		this.ownerId = ownerId;
 		state = new ExecutionState(stepNames);
-		result = new ExecutionResult(stepNames);
-		output = "";
+		executionRecord = new ExecutionRecord(stepNames);
 	}
 
 	public UUID getId() {
@@ -80,33 +80,17 @@ public class WorkflowExecution {
 		this.state = state;
 	}
 
-	public ExecutionResult getResult() {
-		return result;
+	public ExecutionRecord getExecutionRecord() {
+		return executionRecord;
 	}
 
-	public void setResult(ExecutionResult result) {
-		this.result = result;
-	}
-
-	public String getOutput() {
-		return output;
-	}
-
-	public void setOutput(String output) {
-		this.output = output;
-	}
-
-	public String getOutputFormat() {
-		return outputFormat;
-	}
-
-	public void setOutputFormat(String outputFormat) {
-		this.outputFormat = outputFormat;
+	public void setExecutionRecord(ExecutionRecord executionRecord) {
+		this.executionRecord = executionRecord;
 	}
 
 	public void completeTask(String stepName, Map<String, Object> results, String error) {
-		getResult().addResult(stepName, results);
-		getResult().addError(stepName, error);
+		getExecutionRecord().addResult(stepName, results);
+		getExecutionRecord().addError(stepName, error);
 
 		state.getStepStates().get(stepName).completeTask();
 		if (error != null && !error.isBlank()) {
@@ -120,6 +104,11 @@ public class WorkflowExecution {
 
 	public void addStep(String stepName) {
 		state.addStep(stepName);
-		result.addStep(stepName);
+		executionRecord.addStep(stepName);
+	}
+
+	@Transient
+	public ExecutionResult getResult() {
+		return executionRecord != null ? executionRecord.getResult() : null;
 	}
 }

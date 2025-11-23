@@ -1,8 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { retry } from 'rxjs';
+import { interval, retry, Subject, switchMap, takeUntil } from 'rxjs';
 import { AssistantService } from '../../assistant.service';
 import { Assistant } from '../../model/assistant';
 import { ConversationService } from '../../conversation.service';
@@ -11,14 +11,14 @@ import { ChatMessage } from '../../model/chat-message';
 import { UserService } from 'src/app/user.service';
 import { DisplayMode, User } from 'src/app/model/user';
 import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
+import { Conversation } from 'src/app/model/conversation';
 
 @Component({
 	selector: 'minty-view-conversation',
 	imports: [CommonModule, FormsModule, ConversationComponent, ConfirmationDialogComponent],
-	templateUrl: 'view-conversation.component.html',
-	styleUrls: ['view-assistants.component.css']
+	templateUrl: 'view-conversation.component.html'
 })
-export class ViewConversationComponent implements OnInit {
+export class ViewConversationComponent implements OnInit, OnDestroy{
 
 	user: User;
 	DisplayMode = DisplayMode;
@@ -41,6 +41,8 @@ export class ViewConversationComponent implements OnInit {
 		documentIds: []
 	};
 	private conversationId: string = '';
+	conversation: Conversation = null;
+	private conversationTimeoutId: NodeJS.Timeout;
 	confirmRestartConversationVisible: boolean = false;
 
 	constructor(private route: ActivatedRoute,
@@ -68,9 +70,26 @@ export class ViewConversationComponent implements OnInit {
 						}
 					});
 
+					this.pollConversation();
 				});
 			});
 		});
+	}
+
+	pollConversation() {
+		if (!this.conversation?.title) {
+			this.conversationService.getConversation(this.conversationId).subscribe((conversation: Conversation) => {
+				if (conversation?.title) {
+					this.conversation = conversation;
+					return;
+				}
+				this.conversationTimeoutId = setTimeout(() => this.pollConversation(), 5000);
+			});
+		}
+	}
+
+	ngOnDestroy(): void {
+		clearTimeout(this.conversationTimeoutId);
 	}
 
 	submit(text: string) {
