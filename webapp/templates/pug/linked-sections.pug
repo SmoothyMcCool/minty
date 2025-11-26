@@ -1,0 +1,76 @@
+doctype html
+html(lang='en')
+
+	head
+		meta(charset='UTF-8')
+		meta(
+			name='viewport'
+			content='width=device-width, initial-scale=1'
+		)
+		link(
+			rel="stylesheet"
+			href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+			onerror="this.onerror=null;this.href='Minty/bootstrap.min.css';"
+		)
+
+
+	body
+		//- ==============================
+		//- Server‑side slugify helper
+		//- ==============================
+		-
+			function slugify(text) {
+				return text
+					.toString()
+					.normalize('NFKD')					// decompose Unicode
+					.replace(/[\u0300-\u036f]/g, '') // strip diacritics
+					.toLowerCase()
+					.trim()
+					.replace(/[^\w\s-]/g, '')	 // keep alphanum, space, hyphen
+					.replace(/\s+/g, '-')			 // spaces → hyphens
+					.replace(/-+/g, '-');			 // collapse multiple hyphens
+			}
+
+		.container.my-5
+			//- ---------- Table of Contents ----------
+			if snippets && snippets.length
+				h2#toc-title.mb-4 Table of Contents
+				ul.list-group.mb-4
+					each snippet in snippets
+						- var slug = slugify(snippet.id)
+						li.list-group-item
+							a(href=`#${slug}`)= snippet.id
+
+			//- ---------- Sections ----------
+			each snippet in snippets
+				- var slug = slugify(snippet.id)
+				section(id=slug).mb-5
+					h2.mb-3= snippet.id
+					//- Render the first (and only) HTML string
+					!= snippet.text[0]
+
+					//- Optional: show the first data object as prettified JSON
+					if snippet.data && snippet.data[0]
+						pre.mt-3.text-muted
+							code= JSON.stringify(snippet.data[0], null, 2)
+
+		script(
+			src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+			onerror="this.onerror=null;this.src='Minty/bootstrap.bundle.min.js';"
+		)
+
+		//- ==============================
+		//- Client‑side slugify
+		//- ==============================
+		script.
+			function slugify(text) {
+				return text
+					.toString()
+					.normalize('NFKD')
+					.replace(/[\u0300-\u036f]/g, '')
+					.toLowerCase()
+					.trim()
+					.replace(/[^\w\s-]/g, '')
+					.replace(/\s+/g, '-')
+					.replace(/-+/g, '-');
+			}

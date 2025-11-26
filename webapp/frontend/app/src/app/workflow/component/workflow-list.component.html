@@ -79,8 +79,8 @@
 					<input type="text" class="form-control" id="resultFilter" name="resultFilter"
 						[ngModel]="filter" (ngModelChange)="filterChanged($event)">
 				</div>
-				<div class="col">
-					<button class="btn btn-danger" (click)="deleteAllVisibleResults($event)">Delete All</button>
+				<div class="col align-self-center">
+					<button class="btn btn-danger" (click)="deleteAllVisibleResults($event)"><i class="bi bi-trash3"></i> All</button>
 				</div>
 			</form>
 			<ul class="list-group">

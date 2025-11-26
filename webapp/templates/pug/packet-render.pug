@@ -1,0 +1,26 @@
+//- packet-card.pug
+//	Expects locals: Id, Text, Data
+
+.card
+	.card-header.bg-primary.text-white
+		h5.mb-0 Id: #{Id}
+	.card-body
+		//- Text array
+		if Text && Text.length
+		h6.mt-0 text
+		ul.list-group
+			each txt in Text
+				li.list-group-item.list-group-item-action #{txt}
+
+		//- Data array
+		if Data && Data.length
+			h6.mt-4 data
+			each d in Data
+				.card.mb-3
+					.card-body
+						each val, key in d
+							.row
+								.col-4.fw-bold #{key}:
+								.col-8 #{Helpers.jsonToString(val)}
+		else
+			p.text-muted No data available.
