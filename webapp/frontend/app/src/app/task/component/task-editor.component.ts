@@ -54,8 +54,8 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor, OnDest
 		if (!this.taskSpecification || !this.task) {
 			return;
 		}
-		const inputs = this.escapeHtml(this.taskSpecification.expects);
-		const outputs = this.escapeHtml(this.taskSpecification.produces);
+		const inputs = this.taskSpecification.expects ? this.escapeHtml(this.taskSpecification.expects) : 'No inputs';
+		const outputs = this.taskSpecification.produces ? this.escapeHtml(this.taskSpecification.produces) : 'No outputs';
 		const html = `
 <strong>Inputs:</strong> ${inputs}
 <br>
@@ -71,6 +71,9 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor, OnDest
 	}
 
 	escapeHtml(str: string): string {
+		if (!str) {
+			return "";
+		}
 		return str
 			.replace(/&/g, '&amp;')
 			.replace(/</g, '&lt;')

@@ -21,6 +21,7 @@ import de.neuland.pug4j.model.PugModel;
 import de.neuland.pug4j.template.PugTemplate;
 import tom.api.services.RenderService;
 import tom.config.ExternalProperties;
+import tom.output.pug.HelperFunctions;
 import tom.task.ExecutionResult;
 import tom.task.Packet;
 import tom.workflow.service.WorkflowService;
@@ -54,6 +55,7 @@ public class RenderServiceImpl implements RenderService {
 			throw new IllegalArgumentException("Data is null");
 		}
 		Map<String, Object> pugInput = new HashMap<>();
+		pugInput.put("Id", data.getId());
 		pugInput.put("Text", data.getText());
 		pugInput.put("Data", data.getData());
 
@@ -76,6 +78,8 @@ public class RenderServiceImpl implements RenderService {
 			Files.write(tempFilePath, template.getBytes(StandardCharsets.UTF_8));
 
 			PugTemplate pugTemplate = pugConfiguration.getTemplate(tempFilePath.toString());
+
+			model.put("Helpers", new HelperFunctions());
 
 			pugTemplate.process(model, writer);
 			return writer.toString();
