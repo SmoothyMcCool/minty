@@ -58,9 +58,12 @@ public class GroupBy implements MintyTask {
 			readyToRun = false;
 			return true;
 		}
-		if (inputNum == 1 && keyPacket.getId().equals(dataPacket.getId())) {
+		if (inputNum == 1 && keyPacket != null && keyPacket.getId().equals(dataPacket.getId())) {
 			readyToRun = false;
 			return true;
+		}
+		if (keyPacket == null) {
+			throw new RuntimeException("Input received without having received a key packet. Is your input sorted?");
 		}
 		readyToRun = true;
 		return false;
@@ -72,6 +75,7 @@ public class GroupBy implements MintyTask {
 			if (keyPacket == null) {
 				logger.debug("GroupBy: Setting key with Id " + dataPacket.getId());
 				keyPacket = dataPacket;
+				result.setId(dataPacket.getId());
 			} else {
 				throw new RuntimeException("GroupBy: key Packet already received!");
 			}

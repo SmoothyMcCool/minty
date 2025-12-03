@@ -42,7 +42,7 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 		taskServices = null;
 		config = new AiQueryConfig();
 		userId = new UserId("");
-		result = null;
+		result = new Packet();
 		input = null;
 		error = null;
 		outputs = null;
@@ -102,9 +102,6 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 
 	@Override
 	public void run() {
-		result = new Packet();
-		result.setId(input.getId());
-
 		AssistantQuery query = new AssistantQuery();
 		query.setAssistantId(config.getAssistant());
 
@@ -150,6 +147,7 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 				}
 
 				result = parseResponse(response);
+				result.setId(input.getId());
 				if (conversationId != null) {
 					result.getData().put("Conversation ID", conversationId);
 				}

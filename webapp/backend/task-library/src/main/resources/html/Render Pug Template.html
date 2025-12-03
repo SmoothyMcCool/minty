@@ -1,0 +1,58 @@
+<h1 class="mb-0">Render Pug Template Output Task</h1>
+
+<p>Turn the raw results of your workflow into a polished HTML page using a Pug template. The rendered
+	page is returned as the final output of the workflow.</p>
+
+<hr>
+
+<h2>What It Does</h2>
+<ul>
+	<li>Accepts the <code>ExecutionResult</code> from your workflow.</li>
+	<li>Feeds that data into a Pug template you supply.</li>
+	<li>Produces a single <code>text/html</code> file containing the fully rendered page.
+	</li>
+</ul>
+
+<h2>Configuration</h2>
+<p>The task requires a single configuration setting:</p>
+<table class="table table-bordered">
+	<thead class="table-light">
+		<tr>
+			<th scope="col">Parameter</th>
+			<th scope="col">Type</th>
+			<th scope="col">Description</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td><code>template</code></td>
+			<td>String</td>
+			<td>
+				The Pug template to render.<br>
+				See the Pug Syntax Help page for more help on Pug. Consider letting Minty write your Pug template!
+			</td>
+		</tr>
+	</tbody>
+</table>
+
+<h3>Accessing Data in Your Pug Template</h3>
+<p>The template can reference these objects:</p>
+<ul>
+	<li><code>startTime</code> – Time the workflow started.</li>
+	<li><code>endTime</code> – Time the workflow completed.</li>
+	<li><code>results</code> – map of step names to lists of result objects.</li>
+	<li><code>errors</code> – map of step names to lists of error messages.</li>
+</ul>
+<pre class="bg-light p-3"><code>h2 Results for HTML Formatter
+Here are all the results of the Step named "HTML Formatter":
+ul
+  each item in results["HTML Formatter"]
+    li= JSON.stringify(item)
+</code></pre>
+
+<h2>Output Format</h2>
+<p>The task always produces output in <code>text/html</code>.
+
+<h2>Summary</h2>
+<p>Use the <strong>Render Pug Template</strong> output task whenever you need to convert workflow results into a
+	clean HTML report or web page. Give it a Pug template and let the task handle the rendering.</p>

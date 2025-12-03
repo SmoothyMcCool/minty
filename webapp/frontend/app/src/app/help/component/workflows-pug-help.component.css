@@ -1,0 +1,17 @@
+/* Make the TOC sticky on larger screens */
+@media (min-width: 768px) {
+	#toc {
+		position: sticky;
+		top: 1rem;
+	}
+}
+
+/* Give the code block a fixed height so it scrolls if it’s long */
+.code-block {
+	overflow: auto;
+}
+
+/* Optional: add some spacing between fragments */
+section {
+	margin-bottom: 2rem;
+}

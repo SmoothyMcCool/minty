@@ -1,0 +1,207 @@
+<!-- help-page.component.html -->
+<div class="container-fluid p-0">
+
+	<div class="row">
+		<!-- Table of Contents (Left side) -->
+		<nav class="col-2 mb-4 mb-0" id="toc">
+			<h5>Table of Contents</h5>
+
+			<!-- Top-level list -->
+			<ul class="nav flex-column nav-pills">
+				<!-- Section heading -->
+				<li class="nav-item">
+
+					<!-- Nested list of links -->
+					<ul class="nav flex-column nav-pills ms-3">
+						<li class="nav-item">
+							<a class="nav-link" [routerLink]="[]" fragment="name">1. Name</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" [routerLink]="[]" fragment="shared">2. Shared</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" [routerLink]="[]" fragment="memory">3. Keep conversation history</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" [routerLink]="[]" fragment="model">4. Model</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" [routerLink]="[]" fragment="temperature">5. Temperature</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" [routerLink]="[]" fragment="topk">6. Top K (RAG)</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" [routerLink]="[]" fragment="prompt">7. Prompt</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" [routerLink]="[]" fragment="documents">8. Documents (RAG)</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" [routerLink]="[]" fragment="checklist">9. Quick Checklist</a>
+						</li>
+					</ul>
+				</li>
+			</ul>
+		</nav>
+
+
+		<!-- Main content area (Right side) -->
+		<div class="col-10" id="content">
+
+			<h1 class="mb-4">Creating and Editing Assistants</h1>
+
+			<p>
+				This guide walks you through every field in the <strong>New Assistant</strong> form.
+				By the end you'll know how to pick the right model, tweak its behaviour, and
+				enrich it with documents so it can answer smarter questions.
+			</p>
+
+			<!-- 1. Name -->
+			<section class="mb-5">
+				<h2 id="name">1. Name</h2>
+				<p>
+					The <code>Name</code> field is purely cosmetic. It's how the assistant will
+					appear in the list of assistants and in the chat UI. Keep it short, memorable
+					and descriptive (e.g., <em>Java Bot</em>, <em>Diagram Maker</em>).
+				</p>
+			</section>
+
+			<!-- 2. Shared -->
+			<section class="mb-5">
+				<h2 id="shared">2. Shared</h2>
+				<p>
+					When checked, the assistant can be used by all users.
+					If you only want to use it yourself, leave it unchecked.
+					If you intend to use this assistant in a workflow that you want to share, you must share the
+					assistant as well.
+				</p>
+			</section>
+
+			<!-- 3. Keep conversation history -->
+			<section class="mb-5">
+				<h2 id="memory">3. Keep conversation history</h2>
+				<p>
+					Enables the assistant to remember earlier messages in a session.
+					Useful for context-sensitive conversations (e.g., interactive troubleshooting, revising).
+					For normal chatbots you probably want this. For assistants used in workflows, its normally better to
+					disable.
+				</p>
+			</section>
+
+			<!-- 4. Model -->
+			<section class="mb-5">
+				<h2 id="model">4. Model</h2>
+				<p>
+					Choose the underlying LLM. Common options:
+				</p>
+				<ul>
+					<li><strong>gpt-oss:20b</strong> - A fairly fast model. 20 Billion parameter version of the GPT
+						open-source model.</li>
+					<li><strong>gpt-oss:120b</strong> - A much more complex version of the 20 billion gpt-oss model.
+					</li>
+					<li><strong>gemma3:7b</strong> - A fairly reponsive, but still high quality model.</li>
+				</ul>
+				<strong>Tip:</strong> Start with the mini model; if the assistant feels
+				"dumb" or inconsistent, upgrade to a larger model.
+			</section>
+
+			<!-- 5. Temperature -->
+			<section class="mb-5">
+				<h2 id="temperature">5. Temperature</h2>
+				<p>
+					Controls randomness of the output.
+				</p>
+				<ul>
+					<li>0.0 - deterministic, very safe.</li>
+					<li>0.2-0.5 - balanced, good for factual answers.</li>
+					<li>0.6-1.0 - creative, useful for brainstorming or storytelling.</li>
+				</ul>
+				<strong>Recommendation:</strong> For most assistants, start at 0.3-0.5.
+			</section>
+
+			<!-- 6. Top K (RAG) -->
+			<section class="mb-5">
+				<h2 id="topk">6. Top K (Number of Document chunks to use for RAG)</h2>
+				<p>
+					When the assistant uses Retrieval-Augmented Generation (RAG), this
+					number determines how many document snippets it can pull in for context.
+				</p>
+				<ul>
+					<li>0 - no RAG (only the prompt).</li>
+					<li>5-10 - typical for small knowledge bases.</li>
+					<li>20-30 - for large, detailed documents.</li>
+				</ul>
+				<strong>Tip:</strong> Increase Top K if the assistant frequently says
+				"I don't know" but you have relevant docs available.
+			</section>
+
+			<!-- 7. Prompt -->
+			<section class="mb-5">
+				<h2 id="prompt">7. Prompt</h2>
+				<p>
+					The prompt is the assistant's "system message" - it sets the tone,
+					role, and behavior. A well-crafted prompt can dramatically improve
+					responses.
+				</p>
+				<pre class="bg-light p-3 rounded">
+You are <strong>FinanceBot</strong>, a helpful assistant that provides quick and accurate financial advice.
+- Speak in a friendly tone.
+- Keep answers concise (≤ 150 words).
+- If unsure, say you're not certain and suggest checking official sources.
+</pre>
+				<p>
+					<strong>Best practices:</strong>
+				</p>
+				<ul>
+					<li>Specify the role (e.g., "You are a travel agent").</li>
+					<li>Set style guidelines (formal, casual, bullet points).</li>
+					<li>Include constraints (max length, no personal data). </li>
+				</ul>
+			</section>
+
+			<!-- 8. Documents (RAG) -->
+			<section class="mb-5">
+				<h2 id="documents">8. Documents</h2>
+				<p>
+					Upload or select documents that the assistant can reference. These are
+					broken into "chunks" and fed to the model during a conversation.
+				</p>
+				<ul>
+					<li><strong>Available Documents</strong> - all files you've uploaded.</li>
+					<li><strong>Added Documents</strong> - those selected for this assistant.</li>
+				</ul>
+				<strong>How to use:</strong>
+				<ol>
+					<li>Click a document in the left list to add it.</li>
+					<li>Click the "Title:" button in the right list to remove it.</li>
+				</ol>
+				<strong>Tip:</strong> Keep the most relevant docs in the assistant's list
+				to reduce token usage and improve accuracy.
+			</section>
+
+			<!-- 9. Final Checklist -->
+			<section class="mb-5">
+				<h2 id="checklist">9. Quick Checklist</h2>
+				<ul class="list-group">
+					<li class="list-group-item">✓ Name - descriptive and short.</li>
+					<li class="list-group-item">✓ Shared - if you want to share this bot with other users.</li>
+					<li class="list-group-item">✓ Keep conversation history - enable for context. For normal chatbots
+						you probably want this. For assistants used in workflows, its normally better to disable.</li>
+					<li class="list-group-item">✓ Model - Experiment! Some models may work better than others for some
+						jobs. Smaller models return results faster.</li>
+					<li class="list-group-item">✓ Temperature - 0.3-0.5 for factual work.</li>
+					<li class="list-group-item">✓ Top K - 5-10 for small docs, more for large.</li>
+					<li class="list-group-item">✓ Prompt - clear role, tone, constraints.</li>
+					<li class="list-group-item">✓ Documents - add relevant files.</li>
+				</ul>
+			</section>
+
+			<hr>
+
+			<p class="text-muted">
+				Need more help? Make yourself a new assistant and ask it!
+			</p>
+		</div>
+	</div>
+</div>

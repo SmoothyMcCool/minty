@@ -1,0 +1,120 @@
+<!-- HtmlFormatter Task Documentation – normal page layout -->
+<div class="container py-5">
+  <!-- Title -->
+  <div class="row mb-4">
+    <div class="col">
+      <h1>HtmlFormatter Task</h1>
+    </div>
+  </div>
+
+  <!-- Intro -->
+  <div class="row mb-5">
+    <div class="col">
+      <p>
+        The <strong>HtmlFormatter</strong> task renders a Pug template into a full HTML document.
+        It consumes a single <code>Packet</code> and produces a new <code>Packet</code> that contains
+        the rendered HTML as plain text. The task is intended to be used as a final step in a
+        workflow that needs to produce a user‑facing HTML document.
+      </p>
+    </div>
+  </div>
+
+  <!-- Input section -->
+  <section class="mb-5">
+    <h2>Input</h2>
+    <p>
+      <strong>Port:</strong> 1 (index 0) – the task accepts exactly one input packet.
+      The packet may contain any number of fields, including text, numeric, boolean,
+      or nested objects. All of these fields are passed as the data context to the
+      Pug renderer. The task does <strong>not</strong> iterate over arrays that may be present
+      in the packet; the entire packet is treated as a single data object.
+    </p>
+
+    <p>
+      <strong>Restrictions:</strong>
+      <ul class="mb-0">
+        <li>Only one input packet is allowed. Supplying a second input will cause the
+            task to fail with a runtime exception.</li>
+        <li>The input packet must be non‑null; the task will not run until a packet
+            is available on the input port.</li>
+      </ul>
+    </p>
+  </section>
+
+  <!-- Output section -->
+  <section class="mb-5">
+    <h2>Output</h2>
+    <p>
+      <strong>Port:</strong> 1 (index 0) – the task writes a single output packet.
+      The packet contains:
+      <ul>
+        <li><code>Text</code> – the fully rendered HTML string.</li>
+        <li><code>Id</code> – copied from the input packet’s <code>Id</code> so that downstream
+            steps can correlate the output with the original data.</li>
+      </ul>
+      No additional metadata is added to the packet.
+    </p>
+  </section>
+
+  <!-- Configuration section -->
+  <section class="mb-5">
+    <h2>Configuration</h2>
+    <p>The task is configured via a single user‑editable field:</p>
+
+    <table class="table table-sm table-bordered">
+      <thead class="thead-light">
+        <tr>
+          <th>Parameter</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>Pug Template</code></td>
+          <td>TextArea</td>
+          <td>
+            The raw Pug template string that will be rendered.
+            The template can reference any fields present in the input packet
+            using the standard Pug syntax (e.g., <code>{{ title }}</code>, <code>#{name}</code>, etc.).
+            The template is evaluated once per packet; if the packet contains an array,
+            the array will be treated as a single object and not iterated over.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>
+      <strong>System variables</strong> – none. <strong>User variables</strong> – none.
+      The configuration is stored as a plain text area; no additional parsing
+      or validation is performed beyond ensuring the field is present.
+    </p>
+  </section>
+
+  <!-- Typical usage section -->
+  <section class="mb-5">
+    <h2>Typical Usage Pattern</h2>
+    <p>
+      1. <strong>Prepare data</strong> – upstream tasks produce a packet that
+      contains all the fields needed by the Pug template.<br />
+      2. <strong>Configure the task</strong> – provide the Pug template in the
+      workflow editor. The template can be as simple or complex as required.<br />
+      3. <strong>Connect</strong> – wire the output of the data‑producing task to
+      the single input of the <code>HtmlFormatter</code>, and wire its output
+      to whatever sink (file, web endpoint, etc.) will consume the rendered
+      HTML.<br />
+      4. <strong>Execute</strong> – run the workflow; the task will render the
+      template and emit a packet containing the HTML string.
+    </p>
+  </section>
+
+  <!-- Note section -->
+  <section class="mb-5">
+    <p class="text-muted">
+      Note: Because the task forwards the entire packet as context, it is
+      possible to include complex nested structures in the input. If you need
+      to iterate over a list, you must handle that logic inside the Pug
+      template itself (e.g., using <code>each item in items</code>).
+    </p>
+  </section>
+</div>

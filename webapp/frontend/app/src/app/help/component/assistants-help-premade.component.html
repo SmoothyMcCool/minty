@@ -1,0 +1,75 @@
+<!-- help-page.component.html -->
+<div class="container-fluid p-0">
+
+	<div class="row">
+		<!-- Table of Contents (Left side) -->
+		<nav class="col-2 mb-4 mb-0" id="toc">
+			<h5>Table of Contents</h5>
+
+			<!-- Top-level list -->
+			<ul class="nav flex-column nav-pills">
+				<!-- Section heading -->
+				<li class="nav-item">
+
+					<!-- Nested list of links -->
+					<ul class="nav flex-column nav-pills ms-3">
+						<li class="nav-item">
+							<a class="nav-link" [routerLink]="[]" fragment="codeReviewBot">1. Code Review Bot</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link" [routerLink]="[]" fragment="mermaidBot">2. Mermaid Diagram Bot</a>
+						</li>
+					</ul>
+				</li>
+			</ul>
+		</nav>
+
+		<!-- Main content area (Right side) -->
+		<div class="col-10" id="content">
+			<!-- Code Review Bot -->
+			<section class="mb-5">
+				<h2 id="codeReviewBot">Code Review Bot</h2>
+				<p>
+					A senior software engineer on a mission to make your code cleaner, safer, and more efficient.
+					The bot reads the code you paste, then produces a structured review that covers everything from
+					style and readability to performance and security.
+				</p>
+				<ul>
+					<li>Highlights strengths and best practices.</li>
+					<li>Pinpoints bugs, logical errors, and potential edge cases.</li>
+					<li>Assesses readability, maintainability, and performance.</li>
+					<li>Flags security concerns (e.g., injection risks, improper error handling).</li>
+					<li>Provides actionable suggestions with line-number references.</li>
+				</ul>
+				<p>
+					<strong>How to use:</strong> Paste the code into the prompt, then let the bot return a concise
+					review.
+				</p>
+			</section>
+
+			<!-- Mermaid Diagram Bot -->
+			<section class="mb-5">
+				<h2 id="mermaidBot">Mermaid Diagram Bot</h2>
+				<p>
+					An expert in crafting and refining <a href="https://mermaid-js.github.io/mermaid/#/">Mermaid.js</a>
+					diagrams.
+					The bot ensures your diagrams are accurate, visually balanced, and syntactically correct.
+				</p>
+				<ul>
+					<li>Verifies clarity of the request before generating a diagram.</li>
+					<li>Asks targeted clarifying questions when the prompt is ambiguous.</li>
+					<li>Chooses the most suitable Mermaid diagram type (flowchart, sequence, class, state, ER, etc.).
+					</li>
+					<li>Produces clean, self-contained Mermaid code blocks.</li>
+					<li>Provides a plain-text copy of the code for easy copy-paste or version control.</li>
+				</ul>
+				<p>
+					<strong>How to use:</strong> Submit a description of the diagram you need; if more detail is
+					required,
+					the bot will ask follow-up questions before delivering the final Mermaid code block.
+				</p>
+			</section>
+
+		</div>
+	</div>
+</div>

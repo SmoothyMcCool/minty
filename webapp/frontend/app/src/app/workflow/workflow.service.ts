@@ -24,6 +24,8 @@ export class WorkflowService {
 	private static readonly ListTaskSpecifications = 'api/workflow/specification/list';
 	private static readonly ListOutputTaskSpecifications = 'api/workflow/output/specification/list';
 	private static readonly ListEnumLists = 'api/workflow/enum';
+	private static readonly GetTaskHelpFiles = 'api/workflow/help/task';
+	private static readonly GetOutputHelpFiles = 'api/workflow/help/output';
 
 
 	constructor(private http: HttpClient, private alertService: AlertService) {
@@ -269,6 +271,32 @@ export class WorkflowService {
 				}),
 				map((result: ApiResult) => {
 					return result.data as EnumList[];
+				})
+			);
+	}
+
+	getTaskHelpFiles(): Observable<Map<string, string>> {
+		return this.http.get<ApiResult>(WorkflowService.GetTaskHelpFiles)
+			.pipe(
+				catchError(error => {
+					this.alertService.postFailure(JSON.stringify(error));
+					return EMPTY;
+				}),
+				map((result: ApiResult) => {
+					return new Map(Object.entries(result.data));
+				})
+			);
+	}
+
+	getOutputHelpFiles(): Observable<Map<string, string>> {
+		return this.http.get<ApiResult>(WorkflowService.GetOutputHelpFiles)
+			.pipe(
+				catchError(error => {
+					this.alertService.postFailure(JSON.stringify(error));
+					return EMPTY;
+				}),
+				map((result: ApiResult) => {
+					return new Map(Object.entries(result.data));
 				})
 			);
 	}

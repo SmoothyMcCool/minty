@@ -1,0 +1,92 @@
+<div class="container-fluid p-0">
+
+	<div class="row">
+		<!-- Table of Contents (Left side) -->
+		<nav class="col-2 mb-4 mb-0" id="toc">
+			<h5>Table of Contents</h5>
+
+			<!-- Top-level list -->
+			<ul class="nav flex-column nav-pills">
+				<!-- Section heading -->
+				<li class="nav-item">
+
+					<!-- Nested list of links -->
+					<ul class="nav flex-column nav-pills ms-3">
+						<li class="nav-item">
+							<a class="nav-link" [routerLink]="[]" fragment="ideas">1. Ideas</a>
+						</li>
+					</ul>
+				</li>
+			</ul>
+		</nav>
+
+
+		<!-- Main content area (Right side) -->
+		<div class="col-10" id="content">
+
+			<section class="mb-5">
+				<h2 id="ideas">Some Ideas to Get You Started</h2>
+				<!-- Ideas to Get Started with Assistants -->
+				<section class="bot-section mb-5">
+					<h3>Ideas to Get Started</h3>
+					<p>
+						Below are some concrete ways you can leverage an AI assistant in a
+						systems-and-software-engineering environment.
+						Pick one, tweak the prompt, and watch the assistant turn your idea into a working prototype.
+					</p>
+
+					<ul class="mb-4">
+						<li><strong>Review code</strong> - Spot bugs, style violations, and potential performance
+							bottlenecks.</li>
+						<li><strong>Write code</strong> - Generate boilerplate, new features, or refactor existing
+							modules.</li>
+						<li><strong>Make diagrams</strong> - Create flowcharts, sequence diagrams, or ER models with
+							Mermaid.</li>
+						<li><strong>Write unit tests</strong> - Auto-generate test cases based on code coverage or
+							specification.</li>
+						<li><strong>Create Pug templates</strong> - Build reusable UI snippets for your workflows.</li>
+						<li><strong>Generate documentation</strong> - Produce README, API docs, or inline comments from
+							source.</li>
+					</ul>
+
+					<h4>More Ideas for Systems & Software Engineering</h4>
+					<ul>
+						<li><strong>Write Requirements</strong> - Provide source documentation and ask for Shall
+							statements or Given/When/Thens.</li>
+						<li><strong>Generate API specifications</strong> - Produce API docs from controller code.</li>
+						<li><strong>Database schema generation</strong> - Translate entity classes into SQL migration
+							scripts.</li>
+						<li><strong>Performance profiling</strong> - Suggest profiling tools and interpret results.</li>
+						<li><strong>Security audit</strong> - Identify injection points, insecure defaults, or missing
+							auth checks.</li>
+						<li><strong>Refactoring suggestions</strong> - Recommend design pattern applications or code
+							modularization.</li>
+						<li><strong>Code linting & formatting</strong> - Auto-run ESLint, Prettier, or Checkstyle and
+							report violations.</li>
+						<li><strong>Dependency analysis</strong> - Detect unused libraries, outdated versions, or
+							potential conflicts.</li>
+						<li><strong>Release notes & changelog generation</strong> - Summarize commits into
+							human-readable release notes.</li>
+						<li><strong>Test data generation</strong> - Produce realistic mock data sets for integration
+							tests.</li>
+					</ul>
+
+					<p>
+						<em>Tip:</em> Start with a short prompt like "Create a unit test for the
+						<code>UserService</code> class" and let the assistant build the code for you. Once you're
+						comfortable, experiment with more complex requests such as "Generate a CI/CD pipeline that runs
+						tests, builds a Docker image, and deploys to Kubernetes."
+					</p>
+
+					<p>
+						<em>Bonus Fact:</em> I am <strong>FAR</strong> too lazy to write all this documentation. Minty
+						wrote all this documentation for me, by me feeding it code and prompting it with short examples,
+						including general HTML output style that I wanted.
+					</p>
+				</section>
+
+			</section>
+
+		</div>
+	</div>
+</div>

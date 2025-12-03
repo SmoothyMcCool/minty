@@ -24,7 +24,7 @@ public class PacketEmitterConfig implements TaskConfigSpec {
 	@Override
 	public Map<String, TaskConfigTypes> getConfig() {
 		Map<String, TaskConfigTypes> config = new HashMap<>();
-		config.put("Data to Emit", TaskConfigTypes.TextArea);
+		config.put("Data to Emit", TaskConfigTypes.Packet);
 		return config;
 	}
 

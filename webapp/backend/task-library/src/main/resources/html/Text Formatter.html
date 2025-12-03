@@ -1,0 +1,150 @@
+<!-- TextFormatter Task Documentation – normal page layout -->
+<div class="container py-5">
+
+  <!-- Title -->
+  <div class="row mb-4">
+    <div class="col">
+      <h1>TextFormatter Task</h1>
+    </div>
+  </div>
+
+  <!-- Intro -->
+  <div class="row mb-5">
+    <div class="col">
+      <p>
+        The <strong>TextFormatter</strong> task generates human‑readable text by applying a
+        user‑supplied format string to the JSON data carried in a <code>Packet</code>.
+        It scans the format for placeholders of the form <code>{path}</code> and replaces
+        each one with the corresponding value from the packet’s data.
+        The task is useful when you need to produce a plain‑text report,
+        email body, or any other textual output that depends on structured data.
+      </p>
+    </div>
+  </div>
+
+  <!-- Input section -->
+  <section class="mb-5">
+    <h2>Input</h2>
+    <p>
+      <strong>Port:</strong> 1 (index 0) – the task accepts a single input packet.
+      The packet must contain the following fields:
+    </p>
+    <ul>
+      <li><code>Id</code> – a string that will be preserved in the output packet.</li>
+      <li><code>Text</code> – an array of strings that can be referenced by the placeholder
+        <code>{text}</code>. The entire array is joined using the system line separator
+        before substitution.</li>
+      <li><code>Data</code> – an array of JSON objects. The task iterates over this array
+        and produces one formatted text line per object.</li>
+    </ul>
+    <p>
+      The <code>Data</code> objects can contain nested objects, arrays, and primitive
+      values. Placeholders can address nested properties using dot notation
+      (e.g. <code>{user.name}</code>) and array indices using square brackets
+      (e.g. <code>{friends[0].email}</code>).
+    </p>
+    <p>
+      <strong>Restrictions:</strong>
+      <ul class="mb-0">
+        <li>The task requires exactly one input packet; providing more than one
+            input will cause a runtime error.</li>
+        <li>All three fields (Id, Text, Data) are optional from a technical
+            standpoint, but meaningful formatting usually requires at least
+            <code>Data</code> or <code>Text</code>.</li>
+      </ul>
+    </p>
+  </section>
+
+  <!-- Output section -->
+  <section class="mb-5">
+    <h2>Output</h2>
+    <p>
+      <strong>Port:</strong> 1 (index 0) – the task writes a single output packet that
+      contains:
+    </p>
+    <ul>
+      <li><code>Id</code> – copied from the input packet.</li>
+      <li><code>Data</code> – the same array of JSON objects that was supplied in the
+          input.</li>
+      <li><code>Text</code> – an array of formatted strings. The length of this array
+          matches the length of the input <code>Data</code> array; each element is the
+          result of applying the format string to the corresponding JSON object.</li>
+    </ul>
+    <p>
+      No other fields are added to the output packet.
+    </p>
+  </section>
+
+  <!-- Configuration section -->
+  <section class="mb-5">
+    <h2>Configuration</h2>
+    <p>The task is configured via a single user‑editable field:</p>
+
+    <table class="table table-sm table-bordered">
+      <thead class="thead-light">
+        <tr>
+          <th>Parameter</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>Format</code></td>
+          <td>TextArea</td>
+          <td>
+            A template string that may contain placeholders in the form
+            <code>{…}</code>. The placeholders are replaced by values extracted
+            from the packet’s <code>Data</code> array or from the packet’s
+            <code>Id</code> and <code>Text</code> fields.
+            <ul class="mb-0">
+              <li><code>{id}</code> – the packet’s Id.</li>
+              <li><code>{text}</code> – the packet’s Text array joined with line
+                  separators.</li>
+              <li>Any other <code>{path}</code> – resolved against each object in
+                  the <code>Data</code> array using dot notation and optional
+                  array indices.</li>
+            </ul>
+            Example: <code>Hello {user.name}, your order {order.id} is ready.</code>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>
+      <strong>System variables</strong> – none. <strong>User variables</strong> – none.
+      The configuration is stored as plain text; the task validates the presence
+      of the format string but performs no further syntax checking.
+    </p>
+  </section>
+
+  <!-- Typical usage section -->
+  <section class="mb-5">
+    <h2>Typical Usage Pattern</h2>
+    <p>
+      1. <strong>Prepare data</strong> – upstream tasks produce a packet that
+      contains an <code>Id</code>, optional <code>Text</code> array, and a
+      <code>Data</code> array of JSON objects that hold the values you want to
+      inject into the text.<br />
+      2. <strong>Configure the task</strong> – provide a format string in the
+      workflow editor. Use placeholders to reference fields in the data objects
+      (e.g. <code>{user.email}</code> or <code>{items[2].price}</code>).<br />
+      3. <strong>Connect</strong> – wire the output of the data‑producing task to
+      the single input of the <code>TextFormatter</code>, and wire its output
+      to whatever sink (file, email, API) will consume the formatted text.<br />
+      4. <strong>Execute</strong> – run the workflow; the task will emit a
+      packet whose <code>Text</code> field contains the fully formatted lines.
+    </p>
+  </section>
+
+  <!-- Note section -->
+  <section class="mb-5">
+    <p class="text-muted">
+      Note: The task processes each element of the <code>Data</code> array
+      independently, producing one formatted string per element. If the
+      <code>Data</code> array is empty, the output <code>Text</code> array will
+      also be empty. Placeholders that cannot be resolved are left unchanged
+      in the output string, allowing you to spot missing data at a glance.
+    </p>
+  </section>
+</div>

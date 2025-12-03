@@ -40,7 +40,7 @@ public class DataRenamer implements MintyTask {
 
 	@Override
 	public Packet getResult() {
-		return result;
+		return null;
 	}
 
 	@Override

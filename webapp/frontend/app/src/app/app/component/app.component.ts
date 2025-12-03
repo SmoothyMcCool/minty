@@ -62,16 +62,18 @@ export class AppComponent implements OnInit {
 			return;
 		}
 		const alerts: string[] = this.alertList.get(alert.type);
-		alerts.push(alert.message);
 		if (alert.type === 'success') {
+			alerts.push(alert.message);
 			$('#success-alert').fadeTo(500, 1).delay(5000).slideUp(500, () => {
 				this.alertList.set('success', []);
 			});
 		} else if (alert.type === 'info') {
+			alerts.push(alert.message);
 			$('#info-alert').fadeTo(500, 1).delay(10000).slideUp(500, () => {
 				this.alertList.set('info', []);
 			});
 		} else if (alert.type === 'failure') {
+			this.alertList.set(alert.type, [alert.message]);
 			$('#failure-alert').fadeTo(500, 1);
 		}
 	}

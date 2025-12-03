@@ -1,0 +1,128 @@
+<div class="container-fluid p-0">
+
+	<div class="row">
+		<!-- ====================  TOC  ==================== -->
+		<nav class="col-2 mb-4 mb-0" id="toc">
+			<h5>Table of Contents</h5>
+			<ul class="nav flex-column nav-pills">
+				<li class="nav-item">
+					<a class="nav-link" [routerLink]="[]" fragment="documents-management">1. Documents Management</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" [routerLink]="[]" fragment="adding-new-document">2. Adding a New Document</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" [routerLink]="[]" fragment="editing-a-document">3. Editing a Document</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" [routerLink]="[]" fragment="filtering">4. Filtering</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" [routerLink]="[]" fragment="document-status">5. Document Status</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" [routerLink]="[]" fragment="ownership-deletion">6. Ownership & Deletion</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" [routerLink]="[]" fragment="using-documents-in-assistants">7. Using Documents in
+						Assistants</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" [routerLink]="[]" fragment="quick-start">8. Quick Start</a>
+				</li>
+			</ul>
+		</nav>
+
+		<!-- ====================  Content  ==================== -->
+		<div class="col-10" id="content">
+
+			<section class="mb-5">
+				<h1 class="mb-3" id="documents-management">Documents Management</h1>
+				<p>
+					The Documents page lets you upload, view, filter, and delete documents that can be
+					used by your AI assistants. Each document can be attached to one or more
+					assistants, so the page also shows which assistants are currently using it.
+				</p>
+			</section>
+
+			<section class="mb-5">
+				<h2 id="adding-new-document">Adding a New Document</h2>
+				<p>
+					Click <strong>Add Document</strong> to open the editor:
+				</p>
+
+				<ul>
+					<li><strong>Title</strong> - the name shown in the list.</li>
+					<li><strong>File</strong> - the actual file to upload (any format the
+						backend accepts).</li>
+				</ul>
+
+				<p>
+					After filling out the fields, click <strong>Submit</strong> to submit.
+					The document will be processed asynchronously - you'll see a
+					<strong>Processing…</strong> indicator until the backend finishes
+					indexing it.
+				</p>
+
+				<p>
+					If you change your mind, click <strong>Cancel</strong> to cancel.
+				</p>
+			</section>
+
+			<section class="mb-5">
+				<h2 id="editing-a-document">Editing a Document</h2>
+				<p>
+					You can't edit a document. You'll have to delete it and re-upload it if the
+					contents have changed and you want that reflected in your Assistants.
+				</p>
+			</section>
+
+			<section class="mb-5">
+				<h2 id="filtering">Filtering</h2>
+				<p>
+					Use the <strong>Filter</strong> input to search by title. The filter is
+					case-insensitive and updates the list in real time as you type.
+				</p>
+			</section>
+
+			<section class="mb-5">
+				<h2 id="document-status">Document Status</h2>
+				<p>
+					A red <code>Processing...</code> or <code>Document Failed to Process!</code>
+					message appears if the document is still being processed, or if something went wrong.
+					Don't use the document for RAG until it's finished processing or you might get strange results.
+				</p>
+			</section>
+
+			<section class="mb-5">
+				<h2 id="ownership-deletion">Ownership & Deletion</h2>
+				<p>
+					Only the owner of a document can delete it. The delete button (trash icon)
+					appears in the top-right corner of each owned document.
+				</p>
+			</section>
+
+			<section class="mb-5">
+				<h2 id="using-documents-in-assistants">Using Documents in Assistants</h2>
+				<p>
+					When a document is attached to an assistant, the assistant can retrieve
+					the content during a conversation. The list shows a badge for each
+					assistant that uses the document. This helps you keep track of
+					dependencies and avoid orphaned files.
+				</p>
+			</section>
+
+			<section class="mb-5">
+				<h2 id="quick-start">Quick Start</h2>
+				<ol>
+					<li>Click <strong>Add Document</strong>.</li>
+					<li>Enter a title and choose a file.</li>
+					<li>Click <strong>Submit</strong>.</li>
+					<li>Wait for the document to appear in the list as <strong>READY</strong>.</li>
+					<li>Attach the document to an assistant via the assistant editor.</li>
+				</ol>
+			</section>
+
+		</div>
+	</div>
+</div>

@@ -1,0 +1,39 @@
+<div class="container-fluid p-0">
+
+	<div class="row">
+		<!-- Table of Contents (Left side) -->
+		<nav class="col-2 mb-4 mb-0" id="toc">
+			<h5>Table of Contents</h5>
+
+			<!-- Top-level list -->
+			<h6>Tasks</h6>
+			<ul class="nav flex-column nav-pills">
+				<!-- Section heading -->
+				<li class="nav-item">
+					<!-- Nested list of links -->
+					<ul class="nav flex-column nav-pills ms-3" *ngIf="taskHelpFiles">
+						<li class="nav-item" *ngFor="let entry of taskHelpFiles | keyvalue: compareKeys">
+							<a class="nav-link" (click)="displayTaskHelp(entry.key)">{{entry.key}}</a>
+						</li>
+					</ul>
+				</li>
+			</ul>
+			<h6>Output Tasks</h6>
+			<ul class="nav flex-column nav-pills">
+				<!-- Section heading -->
+				<li class="nav-item">
+					<!-- Nested list of links -->
+					<ul class="nav flex-column nav-pills ms-3" *ngIf="outputHelpFiles">
+						<li class="nav-item" *ngFor="let entry of outputHelpFiles | keyvalue: compareKeys">
+							<a class="nav-link" (click)="displayOutputHelp(entry.key)">{{entry.key}}</a>
+						</li>
+					</ul>
+				</li>
+			</ul>
+		</nav>
+
+		<!-- Main content area (Right side) -->
+		<div class="col-10" id="content" [innerHTML]="content">
+		</div>
+	</div>
+</div>

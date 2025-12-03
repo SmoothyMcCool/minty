@@ -1,0 +1,130 @@
+<!-- Identifier Task Documentation – Bootstrap fragment -->
+<div class="container py-5">
+
+  <!-- Title -->
+  <div class="row mb-4">
+    <div class="col">
+      <h1>Identifier Task</h1>
+    </div>
+  </div>
+
+  <!-- Intro -->
+  <div class="row mb-5">
+    <div class="col">
+      <p>
+        The <strong>Identifier</strong> task is a lightweight flow‑control helper that
+        extracts a single value from the <code>data</code> payload of an incoming
+        <code>Packet</code> and writes that value into the packet’s <code>id</code>
+        field.  The packet is then forwarded unchanged to the next step.
+        This is useful when downstream tasks need a stable identifier for
+        correlation, routing, or persistence.
+      </p>
+    </div>
+  </div>
+
+  <!-- Input section -->
+  <section class="mb-5">
+    <h2>Input</h2>
+    <p>
+      <strong>Port:</strong> 1 (index 0) – the task accepts a single packet.
+      The packet can contain any data structure (map, list, nested objects,
+      primitives, etc.).  The task does not modify the data; it only reads
+      from it.
+    </p>
+    <p>
+      <strong>Restrictions:</strong>
+      <ul class="mb-0">
+        <li>The packet must be non‑null.</li>
+        <li>The <code>data</code> field should be a <code>Map</code> or a <code>List</code> so that
+            a dot‑separated path can be resolved.  If the path cannot be
+            resolved, the task logs a warning but still forwards the packet
+            unchanged.</li>
+      </ul>
+    </p>
+  </section>
+
+  <!-- Output section -->
+  <section class="mb-5">
+    <h2>Output</h2>
+    <p>
+      <strong>Port:</strong> 1 (index 0) – the task writes a single packet to the
+      output.  The packet is identical to the input except that its
+      <code>id</code> field is set to the value found at the configured path.
+      If the path cannot be resolved, the packet’s <code>id</code> remains
+      unchanged.
+    </p>
+  </section>
+
+  <!-- Configuration section -->
+  <section class="mb-5">
+    <h2>Configuration</h2>
+    <p>The Identifier task is configured with a single user‑editable field:</p>
+
+    <table class="table table-sm table-bordered">
+      <thead class="thead-light">
+        <tr>
+          <th>Parameter</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>ID Element</code></td>
+          <td>TextField</td>
+          <td>
+            A dot‑separated path that points to the value to use as the packet
+            identifier.  The path is evaluated against the packet’s <code>data</code>
+            payload.  <br/><br/>
+            <strong>Examples</strong>:
+            <ul class="mb-0">
+              <li><code>user.id</code> – fetches the <code>id</code> field of a nested
+                  <code>user</code> map.</li>
+              <li><code>orders.0.id</code> – fetches the <code>id</code> of the first
+                  element in an <code>orders</code> list.</li>
+              <li><code>metadata.timestamp</code> – fetches a timestamp field.</li>
+            </ul>
+            <br/>
+            If the path points to a non‑existent key or an out‑of‑range list
+            index, the task will log a warning and leave the packet’s <code>id</code>
+            unchanged.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>
+      <strong>System variables</strong> – none. <strong>User variables</strong> – none.
+      The configuration is stored as a plain text field; no additional
+      validation is performed beyond ensuring the field is present.
+    </p>
+  </section>
+
+  <!-- Typical usage section -->
+  <section class="mb-5">
+    <h2>Typical Usage Pattern</h2>
+    <p>
+      1. <strong>Produce a packet</strong> – an upstream task generates a packet
+      whose <code>data</code> contains the field you want to use as an ID. <br/>
+      2. <strong>Configure the Identifier</strong> – set the <code>ID Element</code>
+      path to point to that field. <br/>
+      3. <strong>Wire the flow</strong> – connect the output of the data‑producing
+      task to the single input of <code>Identifier</code>, and connect
+      <code>Identifier</code>’s output to the next step (e.g., a database
+      writer, a file sink, or another processing task). <br/>
+      4. <strong>Execute</strong> – run the workflow. The packet that reaches
+      downstream steps will have a stable <code>id</code> that can be used for
+      correlation, deduplication, or routing.
+    </p>
+  </section>
+
+  <!-- Note section -->
+  <section class="mb-5">
+    <p class="text-muted">
+      Note: The Identifier task does not alter the packet’s data payload
+      (except for setting the <code>id</code>).  If you need to transform or
+      enrich the data itself, chain a separate processing task after
+      Identifier.
+    </p>
+  </section>
+</div>

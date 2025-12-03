@@ -1,0 +1,116 @@
+<!-- Joiner Task Documentation – normal page layout -->
+<div class="container py-5">
+  <!-- Title -->
+  <div class="row mb-4">
+    <div class="col">
+      <h1>Joiner Task</h1>
+    </div>
+  </div>
+
+  <!-- Intro -->
+  <div class="row mb-5">
+    <div class="col">
+      <p>
+        The <strong>Joiner</strong> task is a simple fan-in component that takes each
+        incoming <code>Packet</code> from all ports and writes it to a single output port.
+        It is useful when you need to duplicate merge data streams from multiple upstream
+        steps without modifying the payload.
+      </p>
+    </div>
+  </div>
+
+  <!-- Input section -->
+  <section class="mb-5">
+    <h2>Input</h2>
+    <p>
+      <strong>Ports:</strong> <code>n</code> (configurable via <code>JoinerConfig</code>, default 2).<br />
+      The task accepts <code>n</code> input ports. Each port may receive a single
+      <code>Packet</code> at a time. The packet may contain any combination of
+      fields – text, numbers, booleans, nested objects, or binary data arrays.
+      The task does <strong>not</strong> transform or inspect the contents; it simply
+      forwards the packet unchanged.
+    </p>
+
+    <p>
+      <strong>Restrictions:</strong>
+      <ul class="mb-0">
+        <li>Exactly one packet must be present on an input port before the task
+            will run for that packet.</li>
+        <li>If a port receives no packet, the task will wait until one arrives.</li>
+      </ul>
+    </p>
+  </section>
+
+  <!-- Output section -->
+  <section class="mb-5">
+    <h2>Output</h2>
+    <p>
+      <strong>Port:</strong> 1 (index 0) – the task declares a single logical
+      output port, but the implementation writes the received packet to *all*
+      connected output connectors. Each downstream task that is attached to an
+      output connector will receive the identical packet.
+    </p>
+
+    <p>
+      <strong>Packet contents:</strong> The output packet is a direct copy of
+      the input packet; all fields and metadata are preserved verbatim.
+    </p>
+  </section>
+
+  <!-- Configuration section -->
+  <section class="mb-5">
+    <h2>Configuration</h2>
+    <p>The Joiner is configured through a single user‑editable field:</p>
+
+    <table class="table table-sm table-bordered">
+      <thead class="thead-light">
+        <tr>
+          <th>Parameter</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>Number of Inputs</code></td>
+          <td>Integer</td>
+          <td>
+            The number of input ports that the task will expose. The default
+            value is <code>2</code> if the configuration is omitted. This value
+            determines how many upstream tasks can be wired to the Joiner.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>
+      <strong>System variables</strong> – none. <strong>User variables</strong> – none.
+    </p>
+  </section>
+
+  <!-- Typical usage section -->
+  <section class="mb-5">
+    <h2>Typical Usage Pattern</h2>
+    <p>
+      1. <strong>Configure</strong> – set the desired number of input ports via the
+         configuration panel.<br />
+      2. <strong>Connect inputs</strong> – wire each upstream data source to one of
+         the Joiner’s input ports.<br />
+      3. <strong>Connect outputs</strong> – attach as many downstream tasks as
+         needed to the single logical output port. The Joiner will forward each
+         received packet to all of them.<br />
+      4. <strong>Execute</strong> – run the workflow; each packet that arrives
+         on any input port will be broadcast to all downstream consumers.
+    </p>
+  </section>
+
+  <!-- Note section -->
+  <section class="mb-5">
+    <p class="text-muted">
+      Note: The Joiner does not perform any aggregation or deduplication; it
+      simply replicates each packet. If you need to merge data from multiple
+      streams into a single composite packet, consider using a different
+      task that supports aggregation logic.
+    </p>
+  </section>
+</div>

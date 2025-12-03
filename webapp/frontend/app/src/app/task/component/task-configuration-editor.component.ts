@@ -8,11 +8,12 @@ import { ActivatedRoute } from '@angular/router';
 import { TaskSpecification } from 'src/app/model/workflow/task-specification';
 import { EnumList } from 'src/app/model/workflow/enum-list';
 import { WorkflowService } from 'src/app/workflow/workflow.service';
+import { PacketEditorComponent } from './packet-editor.component';
 
 @Component({
 	selector: 'minty-task-config-editor',
 	templateUrl: 'task-configuration-editor.component.html',
-	imports: [CommonModule, FormsModule, MapEditorComponent, StringListEditorComponent, EnumListEditorComponent],
+	imports: [CommonModule, FormsModule, MapEditorComponent, StringListEditorComponent, EnumListEditorComponent, PacketEditorComponent],
 	providers: [
 		{
 			provide: NG_VALUE_ACCESSOR,
@@ -70,7 +71,7 @@ export class TaskConfigurationEditorComponent implements ControlValueAccessor, O
 	registerOnTouched(fn: any): void {
 		this.onTouched = fn;
 	}
-	setDisabledState(isDisabled: boolean): void {
+	setDisabledState(_isDisabled: boolean): void {
 		// Nah.
 	}
 

@@ -1,6 +1,3 @@
-//- packet-card.pug
-//	Expects locals: Id, Text, Data
-
 .card
 	.card-header.bg-primary.text-white
 		h5.mb-0 Id: #{Id}
@@ -10,7 +7,7 @@
 		h6.mt-0 text
 		ul.list-group
 			each txt in Text
-				li.list-group-item.list-group-item-action #{txt}
+				li.list-group-item.list-group-item-action !{txt}
 
 		//- Data array
 		if Data && Data.length
