@@ -39,16 +39,14 @@
 					<div class="col-4 col-sm-12"
 						*ngFor="let assistant of assistants | filter:{shared: false}; index as i">
 						<div class="card text-bg-light bg-opacity-75">
-							<div class="position-absolute top-0 end-0">
+							<div class="position-absolute top-0 end-0" *ngIf="isOwned(assistant)">
 								<button
-									*ngIf="isOwned(assistant)"
 									class="btn btn-sm"
 									style="font-size: 14px;"
 									(click)="editAssistant(assistant.id)">
 									<i class="bi bi-pencil-square"></i>
 								</button>
 								<button
-									*ngIf="isOwned(assistant)"
 									class="btn btn-sm"
 									style="font-size: 14px; color: red;"
 									[disabled]="deleteInProgress"
@@ -57,15 +55,15 @@
 								</button>
 							</div>
 							<div class="card-body">
-								<div class="row">
-									<div class="col-auto pe-0">
-										<h5 class="card-title">{{assistant.name}}</h5>
+								<div class="row align-items-center g-2">
+									<button class="btn btn-primary col-auto" (click)="startConversation(assistant)">Let's Rap!</button>
+									<div class="col-auto">
+										<h5 class="card-title mb-0">{{assistant.name}}</h5>
 									</div>
-									<div class="col-auto p-0">
+									<div class="col-auto">
 										<span class="badge text-bg-secondary mx-2">{{assistant.model}}</span>
 									</div>
 								</div>
-								<button class="btn btn-primary" (click)="startConversation(assistant)">Let's Rap!</button>
 							</div>
 						</div>
 					</div>
@@ -74,14 +72,32 @@
 					<h4>Shared Assistants</h4>
 					<ng-container *ngIf="sharedAssistants.length > 0; else noSharedAssistants">
 						<div class="col-4" *ngFor="let assistant of sharedAssistants; index as i">
-							<div class="card">
+							<div class="card text-bg-light bg-opacity-75">
+								<div class="position-absolute top-0 end-0" *ngIf="isOwned(assistant)">
+									<button
+										class="btn btn-sm"
+										style="font-size: 14px;"
+										(click)="editAssistant(assistant.id)">
+										<i class="bi bi-pencil-square"></i>
+									</button>
+									<button
+										class="btn btn-sm"
+										style="font-size: 14px; color: red;"
+										[disabled]="deleteInProgress"
+										(click)="deleteAssistant(assistant)">
+										<i class="bi bi-trash3"></i>
+									</button>
+								</div>
 								<div class="card-body">
-									<button *ngIf="isOwned(assistant)"
-										class="position-absolute top-0 end-0 bi bi-trash3"
-										style="font-size: 20px; color: red"
-										(click)="deleteAssistant(assistant)"></button>
-									<h5 class="card-title">{{assistant.name}}</h5>
-									<button class="btn btn-primary" (click)="startConversation(assistant)">Let's Rap!</button>
+									<div class="row align-items-center g-2">
+										<button class="btn btn-primary col-auto" (click)="startConversation(assistant)">Let's Rap!</button>
+										<div class="col-auto">
+											<h5 class="card-title mb-0">{{assistant.name}}</h5>
+										</div>
+										<div class="col-auto">
+											<span class="badge text-bg-secondary mx-2">{{assistant.model}}</span>
+										</div>
+									</div>
 								</div>
 							</div>
 						</div>

@@ -1,0 +1,141 @@
+<!-- PacketEmitter Task Documentation – normal page layout -->
+<div class="container py-5">
+  <!-- Title -->
+  <div class="row mb-4">
+    <div class="col">
+      <h1>Packet Emitter Task</h1>
+    </div>
+  </div>
+
+  <!-- Intro -->
+  <div class="row mb-5">
+    <div class="col">
+      <p>
+        The <strong>Packet Emitter</strong> is a <em>producer</em> task that emits a
+        user‑defined list of <code>Packet</code> objects into the workflow.
+        It runs once at the start of a workflow and does not consume any input.
+        Each packet defined in the configuration is written to the single
+        output port in the order they appear in the JSON list.
+      </p>
+    </div>
+  </div>
+
+  <!-- Input section -->
+  <section class="mb-5">
+    <h2>Input</h2>
+    <p>
+      The task accepts <strong>no input packets</strong>.
+    </p>
+  </section>
+
+  <!-- Output section -->
+  <section class="mb-5">
+    <h2>Output</h2>
+    <p>
+      <strong>Port:</strong> 0 – The task writes one packet for each item
+      in the <code>data</code> configuration field. The packet is passed
+      unchanged to downstream consumers.
+    </p>
+    <p>
+      Each output packet is a <code>Packet</code> object of the form:
+	  <pre><code>
+{
+	"id": "stringId",
+	"text": ["array", "of", "text"],
+	"data": [{"value": "array of JSON objects"}]
+}
+	  </code></pre>
+    </p>
+  </section>
+
+  <!-- Configuration section -->
+  <section class="mb-5">
+    <h2>Configuration</h2>
+    <p>
+      The task is configured via a single user-editable field that contains
+      a JSON array of packet objects. The JSON must be a top-level list
+      (e.g., <code>[{...}, {...}]</code>) and each element will be emitted
+      as a separate packet.
+    </p>
+
+    <table class="table table-sm table-bordered">
+      <thead class="thead-light">
+        <tr>
+          <th>Parameter</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>data</code></td>
+          <td>TextArea</td>
+          <td>
+            A JSON string that represents an array of packet objects.
+            <br/><br/>
+            <strong>Example:</strong>
+            <pre class="bg-light p-2">
+[
+  {
+    "id": "first",
+    "text": [
+	  "Hello, world!"
+	],
+    "data": [
+      {"value": 42},
+      {"value": "foo"}
+    ]
+  },
+  {
+    "id": "second",
+    "text": [
+	  "Another packet"
+	],
+    "data": []
+  }
+]
+            </pre>
+            <br/>
+            Each object in the array will be emitted as a distinct packet.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>
+      <strong>System variables</strong> – none.<br/>
+      <strong>User variables</strong> – none.
+    </p>
+  </section>
+
+  <!-- Typical usage section -->
+  <section class="mb-5">
+    <h2>Typical Usage Pattern</h2>
+    <p>
+      1. <strong>Create the packet list</strong> – Prepare a JSON array
+      that contains all the packets you want the workflow to process.
+      <br/><br/>
+      2. <strong>Configure the task</strong> – Paste the JSON into the
+      <code>data</code> field of the Packet Emitter in the workflow editor.
+      <br/><br/>
+      3. <strong>Connect the output</strong> – Wire the single output port
+      of the Packet Emitter to the next step in your pipeline (e.g., a
+      transformer, filter, or sink). Because the task emits multiple
+      packets, downstream steps will receive them one after another.
+      <br/><br/>
+      4. <strong>Run the workflow</strong> – Execute the workflow. The
+      Packet Emitter will emit each packet in the order defined in the
+      configuration, after which the workflow proceeds to the next
+      step.
+    </p>
+  </section>
+
+  <!-- Note section -->
+  <section class="mb-5">
+    <p class="text-muted">
+      Note: This task runs once at the start of the workflow - it is best
+	  used for static data or for generating a fixed set of packets that drive the rest
+      of the pipeline.
+    </p>
+  </section>
+</div>

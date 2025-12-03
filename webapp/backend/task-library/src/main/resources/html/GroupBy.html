@@ -1,0 +1,122 @@
+<!-- GroupBy Task Documentation – normal page layout -->
+<div class="container py-5">
+  <!-- Title -->
+  <div class="row mb-4">
+    <div class="col">
+      <h1>GroupBy Task</h1>
+    </div>
+  </div>
+
+  <!-- Intro -->
+  <div class="row mb-5">
+    <div class="col">
+      <p>
+        The <strong>GroupBy</strong> task aggregates a stream of packets that share the same
+        identifier. It is intended for use in workflows that need to collect
+        multiple related data items into a single packet before passing them
+        downstream. The task is a pure flow‑control operation – it does not
+        perform any transformation on the packet fields other than grouping.
+      </p>
+    </div>
+  </div>
+
+  <!-- Input section -->
+  <section class="mb-5">
+    <h2>Input</h2>
+    <p>
+      <strong>Port 0 (index 0):</strong> A single <code>Packet</code> that contains the key
+      identifier for the group. Only the packet’s <code>Id</code> field is used; all
+      other fields are ignored. The packet may contain any text or data
+      fields, but they are not considered by the task.
+    </p>
+
+    <p>
+      <strong>Port 1 (index 1):</strong> A sorted stream of <code>Packet</code> objects
+      that belong to the group. The stream must be ordered such that all
+      packets with the same <code>Id</code> appear consecutively. For each packet
+      on this port:
+      <ul class="mb-0">
+        <li>The <code>Id</code> must match the key packet’s <code>Id</code>.</li>
+        <li>All entries from the packet’s <code>dataList</code> and <code>text</code>
+          fields are appended to the aggregated result.</li>
+      </ul>
+    </p>
+
+    <p>
+      <strong>Restrictions:</strong>
+      <ul class="mb-0">
+        <li>Exactly two input ports must be connected. Supplying a third port
+          will cause the task to fail.</li>
+        <li>Port 1 must be sorted by <code>Id</code>; otherwise the grouping
+          will be incorrect and the task will throw a runtime exception.</li>
+        <li>The key packet (port 0) must arrive before any packets on port 1.</li>
+      </ul>
+    </p>
+  </section>
+
+  <!-- Output section -->
+  <section class="mb-5">
+    <h2>Output</h2>
+    <p>
+      <strong>Port 0 (index 0):</strong> The task writes a single aggregated
+      <code>Packet</code> to every connected output connector. The packet
+      contains:
+      <ul>
+        <li><code>Id</code> – copied from the key packet.</li>
+        <li><code>dataList</code> – a list that contains all data items from
+          every input packet on port 1.</li>
+        <li><code>text</code> – a list that contains all text entries from
+          every input packet on port 1.</li>
+      </ul>
+      No additional metadata is added. The packet is emitted once all
+      packets with the matching <code>Id</code> have been received and the
+      input stream on port 1 has terminated.
+    </p>
+  </section>
+
+  <!-- Configuration section -->
+  <section class="mb-5">
+    <h2>Configuration</h2>
+    <p>
+      The <strong>GroupBy</strong> task does not expose any user‑configurable
+      parameters. Its configuration class is <code>NullTaskConfig</code>, so
+      the task will run with default behaviour.
+    </p>
+    <p>
+      <strong>System variables</strong> – none.<br>
+      <strong>User variables</strong> – none.
+    </p>
+  </section>
+
+  <!-- Typical usage section -->
+  <section class="mb-5">
+    <h2>Typical Usage Pattern</h2>
+    <p>
+      1. <strong>Prepare a key packet</strong> – upstream, produce a packet that
+      carries the identifier you want to group by. This packet should be
+      sent to input port 0 of the <code>GroupBy</code> task.<br />
+      2. <strong>Send sorted data packets</strong> – upstream, generate a
+      stream of packets that contain the data you wish to aggregate. Ensure
+      that the stream is sorted by <code>Id</code> and that all packets with
+      the same identifier are contiguous. Connect this stream to input port 1.<br />
+      3. <strong>Connect the output</strong> – wire the single output port of
+      <code>GroupBy</code> to the next step in the workflow (e.g., a sink
+      task, another processing step, or a storage service).<br />
+      4. <strong>Run the workflow</strong> – when the workflow executes,
+      the task will collect all matching packets, aggregate their data and
+      text fields, and emit a single packet containing the combined lists.
+    </p>
+  </section>
+
+  <!-- Note section -->
+  <section class="mb-5">
+    <p class="text-muted">
+      Note: The task assumes that the incoming stream on port 1 is correctly
+      sorted. If the stream is not sorted, packets with the same <code>Id</code>
+      that appear after a different <code>Id</code> will not be grouped
+      together, leading to incomplete results. Ensure proper sorting in
+      upstream tasks or by using a dedicated sorting step before
+      <code>GroupBy</code>.
+    </p>
+  </section>
+</div>

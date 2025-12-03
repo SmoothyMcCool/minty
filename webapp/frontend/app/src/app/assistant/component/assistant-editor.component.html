@@ -38,7 +38,7 @@
 			[(ngModel)]="assistant.prompt"></textarea>
 	</div>
 	<div class="form-group mb-2 well p-2" *ngIf="assistant && ((availableDocuments && availableDocuments.length > 0) || (assistantDocuments && assistantDocuments.length > 0)); else noDocuments">
-		<label for="ragFile" class="form-label">Documents to make your assistant less dumb</label>
+		<label for="ragFile" class="form-label">Documents</label>
 		<div class="row">
 			<div class="col">
 				<strong>Available Documents</strong>

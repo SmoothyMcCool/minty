@@ -1,0 +1,130 @@
+<div class="container py-4">
+  <!-- Title -->
+  <div class="row mb-3">
+    <div class="col">
+      <h1>TextCollector Task</h1>
+    </div>
+  </div>
+
+  <!-- Intro -->
+  <div class="row mb-4">
+    <div class="col">
+      <p>
+        The <strong>TextCollector</strong> task aggregates all <code>Text</code> fragments that arrive on its
+        single input port.  The collected fragments are concatenated into a single string,
+        optionally separated by a user‑supplied delimiter, and emitted as a new <code>Packet</code>.
+        The task can operate in two modes:
+      </p>
+      <ul>
+        <li><strong>All</strong> – all packets received in the step are combined into one output.</li>
+        <li><strong>ById</strong> – packets that share the same <code>Id</code> are grouped together; a new
+            output is emitted when a packet with a different <code>Id</code> arrives.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Input section -->
+  <section class="mb-4">
+    <h2>Input</h2>
+    <p>
+      <strong>Port:</strong> 1 (index 0) – the task accepts a single <code>Packet</code> at a time.
+      The packet may contain any number of <code>Text</code> elements.  All of those
+      elements are concatenated in the order they are received.
+    </p>
+    <p>
+      <strong>Restrictions:</strong>
+      <ul class="mb-0">
+        <li>The task will <strong>not</strong> accept more than one input port; supplying a second
+            input will trigger a warning and be ignored.</li>
+        <li>Packets may be empty; an empty packet simply contributes nothing to the
+            final string.</li>
+      </ul>
+    </p>
+  </section>
+
+  <!-- Output section -->
+  <section class="mb-4">
+    <h2>Output</h2>
+    <p>
+      <strong>Port:</strong> 1 (index 0) – the task writes a single output packet that contains:
+      <ul>
+        <li><code>Text</code> – the concatenated string of all input fragments.</li>
+        <li><code>Id</code> – the <code>Id</code> of the first packet in the group (or <code>null</code> if the
+            task was configured for <strong>All</strong>).</li>
+      </ul>
+      The output packet is also captured as a step result so that the workflow
+      can capture it when assembling final workflow output.
+    </p>
+  </section>
+
+  <!-- Configuration section -->
+  <section class="mb-4">
+    <h2>Configuration</h2>
+    <p>The task is configured via two user‑editable fields:</p>
+
+    <table class="table table-sm table-bordered">
+      <thead class="thead-light">
+        <tr>
+          <th>Parameter</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>Grouping</code></td>
+          <td>SelectBox</td>
+          <td>
+            Determines how packets are grouped before concatenation.<br/>
+            <strong>All</strong> – collect every packet into a single output.<br/>
+            <strong>ById</strong> – group packets that share the same <code>Id</code>; a new output is emitted
+            when the <code>Id</code> changes.
+          </td>
+        </tr>
+        <tr>
+          <td><code>Separator</code></td>
+          <td>TextField</td>
+          <td>
+            Optional string that is inserted between each <code>Text</code> fragment in the
+            final output.  The default is an empty string (no separator).
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>
+      <strong>System variables</strong> – none.<br/>
+      <strong>User variables</strong> – none. The configuration is stored as a simple key/value
+      map; no additional parsing or validation is performed beyond ensuring the
+      fields are present.
+    </p>
+  </section>
+
+  <!-- Typical usage section -->
+  <section class="mb-4">
+    <h2>Typical Usage Pattern</h2>
+    <p>
+      1. <strong>Generate text</strong> – upstream tasks produce packets that contain the text fragments
+          you wish to collect.<br />
+      2. <strong>Configure</strong> – choose <code>All</code> if you want one final string, or <code>ById</code>
+          if you need separate strings per key.  Optionally set a <code>Separator</code> such as a comma
+          or newline.<br />
+      3. <strong>Connect</strong> – wire the output of the data‑producing task to the single input of
+          <code>TextCollector</code>, and connect its output to whatever sink (file, database,
+          downstream transformation, etc.) will consume the concatenated string.<br />
+      4. <strong>Execute</strong> – run the workflow; the task will emit a packet containing the
+          aggregated text and the step’s result will be that same packet.
+    </p>
+  </section>
+
+  <!-- Note section -->
+  <section class="mb-4">
+    <p class="text-muted">
+      Note: Because the task forwards all input packets to a single output when
+      configured for <strong>All</strong>, downstream steps should be prepared to handle
+      a potentially large string.  If you need finer control over grouping, use
+      the <strong>ById</strong> mode and ensure that upstream tasks set the <code>Id</code>
+      field appropriately.
+    </p>
+  </section>
+</div>

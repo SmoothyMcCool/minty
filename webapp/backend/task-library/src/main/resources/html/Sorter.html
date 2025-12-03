@@ -1,0 +1,111 @@
+<!-- Sorter Task Documentation – normal page layout -->
+<div class="container py-5">
+  <!-- Title -->
+  <div class="row mb-4">
+    <div class="col">
+      <h1>Sorter Task</h1>
+    </div>
+  </div>
+
+  <!-- Intro -->
+  <div class="row mb-5">
+    <div class="col">
+      <p>
+        The <strong>Sorter</strong> task is a lightweight flow‑control step that
+        receives a stream of <code>Packet</code> objects from the previous step,
+        waits until the upstream step signals that no more packets will arrive,
+        sorts the collected packets by their <code>Id</code> field, and forwards
+        them unchanged to the next step.  It is useful when downstream
+        components require deterministic ordering of data (e.g. for
+        deterministic file generation or for tests that compare results).
+      </p>
+    </div>
+  </div>
+
+  <!-- Input section -->
+  <section class="mb-5">
+    <h2>Input</h2>
+    <p>
+      <strong>Port:</strong> 1 (index 0) – the task accepts a single input
+      port that can receive an arbitrary number of packets.  The packets are
+      queued until the upstream step calls <code>inputTerminated(0)</code>.
+    </p>
+
+    <p>
+      <strong>Packet contents:</strong>
+      <ul class="mb-0">
+        <li>Any fields are allowed – the sorter does not inspect or modify
+            packet data.</li>
+        <li>The only field used for ordering is <code>Id</code>, which must be a
+            non‑null string that can be compared lexicographically.</li>
+        <li>Packets may contain text, numeric, boolean, or nested objects; all
+            are preserved unchanged.</li>
+      </ul>
+    </p>
+
+    <p>
+      <strong>Restrictions:</strong>
+      <ul class="mb-0">
+        <li>The task will not begin sorting until the input port is
+            terminated.  If the upstream step never terminates, the sorter
+            will wait indefinitely.</li>
+        <li>Only one input port is supported; attempting to send packets to
+            another port will result in a runtime exception.</li>
+      </ul>
+    </p>
+  </section>
+
+  <!-- Output section -->
+  <section class="mb-5">
+    <h2>Output</h2>
+    <p>
+      <strong>Port:</strong> 1 (index 0) – the sorter writes each received
+      packet to this single output port, in ascending order of their
+      <code>Id</code> values.  The output packets are identical to the
+      input packets; no additional metadata is added.
+    </p>
+
+    <p>
+      <strong>When no packets are received:</strong> the sorter completes
+      immediately and emits no output packets.
+    </p>
+  </section>
+
+  <!-- Configuration section -->
+  <section class="mb-5">
+    <h2>Configuration</h2>
+    <p>
+      The <strong>Sorter</strong> task does not expose any user‑configurable
+      parameters.  It uses <code>NullTaskConfig</code> internally, so the
+      workflow editor will show an empty configuration panel.  All
+      behaviour is fixed by the task logic.
+    </p>
+  </section>
+
+  <!-- Typical usage section -->
+  <section class="mb-5">
+    <h2>Typical Usage Pattern</h2>
+    <p>
+      1. <strong>Produce packets upstream</strong> – any previous step can
+          emit packets with arbitrary fields.  Ensure each packet has a
+          unique <code>Id</code> string for deterministic sorting.<br />
+      2. <strong>Configure the sorter</strong> – no configuration needed; just
+          add the task to the workflow.<br />
+      3. <strong>Wire ports</strong> – connect the upstream step’s output
+          to the <code>Sorter</code> input, and connect the sorter’s output to
+          the next step (file writer, database sink, etc.).<br />
+      4. <strong>Execute</strong> – run the workflow; the sorter will wait
+          for the upstream termination signal, sort the packets, and forward
+          them in order.
+    </p>
+  </section>
+
+  <!-- Note section -->
+  <section class="mb-5">
+    <p class="text-muted">
+      Note: Because the sorter relies solely on the packet <code>Id</code>
+      field, make sure that IDs are unique and comparable.  If two packets
+      share the same <code>Id</code>, their relative order is undefined.
+    </p>
+  </section>
+</div>

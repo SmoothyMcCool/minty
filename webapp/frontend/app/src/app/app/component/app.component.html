@@ -29,6 +29,10 @@
 				<button class="btn btn-outline-secondary me-2" (click)="navigateTo('/workflow/new')"
 					data-bs-toggle="collapse" data-bs-target=".navbar-collapse.show">New Workflow</button>
 			</li>
+			<li class="nav-item">
+				<a class="nav-link" (click)="navigateTo('/help')" data-bs-toggle="collapse"
+					data-bs-target=".navbar-collapse.show">Help</a>
+			</li>
 			<li class="nav-item" *ngIf="user && user.name == 'tom'">
 				<a class="nav-link" (click)="navigateTo('/statistics')" data-bs-toggle="collapse"
 					data-bs-target=".navbar-collapse.show">Stats</a>
@@ -57,8 +61,10 @@
 			<div class="row mb-3 mb-0">
 				<div class="col me-auto align-middle">
 					<div class="row" *ngFor="let alert of alertList.get('failure')">
-						<label class="col-form-label"><strong>Oh no!&nbsp;</strong><span
-								[innerHTML]="alert"></span></label>
+						<label class="col-form-label"><strong>Oh no!&nbsp;</strong><span>
+							<pre [innerHTML]="alert">
+							</pre>
+						</span></label>
 					</div>
 				</div>
 				<div class="col-auto">
@@ -67,5 +73,5 @@
 			</div>
 		</div>
 	</div>
-	<router-outlet></router-outlet>
 </div>
+<router-outlet></router-outlet>

@@ -46,11 +46,14 @@ public class SecurityConfig {
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-		http.csrf((csrf) -> csrf.disable())
-				// .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
-				.sessionManagement(configurer -> {
-					configurer.sessionCreationPolicy(SessionCreationPolicy.ALWAYS);
-				}).authorizeHttpRequests(authorizeRequests -> authorizeRequests.requestMatchers(r -> {
+		http
+			.csrf((csrf) -> csrf.disable())
+			// .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+			.sessionManagement(configurer -> configurer.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
+
+			.authorizeHttpRequests(authorizeRequests -> authorizeRequests
+
+				.requestMatchers(r -> {
 					String path = r.getServletPath();
 					List<String> extensions = List.of(".js", ".css", ".html", ".map", "ttf", ".woff", ".woff2", ".jpg",
 							".png");
@@ -60,12 +63,25 @@ public class SecurityConfig {
 						}
 					}
 					return false;
-				}).permitAll())
-				.authorizeHttpRequests(authorizeRequests -> authorizeRequests
-						.requestMatchers("/api/user/new", "/api/login").permitAll().anyRequest().authenticated())
+				}).permitAll()
+
+				.requestMatchers("/api/user/new", "/api/login").permitAll()
+
+				.requestMatchers("/api/**")	.authenticated()
+
+				.anyRequest().permitAll())
+				// .authorizeHttpRequests(authorizeRequests -> authorizeRequests
+				// .requestMatchers("/api/user/new",
+				// "/api/login").permitAll().anyRequest().authenticated())
 				.requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()))
+
 				.httpBasic(httpBasic -> {
-				}).logout(logout -> logout.logoutUrl("/api/logout").logoutSuccessUrl("/login"));
+				})
+
+				.logout(logout ->
+					logout.logoutUrl("/api/logout")
+						.logoutSuccessUrl("/login")
+				);
 
 		return http.build();
 

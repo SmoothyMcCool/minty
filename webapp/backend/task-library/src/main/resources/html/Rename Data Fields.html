@@ -1,0 +1,128 @@
+<div class="container py-5">
+  <!-- Title -->
+  <div class="row mb-4">
+    <div class="col">
+      <h1>Rename Data Fields Task</h1>
+    </div>
+  </div>
+
+  <!-- Intro -->
+  <div class="row mb-5">
+    <div class="col">
+      <p>
+        The <strong>Rename Data Fields</strong> task (group <em>Transformer</em>) takes a single
+        <code>Packet</code> that contains a list of key/value maps and produces a new
+        <code>Packet</code> with the same <code>Id</code> but with selected keys renamed according
+        to a user‑supplied mapping.  The task is useful when downstream steps expect
+        different field names or when you need to standardise a data set.
+      </p>
+    </div>
+  </div>
+
+  <!-- Input section -->
+  <section class="mb-5">
+    <h2>Input</h2>
+    <p>
+      <strong>Port:</strong> 1 (index 0) – the task accepts exactly one input packet.
+    </p>
+
+    <p>
+      The packet must contain a <code>DataList</code> that is a <code>List&lt;Map&lt;String,Object&gt;&gt;</code>.
+      Each map represents a record and may contain any number of fields.  The
+      task iterates over every map in the list and applies the rename mapping
+      to each key.  The values are preserved unchanged.  No additional
+      transformation is performed on nested objects or arrays.
+    </p>
+
+    <p>
+      <strong>Restrictions:</strong>
+      <ul class="mb-0">
+        <li>Only a single input packet is allowed. Supplying more than one input
+            will cause the task to throw a runtime exception.</li>
+        <li>The input packet must not be <code>null</code>; otherwise the task
+            will write an empty result packet.</li>
+      </ul>
+    </p>
+  </section>
+
+  <!-- Output section -->
+  <section class="mb-5">
+    <h2>Output</h2>
+    <p>
+      <strong>Port:</strong> 1 (index 0) – the task writes a single output packet.
+      The packet contains:
+      <ul>
+        <li><code>Id</code> – copied from the input packet so that downstream
+            steps can correlate the output with the original data.</li>
+        <li><code>DataList</code> – a list of maps identical to the input’s
+            list, except that any key present in the rename mapping is replaced
+            by its mapped name.  Keys not in the mapping remain unchanged.</li>
+      </ul>
+      No other metadata is added to the packet.
+    </p>
+  </section>
+
+  <!-- Configuration section -->
+  <section class="mb-5">
+    <h2>Configuration</h2>
+    <p>The task is configured via a single JSON‑style mapping field:</p>
+
+    <table class="table table-sm table-bordered">
+      <thead class="thead-light">
+        <tr>
+          <th>Parameter</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>Renames</code></td>
+          <td>Map&lt;String,String&gt;</td>
+          <td>
+            A key/value map where each entry specifies a field name to be
+            replaced (<code>originalKey</code>) and the new field name
+            (<code>newKey</code>).  For example:<br/>
+            <code>{ "A": "Aa", "B": "Bb" }</code><br/>
+            Any key in the input packet that matches an entry’s key will be
+            renamed to the corresponding value.  Keys not listed are left
+            untouched.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>
+      <strong>System variables</strong> – none.<br/>
+      <strong>User variables</strong> – none.
+    </p>
+  </section>
+
+  <!-- Typical usage section -->
+  <section class="mb-5">
+    <h2>Typical Usage Pattern</h2>
+    <p>
+      1. <strong>Prepare data</strong> – upstream tasks produce a packet that
+      contains a <code>DataList</code> of maps with the original field names.<br />
+      2. <strong>Configure the task</strong> – in the workflow editor enter a
+      JSON mapping that lists the fields to rename and their new names.<br />
+      3. <strong>Connect</strong> – wire the output of the data‑producing task
+      to the single input of the <code>Rename Data Fields</code> task, and
+      wire its output to the next step (e.g., a sink or another transformer).<br />
+      4. <strong>Execute</strong> – run the workflow; the task will emit a
+      packet that contains the same data but with the specified keys renamed.
+    </p>
+  </section>
+
+  <!-- Note section -->
+  <section class="mb-5">
+    <p class="text-muted">
+      Note: The task performs a shallow rename – it only changes the top‑level
+      keys of each map.  If your data contains nested maps that also need
+      renaming, you must handle those separately or extend the task
+      accordingly.  The task preserves the original <code>Id</code> and does
+      not alter values, timestamps, or other metadata that may be present
+      in the packet.
+    </p>
+  </section>
+</div>

@@ -1,0 +1,109 @@
+<!-- Splitter Task Documentation – normal page layout -->
+<div class="container py-5">
+  <!-- Title -->
+  <div class="row mb-4">
+    <div class="col">
+      <h1>Splitter Task</h1>
+    </div>
+  </div>
+
+  <!-- Intro -->
+  <div class="row mb-5">
+    <div class="col">
+      <p>
+        The <strong>Splitter</strong> task is a simple flow‑control primitive that takes a single
+        <code>Packet</code> from its sole input port and writes that same packet to
+        every connected output port.  The packet is forwarded unmodified – all
+        fields, text, data arrays, or nested objects are preserved exactly as they
+        arrived.
+      </p>
+    </div>
+  </div>
+
+  <!-- Input section -->
+  <section class="mb-5">
+    <h2>Input</h2>
+    <p>
+      <strong>Port:</strong> 1 (index 0) – the task consumes exactly one packet.
+      The packet may contain any number of fields, including primitive values,
+      arrays, or complex objects.  No transformation or filtering is performed;
+      the entire packet is passed through to the outputs.
+    </p>
+  </section>
+
+  <!-- Output section -->
+  <section class="mb-5">
+    <h2>Output</h2>
+    <p>
+      <strong>Port(s):</strong> 1 to N – the number of outputs is defined by the
+      configuration (default 2).  For each connected output port the task
+      writes a copy of the input packet.  The packet’s <code>Id</code> and all
+      other metadata are preserved.
+    </p>
+
+    <p>
+      <strong>Behaviour:</strong> The same packet instance is written to every
+      output port.  Downstream tasks can therefore receive identical data
+      from multiple branches of the workflow.
+    </p>
+  </section>
+
+  <!-- Configuration section -->
+  <section class="mb-5">
+    <h2>Configuration</h2>
+    <p>The task is configured via a single user‑editable field:</p>
+
+    <table class="table table-sm table-bordered">
+      <thead class="thead-light">
+        <tr>
+          <th>Parameter</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>Number of Outputs</code></td>
+          <td>Integer</td>
+          <td>
+            Specifies how many output ports the task should expose.  The
+            default value is <code>2</code>.  The value must be a positive integer.
+            Changing this value will add or remove output connectors at
+            runtime; any downstream tasks must be re‑connected accordingly.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>
+      <strong>System variables</strong> – none. <strong>User variables</strong> – none.
+    </p>
+  </section>
+
+  <!-- Typical usage section -->
+  <section class="mb-5">
+    <h2>Typical Usage Pattern</h2>
+    <p>
+      1. <strong>Prepare data</strong> – an upstream task emits a packet that
+         contains the data you wish to duplicate.<br />
+      2. <strong>Configure the task</strong> – set the desired number of
+         outputs (e.g., 3) in the workflow editor.<br />
+      3. <strong>Connect</strong> – wire the upstream task’s output to the
+         <code>Splitter</code> input, and wire each of the <code>Splitter</code>
+         outputs to the downstream tasks that should receive the same data.<br />
+      4. <strong>Execute</strong> – run the workflow.  The packet will be
+         forwarded unchanged to every connected branch.
+    </p>
+  </section>
+
+  <!-- Note section -->
+  <section class="mb-5">
+    <p class="text-muted">
+      Note: Because the <code>Splitter</code> forwards the exact same packet
+      instance to each output, downstream tasks that modify the packet in
+      place will see those changes reflected on all branches.  If isolation
+      between branches is required, consider cloning the packet before
+      writing to each output.
+    </p>
+  </section>
+</div>

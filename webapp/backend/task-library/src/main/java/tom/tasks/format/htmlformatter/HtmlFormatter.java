@@ -158,4 +158,8 @@ public class HtmlFormatter implements MintyTask, ServiceConsumer {
 		this.logger = workflowLogger;
 	}
 
+	@Override
+	public String html() {
+		return "";
+	}
 }

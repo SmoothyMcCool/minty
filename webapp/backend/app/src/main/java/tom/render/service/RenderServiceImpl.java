@@ -21,7 +21,6 @@ import de.neuland.pug4j.model.PugModel;
 import de.neuland.pug4j.template.PugTemplate;
 import tom.api.services.RenderService;
 import tom.config.ExternalProperties;
-import tom.output.pug.HelperFunctions;
 import tom.task.ExecutionResult;
 import tom.task.Packet;
 import tom.workflow.service.WorkflowService;

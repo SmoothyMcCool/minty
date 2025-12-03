@@ -24,11 +24,23 @@
 			<groupId>tom.minty</groupId>
 			<artifactId>app</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
+			<exclusions>
+				<exclusion>
+					<groupId>tom.minty</groupId>
+					<artifactId>task-library</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>tom.minty</groupId>
 			<artifactId>workflow-executor</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
+			<exclusions>
+				<exclusion>
+					<groupId>tom.minty</groupId>
+					<artifactId>task-library</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 	</dependencies>
 

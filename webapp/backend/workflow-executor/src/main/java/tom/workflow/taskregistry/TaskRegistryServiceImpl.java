@@ -1,11 +1,13 @@
 package tom.workflow.taskregistry;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -23,6 +25,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import jakarta.annotation.PostConstruct;
 import tom.api.UserId;
 import tom.api.services.TaskServices;
@@ -30,6 +34,7 @@ import tom.config.ExternalProperties;
 import tom.task.MintyTask;
 import tom.task.OutputTask;
 import tom.task.OutputTaskSpec;
+import tom.task.Packet;
 import tom.task.ServiceConsumer;
 import tom.task.TaskConfigSpec;
 import tom.task.TaskConfigTypes;
@@ -53,6 +58,8 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 
 	private final Map<String, ImmutablePair<Class<?>, Map<String, TaskConfigTypes>>> runnableTasks;
 	private final Map<String, ImmutablePair<Class<?>, Map<String, TaskConfigTypes>>> outputTasks;
+	private final Map<String, String> taskHelpFiles;
+	private final Map<String, String> outputHelpFiles;
 	private final List<Class<? extends EnumSpecCreator>> enumSpecCreators;
 	private final Map<String, String> systemConfigs;
 	private final Map<String, String> userConfigs;
@@ -64,6 +71,8 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 			ExternalProperties properties) {
 		runnableTasks = new HashMap<>();
 		outputTasks = new HashMap<>();
+		taskHelpFiles = new HashMap<>();
+		outputHelpFiles = new HashMap<>();
 		enumSpecCreators = new ArrayList<>();
 		systemConfigs = new HashMap<>();
 		userConfigs = new HashMap<>();
@@ -82,12 +91,15 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 			List<Path> paths = stream.filter(file -> file.toString().endsWith(".jar")).toList();
 
 			List<String> classes = new ArrayList<>();
+			List<String> htmlFiles = new ArrayList<>();
 			for (Path path : paths) {
 				logger.info("Found library " + path.toString());
-				classes.addAll(getClassesFrom(path));
+				classes.addAll(getFilesFrom(path, ".class"));
+				htmlFiles.addAll(getFilesFrom(path, ".html"));
 			}
 			findAndRegisterAllTaskClasses(classes, paths);
 			findAndRegisterAllEnumListClasses(classes, paths);
+			findAndRegisterAllHtmlFiles(htmlFiles, paths);
 
 		} catch (Exception e) {
 			logger.warn("initialize: failed to process libraries. ", e);
@@ -171,6 +183,33 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 			logger.warn("findAndRegisterAllTaskClasses: Failed to load class: ", e);
 		}
 
+	}
+
+	private void findAndRegisterAllHtmlFiles(List<String> fileNames, List<Path> jarPaths) {
+		for (Path path : jarPaths) {
+			try (JarFile jar = new JarFile(path.toFile())) {
+
+				jar.stream().filter(entry -> !entry.isDirectory() && entry.getName().endsWith(".html"))
+						.forEach(entry -> {
+							try (InputStream in = jar.getInputStream(entry)) {
+
+								String fileName = entry.getName().replaceAll("^.*[\\\\/]", "").replaceAll("\\.[^.]+$",
+										"");
+								if (runnableTasks.containsKey(fileName)) {
+									String content = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+									taskHelpFiles.put(fileName, content);
+								} else if (outputTasks.containsKey(fileName)) {
+									String content = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+									outputHelpFiles.put(fileName, content);
+								}
+							} catch (Exception ex) {
+								throw new RuntimeException("Failed to read " + entry.getName(), ex);
+							}
+						});
+			} catch (IOException e) {
+				logger.warn("findAndRegisterAllHtmlFiles: Could not load URL. ", e);
+			}
+		}
 	}
 
 	private void loadOutputTask(Class<?> loadedClass) throws ClassNotFoundException, InstantiationException,
@@ -331,22 +370,22 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 		return true;
 	}
 
-	private List<String> getClassesFrom(Path path) {
-		List<String> classes = new ArrayList<>();
+	private List<String> getFilesFrom(Path path, String extension) {
+		List<String> files = new ArrayList<>();
 
 		try (JarFile jarFile = new JarFile(path.toFile())) {
 			var entries = jarFile.entries();
 			while (entries.hasMoreElements()) {
 				JarEntry entry = entries.nextElement();
 				String name = entry.getName();
-				if (name.endsWith(".class") && !entry.isDirectory()) {
-					classes.add(name);
+				if (name.endsWith(extension) && !entry.isDirectory()) {
+					files.add(name);
 				}
 			}
 		} catch (IOException e) {
-			logger.warn("getTaskClassesFrom: caught exception: ", e);
+			logger.warn("getFilesFrom: caught exception: ", e);
 		}
-		return classes;
+		return files;
 	}
 
 	public MintyTask newTask(UserId userId, TaskRequest request) {
@@ -557,6 +596,16 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 	}
 
 	@Override
+	public Map<String, String> getTaskHelpFiles() {
+		return taskHelpFiles;
+	}
+
+	@Override
+	public Map<String, String> getOutputHelpFiles() {
+		return outputHelpFiles;
+	}
+
+	@Override
 	public Map<String, String> getConfigForOutputTask(String outputName) {
 		if (!outputTasks.containsKey(outputName)) {
 			logger.warn("Output task " + outputName + " does not exist.");
@@ -603,6 +652,15 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 				case TaskConfigTypes.Map -> "{}";
 				case TaskConfigTypes.TextArea -> "";
 				case TaskConfigTypes.EnumList -> "";
+				case TaskConfigTypes.Packet -> {
+					String result = "";
+					try {
+						result = new Packet().toJson();
+					} catch (JsonProcessingException e) {
+						logger.warn("Failed to JSON-ify packet: ", e);
+					}
+					yield result;
+				}
 				};
 
 				taskCfg.put(innerEntry.getKey(), value);

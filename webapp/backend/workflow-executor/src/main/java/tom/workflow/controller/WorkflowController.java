@@ -3,6 +3,7 @@ package tom.workflow.controller;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -195,6 +196,20 @@ public class WorkflowController {
 	public ResponseEntity<ResponseWrapper<List<EnumSpec>>> listEnumerations(
 			@AuthenticationPrincipal UserDetailsUser user) {
 		List<EnumSpec> enums = this.taskRegistryService.getEnumerations(user.getId());
+		return new ResponseEntity<>(ResponseWrapper.SuccessResponse(enums), HttpStatus.OK);
+	}
+
+	@GetMapping(value = { "/help/task" })
+	public ResponseEntity<ResponseWrapper<Map<String, String>>> getTaskHelpFiles(
+			@AuthenticationPrincipal UserDetailsUser user) {
+		Map<String, String> enums = this.taskRegistryService.getTaskHelpFiles();
+		return new ResponseEntity<>(ResponseWrapper.SuccessResponse(enums), HttpStatus.OK);
+	}
+
+	@GetMapping(value = { "/help/output" })
+	public ResponseEntity<ResponseWrapper<Map<String, String>>> getOutputHelpFiles(
+			@AuthenticationPrincipal UserDetailsUser user) {
+		Map<String, String> enums = this.taskRegistryService.getOutputHelpFiles();
 		return new ResponseEntity<>(ResponseWrapper.SuccessResponse(enums), HttpStatus.OK);
 	}
 }

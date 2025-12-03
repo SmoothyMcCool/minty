@@ -18,7 +18,7 @@ import { Conversation } from 'src/app/model/conversation';
 	imports: [CommonModule, FormsModule, ConversationComponent, ConfirmationDialogComponent],
 	templateUrl: 'view-conversation.component.html'
 })
-export class ViewConversationComponent implements OnInit, OnDestroy{
+export class ViewConversationComponent implements OnInit, OnDestroy {
 
 	user: User;
 	DisplayMode = DisplayMode;

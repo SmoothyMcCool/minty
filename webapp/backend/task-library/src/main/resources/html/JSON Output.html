@@ -1,0 +1,66 @@
+<h1 class="mb-0">JSON Output</h1>
+
+<p>Turn the raw results of your workflow into a single, well‑structured JSON document.  
+The rendered JSON is returned as the final output of the workflow.</p>
+
+<hr>
+
+<h2>What It Does</h2>
+<ul>
+  <li>Accepts the <code>ExecutionResult</code> from your workflow.</li>
+  <li>Converts that data into a JSON representation.</li>
+  <li>Produces a single <code>text/json</code> file containing the fully rendered document.</li>
+</ul>
+
+<h2>Configuration</h2>
+<p>The JSON Output task does not require any configuration settings.</p>
+
+<table class="table table-bordered">
+  <thead class="table-light">
+    <tr>
+      <th scope="col">Parameter</th>
+      <th scope="col">Type</th>
+      <th scope="col">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td colspan="3" class="text-center text-muted">No configuration needed for this task.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Accessing Data in Your JSON Output</h3>
+<p>The JSON document will contain these top‑level keys:</p>
+<ul>
+  <li><code>startTime</code> – Time the workflow started.</li>
+  <li><code>endTime</code> – Time the workflow completed.</li>
+  <li><code>results</code> – Map of step names to lists of result objects.</li>
+  <li><code>errors</code> – Map of step names to lists of error messages.</li>
+</ul>
+
+<pre class="bg-light p-3"><code>{
+  "startTime": "2025-12-02T10:15:30Z",
+  "endTime": "2025-12-02T10:17:45Z",
+  "results": {
+    "Data Import": [
+      { "id": 1, "value": "foo" },
+      { "id": 2, "value": "bar" }
+    ],
+    "Analysis": [
+      { "metric": "count", "value": 42 }
+    ]
+  },
+  "errors": {
+    "Data Import": [],
+    "Analysis": ["Missing field 'value' in record 3"]
+  }
+}
+</code></pre>
+
+<h2>Output Format</h2>
+<p>The task always produces output in <code>text/json</code>.</p>
+
+<h2>Summary</h2>
+<p>Use the <strong>JSON Output</strong> task whenever you need to export the results of a workflow into a single JSON file.  
+No configuration is required – simply add the task to the workflow and the rendered JSON will be stored as the workflow’s output.</p>

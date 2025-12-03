@@ -11,6 +11,8 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 
 public class Packet {
 
+	private static ObjectMapper mapper = new ObjectMapper();
+
 	private String id;
 	private List<String> text;
 	private List<Map<String, Object>> data;
@@ -90,5 +92,9 @@ public class Packet {
 
 	public void addTextList(List<String> textList) {
 		this.text.addAll(textList);
+	}
+
+	public String toJson() throws JsonProcessingException {
+		return mapper.writeValueAsString(this);
 	}
 }

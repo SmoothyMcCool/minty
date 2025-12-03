@@ -1,0 +1,45 @@
+<div class="container my-5">
+
+	<h1>Creating and Editing</h1>
+
+	<p>
+		Workflows are composed of individual <strong>tasks</strong> that perform specific actions, plus one
+		special <strong>output task</strong> that runs once all other tasks have finished. The typical workflow
+		begins with a <code>PacketEmitter</code> that carries the state needed to drive the rest of the
+		pipeline, such as a query ID or other contextual data.
+	</p>
+
+	<ul class="list-group mb-4">
+		<li class="list-group-item"><strong>Tasks</strong> - The building blocks of a workflow. Connect them in the
+			order that matches the business logic you need to implement.</li>
+		<li class="list-group-item"><strong>PacketEmitter</strong> - The first task in most workflows. It emits a packet
+			that contains the state information required by subsequent tasks.</li>
+		<li class="list-group-item"><strong>Per-packet results</strong> - Some tasks keep a copy of the data they
+			processed for later use. Refer to the individual task documentation for details on how to store, retrieve,
+			or manipulate these results.</li>
+		<li class="list-group-item"><strong>Array handling</strong> - Most tasks can operate on arrays of text or data.
+			However, it is usually simpler to design the workflow so that each piece of information lives in its own
+			packet. This avoids the need to split, normalize, duplicate, or combine arrays. The Task documentation
+			provides guidance on how to perform these operations if you do need to work with arrays.</li>
+	</ul>
+
+	<h1 class="mb-3">Output Tasks</h1>
+
+	<p class="mb-4">
+		Output tasks are special because they execute only once, after all other tasks have completed. They receive an
+		<strong>ExecutionResult</strong> object that contains metadata and aggregated results from the entire workflow.
+	</p>
+
+	<ul class="list-group mb-4">
+		<li class="list-group-item"><strong>startTime</strong> - Timestamp when the workflow started.</li>
+		<li class="list-group-item"><strong>endTime</strong> - Timestamp when the workflow finished.</li>
+		<li class="list-group-item"><strong>logFile</strong> - Path or URL to the log file generated during execution.
+		</li>
+		<li class="list-group-item"><strong>results</strong> - A map keyed by step names (not task names). Each key maps
+			to a list of JSON objects, one for every packet processed by that step. Example usage: assembling HTML
+			fragments from multiple <code>HTML Formatter</code> tasks.</li>
+		<li class="list-group-item"><strong>errors</strong> - Structured like <code>results</code>. Contains a list of
+			error strings emitted by different tasks, if any.</li>
+	</ul>
+
+</div>

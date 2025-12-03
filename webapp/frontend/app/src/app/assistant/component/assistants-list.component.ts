@@ -158,7 +158,9 @@ export class AssistantsListComponent implements OnInit {
 		this.confirmDeleteConversationVisible = false;
 		this.conversationService.delete(this.conversationPendingDeletionId).subscribe(() => {
 			this.assistantService.list().subscribe(assistants => {
+				this.sortAssistants(assistants);
 				this.assistants = assistants;
+				this.sharedAssistants = this.assistants.filter(assistant => assistant.shared === true);
 			});
 			this.conversationService.list().subscribe(conversations => {
 				this.conversations = conversations;

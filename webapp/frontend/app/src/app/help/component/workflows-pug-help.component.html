@@ -1,0 +1,122 @@
+<div class="container-fluid">
+	<h1 class="mb-4">Some Sample Templates For Workflow Output</h1>
+
+	<div class="row">
+		<!-- Table of Contents (Left side) -->
+		<nav class="col-2 mb-4 mb-0" id="toc">
+			<h5>Table of Contents</h5>
+			<ul class="nav flex-column nav-pills">
+				<!-- Each link points to a fragment ID -->
+				<li class="nav-item"><a class="nav-link" [routerLink]="[]" fragment="PacketExample">1. Render a Packet
+						as a Bootstrap Card</a></li>
+				<li class="nav-item"><a class="nav-link" [routerLink]="[]"fragment="#workflowOutput">2. Workflow Output</a></li>
+				<!-- Add more items here -->
+			</ul>
+		</nav>
+
+		<!-- Main content area (Right side) -->
+		<div class="col-10">
+			<!-- Fragment 1 -->
+			<section id="PacketExample">
+				<h2>Render a Packet as a Bootstrap Card</h2>
+				<div class="row">
+					<!-- Code -->
+					<div class="col-8">
+						<h3 class="mb-2">Pug Code</h3>
+						<markdown [data]="packetExampleCode"></markdown>
+					</div>
+
+					<!-- Explanation -->
+					<div class="col-4">
+						<h3 class="mb-2">Explanation</h3>
+						<p>
+							This fragment renders out a packet as a Bootstrap card. This might be handy, for example,
+							to render out Packets that come from an LLM, for later assembly into a larger document.
+							Some things of note in this example:
+						<ol>
+							<li><code>!&#123;txt&#125;</code> - the <code>!</code> at the start tells Pug to directly
+								inline whatever the value
+								of txt with no interpretation. Use <code>!</code> to inline already rendered HTML. Use
+								<code>#</code> to have pug interpret <code>txt</code>.</li>
+							<li>You can reference different fields in the Packet using <code>Id</code>,
+								<code>Text</code>, and <code>Data</code>. <strong>Note that Pug is
+									CaSe-SeNsItIvE</strong></li>
+							<li><code>Text</code> and <code>Data</code> can contain arrays of data, so note how the
+								template iterates over them.</li>
+							<li>You can index into the <code>Data</code> object. If the <code>Data</code> object
+								containsa a field, <code>"name"</code>, it can be accessed using
+								<code>&#123;Data.name&#125;</code>, and so on.</li>
+							<li>The rendering engine is not truly running JavaScript and does not have an execution
+								environment, so standard JS objects don't exist.
+								Functions can be written to add in missing functionaly. For example, see the use of
+								<code>Helpers.jsonToString</code>, instead of the regular
+								<code>JSON.stringify()</code>.
+							</li>
+						</ol>
+						For the input:
+						<pre><code>
+&#123;
+  "Id": "p1",
+  "Text": ["single-text-element"],
+  "Data": []
+&#125;
+							</code></pre>
+						The output of this fragment is:
+						<div class="card">
+							<div class="card-header bg-primary text-white">
+								<h5 class="mb-0">Id: p1</h5>
+							</div>
+							<div class="card-body">
+								<h6 class="mt-0">text</h6>
+								<ul class="list-group">
+									<li class="list-group-item list-group-item-action">
+										<div class="card">
+											<div class="card-header">
+												Packet ID: <strong>p1</strong>
+											</div>
+											<div class="card-body">
+												"single‑text‑element"
+											</div>
+										</div>
+									</li>
+								</ul>
+								<p class="text-muted">No data available.</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- Fragment 2 -->
+			<section id="workflowOutput">
+				<div class="row">
+					<h2>Workflow Output Task</h2>
+					<!-- Code -->
+					<div class="col-8">
+						<h3 class="mb-2">Pug Code</h3>
+						<markdown [data]="outputExampleCode" [lineNumbers]="true"></markdown>
+					</div>
+
+					<!-- Explanation -->
+					<div class="col-4">
+						<h3 class="mb-2">Explanation</h3>
+						<p>
+							This is a complete example of formatting the output when using the Render Pug Template Output.
+							This template dynamically renders a list of results based on the results of previous tasks. In this case,
+							it references the "HTML Formatter" task, and inlines each result from that task into the resulting script.
+							<br><br>
+							This fragment: <code>!&#123;Helpers.jsonToString(results["HTML Formatter"])&#125;</code> grabs all results from a
+							Task named "HTML Formatter" and inlines the result text (in this case HTML) into the template without any
+							interpretation. This allows for rendering HTML snippets in the workflow, and referencing them later.
+							<br><br>
+							Also notice how Bootstrap is included in this script. Minty can serve out bootstrap directly when in an offline
+							environment, but if the resulting HTML file is brought to a different network with Internet, bootstrap will load
+							from the CDN.
+						</p>
+					</div>
+				</div>
+			</section>
+
+		</div>
+	</div>
+</div>

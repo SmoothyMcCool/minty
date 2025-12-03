@@ -1,0 +1,152 @@
+<!-- ConfluenceQuery Task Documentation – normal page layout -->
+<div class="container py-5">
+  <!-- Title -->
+  <div class="row mb-4">
+    <div class="col">
+      <h1>Get Confluence Pages</h1>
+    </div>
+  </div>
+
+  <!-- Intro -->
+  <div class="row mb-5">
+    <div class="col">
+      <p>
+        The <strong>Get Confluence Pages</strong> task retrieves the HTML body of one or more Confluence pages
+        via the Confluence REST API.  It consumes a single <code>Packet</code> that contains a
+        configuration map and emits a <code>Packet</code> for each requested page.  Each
+        output packet contains the cleaned page HTML as plain text, the original
+        <code>DataList</code> from the input packet, and the same <code>Id</code> as the input.
+        This task is typically used as a producer step in a workflow that needs to
+        fetch page content for further processing or storage.
+      </p>
+    </div>
+  </div>
+
+  <!-- Input section -->
+  <section class="mb-5">
+    <h2>Input</h2>
+    <p>
+      <strong>Port:</strong> 1 (index 0) – the task accepts exactly one input packet.
+      The packet must contain <strong>exactly one data element</strong> (a <code>Map<String,Object></code>).
+      The data element may include any fields, but only the following keys are used
+      to override the configuration:
+      <ul>
+        <li><code>Pages</code> – a list of page IDs that will replace the
+            <code>pages</code> value defined in the task configuration.</li>
+      </ul>
+      The packet’s <code>Text</code> field is ignored; only the <code>DataList</code> is forwarded to the
+      output packets unchanged.
+    </p>
+
+    <p>
+      <strong>Restrictions:</strong>
+      <ul class="mb-0">
+        <li>The input packet must contain a single data element; otherwise the
+            task fails immediately.</li>
+        <li>Only one input port is supported – any attempt to provide a second
+            input will result in a configuration error.</li>
+      </ul>
+    </p>
+  </section>
+
+  <!-- Output section -->
+  <section class="mb-5">
+    <h2>Output</h2>
+    <p>
+      <strong>Port:</strong> 1 (index 0) – the task writes one packet for
+      each page ID requested.  Each output packet contains:
+      <ul>
+        <li><code>Text</code> – the cleaned HTML body of the page (macros such as
+            <code>&lt;ac:…&gt;</code> and <code>&lt;ri:…&gt;</code> are removed).</li>
+        <li><code>DataList</code> – identical to the input packet’s data list.</li>
+        <li><code>Id</code> – identical to the input packet’s ID, allowing
+            downstream steps to correlate the result with the original request.</li>
+      </ul>
+      No additional metadata is added to the packet.
+    </p>
+  </section>
+
+  <!-- Configuration section -->
+  <section class="mb-5">
+    <h2>Configuration</h2>
+    <p>The task is configured via the following parameters:</p>
+
+    <table class="table table-sm table-bordered">
+      <thead class="thead-light">
+        <tr>
+          <th>Parameter</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>Base URL</code></td>
+          <td>Text</td>
+          <td>The base URL of the Confluence instance (e.g., <code>https://confluence.example.com</code>).
+              The trailing slash is optional; it will be normalised automatically.</td>
+        </tr>
+        <tr>
+          <td><code>Username</code></td>
+          <td>Text</td>
+          <td>The Confluence user name used for basic authentication.</td>
+        </tr>
+        <tr>
+          <td><code>API Key</code></td>
+          <td>Password</td>
+          <td>The API key or personal access token that authorises the request.</td>
+        </tr>
+        <tr>
+          <td><code>Use Bearer Auth</code></td>
+          <td>Boolean</td>
+          <td>When checked, the API key is sent as a bearer token (e.g. <code>Authorization: Bearer …</code>);
+              otherwise basic authentication is used.</td>
+        </tr>
+        <tr>
+          <td><code>Pages</code></td>
+          <td>List of Strings</td>
+          <td>One or more Confluence page IDs to fetch.  This list can be overridden
+              by the <code>Pages</code> key in the input packet’s data element.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>
+      <strong>System variables</strong> – none. <strong>User variables</strong> – none.
+      The configuration is stored as JSON; the editor validates the fields
+      against the above schema before the workflow can be executed.
+    </p>
+  </section>
+
+  <!-- Typical usage section -->
+  <section class="mb-5">
+    <h2>Typical Usage Pattern</h2>
+    <p>
+      1. <strong>Configure the task</strong> – enter the Confluence base URL, user name,
+      API key, and the list of page IDs that should be fetched.  If you want to
+      supply the page list dynamically, leave the <code>Pages</code> field empty and
+      let a preceding task inject a <code>Pages</code> key into the data list.<br />
+      2. <strong>Prepare the input packet</strong> – create a packet that contains a
+      single data element.  If dynamic page IDs are needed, add a <code>Pages</code>
+      field to that element.  The packet may also contain a <code>Text</code> field,
+      but it will be ignored.<br />
+      3. <strong>Connect</strong> – wire the output of the data‑producing task to the
+      single input of <code>Get Confluence Pages</code>, and wire its output
+      to a downstream sink (file writer, database, or another processing
+      step).<br />
+      4. <strong>Execute</strong> – run the workflow; the task will fetch each
+      requested page, strip Confluence‑specific macros, and emit a packet
+      containing the cleaned HTML body for each page.
+    </p>
+  </section>
+
+  <!-- Note section -->
+  <section class="mb-5">
+    <p class="text-muted">
+      Note: The task does not perform any retry logic – if a page cannot be
+      fetched (e.g., due to network issues or an invalid page ID), the entire
+      workflow will fail.  Ensure that the Confluence credentials have
+      sufficient permissions to read the requested pages.
+    </p>
+  </section>
+</div>

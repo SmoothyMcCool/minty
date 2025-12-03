@@ -1,0 +1,140 @@
+<!-- Normalizer Task Documentation – bootstrap fragment -->
+<div class="container py-5">
+  <!-- Title -->
+  <div class="row mb-4">
+    <div class="col">
+      <h1>Normalizer Task</h1>
+    </div>
+  </div>
+
+  <!-- Intro -->
+  <div class="row mb-5">
+    <div class="col">
+      <p>
+        The <strong>Normalizer</strong> task is a lightweight flow‑control
+        helper that takes a single <code>Packet</code> containing two parallel
+        lists – <code>data</code> and <code>text</code> – and emits a stream
+        of packets, each carrying one element from each list.  The task is
+        useful when downstream steps need to process items individually
+        but the upstream step produces a batch.
+      </p>
+    </div>
+  </div>
+
+  <!-- Input section -->
+  <section class="mb-5">
+    <h2>Input</h2>
+    <p>
+      <strong>Port:</strong> 1 (index 0) – the task accepts exactly one
+      input packet.  The packet may contain any number of fields, but only
+      the following are used by the task:
+    </p>
+    <ul>
+      <li><code>data</code> – a <code>List&lt;Object&gt;</code> of arbitrary
+          elements.  Each element will be copied into a separate output
+          packet.</li>
+      <li><code>text</code> – a <code>List&lt;String&gt;</code> that is
+          interpreted as the textual counterpart of the data list.  If the
+          list is shorter than <code>data</code>, the remaining output
+          packets will contain an empty string.  If it is longer, the
+          excess text entries will be emitted with an empty data field.</li>
+    </ul>
+    <p>
+      <strong>Restrictions:</strong>
+      <ul class="mb-0">
+        <li>The packet must contain the <code>data</code> and <code>text</code>
+            lists (they may be empty).  If either list is missing, the task
+            will simply treat it as an empty list.</li>
+        <li>Only a single input packet is allowed.  Supplying a second
+            input will cause the task to ignore it – the implementation
+            only keeps the last packet received.</li>
+      </ul>
+    </p>
+  </section>
+
+  <!-- Output section -->
+  <section class="mb-5">
+    <h2>Output</h2>
+    <p>
+      <strong>Port:</strong> 1 (index 0) – the task writes a sequence of
+      packets, one for each element in the longer of the two input lists.
+      Each output packet contains:
+    </p>
+    <ul>
+      <li><code>Id</code> – the same identifier as the input packet.</li>
+      <li><code>data</code> – the <em>i</em>‑th element of the input
+          <code>data</code> list, if present; otherwise omitted.</li>
+      <li><code>text</code> – the <em>i</em>‑th element of the input
+          <code>text</code> list, if present; otherwise omitted.</li>
+    </ul>
+    <p>
+      No other fields from the input packet are forwarded.  The task
+      produces no error packets; if an internal exception occurs it
+      will be logged by the workflow engine but the task will not
+      emit a separate error packet.
+    </p>
+  </section>
+
+  <!-- Configuration section -->
+  <section class="mb-5">
+    <h2>Configuration</h2>
+    <p>
+      The <strong>Normalizer</strong> task does not expose any user‑editable
+      configuration parameters.  It is fully driven by the structure of
+      the input packet.
+    </p>
+    <table class="table table-sm table-bordered">
+      <thead class="thead-light">
+        <tr>
+          <th>Parameter</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>None</code></td>
+          <td>—</td>
+          <td>No configuration required.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      <strong>System variables</strong> – none.<br />
+	  <strong>User variables</strong> – none.
+    </p>
+  </section>
+
+  <!-- Typical usage section -->
+  <section class="mb-5">
+    <h2>Typical Usage Pattern</h2>
+    <p>
+      1. <strong>Prepare a batch packet</strong> – an upstream task
+      generates a packet with <code>data</code> and <code>text</code>
+      lists.  The lists may be of equal length or one may be longer.
+      <br />
+      2. <strong>Configure the Normalizer</strong> – because the task
+      has no configuration, simply add it to the workflow canvas.
+      <br />
+      3. <strong>Connect</strong> – wire the output of the batch‑producing
+      task to the single input of the <code>Normalizer</code>, and wire
+      its output to the next step (e.g., a processing or persistence
+      task).
+      <br />
+      4. <strong>Execute</strong> – run the workflow.  The Normalizer
+      will emit a stream of individual packets that can be consumed
+      independently by downstream steps.
+    </p>
+  </section>
+
+  <!-- Note section -->
+  <section class="mb-5">
+    <p class="text-muted">
+      Note: The task writes to all output connectors that are configured,
+      even though the specification declares a single output.  In most
+      workflows this will simply mean the single configured output port
+      is used.  The task preserves the original packet ID, which can be
+      useful for correlation or logging downstream.
+    </p>
+  </section>
+</div>

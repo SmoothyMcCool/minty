@@ -1,0 +1,27 @@
+/* 1. Make the row take the full viewport height */
+.row {
+	height: 100vh;
+	/* full screen height */
+	overflow: hidden;
+	/* prevent double scrollbars on the row itself */
+}
+
+/* 2. Give each column a scrollable area */
+#toc,
+#content {
+	height: 100%;
+	/* fill the row */
+	overflow-y: auto;
+	/* vertical scrolling only */
+}
+
+/* Optional: hide the horizontal scrollbar if the content is too wide */
+#toc,
+#content {
+	overflow-x: hidden;
+}
+
+/* Optional: add a subtle separator between the columns */
+#toc {
+	border-right: 1px solid #dee2e6;
+}

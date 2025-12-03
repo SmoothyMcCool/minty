@@ -119,7 +119,7 @@ public class TaskRunner {
 
 						} catch (Exception e) {
 							logger.error("TaskRunner for " + request.getStepName() + " failed to read from input " + i
-									+ ". Cannot continue.");
+									+ ", with exception: ", e);
 							failed = true;
 							return;
 						}

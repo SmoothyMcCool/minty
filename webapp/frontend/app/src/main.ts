@@ -3,7 +3,7 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { AppComponent } from './app/app/component/app.component';
 import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { XhrInterceptor } from './app/xhr.interceptor';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { ViewAssistantsComponent } from './app/assistant/component/view-assistants.component';
 import { AuthorizedInterceptor } from './app/auth.interceptor';
 import { LoginComponent } from './app/app/component/login.component';
@@ -24,6 +24,17 @@ import { EditWorkflowComponent } from './app/workflow/component/edit-workflow.co
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { NewWorkflowComponent } from './app/workflow/component/new-workflow.component';
 import { RunWorkflowComponent } from './app/workflow/component/run-workflow.component';
+import { ViewHelpComponent } from './app/help/component/view-help.component';
+import { DocumentsHelpComponent } from './app/help/component/documents-help.component';
+import { AssistantsHelpComponent } from './app/help/component/assistants-help.component';
+import { AssistantsHelpEditingComponent } from './app/help/component/assistants-help-editing.component';
+import { AssistantsHelpPremadeComponent } from './app/help/component/assistants-help-premade.component';
+import { AssistantsHelpIdeasComponent } from './app/help/component/assistants-help-ideas.component';
+import { WorkflowsHelpComponent } from './app/help/component/workflows-help.component';
+import { WorkflowsPugHelpComponent } from './app/help/component/workflows-pug-help.component';
+import { WorkflowsTasksHelpComponent } from './app/help/component/workflows-tasks-help.component';
+import { WorkflowsEditingHelpComponent } from './app/help/component/workflows-editing-help.component';
+import { WorkflowsTasksCreateComponent } from './app/help/component/workflows-tasks-create.component';
 
 export function clipboardOptionsFactory(): ClipboardOptions {
 	return {};
@@ -101,6 +112,57 @@ bootstrapApplication(AppComponent, {
 				component: ViewDiagramsComponent
 			},
 			{
+				path: 'help',
+				component: ViewHelpComponent,
+				children: [
+					{
+						path: 'assistants',
+						component: AssistantsHelpComponent,
+						children: [
+							{
+								path: 'edit',
+								component: AssistantsHelpEditingComponent
+							},
+							{
+								path: 'premade',
+								component: AssistantsHelpPremadeComponent
+							},
+							{
+								path: 'ideas',
+								component: AssistantsHelpIdeasComponent
+							},
+						]
+					},
+					{
+						path: 'documents',
+						component: DocumentsHelpComponent
+					},
+					{
+						path: 'workflows',
+						component: WorkflowsHelpComponent,
+						children: [
+							{
+								path: 'editing',
+								component: WorkflowsEditingHelpComponent
+							},
+							{
+								path: 'tasks',
+								component: WorkflowsTasksHelpComponent
+							},
+							{
+								path: 'custom',
+								component: WorkflowsTasksCreateComponent
+							},
+							{
+								path: 'pug',
+								component: WorkflowsPugHelpComponent
+							}
+						]
+					}
+					
+				]
+			},
+			{
 				path: 'user',
 				component: ViewUserComponent
 			},
@@ -108,7 +170,11 @@ bootstrapApplication(AppComponent, {
 				path: 'statistics',
 				component: ViewStatisticsComponent
 			}
-		]/*, withDebugTracing()*/),
+		],
+		withInMemoryScrolling({
+			anchorScrolling: 'enabled'
+		})
+		/*, withDebugTracing()*/),
 		provideHttpClient(withInterceptorsFromDi()),
 		provideMarkdown({
 			mermaidOptions: {

@@ -1,0 +1,142 @@
+<!-- Execute Python Task Documentation – normal page layout -->
+<div class="container py-5">
+  <!-- Title -->
+  <div class="row mb-4">
+    <div class="col">
+      <h1>Execute Python Task</h1>
+    </div>
+  </div>
+
+  <!-- Intro -->
+  <div class="row mb-5">
+    <div class="col">
+      <p>
+        The <strong>Execute Python</strong> task runs a user‑supplied Python script
+        against the data contained in a single input <code>Packet</code>.
+        The script is executed in a sandboxed Python service and the raw
+        result of the script is returned as a new packet.
+        The task is useful when you need to apply arbitrary logic.
+      </p>
+    </div>
+  </div>
+
+  <!-- Input section -->
+  <section class="mb-5">
+    <h2>Input</h2>
+    <p>
+      <strong>Port:</strong> 1 (index 0) – the task accepts exactly one input packet.
+      The packet must contain <strong>exactly one</strong> data element.
+      The value of that element must be a <code>Map</code> (JSON object) that will
+      be passed to the Python script as its input data.
+    </p>
+
+    <p>
+      <strong>Restrictions:</strong>
+      <ul class="mb-0">
+        <li>The packet must not contain more than one data element; otherwise the
+            task will fail with a runtime exception.</li>
+        <li>The single data element must be a map; primitive values will cause a
+            type mismatch error when the Python service attempts to deserialize
+            the input.</li>
+      </ul>
+    </p>
+  </section>
+
+  <!-- Output section -->
+  <section class="mb-5">
+    <h2>Output</h2>
+    <p>
+      <strong>Port:</strong> 1 (index 0) – the task writes a single output packet.
+      The packet contains:
+      <ul>
+        <li><code>Id</code> – copied from the input packet so that downstream
+            steps can correlate the result with the original data.</li>
+        <li><code>Data</code> – the raw result returned by the Python script.
+            This can be any JSON‑serialisable value (object, array, string,
+            number, etc.).</li>
+      </ul>
+      No other metadata is added to the packet.
+    </p>
+  </section>
+
+  <!-- Configuration section -->
+  <section class="mb-5">
+    <h2>Configuration</h2>
+    <p>The task is configured via a single user‑editable field that contains
+    the Python code to execute:</p>
+
+    <table class="table table-sm table-bordered">
+      <thead class="thead-light">
+        <tr>
+          <th>Parameter</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>Python</code></td>
+          <td>TextArea</td>
+          <td>
+            The complete Python script that will be executed. The script
+            should read its input from the file specific in argument 1, and write
+			its result to the file specified in argument 2. The data written to 
+			the output file will be parsed into a JSON object and written out
+			in the data field of the outgoing Packet.
+            <br/><br/>
+            Example:
+            <pre class="mb-0"><code>
+import json
+import sys
+
+def read_dict(inFile):
+	with open(inFile, 'r') as f:
+		return json.load(f)
+	except FileNotFoundError:
+		exit(-1)
+	except json.JSONDecodeError:
+		exit(-1)
+
+def write_to_file(data, outFile):
+	with open(filename, "w") as file:
+		json.dump(data, file, indent=4)
+
+def main():
+	if (len(sys.argv) == 3):
+		data = read_dict(sys.argv[1])
+		write_to_file(data, sys.argv[2])
+
+if __name__ == "__main__":
+	main()
+			</code></pre>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>
+      <strong>System variables</strong> – none.<br/>
+      <strong>User variables</strong> – none.
+    </p>
+  </section>
+
+  <!-- Typical usage section -->
+  <section class="mb-5">
+    <h2>Typical Usage Pattern</h2>
+    <p>
+      1. <strong>Prepare the input packet</strong> – upstream tasks produce a
+      packet that contains a single map with the parameters your Python
+      script expects.<br/>
+      2. <strong>Configure the task</strong> – paste the Python code into the
+      <code>Python</code> text area. Ensure the script assigns the desired
+      output to <code>result</code>.<br/>
+      3. <strong>Connect</strong> – wire the output of the data‑producing task
+      to the single input of <code>Execute Python</code>, and wire its output
+      to the next step (e.g., a sink that writes the result to a file or
+      database).<br/>
+      4. <strong>Execute</strong> – run the workflow. The task will run the
+      script, capture its logs, and emit a packet containing the result.
+    </p>
+  </section>
+
+</div>

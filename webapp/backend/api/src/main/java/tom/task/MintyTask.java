@@ -41,4 +41,8 @@ public interface MintyTask extends Runnable {
 	boolean failed();
 
 	void setLogger(TaskLogger workflowLogger);
+
+	default String html() {
+		return "";
+	}
 }

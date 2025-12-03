@@ -83,13 +83,20 @@ public class TextFormatter implements MintyTask {
 				String placeholder = matcher.group(0); // e.g. "{user.name}"
 				String path = matcher.group(1).trim(); // e.g. "user.name"
 
-				JsonNode valueNode = resolvePath(root, path);
-
-				if (valueNode != null && !valueNode.isMissingNode() && !valueNode.isNull()) {
-					matcher.appendReplacement(sb, Matcher.quoteReplacement(valueNode.asText()));
+				if (path.equalsIgnoreCase("id")) {
+					matcher.appendReplacement(sb, Matcher.quoteReplacement(input.getId()));
+				} else if (path.equalsIgnoreCase("text")) {
+					matcher.appendReplacement(sb,
+							Matcher.quoteReplacement(String.join(System.lineSeparator(), input.getText())));
 				} else {
-					// leave placeholder as-is
-					matcher.appendReplacement(sb, Matcher.quoteReplacement(placeholder));
+					JsonNode valueNode = resolvePath(root, path);
+
+					if (valueNode != null && !valueNode.isMissingNode() && !valueNode.isNull()) {
+						matcher.appendReplacement(sb, Matcher.quoteReplacement(valueNode.asText()));
+					} else {
+						// leave placeholder as-is
+						matcher.appendReplacement(sb, Matcher.quoteReplacement(placeholder));
+					}
 				}
 			}
 			matcher.appendTail(sb);

@@ -4,9 +4,9 @@ import java.util.List;
 import java.util.Map;
 
 import tom.api.UserId;
+import tom.task.MintyTask;
 import tom.task.OutputTask;
 import tom.task.TaskSpec;
-import tom.task.MintyTask;
 import tom.task.enumspec.EnumSpec;
 import tom.workflow.model.OutputTaskSpecDescription;
 import tom.workflow.model.TaskRequest;
@@ -34,4 +34,7 @@ public interface TaskRegistryService {
 
 	List<EnumSpec> getEnumerations(UserId userId);
 
+	Map<String, String> getTaskHelpFiles();
+
+	Map<String, String> getOutputHelpFiles();
 }

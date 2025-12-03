@@ -1,0 +1,149 @@
+<!-- AiQuery Task Documentation – normal page layout -->
+<div class="container py-5">
+  <!-- Title -->
+  <div class="row mb-4">
+    <div class="col">
+      <h1>Query LLM Task</h1>
+    </div>
+  </div>
+
+  <!-- Intro -->
+  <div class="row mb-5">
+    <div class="col">
+      <p>
+        The <strong>Query LLM</strong> task sends a prompt to an
+        assistant and returns the generated response. The
+        task accepts a single <code>Packet</code> as input and emits one
+        <code>Packet</code> as output. The output packet contains the raw
+        text returned by the assistant and, if the response is valid JSON,
+        a parsed <code>Map&lt;String,Object&gt;</code> in the <code>Data</code>
+        field.
+      </p>
+    </div>
+  </div>
+
+  <!-- Input section -->
+  <section class="mb-5">
+    <h2>Input</h2>
+    <p>
+      <strong>Port:</strong> 1 (index 0) – the task accepts exactly one
+      input packet. The packet must contain at least one non‑empty string
+      in its <code>Text</code> field. Each string is appended to the
+      configured prompt and sent to the assistant one by one. If the
+      packet’s <code>Data</code> map contains a key
+      <code>Conversation ID</code>, its value (a string) is used to
+      continue an existing conversation with the assistant. If the key
+      is absent, a new conversation ID is generated for the request.
+    </p>
+
+    <p>
+      <strong>Restrictions:</strong>
+      <ul class="mb-0">
+        <li>Only a single input packet is allowed; supplying a second
+            packet will cause the task to fail.</li>
+        <li>The packet’s <code>Text</code> list must contain at least
+            one non‑blank entry; otherwise the task will not run.</li>
+      </ul>
+    </p>
+  </section>
+
+  <!-- Output section -->
+  <section class="mb-5">
+    <h2>Output</h2>
+    <p>
+      <strong>Port:</strong> 1 (index 0) – the task writes a single
+      output packet. The packet contains:
+      <ul>
+        <li><code>Text</code> – the raw string returned by the LLM.</li>
+        <li><code>Data</code> – if the response is valid JSON, the
+            parsed <code>Map&lt;String,Object&gt;</code> is added here.
+            Otherwise, the <code>Data</code> map remains empty.</li>
+        <li><code>Id</code> – copied from the input packet’s <code>Id</code>
+            so that downstream steps can correlate the response.</li>
+        <li><code>Data[Conversation ID]</code> – if a conversation ID was
+            supplied on input, it is echoed back in the output packet’s
+            <code>Data</code> map.</li>
+      </ul>
+      No additional metadata is added.
+    </p>
+  </section>
+
+  <!-- Configuration section -->
+  <section class="mb-5">
+    <h2>Configuration</h2>
+    <p>The task is configured via two user‑editable fields:</p>
+
+    <table class="table table-sm table-bordered">
+      <thead class="thead-light">
+        <tr>
+          <th>Parameter</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>Assistant</code></td>
+          <td>Text</td>
+          <td>
+            The unique identifier of the assistant that will process the
+            query. The assistant must have memory enabled if a
+            conversation ID is to be used; otherwise, a new conversation
+            will be started automatically.
+          </td>
+        </tr>
+        <tr>
+          <td><code>Query</code></td>
+          <td>TextArea</td>
+          <td>
+            The base prompt that will be sent to the assistant. The
+            contents of the input packet’s <code>Text</code> field are
+            appended to this prompt (separated by a space) before the
+            request is made. The query string can contain placeholders
+            or variables, but they are not processed by the task; the
+            entire string is forwarded verbatim.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>
+      <strong>System variables</strong> – none.<br />
+      <strong>User variables</strong> – none.
+    </p>
+  </section>
+
+  <!-- Typical usage section -->
+  <section class="mb-5">
+    <h2>Typical Usage Pattern</h2>
+    <p>
+      1. <strong>Prepare the prompt</strong> – upstream tasks produce a
+      packet that contains the text you want the assistant to process
+      (e.g., a user query or a piece of content). If you want to
+      maintain conversation state, add a <code>Conversation ID</code>
+      entry to the packet’s <code>Data</code> map.<br />
+      2. <strong>Configure the task</strong> – in the workflow editor,
+      select the <code>Query LLM</code> task and provide the assistant
+      ID and base query string. The assistant should have memory
+      enabled if you plan to use conversation IDs.<br />
+      3. <strong>Connect</strong> – wire the output of the data‑producing
+      task to the single input of the <code>Query LLM</code> task, and
+      wire its output to the next step (e.g., a formatting or storage
+      task).<br />
+      4. <strong>Execute</strong> – run the workflow. The task will
+      send the prompt to the assistant, wait for the response, parse
+      it if possible, and emit the result packet.
+    </p>
+  </section>
+
+  <!-- Note section -->
+  <section class="mb-5">
+    <p class="text-muted">
+      Note: The task blocks until the LLM response is ready. If the
+      LLM queue is full or the conversation is in use, the
+      task will retry every five seconds. For best performance, use
+	  assistants with no conversation history enabled, as they can run
+	  concurrently.
+    </p>
+  </section>
+</div>
