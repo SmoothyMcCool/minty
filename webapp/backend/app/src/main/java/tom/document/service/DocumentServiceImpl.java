@@ -1,6 +1,8 @@
 package tom.document.service;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -9,6 +11,8 @@ import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.tika.Tika;
+import org.apache.tika.exception.TikaException;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.model.transformer.KeywordMetadataEnricher;
@@ -38,7 +42,7 @@ import tom.document.repository.DocumentRepository;
 import tom.ollama.service.OllamaService;
 
 @Service
-public class DocumentServiceImpl implements DocumentService {
+public class DocumentServiceImpl implements DocumentServiceInternal {
 
 	private static final Logger logger = LogManager.getLogger(DocumentServiceImpl.class);
 
@@ -239,4 +243,14 @@ public class DocumentServiceImpl implements DocumentService {
 		return documentRepository.findById(documentId.value()).orElse(null);
 	}
 
+	@Override
+	public String fileBytesToText(byte[] bytes) {
+		Tika tika = new Tika();
+		tika.detect(bytes);
+		try {
+			return tika.parseToString(new ByteArrayInputStream(bytes));
+		} catch (IOException | TikaException e) {
+			throw new RuntimeException("Failed to parse file.", e);
+		}
+	}
 }

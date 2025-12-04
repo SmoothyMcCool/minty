@@ -1,4 +1,4 @@
-package tom.tasks.format.textformatter;
+package tom.tasks.transform.textformatter;
 
 import java.util.HashMap;
 import java.util.List;

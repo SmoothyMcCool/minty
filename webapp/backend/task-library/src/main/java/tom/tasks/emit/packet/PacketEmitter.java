@@ -1,4 +1,4 @@
-package tom.tasks.transform.emitter;
+package tom.tasks.emit.packet;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -135,7 +135,7 @@ public class PacketEmitter implements MintyTask {
 
 			@Override
 			public String group() {
-				return "Producer";
+				return "Emit";
 			}
 		};
 	}

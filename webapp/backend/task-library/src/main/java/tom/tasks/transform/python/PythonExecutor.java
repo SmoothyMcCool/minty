@@ -187,7 +187,7 @@ public class PythonExecutor implements MintyTask, ServiceConsumer {
 
 			@Override
 			public String group() {
-				return "Transformer";
+				return "Transform";
 			}
 
 		};

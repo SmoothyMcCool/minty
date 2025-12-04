@@ -1,4 +1,4 @@
-package tom.tasks.format.htmlformatter;
+package tom.tasks.transform.htmlformatter;
 
 import java.io.IOException;
 import java.util.List;
@@ -139,7 +139,7 @@ public class HtmlFormatter implements MintyTask, ServiceConsumer {
 
 			@Override
 			public String group() {
-				return "Formatting";
+				return "Transform";
 			}
 		};
 	}

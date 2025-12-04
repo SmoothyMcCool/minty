@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import tom.api.services.ConversationService;
+import tom.api.services.DocumentService;
 import tom.api.services.HttpService;
 import tom.api.services.RenderService;
 import tom.api.services.TaskServices;
@@ -23,11 +24,12 @@ public class TaskServicesImpl implements TaskServices {
 	private final PythonService pythonService;
 	private final RenderService renderService;
 	private final UserService userService;
+	private final DocumentService documentService;
 
 	public TaskServicesImpl(@Lazy AssistantManagementService assistantManagementService,
 			@Lazy AssistantQueryService assistantQueryService, @Lazy ConversationServiceInternal conversationService,
 			@Lazy HttpService httpService, @Lazy PythonService pythonService, @Lazy RenderService renderService,
-			@Lazy UserService userService) {
+			@Lazy UserService userService, @Lazy DocumentService documentService) {
 		this.assistantManagementService = assistantManagementService;
 		this.assistantQueryService = assistantQueryService;
 		this.conversationService = conversationService;
@@ -35,6 +37,7 @@ public class TaskServicesImpl implements TaskServices {
 		this.pythonService = pythonService;
 		this.renderService = renderService;
 		this.userService = userService;
+		this.documentService = documentService;
 	}
 
 	@Override
@@ -70,6 +73,11 @@ public class TaskServicesImpl implements TaskServices {
 	@Override
 	public UserService getUserService() {
 		return userService;
+	}
+
+	@Override
+	public DocumentService getDocumentService() {
+		return documentService;
 	}
 
 }

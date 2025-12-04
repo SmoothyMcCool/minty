@@ -143,7 +143,7 @@ public class DataRenamer implements MintyTask {
 
 			@Override
 			public String group() {
-				return "Transformer";
+				return "Transform";
 			}
 
 		};

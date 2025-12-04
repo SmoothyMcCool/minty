@@ -1,4 +1,4 @@
-package tom.tasks.format.htmlformatter;
+package tom.tasks.emit.FileEmitter.java;
 
 import java.util.HashMap;
 import java.util.List;
@@ -7,26 +7,27 @@ import java.util.Map;
 import tom.task.TaskConfigSpec;
 import tom.task.TaskConfigTypes;
 
-public class HtmlFormatterConfig implements TaskConfigSpec {
+public class DocumentEmitterConfig implements TaskConfigSpec {
 
-	private String template = "";
+	String base64;
 
-	public HtmlFormatterConfig() {
+	public DocumentEmitterConfig() {
+		base64 = null;
 	}
 
-	public HtmlFormatterConfig(Map<String, String> config) {
-		template = config.get("Pug Template");
+	public DocumentEmitterConfig(Map<String, String> config) {
+		base64 = config.get("File");
 	}
 
 	@Override
 	public Map<String, TaskConfigTypes> getConfig() {
 		Map<String, TaskConfigTypes> config = new HashMap<>();
-		config.put("Pug Template", TaskConfigTypes.TextArea);
+		config.put("File", TaskConfigTypes.Document);
 		return config;
 	}
 
-	public String getTemplate() {
-		return template;
+	String getBase64() {
+		return base64;
 	}
 
 	@Override
