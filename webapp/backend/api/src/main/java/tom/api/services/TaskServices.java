@@ -19,4 +19,6 @@ public interface TaskServices {
 	RenderService getRenderService();
 
 	UserService getUserService();
+
+	DocumentService getDocumentService();
 }

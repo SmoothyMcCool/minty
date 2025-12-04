@@ -1,4 +1,4 @@
-package tom.tasks.format.textformatter;
+package tom.tasks.transform.textformatter;
 
 import java.util.List;
 import java.util.Map;
@@ -176,7 +176,7 @@ public class TextFormatter implements MintyTask {
 
 			@Override
 			public String group() {
-				return "Formatting";
+				return "Transform";
 			}
 		};
 	}

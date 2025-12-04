@@ -1,4 +1,4 @@
-package tom.tasks.extract.confluence;
+package tom.tasks.emit.confluence;
 
 import java.util.Base64;
 import java.util.List;
@@ -203,7 +203,7 @@ public class ConfluenceQuery implements MintyTask {
 
 			@Override
 			public String group() {
-				return "Producer";
+				return "Emit";
 			}
 
 		};

@@ -149,7 +149,7 @@ public class TextCollector implements MintyTask {
 
 			@Override
 			public String group() {
-				return "Transformer";
+				return "Transform";
 			}
 		};
 	}

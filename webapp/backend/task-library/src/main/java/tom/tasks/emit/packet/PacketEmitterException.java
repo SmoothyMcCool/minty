@@ -1,4 +1,4 @@
-package tom.tasks.transform.emitter;
+package tom.tasks.emit.packet;
 
 public class PacketEmitterException extends Exception {
 

@@ -48,7 +48,7 @@ public class NullTask implements MintyTask {
 
 			@Override
 			public String produces() {
-				return "This task produces no output. Using it will cause your workflow to stop running.";
+				return "This task produces no output. It will swallow all packets it receives.";
 			}
 
 			@Override
@@ -78,8 +78,7 @@ public class NullTask implements MintyTask {
 
 			@Override
 			public String group() {
-				// TODO Auto-generated method stub
-				return "Transformer";
+				return "Transform";
 			}
 
 		};

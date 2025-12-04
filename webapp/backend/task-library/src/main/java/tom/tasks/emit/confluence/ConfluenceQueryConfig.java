@@ -1,4 +1,4 @@
-package tom.tasks.extract.confluence;
+package tom.tasks.emit.confluence;
 
 import java.util.HashMap;
 import java.util.List;

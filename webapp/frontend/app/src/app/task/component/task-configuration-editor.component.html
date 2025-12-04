@@ -67,8 +67,14 @@
 			</ng-container>
 			<ng-container *ngSwitchCase="'Packet'">
 				<div class="mb-3">
-					<label for="enumListInput-{{item.key}}">{{item.key}}</label>
-					<minty-packet-editor  name="packetInput-{{item.key}}" [ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)"></minty-packet-editor>
+					<label for="packetInput-{{item.key}}">{{item.key}}</label>
+					<minty-packet-editor name="packetInput-{{item.key}}" [ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)"></minty-packet-editor>
+				</div>
+			</ng-container>
+			<ng-container *ngSwitchCase="'Document'">
+				<div class="mb-3">
+					<label for="documentInput-{{item.key}}">{{item.key}}</label>
+					<minty-document-editor name="documentInput-{{item.key}}" [ngModel]="" (ngModelChange)="valueChanged(item.key, $event)"></minty-document-editor>
 				</div>
 			</ng-container>
 			<ng-container *ngSwitchDefault>

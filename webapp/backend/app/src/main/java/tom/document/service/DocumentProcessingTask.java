@@ -14,9 +14,9 @@ public class DocumentProcessingTask implements Runnable {
 
 	private static final Logger logger = LogManager.getLogger(DocumentProcessingTask.class);
 	private final File file;
-	private final DocumentService documentService;
+	private final DocumentServiceInternal documentService;
 
-	public DocumentProcessingTask(File file, DocumentService documentService) {
+	public DocumentProcessingTask(File file, DocumentServiceInternal documentService) {
 		this.file = file;
 		this.documentService = documentService;
 	}

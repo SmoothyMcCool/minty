@@ -1,4 +1,4 @@
-package tom.tasks.transform.emitter;
+package tom.tasks.transform.htmlformatter;
 
 import java.util.HashMap;
 import java.util.List;
@@ -7,33 +7,26 @@ import java.util.Map;
 import tom.task.TaskConfigSpec;
 import tom.task.TaskConfigTypes;
 
-public class PacketEmitterConfig implements TaskConfigSpec {
+public class HtmlFormatterConfig implements TaskConfigSpec {
 
-	String keyName;
-	String data;
+	private String template = "";
 
-	public PacketEmitterConfig() {
-		keyName = null;
-		data = null;
+	public HtmlFormatterConfig() {
 	}
 
-	public PacketEmitterConfig(Map<String, String> config) {
-		data = config.get("Data to Emit");
+	public HtmlFormatterConfig(Map<String, String> config) {
+		template = config.get("Pug Template");
 	}
 
 	@Override
 	public Map<String, TaskConfigTypes> getConfig() {
 		Map<String, TaskConfigTypes> config = new HashMap<>();
-		config.put("Data to Emit", TaskConfigTypes.Packet);
+		config.put("Pug Template", TaskConfigTypes.TextArea);
 		return config;
 	}
 
-	String getData() {
-		return data;
-	}
-
-	String getKeyName() {
-		return keyName;
+	public String getTemplate() {
+		return template;
 	}
 
 	@Override

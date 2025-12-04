@@ -5,9 +5,10 @@ import java.util.List;
 
 import tom.api.DocumentId;
 import tom.api.UserId;
+import tom.api.services.DocumentService;
 import tom.document.model.MintyDoc;
 
-public interface DocumentService {
+public interface DocumentServiceInternal extends DocumentService {
 
 	void processFile(File file);
 

@@ -9,11 +9,12 @@ import { TaskSpecification } from 'src/app/model/workflow/task-specification';
 import { EnumList } from 'src/app/model/workflow/enum-list';
 import { WorkflowService } from 'src/app/workflow/workflow.service';
 import { PacketEditorComponent } from './packet-editor.component';
+import { DocumentEditorComponent } from './document-editor.component';
 
 @Component({
 	selector: 'minty-task-config-editor',
 	templateUrl: 'task-configuration-editor.component.html',
-	imports: [CommonModule, FormsModule, MapEditorComponent, StringListEditorComponent, EnumListEditorComponent, PacketEditorComponent],
+	imports: [CommonModule, FormsModule, MapEditorComponent, StringListEditorComponent, EnumListEditorComponent, PacketEditorComponent, DocumentEditorComponent],
 	providers: [
 		{
 			provide: NG_VALUE_ACCESSOR,

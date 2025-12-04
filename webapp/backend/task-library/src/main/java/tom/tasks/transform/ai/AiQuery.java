@@ -235,7 +235,7 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 
 			@Override
 			public String group() {
-				return "AI";
+				return "Transform";
 			}
 
 		};

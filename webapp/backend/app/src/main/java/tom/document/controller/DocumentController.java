@@ -25,7 +25,7 @@ import tom.api.DocumentId;
 import tom.config.ExternalProperties;
 import tom.controller.ResponseWrapper;
 import tom.document.model.MintyDoc;
-import tom.document.service.DocumentService;
+import tom.document.service.DocumentServiceInternal;
 import tom.model.security.UserDetailsUser;
 
 @Controller
@@ -35,9 +35,9 @@ public class DocumentController {
 	private static final Logger logger = LogManager.getLogger(DocumentController.class);
 
 	private final String docFileStore;
-	private final DocumentService documentService;
+	private final DocumentServiceInternal documentService;
 
-	public DocumentController(DocumentService documentService, ExternalProperties properties) {
+	public DocumentController(DocumentServiceInternal documentService, ExternalProperties properties) {
 		this.documentService = documentService;
 		docFileStore = properties.get("docFileStore");
 	}

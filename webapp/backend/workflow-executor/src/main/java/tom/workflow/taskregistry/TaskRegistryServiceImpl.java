@@ -661,6 +661,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 					}
 					yield result;
 				}
+				case TaskConfigTypes.Document -> "";
 				};
 
 				taskCfg.put(innerEntry.getKey(), value);
