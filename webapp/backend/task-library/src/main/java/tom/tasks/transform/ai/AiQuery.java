@@ -172,9 +172,11 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 
 		input = dataPacket;
 
-		Map<String, Object> data = dataPacket.getData().getFirst();
-		if (data != null && data.containsKey("Conversation ID")) {
-			conversationId = (String) data.get("Conversation ID");
+		if (dataPacket.getData().size() > 0) {
+			Map<String, Object> data = dataPacket.getData().getFirst();
+			if (data != null && data.containsKey("Conversation ID")) {
+				conversationId = (String) data.get("Conversation ID");
+			}
 		}
 		return true;
 	}

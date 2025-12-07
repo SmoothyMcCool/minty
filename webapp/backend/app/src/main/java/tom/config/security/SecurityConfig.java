@@ -36,16 +36,15 @@ public class SecurityConfig {
 	}
 
 	@Bean
-	public AuthenticationManager authenticationManager(PasswordEncoder passwordEncoder,
+	AuthenticationManager authenticationManager(PasswordEncoder passwordEncoder,
 			UserDetailsService userDetailsService) {
-		DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+		DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
 		provider.setPasswordEncoder(passwordEncoder);
-		provider.setUserDetailsService(userDetailsService);
 		return new ProviderManager(provider);
 	}
 
 	@Bean
-	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http
 			.csrf((csrf) -> csrf.disable())
 			// .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))

@@ -20,7 +20,7 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.ollama.api.OllamaApi;
-import org.springframework.ai.ollama.api.OllamaOptions;
+import org.springframework.ai.ollama.api.OllamaChatOptions;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.SearchRequest.Builder;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -259,7 +259,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 
 		String model = assistant.model();
 
-		OllamaChatModel chatModel = OllamaChatModel.builder().ollamaApi(ollamaApi).defaultOptions(OllamaOptions
+		OllamaChatModel chatModel = OllamaChatModel.builder().ollamaApi(ollamaApi).defaultOptions(OllamaChatOptions
 				.builder().model(model).temperature(assistant.temperature()).topK(assistant.topK()).build()).build();
 
 		List<Advisor> advisors = new ArrayList<>();

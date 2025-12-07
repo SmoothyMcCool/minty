@@ -16,7 +16,7 @@ import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryReposito
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.ollama.OllamaEmbeddingModel;
 import org.springframework.ai.ollama.api.OllamaApi;
-import org.springframework.ai.ollama.api.OllamaOptions;
+import org.springframework.ai.ollama.api.OllamaEmbeddingOptions;
 import org.springframework.ai.ollama.management.ModelManagementOptions;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.mariadb.MariaDBVectorStore;
@@ -52,7 +52,7 @@ public class OllamaServiceImpl implements OllamaService {
 
 		logger.info("Registering models " + models.toString());
 
-		OllamaOptions embeddingOptions = OllamaOptions.builder().model(embeddingModelName).build();
+		OllamaEmbeddingOptions embeddingOptions = OllamaEmbeddingOptions.builder().model(embeddingModelName).build();
 		embeddingModel = new OllamaEmbeddingModel(ollamaApi, embeddingOptions, ObservationRegistry.NOOP,
 				ModelManagementOptions.defaults());
 

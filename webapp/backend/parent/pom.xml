@@ -3,6 +3,12 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
+	<groupId>tom.minty</groupId>
+	<artifactId>parent</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	<name>parent</name>
+
 	<licenses>
 		<license>
 			<name>MIT</name>
@@ -10,23 +16,18 @@
 		</license>
 	</licenses>
 
-	<groupId>tom.minty</groupId>
-	<artifactId>parent</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<packaging>pom</packaging>
-	<name>parent</name>
-
 	<properties>
 
 		<output.directory>d:/projects/Minty/</output.directory>
 		<tomcat.base>d:/projects/tomcat</tomcat.base>
 
 		<java.version>21</java.version>
-
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
+
+		<!-- Maven plugin versions -->
 		<maven.compiler.version>3.14.0</maven.compiler.version>
 		<maven.jar.version>3.4.2</maven.jar.version>
 		<maven.shade.version>3.6.0</maven.shade.version>
@@ -34,24 +35,29 @@
 		<maven.war.version>3.4.0</maven.war.version>
 		<maven.resources.version>3.3.1</maven.resources.version>
 
+		<!-- Library versions -->
+		<commons.codec.version>1.20.0</commons.codec.version>
 		<commons.lang.version>3.17.0</commons.lang.version>
 		<hibernate.version>7.0.2.Final</hibernate.version>
 		<hikari.cp.version>6.3.0</hikari.cp.version>
+		<httpcore.version>5.3.6</httpcore.version>
 		<httpclient.version>5.4.4</httpclient.version>
-		<jackson.version>2.19.0</jackson.version>
-		<jakarta.servlet.version>6.1.0</jakarta.servlet.version>
-		<jakarta.annotation-api.version>3.0.0</jakarta.annotation-api.version>
 		<log4j.version>2.24.3</log4j.version>
+		<jackson.version>2.19.0</jackson.version>
+		<jakarta.annotation-api.version>3.0.0</jakarta.annotation-api.version>
+		<jakarta.servlet-api.version>6.1.0</jakarta.servlet-api.version>
+		<jakarta.transaction-api.version>2.0.1</jakarta.transaction-api.version>
+		<jakarta.persistence-api.version>3.2.0</jakarta.persistence-api.version>
 		<mariadb.client.version>3.5.3</mariadb.client.version>
+		<micrometer.version>1.16.0</micrometer.version>
 		<pug4j.version>2.3.1</pug4j.version>
+		<spring.version>6.2.7</spring.version>
+		<spring.data.version>2025.0.6</spring.data.version>
+		<spring.security.version>6.5.7</spring.security.version>
+		<spring.session.version>3.5.3</spring.session.version>
+		<spring.ai.version>1.1.1</spring.ai.version>
 		<spring-pug4j.version>3.3.1</spring-pug4j.version>
 		<tika.version>3.2.1</tika.version>
-
-		<spring.version>6.2.7</spring.version>
-		<spring.ai.version>1.0.3</spring.ai.version>
-		<spring.data.version>3.5.0</spring.data.version>
-		<spring.security.version>6.4.5</spring.security.version>
-		<spring.session.jdbc.version>3.4.3</spring.session.jdbc.version>
 
 		<junit.jupiter.version>5.12.2</junit.jupiter.version>
 		<mockito.junit.jupiter.version>5.20.0</mockito.junit.jupiter.version>
@@ -59,27 +65,134 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<!-- Spring BOMs -->
 			<dependency>
-				<groupId>tom.minty</groupId>
-				<artifactId>api</artifactId>
-				<version>0.0.1-SNAPSHOT</version>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-framework-bom</artifactId>
+				<version>${spring.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
 			</dependency>
 
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-bom</artifactId>
+				<version>1.1.1</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.springframework.data</groupId>
+				<artifactId>spring-data-bom</artifactId>
+				<version>${spring.data.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.springframework.security</groupId>
+				<artifactId>spring-security-bom</artifactId>
+				<version>${spring.security.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.springframework.session</groupId>
+				<artifactId>spring-session-bom</artifactId>
+				<version>${spring.session.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+
+			<!-- Jakarta APIs -->
+			<dependency>
+				<groupId>jakarta.annotation</groupId>
+				<artifactId>jakarta.annotation-api</artifactId>
+				<version>${jakarta.annotation-api.version}</version>
+			</dependency>
 			<dependency>
 				<groupId>jakarta.servlet</groupId>
 				<artifactId>jakarta.servlet-api</artifactId>
-				<version>${jakarta.servlet.version}</version>
+				<version>${jakarta.servlet-api.version}</version>
+				<scope>provided</scope>
 			</dependency>
-
 			<dependency>
-				<groupId>org.apache.commons</groupId>
-				<artifactId>commons-lang3</artifactId>
-				<version>${commons.lang.version}</version>
+				<groupId>jakarta.transaction</groupId>
+				<artifactId>jakarta.transaction-api</artifactId>
+				<version>${jakarta.transaction-api.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>jakarta.persistence</groupId>
+				<artifactId>jakarta.persistence-api</artifactId>
+				<version>${jakarta.persistence-api.version}</version>
 			</dependency>
 
+			<!-- Hibernate -->
+			<dependency>
+				<groupId>org.hibernate.orm</groupId>
+				<artifactId>hibernate-core</artifactId>
+				<version>${hibernate.version}</version>
+			</dependency>
+
+			<!-- Database -->
+			<dependency>
+				<groupId>org.mariadb.jdbc</groupId>
+				<artifactId>mariadb-java-client</artifactId>
+				<version>${mariadb.client.version}</version>
+				<scope>runtime</scope>
+			</dependency>
+
+			<!-- Hikari -->
+			<dependency>
+				<groupId>com.zaxxer</groupId>
+				<artifactId>HikariCP</artifactId>
+				<version>${hikari.cp.version}</version>
+			</dependency>
+
+			<!-- Apache Tika -->
+			<dependency>
+				<groupId>org.apache.tika</groupId>
+				<artifactId>tika-core</artifactId>
+				<version>${tika.version}</version>
+			</dependency>
+
+			<!-- pug4j -->
+			<dependency>
+				<groupId>de.neuland-bfi</groupId>
+				<artifactId>pug4j</artifactId>
+				<version>${pug4j.version}</version>
+			</dependency>
+
+			<!-- Micrometer -->
+			<dependency>
+				<groupId>io.micrometer</groupId>
+				<artifactId>micrometer-observation</artifactId>
+				<version>${micrometer.version}</version>
+			</dependency>
+
+			<!-- Logging -->
+			<dependency>
+				<groupId>org.apache.logging.log4j</groupId>
+				<artifactId>log4j-api</artifactId>
+				<version>${log4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.logging.log4j</groupId>
+				<artifactId>log4j-core</artifactId>
+				<version>${log4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.logging.log4j</groupId>
+				<artifactId>log4j-slf4j2-impl</artifactId>
+				<version>${log4j.version}</version>
+			</dependency>
+
+			<!-- Jackson -->
 			<dependency>
 				<groupId>com.fasterxml.jackson.core</groupId>
-				<artifactId>jackson-databind</artifactId>
+				<artifactId>jackson-annotations</artifactId>
 				<version>${jackson.version}</version>
 			</dependency>
 			<dependency>
@@ -88,13 +201,8 @@
 				<version>${jackson.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.fasterxml.jackson.module</groupId>
-				<artifactId>jackson-module-jaxb-annotations</artifactId>
-				<version>${jackson.version}</version>
-			</dependency>
-			<dependency>
 				<groupId>com.fasterxml.jackson.core</groupId>
-				<artifactId>jackson-annotations</artifactId>
+				<artifactId>jackson-databind</artifactId>
 				<version>${jackson.version}</version>
 			</dependency>
 			<dependency>
@@ -112,136 +220,32 @@
 				<artifactId>jackson-datatype-jsr310</artifactId>
 				<version>${jackson.version}</version>
 			</dependency>
-
-			<!-- Spring -->
 			<dependency>
-				<groupId>org.springframework</groupId>
-				<artifactId>spring-core</artifactId>
-				<version>${spring.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework</groupId>
-				<artifactId>spring-context</artifactId>
-				<version>${spring.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework</groupId>
-				<artifactId>spring-web</artifactId>
-				<version>${spring.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework</groupId>
-				<artifactId>spring-webmvc</artifactId>
-				<version>${spring.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework</groupId>
-				<artifactId>spring-tx</artifactId>
-				<version>${spring.version}</version>
+				<groupId>com.fasterxml.jackson.module</groupId>
+				<artifactId>jackson-module-jaxb-annotations</artifactId>
+				<version>${jackson.version}</version>
 			</dependency>
 
-			<!-- Spring AI -->
+			<!-- Http Components -->
 			<dependency>
-				<groupId>org.springframework.ai</groupId>
-				<artifactId>spring-ai-bom</artifactId>
-				<version>${spring.ai.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
+				<groupId>org.apache.httpcomponents.core5</groupId>
+				<artifactId>httpcore5</artifactId>
+				<version>${httpcore.version}</version>
 			</dependency>
-
-			<!-- Spring Data -->
-			<dependency>
-				<groupId>org.springframework.data</groupId>
-				<artifactId>spring-data-jpa</artifactId>
-				<version>${spring.data.version}</version>
-			</dependency>
-
-			<!-- Spring Security -->
-			<dependency>
-				<groupId>org.springframework.security</groupId>
-				<artifactId>spring-security-core</artifactId>
-				<version>${spring.security.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework.security</groupId>
-				<artifactId>spring-security-config</artifactId>
-				<version>${spring.security.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework.security</groupId>
-				<artifactId>spring-security-web</artifactId>
-				<version>${spring.security.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework.security</groupId>
-				<artifactId>spring-security-crypto</artifactId>
-				<version>${spring.security.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework.session</groupId>
-				<artifactId>spring-session-jdbc</artifactId>
-				<version>${spring.session.jdbc.version}</version>
-			</dependency>
-
-			<!-- Hibernate -->
-			<dependency>
-				<groupId>org.hibernate.orm</groupId>
-				<artifactId>hibernate-core</artifactId>
-				<version>${hibernate.version}</version>
-			</dependency>
-
-			<!-- MariaDB -->
-			<dependency>
-				<groupId>org.mariadb.jdbc</groupId>
-				<artifactId>mariadb-java-client</artifactId>
-				<version>${mariadb.client.version}</version>
-				<scope>runtime</scope>
-			</dependency>
-
-			<!-- HttpClient -->
 			<dependency>
 				<groupId>org.apache.httpcomponents.client5</groupId>
 				<artifactId>httpclient5</artifactId>
 				<version>${httpclient.version}</version>
 			</dependency>
 
-			<!-- Hikari Datasource-->
+			<!-- Apache Commons Lang3 -->
 			<dependency>
-				<groupId>com.zaxxer</groupId>
-				<artifactId>HikariCP</artifactId>
-				<version>${hikari.cp.version}</version>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-lang3</artifactId>
+				<version>${commons.lang.version}</version>
 			</dependency>
 
-			<!-- pug4j -->
-			<dependency>
-				<groupId>de.neuland-bfi</groupId>
-				<artifactId>pug4j</artifactId>
-				<version>${pug4j.version}</version>
-				<exclusions>
-					<exclusion>
-						<groupId>commons-logging</groupId>
-						<artifactId>commons-logging</artifactId>
-					</exclusion>
-				</exclusions>
-			</dependency>
-
-			<!-- log4j -->
-			<dependency>
-				<groupId>org.apache.logging.log4j</groupId>
-				<artifactId>log4j-api</artifactId>
-				<version>${log4j.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.logging.log4j</groupId>
-				<artifactId>log4j-core</artifactId>
-				<version>${log4j.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.logging.log4j</groupId>
-				<artifactId>log4j-slf4j2-impl</artifactId>
-				<version>${log4j.version}</version>
-			</dependency>
-
+			<!-- Testing -->
 			<dependency>
 				<groupId>org.junit</groupId>
 				<artifactId>junit-bom</artifactId>
@@ -261,7 +265,6 @@
 				<version>${mockito.junit.jupiter.version}</version>
 				<scope>test</scope>
 			</dependency>
-
 		</dependencies>
 	</dependencyManagement>
 </project>

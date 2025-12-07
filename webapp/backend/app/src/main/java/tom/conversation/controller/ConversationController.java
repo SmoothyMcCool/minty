@@ -6,8 +6,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import tom.ApiError;
@@ -32,7 +33,7 @@ public class ConversationController {
 		this.metadataService = metadataService;
 	}
 
-	@RequestMapping(value = { "" }, method = RequestMethod.GET)
+	@GetMapping({ "" })
 	public ResponseEntity<ResponseWrapper<Conversation>> getConversation(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestParam("conversationId") ConversationId conversationId) {
 
@@ -47,7 +48,7 @@ public class ConversationController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "new" }, method = RequestMethod.GET)
+	@GetMapping({ "new" })
 	public ResponseEntity<ResponseWrapper<Conversation>> startNewConversation(
 			@AuthenticationPrincipal UserDetailsUser user, @RequestParam("assistantId") AssistantId assistantId) {
 		ResponseWrapper<Conversation> response = ResponseWrapper
@@ -56,7 +57,7 @@ public class ConversationController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "/list" }, method = RequestMethod.GET)
+	@GetMapping({ "/list" })
 	public ResponseEntity<ResponseWrapper<List<Conversation>>> listChats(
 			@AuthenticationPrincipal UserDetailsUser user) {
 
@@ -66,7 +67,7 @@ public class ConversationController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "/history" }, method = RequestMethod.GET)
+	@GetMapping({ "/history" })
 	public ResponseEntity<ResponseWrapper<List<ChatMessage>>> getChatHistory(
 			@AuthenticationPrincipal UserDetailsUser user,
 			@RequestParam("conversationId") ConversationId conversationId) {
@@ -77,7 +78,7 @@ public class ConversationController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "/delete" }, method = RequestMethod.DELETE)
+	@DeleteMapping({ "/delete" })
 	public ResponseEntity<ResponseWrapper<String>> deleteConversation(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestParam("conversationId") ConversationId conversationId) {
 
@@ -91,7 +92,7 @@ public class ConversationController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "/reset" }, method = RequestMethod.DELETE)
+	@DeleteMapping({ "/reset" })
 	public ResponseEntity<ResponseWrapper<String>> resetConversation(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestParam("conversationId") ConversationId conversationId) {
 
@@ -105,7 +106,7 @@ public class ConversationController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "/rename" }, method = RequestMethod.GET)
+	@GetMapping({ "/rename" })
 	public ResponseEntity<ResponseWrapper<Conversation>> renameConversation(
 			@AuthenticationPrincipal UserDetailsUser user,
 			@RequestParam("conversationId") ConversationId conversationId, @RequestParam("title") String title) {

@@ -12,9 +12,10 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -50,7 +51,7 @@ public class UserController {
 		this.taskRegistryService = taskRegistryService;
 	}
 
-	@RequestMapping(value = { "" }, method = RequestMethod.GET)
+	@GetMapping({ "" })
 	public ResponseEntity<ResponseWrapper<User>> getUser(@AuthenticationPrincipal UserDetailsUser userDetails) {
 
 		EncryptedUser encryptedUser = userRepository.findByAccount(userDetails.getUsername());
@@ -74,7 +75,7 @@ public class UserController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "/new" }, method = RequestMethod.POST)
+	@PostMapping({ "/new" })
 	public ResponseEntity<ResponseWrapper<User>> newUser(@AuthenticationPrincipal UserDetailsUser userDetails,
 			@RequestBody User user, HttpServletRequest request, BindingResult result) throws ApiException {
 
@@ -114,7 +115,7 @@ public class UserController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "/update" }, method = RequestMethod.POST)
+	@PostMapping({ "/update" })
 	public ResponseEntity<ResponseWrapper<User>> updateUser(@AuthenticationPrincipal UserDetailsUser userDetails,
 			@RequestBody User user, HttpServletRequest request, BindingResult result) throws ApiException {
 
@@ -163,7 +164,7 @@ public class UserController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "/defaults/system" }, method = RequestMethod.GET)
+	@GetMapping({ "/defaults/system" })
 	public ResponseEntity<ResponseWrapper<Map<String, String>>> systemDefaults(
 			@AuthenticationPrincipal UserDetailsUser userDetails) {
 		ResponseWrapper<Map<String, String>> response = ResponseWrapper
@@ -171,7 +172,7 @@ public class UserController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "/defaults/user" }, method = RequestMethod.GET)
+	@GetMapping({ "/defaults/user" })
 	public ResponseEntity<ResponseWrapper<Map<String, String>>> userDefaults(
 			@AuthenticationPrincipal UserDetailsUser userDetails) {
 		User user = userService.getUserFromId(userDetails.getId()).orElseThrow();

@@ -19,13 +19,6 @@
 
 	<artifactId>pug4j-shaded</artifactId>
 
-	<dependencies>
-		<dependency>
-			<groupId>de.neuland-bfi</groupId>
-			<artifactId>pug4j</artifactId>
-		</dependency>
-	</dependencies>
-
 	<build>
 		<plugins>
 			<plugin>
