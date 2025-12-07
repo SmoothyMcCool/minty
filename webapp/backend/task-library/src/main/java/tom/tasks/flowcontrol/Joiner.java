@@ -90,7 +90,7 @@ public class Joiner implements MintyTask {
 
 			@Override
 			public TaskConfigSpec taskConfiguration() {
-				return new JoinerConfig();
+				return new JoinerConfig(Map.of("Number of Inputs", "2"));
 			}
 
 			@Override

@@ -88,7 +88,7 @@ public class Splitter implements MintyTask {
 
 			@Override
 			public TaskConfigSpec taskConfiguration() {
-				return new SplitterConfig();
+				return new SplitterConfig(Map.of("Number of Outputs", "2"));
 			}
 
 			@Override

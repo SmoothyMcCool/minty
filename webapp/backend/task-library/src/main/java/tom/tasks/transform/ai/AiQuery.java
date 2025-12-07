@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import tom.api.ConversationId;
 import tom.api.UserId;
 import tom.api.services.TaskServices;
+import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.ConversationInUseException;
 import tom.api.services.assistant.QueueFullException;
 import tom.api.services.assistant.StringResult;
@@ -149,7 +150,7 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 				result = parseResponse(response);
 				result.setId(input.getId());
 				if (conversationId != null) {
-					result.getData().put("Conversation ID", conversationId);
+					result.getData().forEach(item -> item.put("Conversation ID", conversationId));
 				}
 
 			} catch (InterruptedException e) {
@@ -171,7 +172,7 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 
 		input = dataPacket;
 
-		Map<String, Object> data = dataPacket.getData();
+		Map<String, Object> data = dataPacket.getData().getFirst();
 		if (data != null && data.containsKey("Conversation ID")) {
 			conversationId = (String) data.get("Conversation ID");
 		}
@@ -220,7 +221,8 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 
 			@Override
 			public TaskConfigSpec taskConfiguration() {
-				return new AiQueryConfig();
+				return new AiQueryConfig(
+						Map.of("Assistant", AssistantManagementService.DefaultAssistantId.getValue().toString()));
 			}
 
 			@Override

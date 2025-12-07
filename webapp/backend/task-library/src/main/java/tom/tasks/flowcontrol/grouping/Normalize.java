@@ -43,7 +43,7 @@ public class Normalize implements MintyTask {
 	@Override
 	public void run() {
 		for (OutputPort output : outputs) {
-			int dataLength = input.getDataList().size();
+			int dataLength = input.getData().size();
 			int textLength = input.getText().size();
 			int maxLength = dataLength > textLength ? dataLength : textLength;
 
@@ -51,7 +51,7 @@ public class Normalize implements MintyTask {
 				Packet out = new Packet();
 				out.setId(input.getId());
 				if (i < dataLength) {
-					out.addData(input.getDataList().get(i));
+					out.addData(input.getData().get(i));
 				}
 				if (i < textLength) {
 					out.addText(input.getText().get(i));

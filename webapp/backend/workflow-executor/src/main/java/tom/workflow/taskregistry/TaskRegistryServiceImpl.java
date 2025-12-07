@@ -567,7 +567,6 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 			try {
 				TaskSpecDescription td = new TaskSpecDescription();
 				td.setTaskName(entry.getKey());
-				td.setConfiguration(configMapToStringMap(entry.getValue().right));
 
 				if (MintyTask.class.isAssignableFrom(clazz)) {
 					MintyTask task = (MintyTask) clazz.getDeclaredConstructor().newInstance();
@@ -578,6 +577,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 					td.setNumInputs(task.getSpecification().numInputs());
 					td.setNumOutputs(task.getSpecification().numOutputs());
 					td.setConfigSpec(task.getSpecification().taskConfiguration().getConfig());
+					td.setConfiguration(task.getSpecification().taskConfiguration().getValues());
 					td.setSystemConfigVariables(task.getSpecification().taskConfiguration().getSystemConfigVariables());
 					td.setUserConfigVariables(task.getSpecification().taskConfiguration().getUserConfigVariables());
 				} else {

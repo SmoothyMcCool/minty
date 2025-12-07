@@ -112,7 +112,7 @@ public class ConfluenceQuery implements MintyTask {
 
 				Packet output = new Packet();
 				output.addText(pageText);
-				output.addDataList(input.getDataList());
+				output.addDataList(input.getData());
 				output.setId(input.getId());
 				outputs.get(0).write(output);
 
@@ -136,7 +136,7 @@ public class ConfluenceQuery implements MintyTask {
 			throw new RuntimeException("Packet must contain exactly one data element.");
 		}
 		try {
-			List<Map<String, Object>> dataList = dataPacket.getDataList();
+			List<Map<String, Object>> dataList = dataPacket.getData();
 			for (Map<String, Object> data : dataList) {
 				config.updateFrom(data);
 			}

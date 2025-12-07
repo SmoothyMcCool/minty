@@ -23,14 +23,29 @@ public class ConfluenceQueryConfig implements TaskConfigSpec {
 
 	public ConfluenceQueryConfig() {
 		pages = List.of();
+		username = "";
+		apiKey = "";
+		baseUrl = "";
+		useBearerAuth = false;
 	}
 
 	public ConfluenceQueryConfig(Map<String, String> config) throws JsonMappingException, JsonProcessingException {
-		pages = stringToList(config.get("Page IDs"));
-		username = config.get("Username");
-		apiKey = config.get("Access Token");
-		baseUrl = config.get("Base URL");
-		useBearerAuth = Boolean.getBoolean(config.get("Use Bearer Authorization"));
+		this();
+		if (config.containsKey("Page IDs")) {
+			pages = stringToList(config.get("Page IDs"));
+		}
+		if (config.containsKey("Username")) {
+			username = config.get("Username");
+		}
+		if (config.containsKey("Access Token")) {
+			apiKey = config.get("Access Token");
+		}
+		if (config.containsKey("Base URL")) {
+			baseUrl = config.get("Base URL");
+		}
+		if (config.containsKey("Use Bearer Authorization")) {
+			useBearerAuth = Boolean.getBoolean(config.get("Use Bearer Authorization"));
+		}
 	}
 
 	@Override
@@ -92,4 +107,15 @@ public class ConfluenceQueryConfig implements TaskConfigSpec {
 
 	}
 
+	@Override
+	public Map<String, String> getValues() {
+		try {
+			return Map.of("Page IDs", new ObjectMapper().writeValueAsString(pages), "Username", username,
+					"Access Token", apiKey, "Base URL", baseUrl, "Use Bearer Authorization",
+					Boolean.toString(useBearerAuth));
+		} catch (JsonProcessingException e) {
+			return Map.of("Page IDs", "[]", "Username", username, "Access Token", apiKey, "Base URL", baseUrl,
+					"Use Bearer Authorization", Boolean.toString(useBearerAuth));
+		}
+	}
 }

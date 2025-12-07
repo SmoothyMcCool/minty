@@ -11,20 +11,25 @@ import tom.task.TaskConfigTypes;
 
 public class DataRenamerConfig implements TaskConfigSpec {
 
-	Map<String, String> renames = Map.of();
+	Map<String, String> renames;
 
 	public DataRenamerConfig() {
+		renames = Map.of();
 	}
 
 	public DataRenamerConfig(Map<String, String> config) {
-		String renameObj = config.get("Input Renamings");
+		this();
+		if (config.containsKey("Input Renamings")) {
+			String renameObj = config.get("Input Renamings");
 
-		if (renameObj == null || renameObj.isBlank()) {
-			return;
+			if (renameObj == null || renameObj.isBlank()) {
+				return;
+			}
+
+			renames = Arrays.stream(renameObj.split(",")).map(s -> s.split(":"))
+					.collect(Collectors.toMap(array -> array[0].trim(), array -> array[1].trim()));
+
 		}
-
-		renames = Arrays.stream(renameObj.split(",")).map(s -> s.split(":"))
-				.collect(Collectors.toMap(array -> array[0].trim(), array -> array[1].trim()));
 	}
 
 	@Override
@@ -48,4 +53,9 @@ public class DataRenamerConfig implements TaskConfigSpec {
 		return List.of();
 	}
 
+	@Override
+	public Map<String, String> getValues() {
+		return Map.of("Input Renamings", renames.entrySet().stream()
+				.map(e -> e.getKey().trim() + ":" + e.getValue().trim()).collect(Collectors.joining(",")));
+	}
 }

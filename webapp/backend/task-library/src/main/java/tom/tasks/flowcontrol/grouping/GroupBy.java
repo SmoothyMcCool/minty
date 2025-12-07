@@ -83,7 +83,7 @@ public class GroupBy implements MintyTask {
 		}
 		if (inputNum == 1) {
 			logger.debug("GroupBy: Adding packet with Id " + dataPacket.getId());
-			result.addDataList(dataPacket.getDataList());
+			result.addDataList(dataPacket.getData());
 			result.addTextList(dataPacket.getText());
 			return false;
 		}

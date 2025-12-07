@@ -30,4 +30,9 @@ public class JsonOutputConfig implements TaskConfigSpec {
 	public List<String> getUserConfigVariables() {
 		return List.of();
 	}
+
+	@Override
+	public Map<String, String> getValues() {
+		return Map.of();
+	}
 }

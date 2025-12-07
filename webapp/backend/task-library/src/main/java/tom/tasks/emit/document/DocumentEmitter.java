@@ -1,4 +1,4 @@
-package tom.tasks.emit.FileEmitter.java;
+package tom.tasks.emit.document;
 
 import java.util.ArrayList;
 import java.util.Base64;

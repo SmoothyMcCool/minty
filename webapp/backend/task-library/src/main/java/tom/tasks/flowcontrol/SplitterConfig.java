@@ -18,7 +18,9 @@ public class SplitterConfig implements TaskConfigSpec {
 	public SplitterConfig(Map<String, String> config) {
 		this();
 		try {
-			numOutputs = Integer.parseInt(config.get("Number of Outputs"));
+			if (config.containsKey("Number of Outputs")) {
+				numOutputs = Integer.parseInt(config.get("Number of Outputs"));
+			}
 		} catch (Exception e) {
 			numOutputs = 2;
 		}
@@ -49,4 +51,8 @@ public class SplitterConfig implements TaskConfigSpec {
 		this.numOutputs = numOutputs;
 	}
 
+	@Override
+	public Map<String, String> getValues() {
+		return Map.of("Number of Outputs", Integer.toString(numOutputs));
+	}
 }

@@ -9,16 +9,17 @@ import tom.task.TaskConfigTypes;
 
 public class PacketEmitterConfig implements TaskConfigSpec {
 
-	String keyName;
 	String data;
 
 	public PacketEmitterConfig() {
-		keyName = null;
-		data = null;
+		data = "";
 	}
 
 	public PacketEmitterConfig(Map<String, String> config) {
-		data = config.get("Data to Emit");
+		this();
+		if (config.containsKey("Data to Emit")) {
+			data = config.get("Data to Emit");
+		}
 	}
 
 	@Override
@@ -32,10 +33,6 @@ public class PacketEmitterConfig implements TaskConfigSpec {
 		return data;
 	}
 
-	String getKeyName() {
-		return keyName;
-	}
-
 	@Override
 	public List<String> getSystemConfigVariables() {
 		return List.of();
@@ -44,5 +41,10 @@ public class PacketEmitterConfig implements TaskConfigSpec {
 	@Override
 	public List<String> getUserConfigVariables() {
 		return List.of();
+	}
+
+	@Override
+	public Map<String, String> getValues() {
+		return Map.of("Data to Emit", data);
 	}
 }

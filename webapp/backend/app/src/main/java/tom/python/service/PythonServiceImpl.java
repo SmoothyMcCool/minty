@@ -35,7 +35,7 @@ public class PythonServiceImpl implements PythonService {
 	}
 
 	@Override
-	public PythonResult execute(String pythonFile, Map<String, Object> inputDictionary) throws PythonException {
+	public PythonResult execute(String pythonFile, List<Map<String, Object>> inputDictionary) throws PythonException {
 		Path inputFilePath = null;
 		Path outputFilePath = null;
 		List<String> logs = new ArrayList<>();
@@ -102,7 +102,8 @@ public class PythonServiceImpl implements PythonService {
 	}
 
 	@Override
-	public PythonResult executeCodeString(String code, Map<String, Object> inputDictionary) throws PythonException {
+	public PythonResult executeCodeString(String code, List<Map<String, Object>> inputDictionary)
+			throws PythonException {
 		Path tempPyFile = null;
 		try {
 			tempPyFile = Files.createTempFile(Path.of(pythonScripts), "tempPy-", ".py");

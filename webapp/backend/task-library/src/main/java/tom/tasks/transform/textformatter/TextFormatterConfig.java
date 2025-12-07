@@ -17,7 +17,9 @@ public class TextFormatterConfig implements TaskConfigSpec {
 
 	public TextFormatterConfig(Map<String, String> config) {
 		this();
-		formatStr = config.get("Format");
+		if (config.containsKey("Format")) {
+			formatStr = config.get("Format");
+		}
 
 		if (formatStr == null || formatStr.isBlank()) {
 			return;
@@ -43,6 +45,11 @@ public class TextFormatterConfig implements TaskConfigSpec {
 	@Override
 	public List<String> getUserConfigVariables() {
 		return List.of();
+	}
+
+	@Override
+	public Map<String, String> getValues() {
+		return Map.of("Format", formatStr);
 	}
 
 }

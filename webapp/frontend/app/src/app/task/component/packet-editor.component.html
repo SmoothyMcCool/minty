@@ -6,62 +6,76 @@
 	</div>
 
 	<ng-container *ngIf="!textMode; else showText">
-		<div *ngFor="let packet of packets; let i = index" class="card mb-4">
-			<div class="card-header d-flex justify-content-between align-items-center">
-				<h5 class="mb-0">Packet {{i + 1}}</h5>
-				<button class="btn btn-sm btn-outline-danger" (click)="removeItem(i)">
-					Remove Packet
-				</button>
+		<ng-container *ngIf="packets?.length">
+			<div *ngFor="let packet of packets; let i = index" class="card mb-4">
+				<div class="card-header d-flex justify-content-between align-items-center">
+					<h5 class="mb-0">Packet {{i + 1}}</h5>
+					<button class="btn btn-sm btn-outline-danger" (click)="removePacket(i)">
+						Remove Packet
+					</button>
+				</div>
+
+				<div class="card-body">
+
+					<h6>ID: <strong>{{packet.id}}</strong></h6>
+					<div class="col">
+						<input type="text" class="form-control" [(ngModel)]="packet.id"
+							(ngModelChange)="onIdChange(packet, $event)" placeholder="Enter ID" />
+					</div>
+
+					<hr />
+
+					<!-- Text section -->
+					<h6>Text</h6>
+					<ng-container *ngIf="packet.text?.length">
+						<div *ngFor="let txt of packet.text; let j = index; trackBy: trackByIndex" class="row align-items-center mb-2">
+							<div class="col-10">
+								<input type="text" class="form-control" [(ngModel)]="packet.text[j]"
+									(ngModelChange)="onTextChange(packet, j, $event)" placeholder="Enter text" />
+							</div>
+							<div class="col-2">
+								<button type="button" class="btn btn-sm btn-outline-danger" (click)="removeText(packet, j)">
+									&times;
+								</button>
+							</div>
+						</div>
+					</ng-container>
+					<button class="btn btn-sm btn-outline-primary" (click)="addText(packet)">
+						Add Text
+					</button>
+
+					<hr />
+
+					<!-- Data section -->
+					<h6>Data</h6>
+					<ng-container *ngIf="packet.data?.length">
+						<div *ngFor="let d of packet.data; let k = index; trackBy: trackByIndex" class="row align-items-center mb-2">
+							<div class="col-10">
+								<textarea id="packetDataInput-{{i}}-{{j}}-{{k}}"
+									name="packetDataInput-{{i}}-{{j}}-{{k}}"
+									type="text"
+									style="height: 200px;"
+									class="form-control form-control-sm font-monospace"
+									[ngModel]="packetAsString(d)"
+									(ngModelChange)="onValueChange(packet, k, $event)"
+									autocomplete="off"
+									required
+									[class.is-invalid]="!valid"></textarea>
+							</div>
+							<div class="col-2">
+								<button type="button" class="btn btn-sm btn-outline-danger" (click)="removeData(packet, k)">
+									&times;
+								</button>
+							</div>
+						</div>
+					</ng-container>
+					<button class="btn btn-sm btn-outline-primary" (click)="addData(packet)">
+						Add Item
+					</button>
+
+				</div>
 			</div>
-
-			<div class="card-body">
-
-				<h6>ID: <strong>{{packet.id}}</strong></h6>
-				<div class="col">
-					<input type="text" class="form-control" [(ngModel)]="packet.id"
-						(ngModelChange)="onIdChange(packet, $event)" placeholder="Enter ID" />
-				</div>
-
-				<hr />
-
-				<!-- Text section -->
-				<h6>Text</h6>
-				<div *ngFor="let txt of packet.text; let j = index" class="row align-items-center mb-2">
-					<div class="col-10">
-						<input type="text" class="form-control" [(ngModel)]="packet.text[j]"
-							(ngModelChange)="onTextChange(item, j, $event)" placeholder="Enter text" />
-					</div>
-					<div class="col-2">
-						<button type="button" class="btn btn-sm btn-outline-danger" (click)="removeText(packet, j)">
-							&times;
-						</button>
-					</div>
-				</div>
-				<button class="btn btn-sm btn-outline-primary" (click)="addText(packet)">
-					Add Text
-				</button>
-
-				<hr />
-
-				<!-- Data section -->
-				<h6>Data</h6>
-				<div *ngFor="let d of packet.data; let k = index" class="row align-items-center mb-2">
-					<div class="col-10">
-						<textarea id="packetDataInput-{{i}}-{{j}}-{{k}}" name="packetDataInput-{{i}}-{{j}}-{{k}}" type="text" style="height: 200px;" class="form-control form-control-sm font-monospace" [(ngModel)]="packet.data[k].value"
-							(ngModelChange)="onValueChange(packet, k, $event)" autocomplete="off" required></textarea>
-					</div>
-					<div class="col-2">
-						<button type="button" class="btn btn-sm btn-outline-danger" (click)="removeData(packet, k)">
-							&times;
-						</button>
-					</div>
-				</div>
-				<button class="btn btn-sm btn-outline-primary" (click)="addData(packet)">
-					Add Item
-				</button>
-
-			</div>
-		</div>
+		</ng-container>
 
 		<!-- Add new item button -->
 		<button class="btn btn-primary" (click)="addPacket()">Add Packet</button>
