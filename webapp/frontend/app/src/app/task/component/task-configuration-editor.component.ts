@@ -7,7 +7,6 @@ import { EnumListEditorComponent } from './enumlist-editor.component';
 import { ActivatedRoute } from '@angular/router';
 import { TaskSpecification } from 'src/app/model/workflow/task-specification';
 import { EnumList } from 'src/app/model/workflow/enum-list';
-import { WorkflowService } from 'src/app/workflow/workflow.service';
 import { PacketEditorComponent } from './packet-editor.component';
 import { DocumentEditorComponent } from './document-editor.component';
 
@@ -23,7 +22,7 @@ import { DocumentEditorComponent } from './document-editor.component';
 		}
 	]
 })
-export class TaskConfigurationEditorComponent implements ControlValueAccessor, OnInit {
+export class TaskConfigurationEditorComponent implements ControlValueAccessor {
 
 	@Input() defaults: string[] = [];
 	@Input() taskSpecification: TaskSpecification;
@@ -34,17 +33,9 @@ export class TaskConfigurationEditorComponent implements ControlValueAccessor, O
 
 	resultTemplates: string[] = [];
 
-	constructor(private route: ActivatedRoute,
-		private workflowService: WorkflowService) {
+	constructor() {
 	}
 
-	ngOnInit(): void {
-		this.route.params.subscribe(() => {
-			this.workflowService.listResultTemplates().subscribe(resultTemplates => {
-				this.resultTemplates = resultTemplates;
-			});
-		});
-	}
 
 	valueChanged(param: string, value: string) {
 		this.config.set(param, value);

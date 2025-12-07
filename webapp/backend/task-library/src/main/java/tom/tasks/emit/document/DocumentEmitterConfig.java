@@ -1,4 +1,4 @@
-package tom.tasks.emit.FileEmitter.java;
+package tom.tasks.emit.document;
 
 import java.util.HashMap;
 import java.util.List;
@@ -12,11 +12,13 @@ public class DocumentEmitterConfig implements TaskConfigSpec {
 	String base64;
 
 	public DocumentEmitterConfig() {
-		base64 = null;
+		base64 = "";
 	}
 
 	public DocumentEmitterConfig(Map<String, String> config) {
-		base64 = config.get("File");
+		if (config.containsKey("File")) {
+			base64 = config.get("File");
+		}
 	}
 
 	@Override
@@ -38,5 +40,10 @@ public class DocumentEmitterConfig implements TaskConfigSpec {
 	@Override
 	public List<String> getUserConfigVariables() {
 		return List.of();
+	}
+
+	@Override
+	public Map<String, String> getValues() {
+		return Map.of("File", base64);
 	}
 }

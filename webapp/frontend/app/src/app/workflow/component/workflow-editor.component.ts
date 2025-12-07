@@ -277,8 +277,8 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 		if (this.workflow.outputStep?.id === this.editTask.id) {
 			this.workflow.outputStep = null;
 		}
+		this.confirmDeleteStepVisible = false;
 		this.doneEditingStep();
-
 	}
 
 	onConnectorClicked(c) {

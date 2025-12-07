@@ -18,7 +18,9 @@ public class JoinerConfig implements TaskConfigSpec {
 	public JoinerConfig(Map<String, String> config) {
 		this();
 		try {
-			numInputs = Integer.parseInt(config.get("Number of Inputs"));
+			if (config.containsKey("Number of Inputs")) {
+				numInputs = Integer.parseInt(config.get("Number of Inputs"));
+			}
 		} catch (Exception e) {
 			numInputs = 2;
 		}
@@ -49,4 +51,8 @@ public class JoinerConfig implements TaskConfigSpec {
 		this.numInputs = numInputs;
 	}
 
+	@Override
+	public Map<String, String> getValues() {
+		return Map.of("Number of Inputs", Integer.toString(numInputs));
+	}
 }

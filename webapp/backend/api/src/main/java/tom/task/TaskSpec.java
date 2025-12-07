@@ -21,7 +21,9 @@ public interface TaskSpec {
 	// should be.
 	int numInputs();
 
-	// Description of the configuration object for this task.
+	// Description of the configuration object for this task. Implementations should
+	// ensure this TaskConfigSpec is populated with any default values for their
+	// tasks.
 	TaskConfigSpec taskConfiguration();
 
 	// Description of the configuration object for this task, populated with the

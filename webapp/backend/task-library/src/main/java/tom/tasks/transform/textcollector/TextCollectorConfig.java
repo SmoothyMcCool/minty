@@ -20,8 +20,12 @@ public class TextCollectorConfig implements TaskConfigSpec {
 
 	public TextCollectorConfig(Map<String, String> config) {
 		this();
-		grouping = Grouping.valueOf(config.get("Grouping"));
-		separator = config.get("Separator");
+		if (config.containsKey("Grouping")) {
+			grouping = Grouping.valueOf(config.get("Grouping"));
+		}
+		if (config.containsKey("Separator")) {
+			separator = config.get("Separator");
+		}
 	}
 
 	@Override
@@ -50,4 +54,8 @@ public class TextCollectorConfig implements TaskConfigSpec {
 		return separator;
 	}
 
+	@Override
+	public Map<String, String> getValues() {
+		return Map.of("Grouping", grouping.toString(), "Separator", separator);
+	}
 }

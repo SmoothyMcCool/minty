@@ -17,7 +17,9 @@ public class IdentifierConfig implements TaskConfigSpec {
 
 	public IdentifierConfig(Map<String, String> config) {
 		this();
-		idElement = config.get("ID Element");
+		if (config.containsKey("ID Element")) {
+			idElement = config.get("ID Element");
+		}
 	}
 
 	@Override
@@ -45,4 +47,8 @@ public class IdentifierConfig implements TaskConfigSpec {
 		this.idElement = idElement;
 	}
 
+	@Override
+	public Map<String, String> getValues() {
+		return Map.of("ID Element", idElement);
+	}
 }

@@ -53,6 +53,11 @@ public class NullOutput implements OutputTask {
 						return List.of();
 					}
 
+					@Override
+					public Map<String, String> getValues() {
+						return Map.of();
+					}
+
 				};
 			}
 

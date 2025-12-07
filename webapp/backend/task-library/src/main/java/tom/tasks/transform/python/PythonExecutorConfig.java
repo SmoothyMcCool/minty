@@ -15,10 +15,14 @@ public class PythonExecutorConfig implements TaskConfigSpec {
 	private String python;
 
 	public PythonExecutorConfig() {
+		python = "";
 	}
 
 	public PythonExecutorConfig(Map<String, String> config) throws JsonMappingException, JsonProcessingException {
-		python = config.get("Python Code");
+		this();
+		if (config.containsKey("Python Code")) {
+			python = config.get("Python Code");
+		}
 	}
 
 	@Override
@@ -40,5 +44,10 @@ public class PythonExecutorConfig implements TaskConfigSpec {
 	@Override
 	public List<String> getUserConfigVariables() {
 		return List.of();
+	}
+
+	@Override
+	public Map<String, String> getValues() {
+		return Map.of("Python Code", python);
 	}
 }

@@ -134,7 +134,7 @@ public class TextCollector implements MintyTask {
 
 			@Override
 			public TaskConfigSpec taskConfiguration() {
-				return new TextCollectorConfig();
+				return new TextCollectorConfig(Map.of("Grouping", "All"));
 			}
 
 			@Override

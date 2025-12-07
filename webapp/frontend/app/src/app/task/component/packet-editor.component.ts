@@ -1,6 +1,6 @@
 // data-editor.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, Input, Output, EventEmitter, forwardRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, forwardRef, AfterViewInit } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { Packet } from 'src/app/model/workflow/packet';
 
@@ -17,8 +17,7 @@ import { Packet } from 'src/app/model/workflow/packet';
 	]
 })
 export class PacketEditorComponent implements ControlValueAccessor {
-	@Input() packets: Packet[] = [];
-	@Output() packetsChange = new EventEmitter<Packet[]>();
+	packets: Packet[] = [];
 
 	onChange: any = () => {};
 	onTouched: any = () => {};
@@ -38,6 +37,12 @@ export class PacketEditorComponent implements ControlValueAccessor {
 		});
 	}
 
+	removePacket(index: number) {
+		if (index != -1) {
+			this.packets.splice(index, 1);
+		}
+	}
+
 	addText(packet: Packet) {
 		packet.text.push('');
 		this.emitChange();
@@ -46,6 +51,10 @@ export class PacketEditorComponent implements ControlValueAccessor {
 	removeText(packet: Packet, index: number) {
 		packet.text.splice(index, 1);
 		this.emitChange();
+	}
+
+	trackByIndex(index: number, item: any) {
+		return index;
 	}
 
 	addData(packet: Packet) {
@@ -64,7 +73,14 @@ export class PacketEditorComponent implements ControlValueAccessor {
 	}
 
 	onValueChange(packet: Packet, index: number, value: any) {
-		packet.data[index] = value;
+		try {
+			const parsed = JSON.parse(value);
+			packet.data[index] = parsed;
+			this.valid = true;
+		} catch(error) {
+			this.valid = false;
+		}
+
 		this.emitChange();
 	}
 
@@ -77,9 +93,13 @@ export class PacketEditorComponent implements ControlValueAccessor {
 		return JSON.stringify(this.packets, undefined, 2);
 	}
 
+	packetAsString(packet: Packet) {
+		return JSON.stringify(packet, undefined, 2);
+	}
+
 	packetTextChanged($event) {
 		try {
-			this.packets = JSON.parse($event) as Packet[];
+			this.packets = this.packets = JSON.parse($event) as Packet[];
 			this.valid = true;
 			this.emitChange();
 		} catch(error) {
@@ -93,7 +113,18 @@ export class PacketEditorComponent implements ControlValueAccessor {
 			return;
 		}
 
-		this.packets = JSON.parse(obj) as Packet[];
+		if (typeof obj ===  'string') {
+			obj = JSON.parse(obj);
+			if (!Array.isArray(obj)) {
+				obj = [obj];
+			}
+			this.packets = obj;
+		} else if (Array.isArray(obj)) {
+			this.packets = obj;
+		} else {
+			this.packets = [obj];
+		}
+		console.log(JSON.stringify(this.packets, undefined, 2));
 	}
 	registerOnChange(fn: any): void {
 		this.onChange = fn;
@@ -101,7 +132,7 @@ export class PacketEditorComponent implements ControlValueAccessor {
 	registerOnTouched(fn: any): void {
 		this.onTouched = fn;
 	}
-	setDisabledState(isDisabled: boolean): void {
+	setDisabledState(_isDisabled: boolean): void {
 		// Nah.
 	}
 }

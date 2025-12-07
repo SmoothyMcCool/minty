@@ -43,16 +43,9 @@ public class Packet {
 		this.text.add(text);
 	}
 
-	public List<Map<String, Object>> getDataList() {
+	public List<Map<String, Object>> getData() {
+
 		return data;
-	}
-
-	public Map<String, Object> getData() {
-
-		if (data.size() > 0) {
-			return data.get(0);
-		}
-		return null;
 	}
 
 	public void setData(List<Map<String, Object>> data) {

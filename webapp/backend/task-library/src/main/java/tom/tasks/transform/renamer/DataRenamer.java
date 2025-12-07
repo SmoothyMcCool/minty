@@ -59,7 +59,7 @@ public class DataRenamer implements MintyTask {
 			outputs.get(0).write(result);
 		}
 
-		input.getDataList().forEach(item -> {
+		input.getData().forEach(item -> {
 			item.forEach((key, value) -> {
 				if (renames.containsKey(key)) {
 					logger.debug("DataRenamer: Renaming " + key + " to " + renames.get(key));

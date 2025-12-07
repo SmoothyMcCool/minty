@@ -63,10 +63,10 @@ public class TextFormatter implements MintyTask {
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
 
-		List<Map<String, Object>> dataList = input.getDataList();
+		List<Map<String, Object>> dataList = input.getData();
 		result = new Packet();
 		result.setId(input.getId());
-		result.setData(input.getDataList());
+		result.setData(input.getData());
 
 		for (Map<String, Object> data : dataList) {
 			JsonNode root;

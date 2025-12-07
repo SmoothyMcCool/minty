@@ -10,6 +10,7 @@ import tom.task.TaskConfigSpec;
 import tom.task.TaskLogger;
 import tom.task.TaskSpec;
 import tom.task.annotation.RunnableTask;
+import tom.tasks.noop.NullTaskConfig;
 
 @RunnableTask
 public class Identifier implements MintyTask {
@@ -44,7 +45,7 @@ public class Identifier implements MintyTask {
 
 	@Override
 	public void run() {
-		Object keyValue = findKeyFromObject(config.getIdElement(), input.getData());
+		Object keyValue = findKeyFromObject(config.getIdElement(), input.getData().getFirst());
 
 		// current now holds the element that we want to use as the ID. If current is
 		// null, we did not find the key we wanted.
@@ -135,12 +136,12 @@ public class Identifier implements MintyTask {
 
 			@Override
 			public TaskConfigSpec taskConfiguration() {
-				return new JoinerConfig();
+				return new NullTaskConfig();
 			}
 
 			@Override
 			public TaskConfigSpec taskConfiguration(Map<String, String> configuration) {
-				return new JoinerConfig(configuration);
+				return new NullTaskConfig(configuration);
 			}
 
 			@Override

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import tom.api.AssistantId;
+import tom.api.services.assistant.AssistantManagementService;
 import tom.task.TaskConfigSpec;
 import tom.task.TaskConfigTypes;
 import tom.tasks.TaskUtils;
@@ -15,12 +16,18 @@ public class AiQueryConfig implements TaskConfigSpec {
 	private String query;
 
 	public AiQueryConfig() {
+		assistant = AssistantManagementService.DefaultAssistantId;
 		query = "";
 	}
 
 	public AiQueryConfig(Map<String, String> config) {
-		assistant = new AssistantId(config.get("Assistant"));
-		query = config.get("Query");
+		this();
+		if (config.containsKey("Assistant")) {
+			assistant = new AssistantId(config.get("Assistant"));
+		}
+		if (config.containsKey("Query")) {
+			query = config.get("Query");
+		}
 	}
 
 	@Override
@@ -56,5 +63,10 @@ public class AiQueryConfig implements TaskConfigSpec {
 	@Override
 	public List<String> getUserConfigVariables() {
 		return List.of();
+	}
+
+	@Override
+	public Map<String, String> getValues() {
+		return Map.of("Assistant", assistant.getValue().toString(), "Query", query);
 	}
 }

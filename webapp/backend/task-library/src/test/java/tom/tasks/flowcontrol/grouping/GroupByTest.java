@@ -166,8 +166,8 @@ class GroupByTest {
 		Packet written = captor.getValue();
 
 		// The result packet should contain the data list and text from the data packet
-		assertEquals(1, written.getDataList().size(), "dataList size");
-		assertEquals("value", written.getDataList().get(0).get("field"));
+		assertEquals(1, written.getData().size(), "dataList size");
+		assertEquals("value", written.getData().get(0).get("field"));
 		assertEquals(1, written.getText().size(), "text size");
 		assertEquals("dataText", written.getText().get(0));
 	}
@@ -224,7 +224,7 @@ class GroupByTest {
 		Packet out1 = captor.getAllValues().get(0);
 		Packet out2 = captor.getAllValues().get(1);
 		assertEquals(out1.getText(), out2.getText(), "text lists should match");
-		assertEquals(out1.getDataList(), out2.getDataList(), "data lists should match");
+		assertEquals(out1.getData(), out2.getData(), "data lists should match");
 
 		// Verify debug logging
 		verify(logger, times(2)).debug("GroupBy: Writing out items for key K1");

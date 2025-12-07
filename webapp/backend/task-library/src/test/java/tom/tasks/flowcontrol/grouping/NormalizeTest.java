@@ -129,19 +129,19 @@ class NormalizeTest {
 			// first packet
 			Packet p0 = written.get(0);
 			assertEquals("id-1", p0.getId());
-			assertEquals(1, p0.getDataList().size());
+			assertEquals(1, p0.getData().size());
 			assertEquals(1, p0.getText().size());
 
 			// second packet – no text
 			Packet p1 = written.get(1);
 			assertEquals("id-1", p1.getId());
-			assertEquals(1, p1.getDataList().size());
+			assertEquals(1, p1.getData().size());
 			assertTrue(p1.getText().isEmpty());
 
 			// third packet – no text
 			Packet p2 = written.get(2);
 			assertEquals("id-1", p2.getId());
-			assertEquals(1, p2.getDataList().size());
+			assertEquals(1, p2.getData().size());
 			assertTrue(p2.getText().isEmpty());
 		}
 
@@ -165,19 +165,19 @@ class NormalizeTest {
 			// first packet
 			Packet p0 = written.get(0);
 			assertEquals("id-2", p0.getId());
-			assertEquals(1, p0.getDataList().size());
+			assertEquals(1, p0.getData().size());
 			assertEquals(1, p0.getText().size());
 
 			// second packet – no data
 			Packet p1 = written.get(1);
 			assertEquals("id-2", p1.getId());
-			assertTrue(p1.getDataList().isEmpty());
+			assertTrue(p1.getData().isEmpty());
 			assertEquals(1, p1.getText().size());
 
 			// third packet – no data
 			Packet p2 = written.get(2);
 			assertEquals("id-2", p2.getId());
-			assertTrue(p2.getDataList().isEmpty());
+			assertTrue(p2.getData().isEmpty());
 			assertEquals(1, p2.getText().size());
 		}
 
@@ -200,12 +200,12 @@ class NormalizeTest {
 
 			Packet p0 = written.get(0);
 			assertEquals("id-3", p0.getId());
-			assertEquals(1, p0.getDataList().size());
+			assertEquals(1, p0.getData().size());
 			assertEquals(1, p0.getText().size());
 
 			Packet p1 = written.get(1);
 			assertEquals("id-3", p1.getId());
-			assertEquals(1, p1.getDataList().size());
+			assertEquals(1, p1.getData().size());
 			assertEquals(1, p1.getText().size());
 		}
 	}
