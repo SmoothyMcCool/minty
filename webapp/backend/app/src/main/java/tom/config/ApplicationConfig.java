@@ -62,12 +62,12 @@ public class ApplicationConfig implements WebMvcConfigurer {
 	}
 
 	@Bean
-	public static ExternalProperties properties() {
+	static ExternalProperties properties() {
 		return new ExternalProperties();
 	}
 
 	@Bean
-	public HttpSessionIdResolver httpSessionIdResolver() {
+	HttpSessionIdResolver httpSessionIdResolver() {
 		return HeaderHttpSessionIdResolver.xAuthToken();
 	}
 
@@ -108,7 +108,7 @@ public class ApplicationConfig implements WebMvcConfigurer {
 
 	// For use by @Scheduled
 	@Bean
-	public TaskScheduler taskScheduler() {
+	TaskScheduler taskScheduler() {
 		ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
 		scheduler.setPoolSize(2);
 		scheduler.setThreadNamePrefix("spring-scheduler-");
@@ -117,7 +117,7 @@ public class ApplicationConfig implements WebMvcConfigurer {
 	}
 
 	@Bean
-	public MultipartResolver multipartResolver() {
+	MultipartResolver multipartResolver() {
 		return new StandardServletMultipartResolver();
 	}
 
@@ -129,7 +129,7 @@ public class ApplicationConfig implements WebMvcConfigurer {
 	}
 
 	@Bean
-	public PugConfiguration pugConfiguration(FileTemplateLoader pugFileLoader) {
+	PugConfiguration pugConfiguration(FileTemplateLoader pugFileLoader) {
 		PugConfiguration config = new PugConfiguration();
 		config.setCaching(true);
 		config.setTemplateLoader(pugFileLoader);

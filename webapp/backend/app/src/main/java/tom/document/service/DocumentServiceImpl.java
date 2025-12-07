@@ -20,7 +20,7 @@ import org.springframework.ai.model.transformer.SummaryMetadataEnricher;
 import org.springframework.ai.model.transformer.SummaryMetadataEnricher.SummaryType;
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.ollama.api.OllamaApi;
-import org.springframework.ai.ollama.api.OllamaOptions;
+import org.springframework.ai.ollama.api.OllamaChatOptions;
 import org.springframework.ai.reader.tika.TikaDocumentReader;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -119,7 +119,7 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 	public void transformAndStore(File file, MintyDoc doc) {
 		VectorStore vectorStore = ollamaService.getVectorStore();
 		ChatModel chatModel = OllamaChatModel.builder().ollamaApi(ollamaApi)
-				.defaultOptions(OllamaOptions.builder().model(summarizingModel).build()).build();
+				.defaultOptions(OllamaChatOptions.builder().model(summarizingModel).build()).build();
 
 		FileSystemResource resource = new FileSystemResource(file);
 		List<Document> documents = read(resource);

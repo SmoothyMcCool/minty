@@ -25,6 +25,8 @@
 		<module>../common</module>
 		<module>../pug4j-shaded</module>
 		<module>../task-library</module>
+		<module>../tools</module>
+		<module>../tool-library</module>
 		<module>../workflow-executor</module>
 		<module>../bundle</module>
 	</modules>

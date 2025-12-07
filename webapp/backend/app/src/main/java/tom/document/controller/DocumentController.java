@@ -13,11 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import tom.ApiError;
@@ -42,7 +38,7 @@ public class DocumentController {
 		docFileStore = properties.get("docFileStore");
 	}
 
-	@RequestMapping(value = { "/add" }, method = RequestMethod.POST)
+	@PostMapping({ "/add" })
 	public ResponseEntity<ResponseWrapper<MintyDoc>> addDocument(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestBody MintyDoc document) {
 
@@ -60,7 +56,7 @@ public class DocumentController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "/upload" }, method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@PostMapping(value = { "/upload" }, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<ResponseWrapper<String>> uploadDocument(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestParam("documentId") String documentId, @RequestPart("file") MultipartFile mpf) {
 
@@ -82,7 +78,7 @@ public class DocumentController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "/list" }, method = RequestMethod.GET)
+	@GetMapping({ "/list" })
 	public ResponseEntity<ResponseWrapper<List<MintyDoc>>> listDocuments(
 			@AuthenticationPrincipal UserDetailsUser user) {
 		List<MintyDoc> documents = documentService.listDocuments();
@@ -91,7 +87,7 @@ public class DocumentController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "/delete" }, method = RequestMethod.DELETE)
+	@DeleteMapping({ "/delete" })
 	public ResponseEntity<ResponseWrapper<Boolean>> deleteDocument(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestParam("documentId") DocumentId documentId) {
 

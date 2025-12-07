@@ -8,9 +8,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
@@ -50,7 +52,7 @@ public class AssistantController {
 		this.assistantQueryService = assistantQueryService;
 	}
 
-	@RequestMapping(value = { "/new" }, method = RequestMethod.POST)
+	@PostMapping({ "/new" })
 	public ResponseEntity<ResponseWrapper<Assistant>> addAssistant(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestBody Assistant assistant) {
 
@@ -61,7 +63,7 @@ public class AssistantController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "/edit" }, method = RequestMethod.POST)
+	@PostMapping({ "/edit" })
 	public ResponseEntity<ResponseWrapper<Assistant>> editAssistant(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestBody Assistant assistant) {
 
@@ -71,7 +73,7 @@ public class AssistantController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "/list" }, method = RequestMethod.GET)
+	@GetMapping({ "/list" })
 	public ResponseEntity<ResponseWrapper<List<Assistant>>> listAssistants(
 			@AuthenticationPrincipal UserDetailsUser user) {
 		List<Assistant> assistants = assistantManagementService.listAssistants(user.getId());
@@ -79,14 +81,14 @@ public class AssistantController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "/models" }, method = RequestMethod.GET)
+	@GetMapping({ "/models" })
 	public ResponseEntity<ResponseWrapper<List<String>>> listModels(@AuthenticationPrincipal UserDetailsUser user) {
 		List<String> models = ollamaService.listModels();
 		ResponseWrapper<List<String>> response = ResponseWrapper.SuccessResponse(models);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "/get" }, method = RequestMethod.GET)
+	@GetMapping({ "/get" })
 	public ResponseEntity<ResponseWrapper<Assistant>> getAssistant(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestParam("id") AssistantId assistantId) {
 		Assistant assistant = assistantManagementService.findAssistant(user.getId(), assistantId);
@@ -101,7 +103,7 @@ public class AssistantController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "/conversation" }, method = RequestMethod.GET)
+	@GetMapping({ "/conversation" })
 	public ResponseEntity<ResponseWrapper<Assistant>> getAssistantForChat(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestParam("conversationId") ConversationId conversationId) {
 
@@ -116,7 +118,7 @@ public class AssistantController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "/delete" }, method = RequestMethod.DELETE)
+	@DeleteMapping({ "/delete" })
 	public ResponseEntity<ResponseWrapper<Boolean>> deleteAssistant(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestParam("id") AssistantId assistantId) {
 
@@ -132,7 +134,7 @@ public class AssistantController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "/ask" }, method = RequestMethod.POST)
+	@PostMapping({ "/ask" })
 	public ResponseEntity<ResponseWrapper<ConversationId>> ask(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestBody AssistantQuery query) {
 		Assistant assistant = assistantManagementService.findAssistant(user.getId(), query.getAssistantId());
@@ -169,7 +171,7 @@ public class AssistantController {
 
 	}
 
-	@RequestMapping(value = { "/response" }, method = RequestMethod.POST, produces = MediaType.TEXT_PLAIN_VALUE)
+	@PostMapping(value = { "/response" }, produces = MediaType.TEXT_PLAIN_VALUE)
 	public StreamingResponseBody ask(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestBody ConversationId streamId) {
 

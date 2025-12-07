@@ -29,7 +29,7 @@ public class DatabaseConfig {
 
 	@Bean
 	@SpringSessionDataSource
-	public DataSource applicationDataSource() {
+	DataSource applicationDataSource() {
 		HikariConfig config = new HikariConfig();
 		config.setJdbcUrl(props.get("applicationDbUrl"));
 		config.setUsername(props.get("applicationDbUser"));
@@ -43,7 +43,7 @@ public class DatabaseConfig {
 	}
 
 	@Bean
-	public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+	LocalContainerEntityManagerFactoryBean entityManagerFactory() {
 		LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
 		em.setDataSource(applicationDataSource());
 		em.setPackagesToScan("tom");
@@ -61,7 +61,7 @@ public class DatabaseConfig {
 	}
 
 	@Bean
-	public PlatformTransactionManager transactionManager() {
+	PlatformTransactionManager transactionManager() {
 		JpaTransactionManager transactionManager = new JpaTransactionManager();
 		transactionManager.setEntityManagerFactory(entityManagerFactory().getObject());
 		return transactionManager;
