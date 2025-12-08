@@ -8,6 +8,8 @@ import { FilterPipe } from '../../pipe/filter-pipe';
 import { MintyDoc } from 'src/app/model/minty-doc';
 import { DocumentService } from 'src/app/document.service';
 import { AssistantEditorComponent } from './assistant-editor.component';
+import { MintyTool } from 'src/app/model/minty-tool';
+import { ToolService } from 'src/app/tool.service';
 
 @Component({
 	selector: 'minty-edit-assistant',
@@ -18,6 +20,7 @@ export class EditAssistantComponent implements OnInit {
 
 	models: string[] = [];
 	availableDocuments: MintyDoc[] = [];
+	tools: MintyTool[] = [];
 	assistant: Assistant = {
 		id: '',
 		name: '',
@@ -25,6 +28,7 @@ export class EditAssistantComponent implements OnInit {
 		model: '',
 		temperature: 0,
 		topK: 5,
+		tools: [],
 		ownerId: '',
 		shared: false,
 		hasMemory: false,
@@ -35,6 +39,7 @@ export class EditAssistantComponent implements OnInit {
 		private route: ActivatedRoute,
 		private assistantService: AssistantService,
 		private documentService: DocumentService,
+		private toolService: ToolService,
 		private router: Router) {
 	}
 
@@ -49,6 +54,9 @@ export class EditAssistantComponent implements OnInit {
 		});
 		this.assistantService.models().subscribe((models: string[]) => {
 			this.models = models;
+		});
+		this.toolService.list().subscribe((tools: MintyTool[]) => {
+			this.tools = tools;
 		});
 	}
 

@@ -12,8 +12,9 @@ import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 
 import tom.http.service.HttpResponseHandler;
+import tom.tool.MintyTool;
 
-public class WeatherLookupTool {
+public class WeatherLookupTool implements MintyTool {
 
 	private static final Logger logger = LogManager.getLogger(WeatherLookupTool.class);
 
@@ -40,5 +41,15 @@ public class WeatherLookupTool {
 		}
 
 		return null;
+	}
+
+	@Override
+	public String name() {
+		return "Get Weather Forecast";
+	}
+
+	@Override
+	public String description() {
+		return "Returns the weather forecast for a given latitude and longitude, from weather.gc.ca.";
 	}
 }

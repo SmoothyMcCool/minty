@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.core.exc.StreamReadException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -34,9 +35,13 @@ public class AssistantRegistry {
 			Map<String, Object> asstData = (Map<String, Object>) asstObj;
 
 			AssistantBuilder builder = new AssistantBuilder();
+
+			List<String> tools = mapper.convertValue(asstData.get("tools"), new TypeReference<List<String>>() {
+			});
+
 			builder.id(AssistantManagementService.DefaultAssistantId).name((String) asstData.get("name"))
 					.model((String) asstData.get("model")).temperature((Double) asstData.get("temperature"))
-					.topK((Integer) asstData.get("topK")).prompt((String) asstData.get("prompt"))
+					.topK((Integer) asstData.get("topK")).prompt((String) asstData.get("prompt")).tools(tools)
 					.ownerId(UserService.DefaultId).shared((Boolean) asstData.get("shared"))
 					.hasMemory((Boolean) asstData.get("hasMemory")).documentIds(List.of());
 			Assistant assistant = builder.build();

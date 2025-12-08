@@ -6,6 +6,7 @@ assistants:
       shared: false
       hasMemory: true
       prompt: ""
+      tools: []
 
     - name: Conversation Naming Bot
       model: gpt-oss:20b
@@ -19,7 +20,7 @@ assistants:
            Respond with only the summary, at most 50 characters in length.
            Do not add punctuation unless it is part of the conversation."
            Do not add extra words like "Summary:" or explanations." + "Conversation:
-
+      tools: []
 
 
     - name: Diagramming Bot
@@ -49,3 +50,5 @@ assistants:
            Input:
 
 
+
+      tools: []

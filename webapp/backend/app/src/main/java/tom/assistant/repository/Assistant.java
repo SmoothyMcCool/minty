@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -12,6 +13,7 @@ import jakarta.persistence.Transient;
 import tom.api.AssistantId;
 import tom.api.DocumentId;
 import tom.api.UserId;
+import tom.workflow.converters.StringListToStringConverter;
 
 @Entity
 public class Assistant {
@@ -30,6 +32,9 @@ public class Assistant {
 	@Transient
 	private List<DocumentId> associatedDocumentIds;
 
+	@Convert(converter = StringListToStringConverter.class)
+	private List<String> tools;
+
 	public Assistant() {
 	}
 
@@ -44,11 +49,12 @@ public class Assistant {
 		this.shared = assistant.shared();
 		this.hasMemory = assistant.hasMemory();
 		this.associatedDocumentIds = new ArrayList<>();
+		this.tools = assistant.tools();
 	}
 
 	public tom.model.Assistant toTaskAssistant() {
 		return new tom.model.Assistant(new AssistantId(id), name, model.toString(), temperature, topK, prompt,
-				associatedDocumentIds, ownerId, shared, hasMemory);
+				associatedDocumentIds, tools, ownerId, shared, hasMemory);
 	}
 
 	public Assistant updateWith(tom.model.Assistant assistant) {
@@ -60,6 +66,7 @@ public class Assistant {
 		setShared(assistant.shared());
 		setHasMemory(assistant.hasMemory());
 		setAssociatedDocuments(assistant.documentIds());
+		setTools(assistant.tools());
 		return this;
 	}
 
@@ -142,6 +149,14 @@ public class Assistant {
 
 	public void setAssociatedDocuments(List<DocumentId> associatedDocumentIds) {
 		this.associatedDocumentIds = associatedDocumentIds;
+	}
+
+	public List<String> getTools() {
+		return tools;
+	}
+
+	public void setTools(List<String> tools) {
+		this.tools = tools;
 	}
 
 }
