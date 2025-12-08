@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { interval, retry, Subject, switchMap, takeUntil } from 'rxjs';
+import { retry } from 'rxjs';
 import { AssistantService } from '../../assistant.service';
 import { Assistant } from '../../model/assistant';
 import { ConversationService } from '../../conversation.service';
@@ -35,6 +35,7 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 		model: '',
 		temperature: 0,
 		topK: 5,
+		tools: [],
 		ownerId: '',
 		shared: false,
 		hasMemory: false,

@@ -81,49 +81,6 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>${maven.surefire.version}</version>
 			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-resources-plugin</artifactId>
-				<version>${maven.resources.version}</version>
-				<executions>
-					<execution>
-						<id>copy-pug-templates</id>
-						<phase>install</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>${output.directory}/working/pug</outputDirectory>
-							<resources>
-								<resource>
-									<directory>src/main/resources/templates</directory>
-									<includes>
-										<include>*.pug</include>
-									</includes>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-					<execution>
-						<id>copy-python</id>
-						<phase>install</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>${output.directory}/working/python</outputDirectory>
-							<resources>
-								<resource>
-									<directory>src/main/resources/python</directory>
-									<includes>
-										<include>*.py</include>
-									</includes>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
 		</plugins>
 	</build>
 

@@ -37,6 +37,31 @@
 		<textarea class="form-control bg-opacity-75" id="assistantPrompt" name="assistantPrompt" style="height: 200px;"
 			[(ngModel)]="assistant.prompt"></textarea>
 	</div>
+	<div class="form-group mb-2 well p-2" *ngIf="assistant && (tools && tools.length > 0) || (assistantTools && assistantTools.length > 0)">
+		<label class="form-label">Tools</label>
+		<div class="row">
+			<div class="col">
+				<strong>Available Tools</strong>
+				<ul class="list-group">
+					<li class="list-group-item"
+						*ngFor="let tool of tools"
+						(click)="addTool(tool)">
+					{{tool.name}}
+					</li>
+				</ul>
+			</div>
+			<div class="col">
+				<strong>Added Tools</strong>
+				<div class="list-group">
+					<button type="button" class="list-group-item list-group-item-action"
+						*ngFor="let tool of assistantTools"
+						(click)="removeTool(tool)">
+					{{tool.name}}
+				</button>
+				</div>
+			</div>
+		</div>
+	</div>
 	<div class="form-group mb-2 well p-2" *ngIf="assistant && ((availableDocuments && availableDocuments.length > 0) || (assistantDocuments && assistantDocuments.length > 0)); else noDocuments">
 		<label for="ragFile" class="form-label">Documents</label>
 		<div class="row">

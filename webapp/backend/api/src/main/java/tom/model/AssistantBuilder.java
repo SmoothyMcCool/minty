@@ -18,6 +18,7 @@ public class AssistantBuilder {
 	private boolean shared;
 	private boolean hasMemory;
 	private List<DocumentId> documentIds;
+	private List<String> tools;
 
 	public AssistantBuilder() {
 
@@ -34,6 +35,7 @@ public class AssistantBuilder {
 		shared = assistant.shared();
 		hasMemory = assistant.hasMemory();
 		documentIds = assistant.documentIds();
+		tools = assistant.tools();
 	}
 
 	public AssistantBuilder id(AssistantId id) {
@@ -71,6 +73,11 @@ public class AssistantBuilder {
 		return this;
 	}
 
+	public AssistantBuilder tools(List<String> tools) {
+		this.tools = tools;
+		return this;
+	}
+
 	public AssistantBuilder ownerId(UserId ownerId) {
 		this.ownerId = ownerId;
 		return this;
@@ -94,6 +101,7 @@ public class AssistantBuilder {
 				Objects.requireNonNull(topK, "topK must not be null"),
 				Objects.requireNonNull(prompt, "prompt must not be null"),
 				Objects.requireNonNull(documentIds, "documentIds must not be null"),
+				Objects.requireNonNull(tools, "tools must not be null"),
 				Objects.requireNonNull(ownerId, "ownerId must not be null"), shared, hasMemory);
 	}
 

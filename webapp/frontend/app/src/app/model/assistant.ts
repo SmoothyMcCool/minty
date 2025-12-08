@@ -5,6 +5,7 @@ export interface Assistant {
 	model: string;
 	temperature: number;
 	topK: number;
+	tools: string[];
 	ownerId: string;
 	shared: boolean;
 	hasMemory: boolean;

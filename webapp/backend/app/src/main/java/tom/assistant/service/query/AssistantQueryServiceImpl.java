@@ -21,6 +21,7 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.ollama.api.OllamaApi;
 import org.springframework.ai.ollama.api.OllamaChatOptions;
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.SearchRequest.Builder;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -43,6 +44,7 @@ import tom.config.ExternalProperties;
 import tom.model.Assistant;
 import tom.model.AssistantQuery;
 import tom.ollama.service.OllamaService;
+import tom.tools.toolregistry.ToolRegistryService;
 import tom.user.model.User;
 import tom.user.service.UserServiceInternal;
 
@@ -55,16 +57,18 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	private final OllamaApi ollamaApi;
 	private final UserServiceInternal userService;
 	private final AssistantManagementService assistantManagementService;
+	private final ToolRegistryService toolRegistryService;
 	private final ThreadPoolTaskExecutor llmExecutor;
 	private final Map<ConversationId, LlmResult> results;
 
 	public AssistantQueryServiceImpl(AssistantManagementService assistantManagementService, OllamaService ollamaService,
-			OllamaApi ollamaApi, UserServiceInternal userService,
+			OllamaApi ollamaApi, UserServiceInternal userService, ToolRegistryService toolRegistryService,
 			@Qualifier("llmExecutor") ThreadPoolTaskExecutor llmExecutor, ExternalProperties properties) {
 		this.ollamaService = ollamaService;
 		this.ollamaApi = ollamaApi;
 		this.userService = userService;
 		this.assistantManagementService = assistantManagementService;
+		this.toolRegistryService = toolRegistryService;
 		this.llmExecutor = llmExecutor;
 		this.results = new ConcurrentHashMap<>();
 	}
@@ -306,6 +310,15 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			String fullPrompt = (assistant.prompt().isBlank() ? "" : assistant.prompt() + "\n") + query;
 			spec = chatClient.prompt(fullPrompt);
 		}
+
+		List<ToolCallback> toolList = new ArrayList<>();
+		for (String toolName : assistant.tools()) {
+			ToolCallback tc = toolRegistryService.getTool(toolName);
+			if (tc != null) {
+				toolList.add(tc);
+			}
+		}
+		spec.toolCallbacks(toolList);
 
 		return spec;
 	}

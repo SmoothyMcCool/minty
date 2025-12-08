@@ -58,6 +58,7 @@ CREATE TABLE IF NOT EXISTS Assistant (
 	model TEXT,
 	temperature DOUBLE,
 	topK INTEGER,
+	tools JSON,
 	ownerId UUID,
 	shared BOOLEAN,
 	hasMemory BOOLEAN,
