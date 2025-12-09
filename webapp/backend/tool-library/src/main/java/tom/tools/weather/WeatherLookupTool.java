@@ -18,7 +18,7 @@ public class WeatherLookupTool implements MintyTool {
 
 	private static final Logger logger = LogManager.getLogger(WeatherLookupTool.class);
 
-	@Tool(description = "Get the current weather for a city by specifying its latitude and longitude")
+	@Tool(name = "get_weather", description = "Get the current weather for a city by specifying its latitude and longitude")
 	String getCurrentWeather(@ToolParam() double latitude, @ToolParam() double longitude) {
 
 		String forecast = getForecast(latitude, longitude);

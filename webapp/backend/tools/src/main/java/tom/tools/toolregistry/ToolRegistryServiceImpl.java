@@ -18,13 +18,15 @@ import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.ai.support.ToolCallbacks;
-import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
+import tom.api.UserId;
+import tom.api.services.TaskServices;
 import tom.config.ExternalProperties;
+import tom.task.ConfigurationConsumer;
+import tom.task.ServiceConsumer;
 import tom.tool.MintyTool;
 import tom.tools.model.MintyToolDescription;
 
@@ -34,13 +36,17 @@ public class ToolRegistryServiceImpl implements ToolRegistryService {
 	private final Logger logger = LogManager.getLogger(ToolRegistryServiceImpl.class);
 
 	private final String toolLibrary;
-	private final Map<String, ToolCallback> tools;
+	private final Map<String, Class<?>> tools;
 	private final List<MintyToolDescription> descriptions;
+	private final TaskServices taskServices;
+	private final ExternalProperties properties;
 
-	public ToolRegistryServiceImpl(ExternalProperties properties) {
+	public ToolRegistryServiceImpl(TaskServices taskServices, ExternalProperties properties) {
 		tools = new HashMap<>();
 		descriptions = new ArrayList<>();
 		toolLibrary = properties.get("toolLibrary");
+		this.taskServices = taskServices;
+		this.properties = properties;
 	}
 
 	@PostConstruct
@@ -64,11 +70,28 @@ public class ToolRegistryServiceImpl implements ToolRegistryService {
 	}
 
 	@Override
-	public ToolCallback getTool(String toolName) {
-		if (tools.containsKey(toolName)) {
-			return tools.get(toolName);
+	public Object getTool(String toolName, UserId userId) {
+		if (!tools.containsKey(toolName)) {
+			return null;
 		}
-		return null;
+
+		try {
+
+			Class<?> clazz = tools.get(toolName);
+			MintyTool o = (MintyTool) clazz.getDeclaredConstructor().newInstance();
+			if (o instanceof ServiceConsumer) {
+				((ServiceConsumer) o).setTaskServices(taskServices);
+			}
+			if (o instanceof ConfigurationConsumer) {
+				((ConfigurationConsumer) o).setProperties(properties.toMap());
+			}
+			return o;
+
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+				| NoSuchMethodException | SecurityException e) {
+			logger.warn("Failed to instantiate instance of tool " + toolName);
+			return null;
+		}
 	}
 
 	@Override
@@ -111,12 +134,12 @@ public class ToolRegistryServiceImpl implements ToolRegistryService {
 		String taskName = mt.name();
 
 		if (tools.containsKey(taskName)) {
-			ToolCallback conflictedClass = tools.get(taskName);
+			Object conflictedClass = tools.get(taskName);
 			throw new DuplicateToolException("Duplicate task named " + taskName + " found implemented by "
-					+ conflictedClass.getToolDefinition().name() + " and " + loadedClass.toString());
+					+ conflictedClass.toString() + " and " + loadedClass.toString());
 		}
 
-		tools.put(taskName, ToolCallbacks.from(mt)[0]);
+		tools.put(taskName, mt.getClass());
 		descriptions.add(new MintyToolDescription(mt.name(), mt.description()));
 
 		logger.info("Registered task " + taskName);

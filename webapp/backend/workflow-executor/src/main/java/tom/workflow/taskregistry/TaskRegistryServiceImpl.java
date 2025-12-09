@@ -280,7 +280,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 							"Cannot declare non-primitive (or String) types as system or user configuration items. Item is "
 									+ configClassName + "." + configKey);
 				} else {
-					result.put(taskName + "::" + configKey, "");
+					result.put(configKey, "");
 				}
 			}
 		}

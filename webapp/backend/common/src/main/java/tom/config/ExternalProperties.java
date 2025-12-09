@@ -80,4 +80,8 @@ public class ExternalProperties {
 	public boolean has(String key) {
 		return properties.containsKey(key);
 	}
+
+	public Properties toMap() {
+		return new Properties(properties);
+	}
 }

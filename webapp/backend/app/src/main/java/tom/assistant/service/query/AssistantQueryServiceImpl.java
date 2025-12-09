@@ -21,7 +21,6 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.ollama.api.OllamaApi;
 import org.springframework.ai.ollama.api.OllamaChatOptions;
-import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.SearchRequest.Builder;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -256,10 +255,10 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			return null;
 		}
 
-		return prepare(query.getQuery(), query.getConversationId(), assistant);
+		return prepare(user, query.getQuery(), query.getConversationId(), assistant);
 	}
 
-	private ChatClientRequestSpec prepare(String query, ConversationId conversationId, Assistant assistant) {
+	private ChatClientRequestSpec prepare(User user, String query, ConversationId conversationId, Assistant assistant) {
 
 		String model = assistant.model();
 
@@ -311,14 +310,12 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			spec = chatClient.prompt(fullPrompt);
 		}
 
-		List<ToolCallback> toolList = new ArrayList<>();
 		for (String toolName : assistant.tools()) {
-			ToolCallback tc = toolRegistryService.getTool(toolName);
+			Object tc = toolRegistryService.getTool(toolName, user.getId());
 			if (tc != null) {
-				toolList.add(tc);
+				spec.tools(tc);
 			}
 		}
-		spec.toolCallbacks(toolList);
 
 		return spec;
 	}

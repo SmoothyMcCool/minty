@@ -1,5 +1,6 @@
 package tom.api.services;
 
+import java.util.Map;
 import java.util.UUID;
 
 import tom.api.UserId;
@@ -10,4 +11,5 @@ public interface UserService {
 
 	String getUsernameFromId(UserId userId);
 
+	Map<String, String> getUserDefaults(UserId userId);
 }
