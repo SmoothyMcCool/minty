@@ -1,6 +1,7 @@
 package tom.user.service;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.logging.log4j.LogManager;
@@ -98,5 +99,16 @@ public class UserServiceImpl implements UserServiceInternal {
 			logger.warn("Failed to get user for user ID " + userId);
 			return Optional.empty();
 		}
+	}
+
+	@Override
+	public Map<String, String> getUserDefaults(UserId userId) {
+		User user = getUserFromId(userId).orElse(null);
+
+		if (user != null) {
+			return user.getDefaults();
+		}
+
+		return null;
 	}
 }

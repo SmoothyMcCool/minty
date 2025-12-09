@@ -49,11 +49,8 @@ export class RunWorkflowComponent implements OnInit {
 					workflow.steps.forEach(step => {
 						const updated = new Map<string, string>(step.configuration);
 						step.configuration.forEach((_value, key) => {
-							// System and user defaults are stored in the form "Task Name::Property Name", so
-							// we need to build that up to find our keys.
-							const fullKey = step.taskName + '::' + key;
-							if (this.defaults?.has(fullKey)) {
-								updated.set(key, this.defaults.get(fullKey));
+							if (this.defaults?.has(key)) {
+								updated.set(key, this.defaults.get(key));
 							}
 						});
 						step.configuration = updated;
