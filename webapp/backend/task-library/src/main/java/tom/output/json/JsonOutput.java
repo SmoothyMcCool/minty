@@ -4,10 +4,10 @@ import java.io.IOException;
 import java.util.Map;
 
 import tom.api.services.TaskServices;
+import tom.model.ServiceConsumer;
 import tom.task.ExecutionResult;
 import tom.task.OutputTask;
 import tom.task.OutputTaskSpec;
-import tom.task.ServiceConsumer;
 import tom.task.TaskConfigSpec;
 import tom.task.annotation.Output;
 

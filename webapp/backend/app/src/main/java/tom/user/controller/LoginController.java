@@ -66,16 +66,13 @@ public class LoginController {
 
 		// Use this opportunity to scrub any no-longer-valid user defaults from the user
 		// object.
-		Boolean updateUser = false;
 		Map<String, String> defaults = taskRegistryService.getUserDefaults();
-		for (Map.Entry<String, String> entry : result.getDefaults().entrySet()) {
-			if (!defaults.containsKey(entry.getKey())) {
-				result.getDefaults().remove(entry.getKey());
-				updateUser = true;
-			}
-		}
+
+		boolean anythingRemoved = result.getDefaults().entrySet()
+				.removeIf(entry -> !defaults.containsKey(entry.getKey()));
+
 		try {
-			if (updateUser) {
+			if (anythingRemoved) {
 				userRepository.save(userService.encrypt(result));
 			}
 		} catch (JsonProcessingException e) {

@@ -1,5 +1,6 @@
 package tom.conversation.service;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -235,6 +236,16 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 				.equals(AssistantManagementService.DefaultAssistantId)).toList();
 
 		return conversations;
+	}
+
+	@Override
+	@Transactional
+	public void updateLastUsed(ConversationId conversationId) {
+		ConversationEntity conversation = conversationRepository.findById(conversationId.value()).orElse(null);
+		if (conversation != null) {
+			conversation.setLastUsed(Instant.now());
+			conversationRepository.save(conversation);
+		}
 	}
 
 }

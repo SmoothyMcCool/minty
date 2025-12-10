@@ -25,8 +25,8 @@ import jakarta.annotation.PostConstruct;
 import tom.api.UserId;
 import tom.api.services.TaskServices;
 import tom.config.ExternalProperties;
-import tom.task.ConfigurationConsumer;
-import tom.task.ServiceConsumer;
+import tom.model.ConfigurationConsumer;
+import tom.model.ServiceConsumer;
 import tom.tool.MintyTool;
 import tom.tools.model.MintyToolDescription;
 
@@ -81,6 +81,7 @@ public class ToolRegistryServiceImpl implements ToolRegistryService {
 			MintyTool o = (MintyTool) clazz.getDeclaredConstructor().newInstance();
 			if (o instanceof ServiceConsumer) {
 				((ServiceConsumer) o).setTaskServices(taskServices);
+				((ServiceConsumer) o).setUserId(userId);
 			}
 			if (o instanceof ConfigurationConsumer) {
 				((ConfigurationConsumer) o).setProperties(properties.toMap());

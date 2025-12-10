@@ -38,13 +38,13 @@ public class ConfluenceQueryConfig implements TaskConfigSpec {
 			username = config.get("Username");
 		}
 		if (config.containsKey("Confluence Access Token")) {
-			apiKey = config.get("Access Token");
+			apiKey = config.get("Confluence Access Token");
 		}
 		if (config.containsKey("Confluence Base URL")) {
-			baseUrl = config.get("Base URL");
+			baseUrl = config.get("Confluence Base URL");
 		}
 		if (config.containsKey("Confluence Use Bearer Authorization")) {
-			useBearerAuth = Boolean.getBoolean(config.get("Use Bearer Authorization"));
+			useBearerAuth = Boolean.getBoolean(config.get("Confluence Use Bearer Authorization"));
 		}
 	}
 
@@ -61,7 +61,8 @@ public class ConfluenceQueryConfig implements TaskConfigSpec {
 
 	@Override
 	public List<String> getSystemConfigVariables() {
-		return List.of("Confluence Base URL", "Confluence Use Bearer Authorization");
+		// return List.of("Confluence Base URL", "Confluence Use Bearer Authorization");
+		return List.of("Confluence Use Bearer Authorization");
 	}
 
 	@Override

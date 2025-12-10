@@ -1,4 +1,4 @@
-package tom.task;
+package tom.model;
 
 import java.util.Properties;
 

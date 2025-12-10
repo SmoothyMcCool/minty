@@ -3,4 +3,5 @@ export interface Conversation {
 	conversationId: string;
 	ownerId: string;
 	associatedAssistantId: string;
+	lastUsed: number;
 }

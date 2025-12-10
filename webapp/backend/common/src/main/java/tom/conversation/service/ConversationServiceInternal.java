@@ -24,4 +24,6 @@ public interface ConversationServiceInternal extends ConversationService {
 
 	boolean resetConversation(UserId userId, ConversationId conversationId);
 
+	void updateLastUsed(ConversationId conversationId);
+
 }
