@@ -10,10 +10,11 @@ import { UserService } from 'src/app/user.service';
 import { Conversation } from 'src/app/model/conversation';
 import { FilterPipe } from 'src/app/pipe/filter-pipe';
 import { User } from 'src/app/model/user';
+import { PredicatePipe } from 'src/app/pipe/predicate-pipe';
 
 @Component({
 	selector: 'minty-assistants-list',
-	imports: [CommonModule, FormsModule, RouterModule, FilterPipe, ConfirmationDialogComponent],
+	imports: [CommonModule, FormsModule, RouterModule, FilterPipe, ConfirmationDialogComponent, PredicatePipe],
 	templateUrl: 'assistants-list.component.html'
 })
 export class AssistantsListComponent implements OnInit {
@@ -23,6 +24,8 @@ export class AssistantsListComponent implements OnInit {
 
 	assistants: Assistant[] = [];
 	sharedAssistants: Assistant[] = [];
+	assistantFilter: string = '';
+	conversationSortOrder: string = 'alpha';
 
 	fileList: File[] = [];
 	workingAssistant: Assistant = {
@@ -79,18 +82,51 @@ export class AssistantsListComponent implements OnInit {
 		});
 	}
 
+	assistantPassesFilter(shared: boolean) {
+		return this.assistants.filter(a => {
+			if (a.shared != shared) {
+				return false;
+			}
+
+			const text = (this.assistantFilter ?? '').toString().trim().toLowerCase();
+			if (!text) {
+				return true;
+			}
+			const name = (a.name ?? '').toString().toLowerCase();
+			return name.includes(text);
+		});
+	}
+
+	sortConversationsBy(ordering: string) {
+		this.conversationSortOrder = ordering;
+		this.sortConversations(this.conversations);
+	}
+
 	sortConversations(conversations: Conversation[]) {
 		conversations.sort((left, right) => {
-			if (!left.title && !right.title) {
-				return left.conversationId.localeCompare(right.conversationId);
+			if (this.conversationSortOrder === 'alpha') {
+				if (!left.title && !right.title) {
+					return left.conversationId.localeCompare(right.conversationId);
+				}
+				if (!left.title) {
+					return 1;
+				}
+				if (!right.title) {
+					return -1;
+				}
+				return left.title.localeCompare(right.title);
+			} else {
+				if (!left.lastUsed && ! right.lastUsed) {
+					return left.conversationId.localeCompare(right.conversationId);
+				}
+				if (!left.lastUsed) {
+					return 1;
+				}
+				if (!right.lastUsed) {
+					return -1;
+				}
+				return right.lastUsed - left.lastUsed;
 			}
-			if (!left.title) {
-				return 1;
-			}
-			if (!right.title) {
-				return -1;
-			}
-			return left.title.localeCompare(right.title);
 		});
 	}
 

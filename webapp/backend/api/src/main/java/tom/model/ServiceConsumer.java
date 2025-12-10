@@ -1,4 +1,4 @@
-package tom.task;
+package tom.model;
 
 import tom.api.UserId;
 import tom.api.services.TaskServices;

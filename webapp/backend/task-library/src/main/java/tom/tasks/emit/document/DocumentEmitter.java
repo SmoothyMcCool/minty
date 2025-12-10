@@ -6,10 +6,10 @@ import java.util.List;
 import java.util.Map;
 
 import tom.api.services.TaskServices;
+import tom.model.ServiceConsumer;
 import tom.task.MintyTask;
 import tom.task.OutputPort;
 import tom.task.Packet;
-import tom.task.ServiceConsumer;
 import tom.task.TaskConfigSpec;
 import tom.task.TaskLogger;
 import tom.task.TaskSpec;

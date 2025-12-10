@@ -70,6 +70,7 @@ CREATE TABLE IF NOT EXISTS Conversation (
 	ownerId UUID,
 	associatedAssistantId UUID,
 	associatedWorkflow TEXT,
+	lastUsed TIMESTAMP,
 	PRIMARY KEY (conversationId)
 );
 CREATE TABLE IF NOT EXISTS Document (

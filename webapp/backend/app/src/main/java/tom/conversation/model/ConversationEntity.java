@@ -1,5 +1,6 @@
 package tom.conversation.model;
 
+import java.time.Instant;
 import java.util.UUID;
 
 import jakarta.persistence.Convert;
@@ -23,8 +24,8 @@ public class ConversationEntity {
 	private UUID conversationId;
 	@Convert(converter = UserIdConverter.class)
 	private UserId ownerId;
-
 	private AssistantId associatedAssistantId;
+	private Instant lastUsed;
 
 	public ConversationEntity() {
 
@@ -62,12 +63,21 @@ public class ConversationEntity {
 		this.associatedAssistantId = associatedAssistantId;
 	}
 
+	public Instant getLastUsed() {
+		return lastUsed;
+	}
+
+	public void setLastUsed(Instant lastUsed) {
+		this.lastUsed = lastUsed;
+	}
+
 	public Conversation fromEntity() {
 		Conversation convo = new Conversation();
 		convo.setAssociatedAssistantId(associatedAssistantId);
 		convo.setConversationId(new ConversationId(conversationId));
 		convo.setOwnerId(ownerId);
 		convo.setTitle(title);
+		convo.setLastUsed(lastUsed);
 		return convo;
 	}
 

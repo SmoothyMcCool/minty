@@ -1,5 +1,7 @@
 package tom.conversation.model;
 
+import java.time.Instant;
+
 import tom.api.AssistantId;
 import tom.api.ConversationId;
 import tom.api.UserId;
@@ -10,6 +12,7 @@ public class Conversation {
 	private ConversationId conversationId;
 	private UserId ownerId;
 	private AssistantId associatedAssistantId;
+	private Instant lastUsed;
 
 	public String getTitle() {
 		return title;
@@ -41,6 +44,14 @@ public class Conversation {
 
 	public void setAssociatedAssistantId(AssistantId associatedAssistantId) {
 		this.associatedAssistantId = associatedAssistantId;
+	}
+
+	public Instant getLastUsed() {
+		return lastUsed;
+	}
+
+	public void setLastUsed(Instant lastUsed) {
+		this.lastUsed = lastUsed;
 	}
 
 }

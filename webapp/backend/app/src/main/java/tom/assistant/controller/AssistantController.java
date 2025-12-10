@@ -153,7 +153,9 @@ public class AssistantController {
 		if (conversationService.conversationOwnedBy(user.getId(), query.getConversationId())) {
 			ConversationId requestUuid;
 			try {
+
 				requestUuid = assistantQueryService.askStreaming(user.getId(), query);
+				conversationService.updateLastUsed(query.getConversationId());
 
 			} catch (QueueFullException e) {
 				ResponseWrapper<ConversationId> response = ResponseWrapper
