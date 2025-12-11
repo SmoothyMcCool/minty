@@ -82,6 +82,8 @@ public class ExternalProperties {
 	}
 
 	public Properties toMap() {
-		return new Properties(properties);
+		Properties copy = new Properties();
+		copy.putAll(properties);
+		return copy;
 	}
 }

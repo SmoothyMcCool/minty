@@ -1,6 +1,7 @@
 <div>
 	<div class="container">
-		<h1>{{assistant.name}}<ng-container *ngIf="conversation && conversation.title"> - {{conversation.title}}</ng-container></h1>
+		<h1>{{assistant.name}}<ng-container *ngIf="conversation && conversation.title"> -
+				{{conversation.title}}</ng-container></h1>
 		<div class="row mb-2">
 			<div class="col-2">
 				<h2>Prompt</h2>
@@ -20,26 +21,42 @@
 		</div>
 		<div class="row mb-2 form-floating">
 			<div class="col form-floating">
-				<textarea style="height: 100px;" class="form-control" id="aiQuery" name="aiQuery" [(ngModel)]="userText"></textarea>
+				<textarea style="height: 100px;" class="form-control" id="aiQuery" name="aiQuery"
+					[(ngModel)]="userText"></textarea>
 				<label class="ms-3" for="aiQuery">Put your input here</label>
 			</div>
 		</div>
 		<div class="row mb-2">
-			<div class="col me-auto">
-				<button class="btn btn-primary mb-2" (click)="submit(userText)" [disabled]="!userText || waitingForResponse">Okey Dokey</button>
+			<div class="col-auto">
+				<button class="btn btn-primary mb-2" (click)="submit(userText)"
+					[disabled]="!userText || waitingForResponse">
+					Okey Dokey
+				</button>
+			</div>
+			<div class="col">
+				<!--div class="border border-black rounded p-3  text-center drop-textarea w-100" style="border-style: dashed !important;" (dragover)="onDragOver($event)"
+					(dragleave)="onDragLeave($event)" (drop)="onDrop($event)" [class.dragging]="dragging"
+					contenteditable="true" (input)="onInput($event)">
+					<span *ngIf="!content" class="text-muted">
+						Drop an image here...
+					</span>
+				</div-->
 			</div>
 			<div class="col-auto">
-				<button class="btn btn-danger" (click)="restartConversation()">Start over</button>
+				<button class="btn btn-danger" (click)="restartConversation()">
+					Start over
+				</button>
 			</div>
 		</div>
 		<div class="overflow-auto">
-			<minty-conversation [messages]="chatHistory" [responsePending]="waitingForResponse" [queueDepth]="queueDepth"></minty-conversation>
+			<minty-conversation [messages]="chatHistory" [responsePending]="waitingForResponse"
+				[queueDepth]="queueDepth"></minty-conversation>
 		</div>
 	</div>
 </div>
 
 <minty-confirmation-dialog [title]="'Restart Conversation'"
-	[message]="'Are you sure you want to start over? You conversation history will be irretrievably lost.'" [visible]="confirmRestartConversationVisible"
-	(confirm)="confirmRestartConversation()"
+	[message]="'Are you sure you want to start over? You conversation history will be irretrievably lost.'"
+	[visible]="confirmRestartConversationVisible" (confirm)="confirmRestartConversation()"
 	(cancel)="confirmRestartConversationVisible = false">
 </minty-confirmation-dialog>

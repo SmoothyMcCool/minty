@@ -22,22 +22,22 @@ import { MintyTool } from 'src/app/model/minty-tool';
 export class AssistantEditorComponent implements ControlValueAccessor {
 
 	@Input() models: string[] = [];
-	private _availableDocuments: MintyDoc[] = [];
+	private _documents: MintyDoc[] = [];
 	@Input()
-	set availableDocuments(value: MintyDoc[]) {
-		this._availableDocuments = value;
-		this.assistantDocuments = this._availableDocuments.filter(doc => this.assistant.documentIds.find(id => id === doc.documentId) != undefined);
-		this._availableDocuments = this._availableDocuments.filter(doc => this.assistantDocuments.find(asstDoc => asstDoc.documentId === doc.documentId) == undefined);
+	set documents(value: MintyDoc[]) {
+		this._documents = value;
+		this.assistantDocuments = this._documents.filter(doc => this.assistant.documentIds.find(id => id === doc.documentId) != undefined);
+		this._documents = this._documents.filter(doc => this.assistantDocuments.find(asstDoc => asstDoc.documentId === doc.documentId) == undefined);
 	}
-	get availableDocuments(): MintyDoc[] {
-		return this._availableDocuments;
+	get documents(): MintyDoc[] {
+		return this._documents;
 	}
 	private _tools: MintyTool[] = [];
 	@Input()
 	set tools(value: MintyTool[]) {
 		this._tools = value;
-		this.assistantTools = this._tools.filter(tool => this.assistant.tools.find(id => id === tool.name) != undefined);
-		this._tools = this._tools.filter(tool => this.assistantTools.find(asstTool => asstTool.name === tool.name) == undefined);
+		this.assistantTools = this._tools.filter(tool => this.assistant.tools.find(name => name.localeCompare(tool.name) === 0) != undefined);
+		this._tools = this._tools.filter(tool => this.assistantTools.find(asstTool => asstTool.name.localeCompare(tool.name) === 0) == undefined);
 	}
 	get tools(): MintyTool[] {
 		return this._tools;
@@ -65,15 +65,15 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 		}
 		this.assistant.documentIds.push(doc.documentId);
 		this.assistantDocuments.push(doc);
-		this._availableDocuments = this._availableDocuments.filter(doc => this.assistantDocuments.find(asstDoc => asstDoc.documentId === doc.documentId) == undefined);
+		this._documents = this._documents.filter(d => d.documentId !== doc.documentId);
 		// New object for better chances at sane change detection.
 		this.assistant.documentIds = [...this.assistant.documentIds];
 	}
 
 	removeDoc(doc: MintyDoc) {
 		this.assistant.documentIds = this.assistant.documentIds.filter(el => el !== doc.documentId);
-		this.assistantDocuments = this.availableDocuments.filter(doc => this.assistant.documentIds.find(id => id === doc.documentId) != undefined);
-		this._availableDocuments.push(doc);
+		this.assistantDocuments = this.documents.filter(doc => this.assistant.documentIds.find(id => id === doc.documentId) != undefined);
+		this.documents.push(doc);
 	}
 
 	addTool(tool: MintyTool) {
@@ -82,19 +82,20 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 		}
 		this.assistant.tools.push(tool.name);
 		this.assistantTools.push(tool);
-		this.tools = this.tools.filter(tool => this.assistantTools.find(asstTool => asstTool === tool) == undefined);
+		this._tools = this._tools.filter(t => t.name !== tool.name);
 		// New object for better chances at sane change detection.
 		this.assistant.tools = [...this.assistant.tools];
 	}
 
 	removeTool(tool: MintyTool) {
 		this.assistant.tools = this.assistant.tools.filter(el => el !== tool.name);
-		this.assistantTools = this.tools.filter(tool => this.assistant.tools.find(id => id === tool.name) != undefined);
+		this.assistantTools = this.tools.filter(tool => this.assistant.tools.find(id => id.localeCompare(tool.name) === 0) != undefined);
 		this.tools.push(tool);
 	}
 
 	writeValue(obj: any): void {
 		this.assistant = obj;
+		this.tools = this.tools;
 	}
 	registerOnChange(fn: any): void {
 		this.assistant = fn;

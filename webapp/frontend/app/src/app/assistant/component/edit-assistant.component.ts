@@ -19,7 +19,7 @@ import { ToolService } from 'src/app/tool.service';
 export class EditAssistantComponent implements OnInit {
 
 	models: string[] = [];
-	availableDocuments: MintyDoc[] = [];
+	documents: MintyDoc[] = [];
 	tools: MintyTool[] = [];
 	assistant: Assistant = {
 		id: '',
@@ -48,7 +48,7 @@ export class EditAssistantComponent implements OnInit {
 			this.assistantService.getAssistant(params['id']).subscribe((assistant: Assistant) => {
 				this.assistant = assistant;
 				this.documentService.list().subscribe(docs => {
-					this.availableDocuments = docs;
+					this.documents = docs;
 				});
 			});
 		});
