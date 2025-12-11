@@ -62,14 +62,14 @@
 			</div>
 		</div>
 	</div>
-	<div class="form-group mb-2 well p-2" *ngIf="assistant && ((availableDocuments && availableDocuments.length > 0) || (assistantDocuments && assistantDocuments.length > 0)); else noDocuments">
+	<div class="form-group mb-2 well p-2" *ngIf="assistant && ((documents && documents.length > 0) || (assistantDocuments && assistantDocuments.length > 0)); else noDocuments">
 		<label for="ragFile" class="form-label">Documents</label>
 		<div class="row">
 			<div class="col">
 				<strong>Available Documents</strong>
 				<ul class="list-group">
 					<li class="list-group-item"
-						*ngFor="let doc of availableDocuments"
+						*ngFor="let doc of documents"
 						(click)="addDoc(doc)">
 					{{doc.title}}
 					</li>

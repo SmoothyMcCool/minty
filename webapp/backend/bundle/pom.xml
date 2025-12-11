@@ -29,6 +29,10 @@
 					<groupId>tom.minty</groupId>
 					<artifactId>task-library</artifactId>
 				</exclusion>
+				<exclusion>
+					<groupId>tom.minty</groupId>
+					<artifactId>tool-library</artifactId>
+				</exclusion>
 			</exclusions>
 		</dependency>
 		<dependency>
@@ -39,6 +43,10 @@
 				<exclusion>
 					<groupId>tom.minty</groupId>
 					<artifactId>task-library</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>tom.minty</groupId>
+					<artifactId>tool-library</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>

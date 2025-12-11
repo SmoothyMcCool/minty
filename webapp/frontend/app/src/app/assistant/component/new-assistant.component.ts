@@ -18,7 +18,7 @@ import { ToolService } from 'src/app/tool.service';
 })
 export class NewAssistantComponent implements OnInit {
 
-	availableDocuments: MintyDoc[] = [];
+	documents: MintyDoc[] = [];
 	tools: MintyTool[] = [];
 	models: string[] = [];
 	assistant: Assistant = {
@@ -48,7 +48,7 @@ export class NewAssistantComponent implements OnInit {
 			this.models = models;
 		});
 		this.documentService.list().subscribe(docs => {
-			this.availableDocuments = docs;
+			this.documents = docs;
 		});
 		this.toolService.list().subscribe((tools: MintyTool[]) => {
 			this.tools = tools;
