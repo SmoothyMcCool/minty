@@ -12,15 +12,15 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import tom.api.UserId;
-import tom.config.ExternalProperties;
+import tom.api.MintyProperties;
+import tom.task.model.TaskRequest;
+import tom.task.registry.TaskRegistryService;
 import tom.workflow.controller.WorkflowRequest;
 import tom.workflow.executor.WorkflowRunner;
 import tom.workflow.model.ResultTemplate;
-import tom.workflow.model.TaskRequest;
 import tom.workflow.model.Workflow;
 import tom.workflow.repository.ResultTemplateRepository;
 import tom.workflow.repository.WorkflowRepository;
-import tom.workflow.taskregistry.TaskRegistryService;
 import tom.workflow.tracking.service.WorkflowTrackingService;
 
 @Service
@@ -37,7 +37,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 	public WorkflowServiceImpl(WorkflowRepository workflowRepository, ResultTemplateRepository resultTemplateRepository,
 			TaskRegistryService taskRegistryService, WorkflowTrackingService workflowTrackingService,
-			@Qualifier("taskExecutor") ThreadPoolTaskExecutor taskExecutor, ExternalProperties properties) {
+			@Qualifier("taskExecutor") ThreadPoolTaskExecutor taskExecutor, MintyProperties properties) {
 		this.workflowRepository = workflowRepository;
 		this.resultTemplateRepository = resultTemplateRepository;
 		this.taskRegistryService = taskRegistryService;

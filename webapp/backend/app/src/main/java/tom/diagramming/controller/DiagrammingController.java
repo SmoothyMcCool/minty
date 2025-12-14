@@ -12,34 +12,32 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import tom.ApiError;
 import tom.api.ConversationId;
+import tom.api.conversation.model.Conversation;
+import tom.api.model.AssistantQuery;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
 import tom.api.services.assistant.ConversationInUseException;
 import tom.api.services.assistant.LlmResult;
 import tom.api.services.assistant.QueueFullException;
 import tom.api.services.assistant.StringResult;
-import tom.assistant.service.management.AssistantManagementServiceInternal;
 import tom.controller.ResponseWrapper;
-import tom.conversation.model.Conversation;
 import tom.conversation.service.ConversationServiceInternal;
-import tom.meta.service.MetadataService;
-import tom.model.AssistantQuery;
 import tom.model.security.UserDetailsUser;
 
 @Controller
 @RequestMapping("/api/diagram")
 public class DiagrammingController {
 
-	private final MetadataService metadataService;
-	private final AssistantManagementServiceInternal assistantManagementService;
+	// private final MetadataService metadataService;
+	// private final AssistantManagementServiceInternal assistantManagementService;
 	private final AssistantQueryService assistantQueryService;
 	private final ConversationServiceInternal conversationService;
 
-	public DiagrammingController(AssistantManagementServiceInternal assistantManagementService,
-			AssistantQueryService assistantQueryService, MetadataService metadataService,
+	public DiagrammingController(// AssistantManagementServiceInternal assistantManagementService,
+			AssistantQueryService assistantQueryService, // MetadataService metadataService,
 			ConversationServiceInternal conversationService) {
-		this.assistantManagementService = assistantManagementService;
-		this.metadataService = metadataService;
+		// this.assistantManagementService = assistantManagementService;
+		// this.metadataService = metadataService;
 		this.assistantQueryService = assistantQueryService;
 		this.conversationService = conversationService;
 	}

@@ -1,6 +1,6 @@
 package tom.api.services.assistant;
 
-import tom.model.Assistant;
+import tom.api.model.Assistant;
 
 public interface AssistantRegistryService {
 

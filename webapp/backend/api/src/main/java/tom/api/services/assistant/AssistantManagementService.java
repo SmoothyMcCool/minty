@@ -5,7 +5,7 @@ import java.util.UUID;
 
 import tom.api.AssistantId;
 import tom.api.UserId;
-import tom.model.Assistant;
+import tom.api.model.Assistant;
 
 public interface AssistantManagementService {
 

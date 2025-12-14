@@ -12,10 +12,10 @@ import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
+import tom.api.model.Assistant;
+import tom.api.model.AssistantBuilder;
 import tom.api.services.UserService;
 import tom.api.services.assistant.AssistantManagementService;
-import tom.model.Assistant;
-import tom.model.AssistantBuilder;
 
 public class AssistantRegistry {
 

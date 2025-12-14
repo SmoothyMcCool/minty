@@ -7,16 +7,16 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.databind.DatabindException;
 
+import tom.api.MintyProperties;
+import tom.api.model.Assistant;
 import tom.api.services.assistant.AssistantRegistryService;
-import tom.config.ExternalProperties;
-import tom.model.Assistant;
 
 @Service
 public class AssistantRegistryServiceImpl implements AssistantRegistryService {
 
 	private final AssistantRegistry assistantRegistry;
 
-	public AssistantRegistryServiceImpl(ExternalProperties properties)
+	public AssistantRegistryServiceImpl(MintyProperties properties)
 			throws StreamReadException, DatabindException, IOException {
 		assistantRegistry = new AssistantRegistry();
 	}

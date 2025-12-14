@@ -5,8 +5,8 @@ import java.util.List;
 import tom.api.AssistantId;
 import tom.api.ConversationId;
 import tom.api.UserId;
-import tom.conversation.model.Conversation;
-import tom.model.ChatMessage;
+import tom.api.conversation.model.Conversation;
+import tom.api.model.ChatMessage;
 
 public interface ConversationService {
 

@@ -19,7 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import tom.api.services.python.PythonException;
 import tom.api.services.python.PythonResult;
 import tom.api.services.python.PythonService;
-import tom.config.ExternalProperties;
+import tom.api.MintyProperties;
 
 @Service
 public class PythonServiceImpl implements PythonService {
@@ -29,7 +29,7 @@ public class PythonServiceImpl implements PythonService {
 	private final String pythonScripts;
 	private final String tempFileDir;
 
-	public PythonServiceImpl(ExternalProperties properties) {
+	public PythonServiceImpl(MintyProperties properties) {
 		pythonScripts = properties.get("pythonScripts");
 		tempFileDir = properties.get("tempFileStore");
 	}

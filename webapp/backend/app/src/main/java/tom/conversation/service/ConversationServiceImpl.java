@@ -21,13 +21,13 @@ import jakarta.transaction.Transactional;
 import tom.api.AssistantId;
 import tom.api.ConversationId;
 import tom.api.UserId;
+import tom.api.conversation.model.Conversation;
+import tom.api.model.Assistant;
+import tom.api.model.ChatMessage;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.assistant.service.management.AssistantManagementServiceInternal;
-import tom.conversation.model.Conversation;
 import tom.conversation.model.ConversationEntity;
 import tom.conversation.repository.ConversationRepository;
-import tom.model.Assistant;
-import tom.model.ChatMessage;
 import tom.ollama.service.OllamaService;
 
 @Service

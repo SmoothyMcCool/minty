@@ -11,10 +11,10 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import tom.api.UserId;
 import tom.repository.converter.UserIdConverter;
-import tom.workflow.converters.TaskRequestConverter;
+import tom.task.model.TaskRequest;
 import tom.workflow.converters.ConnectionConverter;
+import tom.workflow.converters.TaskRequestConverter;
 import tom.workflow.model.Connection;
-import tom.workflow.model.TaskRequest;
 
 @Entity
 public class Workflow {

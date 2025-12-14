@@ -3,7 +3,8 @@ package tom.workflow.converters;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import jakarta.persistence.Converter;
-import tom.task.ExecutionResult;
+import tom.api.task.ExecutionResult;
+import tom.util.ClassConverter;
 
 @Converter
 public class ExecutionResultConverter extends ClassConverter<ExecutionResult> {

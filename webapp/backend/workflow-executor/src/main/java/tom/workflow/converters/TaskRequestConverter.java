@@ -3,7 +3,8 @@ package tom.workflow.converters;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import jakarta.persistence.Converter;
-import tom.workflow.model.TaskRequest;
+import tom.task.model.TaskRequest;
+import tom.util.ClassConverter;
 
 @Converter
 public class TaskRequestConverter extends ClassConverter<TaskRequest> {

@@ -15,13 +15,13 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.core.task.AsyncTaskExecutor;
 
 import tom.api.UserId;
-import tom.task.OutputTask;
-import tom.task.TaskSpec;
+import tom.api.task.OutputTask;
+import tom.api.task.TaskSpec;
+import tom.task.model.TaskRequest;
+import tom.task.registry.TaskRegistryService;
 import tom.util.StackTraceUtilities;
 import tom.workflow.model.Connection;
-import tom.workflow.model.TaskRequest;
 import tom.workflow.model.Workflow;
-import tom.workflow.taskregistry.TaskRegistryService;
 import tom.workflow.tracking.model.WorkflowExecution;
 import tom.workflow.tracking.service.WorkflowTrackingService;
 

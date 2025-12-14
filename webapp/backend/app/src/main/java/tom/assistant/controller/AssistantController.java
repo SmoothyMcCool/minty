@@ -19,6 +19,8 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import tom.ApiError;
 import tom.api.AssistantId;
 import tom.api.ConversationId;
+import tom.api.model.Assistant;
+import tom.api.model.AssistantQuery;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
 import tom.api.services.assistant.LlmResult;
@@ -27,8 +29,6 @@ import tom.api.services.assistant.StreamResult;
 import tom.controller.ResponseWrapper;
 import tom.conversation.service.ConversationServiceInternal;
 import tom.meta.service.MetadataService;
-import tom.model.Assistant;
-import tom.model.AssistantQuery;
 import tom.model.security.UserDetailsUser;
 import tom.ollama.service.OllamaService;
 

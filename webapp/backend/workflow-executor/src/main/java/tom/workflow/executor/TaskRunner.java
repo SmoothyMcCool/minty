@@ -8,11 +8,11 @@ import java.util.concurrent.CompletableFuture;
 import org.springframework.core.task.AsyncTaskExecutor;
 
 import tom.api.UserId;
-import tom.task.MintyTask;
-import tom.task.Packet;
-import tom.task.TaskLogger;
-import tom.workflow.model.TaskRequest;
-import tom.workflow.taskregistry.TaskRegistryService;
+import tom.api.task.MintyTask;
+import tom.api.task.Packet;
+import tom.api.task.TaskLogger;
+import tom.task.model.TaskRequest;
+import tom.task.registry.TaskRegistryService;
 import tom.workflow.tracking.model.ExecutionStepState;
 
 public class TaskRunner {

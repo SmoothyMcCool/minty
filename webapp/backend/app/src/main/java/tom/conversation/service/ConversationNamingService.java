@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
 import tom.api.ConversationId;
+import tom.api.conversation.model.Conversation;
+import tom.api.model.AssistantQuery;
 import tom.api.services.UserService;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
@@ -18,11 +20,9 @@ import tom.api.services.assistant.AssistantRegistryService;
 import tom.api.services.assistant.ConversationInUseException;
 import tom.api.services.assistant.QueueFullException;
 import tom.api.services.assistant.StringResult;
-import tom.config.ExternalProperties;
-import tom.conversation.model.Conversation;
+import tom.api.MintyProperties;
 import tom.conversation.model.ConversationEntity;
 import tom.conversation.repository.ConversationRepository;
-import tom.model.AssistantQuery;
 import tom.ollama.service.OllamaService;
 
 @Service
@@ -41,7 +41,7 @@ public class ConversationNamingService {
 	public ConversationNamingService(ConversationRepository conversationRepository,
 			AssistantQueryService assistantQueryService, AssistantRegistryService assistantRegistryService,
 			ConversationServiceInternal conversationService, OllamaService ollamaService,
-			ExternalProperties properties) {
+			MintyProperties properties) {
 		this.conversationRepository = conversationRepository;
 		this.assistantQueryService = assistantQueryService;
 		this.assistantRegistryService = assistantRegistryService;

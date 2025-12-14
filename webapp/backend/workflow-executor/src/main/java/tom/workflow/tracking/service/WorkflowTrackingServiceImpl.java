@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
 import tom.api.UserId;
-import tom.config.ExternalProperties;
+import tom.api.MintyProperties;
 import tom.workflow.executor.WorkflowRunner;
 import tom.workflow.tracking.controller.model.WorkflowResult;
 import tom.workflow.tracking.controller.model.WorkflowState;
@@ -32,7 +32,7 @@ public class WorkflowTrackingServiceImpl implements WorkflowTrackingService {
 	private final String logFileDirectory;
 
 	public WorkflowTrackingServiceImpl(WorkflowExecutionRepository workflowExecutionRepository,
-			ExternalProperties properties) {
+			MintyProperties properties) {
 		this.workflowExecutionRepository = workflowExecutionRepository;
 		runningWorkflows = new ArrayList<>();
 		logFileDirectory = properties.get("workflowLogs");

@@ -15,7 +15,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Transient;
 import tom.api.UserId;
-import tom.task.ExecutionResult;
+import tom.api.task.ExecutionResult;
 import tom.workflow.converters.ExecutionStateConverter;
 
 @Entity

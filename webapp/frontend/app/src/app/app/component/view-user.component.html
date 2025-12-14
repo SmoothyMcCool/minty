@@ -12,7 +12,7 @@
 		</div>
 
 		<h1>Update Yourself</h1>
-		<div class="well p-2">
+		<div class="well p-2" *ngIf="user">
 			<form role="form" #userForm="ngForm" class="container" (submit)="update()">
 				<div class="mb-3 row">
 					<label for="account" class="col-sm-6 col-form-label">User Name</label>

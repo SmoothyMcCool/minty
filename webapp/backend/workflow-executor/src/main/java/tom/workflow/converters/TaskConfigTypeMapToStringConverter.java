@@ -5,7 +5,8 @@ import java.util.Map;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import jakarta.persistence.Converter;
-import tom.task.TaskConfigTypes;
+import tom.api.task.TaskConfigTypes;
+import tom.util.ClassConverter;
 
 @Converter
 public class TaskConfigTypeMapToStringConverter extends ClassConverter<Map<String, TaskConfigTypes>> {

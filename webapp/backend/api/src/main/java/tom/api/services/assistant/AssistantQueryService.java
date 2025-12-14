@@ -2,7 +2,7 @@ package tom.api.services.assistant;
 
 import tom.api.ConversationId;
 import tom.api.UserId;
-import tom.model.AssistantQuery;
+import tom.api.model.AssistantQuery;
 
 public interface AssistantQueryService {
 
