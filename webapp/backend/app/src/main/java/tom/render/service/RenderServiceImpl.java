@@ -20,9 +20,9 @@ import de.neuland.pug4j.PugConfiguration;
 import de.neuland.pug4j.model.PugModel;
 import de.neuland.pug4j.template.PugTemplate;
 import tom.api.services.RenderService;
-import tom.config.ExternalProperties;
-import tom.task.ExecutionResult;
-import tom.task.Packet;
+import tom.api.task.ExecutionResult;
+import tom.api.task.Packet;
+import tom.api.MintyProperties;
 import tom.workflow.service.WorkflowService;
 
 @Service
@@ -33,7 +33,7 @@ public class RenderServiceImpl implements RenderService {
 	private final String tempFolder;
 
 	public RenderServiceImpl(PugConfiguration pugConfiguration, WorkflowService workflowService,
-			ExternalProperties properties) {
+			MintyProperties properties) {
 		this.pugConfiguration = pugConfiguration;
 		this.workflowService = workflowService;
 		this.tempFolder = properties.get("tempFileStore");

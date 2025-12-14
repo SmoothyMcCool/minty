@@ -45,6 +45,7 @@ import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import de.neuland.pug4j.PugConfiguration;
 import de.neuland.pug4j.filter.MarkdownFilter;
 import de.neuland.pug4j.template.FileTemplateLoader;
+import tom.api.MintyProperties;
 
 @Configuration
 @EnableWebMvc
@@ -55,15 +56,15 @@ public class ApplicationConfig implements WebMvcConfigurer {
 
 	private static final Logger logger = LogManager.getLogger(ApplicationConfig.class);
 
-	ExternalProperties props;
+	MintyPropertiesImpl props;
 
-	public ApplicationConfig(ExternalProperties properties) {
+	public ApplicationConfig(MintyPropertiesImpl properties) {
 		this.props = properties;
 	}
 
 	@Bean
-	static ExternalProperties properties() {
-		return new ExternalProperties();
+	static MintyProperties properties() {
+		return new MintyPropertiesImpl();
 	}
 
 	@Bean

@@ -10,7 +10,7 @@ import org.apache.logging.log4j.core.impl.Log4jLogEvent;
 import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.apache.logging.log4j.message.SimpleMessage;
 
-import tom.task.TaskLogger;
+import tom.api.task.TaskLogger;
 
 public class WorkflowLoggerImpl implements AutoCloseable, TaskLogger {
 	private static final LoggerContext ctx = (LoggerContext) LogManager.getContext(false);

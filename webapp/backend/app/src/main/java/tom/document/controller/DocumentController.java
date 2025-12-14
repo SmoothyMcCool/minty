@@ -18,7 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import tom.ApiError;
 import tom.api.DocumentId;
-import tom.config.ExternalProperties;
+import tom.api.MintyProperties;
 import tom.controller.ResponseWrapper;
 import tom.document.model.MintyDoc;
 import tom.document.service.DocumentServiceInternal;
@@ -33,7 +33,7 @@ public class DocumentController {
 	private final String docFileStore;
 	private final DocumentServiceInternal documentService;
 
-	public DocumentController(DocumentServiceInternal documentService, ExternalProperties properties) {
+	public DocumentController(DocumentServiceInternal documentService, MintyProperties properties) {
 		this.documentService = documentService;
 		docFileStore = properties.get("docFileStore");
 	}

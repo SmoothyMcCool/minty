@@ -310,10 +310,7 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 		const result: string[] = [];
 
 		task.configuration.forEach((_value, key) => {
-			// System and user defaults are stored in the form "Task Name::Property Name", so
-			// we need to build that up to find our keys.
-			const fullKey = task.taskName + '::' + key;
-			if (this.defaults?.has(fullKey)) {
+			if (this.defaults?.has(key)) {
 				result.push(key);
 			}
 		});

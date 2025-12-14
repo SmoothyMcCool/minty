@@ -14,11 +14,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import tom.ApiError;
 import tom.api.AssistantId;
 import tom.api.ConversationId;
+import tom.api.conversation.model.Conversation;
+import tom.api.model.ChatMessage;
 import tom.controller.ResponseWrapper;
-import tom.conversation.model.Conversation;
 import tom.conversation.service.ConversationServiceInternal;
 import tom.meta.service.MetadataService;
-import tom.model.ChatMessage;
 import tom.model.security.UserDetailsUser;
 
 @Controller

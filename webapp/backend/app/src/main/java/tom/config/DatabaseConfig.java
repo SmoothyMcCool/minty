@@ -17,13 +17,15 @@ import org.springframework.transaction.PlatformTransactionManager;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
+import tom.api.MintyProperties;
+
 @Configuration
 @EnableJpaRepositories("tom")
 public class DatabaseConfig {
 
-	private final ExternalProperties props;
+	private final MintyProperties props;
 
-	public DatabaseConfig(ExternalProperties properties) {
+	public DatabaseConfig(MintyProperties properties) {
 		props = properties;
 	}
 

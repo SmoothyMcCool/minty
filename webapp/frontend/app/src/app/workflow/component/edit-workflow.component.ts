@@ -36,7 +36,7 @@ export class EditWorkflowComponent implements OnInit {
 				systemDefaults: this.userService.systemDefaults(),
 				userDefaults: this.userService.userDefaults(),
 				taskSpecifications: this.workflowService.listTaskSpecifications(),
-			outputTaskSpecifications: this.workflowService.listOutputTaskSpecifications()
+				outputTaskSpecifications: this.workflowService.listOutputTaskSpecifications()
 			}).subscribe(({ systemDefaults, userDefaults, taskSpecifications, outputTaskSpecifications }) => {
 
 				// User defaults should take priority in conflicts.

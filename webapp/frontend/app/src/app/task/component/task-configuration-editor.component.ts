@@ -1,10 +1,9 @@
-import { Component, forwardRef, Input, OnInit } from '@angular/core';
+import { Component, forwardRef, Input } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MapEditorComponent } from './map-editor.component';
 import { StringListEditorComponent } from './stringlist-editor.component';
 import { EnumListEditorComponent } from './enumlist-editor.component';
-import { ActivatedRoute } from '@angular/router';
 import { TaskSpecification } from 'src/app/model/workflow/task-specification';
 import { EnumList } from 'src/app/model/workflow/enum-list';
 import { PacketEditorComponent } from './packet-editor.component';

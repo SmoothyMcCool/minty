@@ -23,6 +23,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.servlet.http.HttpServletRequest;
 import tom.ApiError;
 import tom.ApiException;
+import tom.api.MintyProperties;
 import tom.controller.ResponseWrapper;
 import tom.meta.service.MetadataService;
 import tom.model.security.UserDetailsUser;
@@ -30,7 +31,6 @@ import tom.user.model.User;
 import tom.user.repository.EncryptedUser;
 import tom.user.repository.UserRepository;
 import tom.user.service.UserServiceInternal;
-import tom.workflow.taskregistry.TaskRegistryService;
 
 @RestController
 @RequestMapping("/api/user")
@@ -41,14 +41,14 @@ public class UserController {
 	private final UserRepository userRepository;
 	private final UserServiceInternal userService;
 	private final MetadataService metadataService;
-	private final TaskRegistryService taskRegistryService;
+	private final MintyProperties properties;
 
 	public UserController(UserRepository userRepository, UserServiceInternal userService,
-			MetadataService metadataService, TaskRegistryService taskRegistryService) {
+			MetadataService metadataService, MintyProperties properties) {
 		this.userRepository = userRepository;
 		this.userService = userService;
 		this.metadataService = metadataService;
-		this.taskRegistryService = taskRegistryService;
+		this.properties = properties;
 	}
 
 	@GetMapping({ "" })
@@ -167,8 +167,7 @@ public class UserController {
 	@GetMapping({ "/defaults/system" })
 	public ResponseEntity<ResponseWrapper<Map<String, String>>> systemDefaults(
 			@AuthenticationPrincipal UserDetailsUser userDetails) {
-		ResponseWrapper<Map<String, String>> response = ResponseWrapper
-				.SuccessResponse(taskRegistryService.getSystemDefaults());
+		ResponseWrapper<Map<String, String>> response = ResponseWrapper.SuccessResponse(properties.getSystemDefaults());
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
@@ -177,7 +176,7 @@ public class UserController {
 			@AuthenticationPrincipal UserDetailsUser userDetails) {
 		User user = userService.getUserFromId(userDetails.getId()).orElseThrow();
 		Map<String, String> currentUserDefaults = user.getDefaults();
-		Map<String, String> taskDefaults = taskRegistryService.getUserDefaults();
+		Map<String, String> taskDefaults = properties.getUserDefaults();
 
 		// Add any values absent to currentUserDefaults from taskDefaults.
 		taskDefaults.entrySet().stream().forEach(value -> {

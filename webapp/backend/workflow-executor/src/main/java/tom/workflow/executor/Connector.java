@@ -3,8 +3,8 @@ package tom.workflow.executor;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 
-import tom.task.OutputPort;
-import tom.task.Packet;
+import tom.api.task.OutputPort;
+import tom.api.task.Packet;
 
 public class Connector implements OutputPort {
 

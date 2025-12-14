@@ -31,7 +31,10 @@ import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PreDestroy;
 import tom.api.ConversationId;
+import tom.api.MintyProperties;
 import tom.api.UserId;
+import tom.api.model.Assistant;
+import tom.api.model.AssistantQuery;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
 import tom.api.services.assistant.ConversationInUseException;
@@ -39,11 +42,8 @@ import tom.api.services.assistant.LlmResult;
 import tom.api.services.assistant.QueueFullException;
 import tom.api.services.assistant.StreamResult;
 import tom.api.services.assistant.StringResult;
-import tom.config.ExternalProperties;
-import tom.model.Assistant;
-import tom.model.AssistantQuery;
 import tom.ollama.service.OllamaService;
-import tom.tools.toolregistry.ToolRegistryService;
+import tom.tool.registry.ToolRegistryService;
 import tom.user.model.User;
 import tom.user.service.UserServiceInternal;
 
@@ -62,7 +62,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 
 	public AssistantQueryServiceImpl(AssistantManagementService assistantManagementService, OllamaService ollamaService,
 			OllamaApi ollamaApi, UserServiceInternal userService, ToolRegistryService toolRegistryService,
-			@Qualifier("llmExecutor") ThreadPoolTaskExecutor llmExecutor, ExternalProperties properties) {
+			@Qualifier("llmExecutor") ThreadPoolTaskExecutor llmExecutor, MintyProperties properties) {
 		this.ollamaService = ollamaService;
 		this.ollamaApi = ollamaApi;
 		this.userService = userService;

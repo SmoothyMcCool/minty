@@ -35,7 +35,7 @@ import jakarta.annotation.PreDestroy;
 import jakarta.transaction.Transactional;
 import tom.api.DocumentId;
 import tom.api.UserId;
-import tom.config.ExternalProperties;
+import tom.api.MintyProperties;
 import tom.document.model.DocumentState;
 import tom.document.model.MintyDoc;
 import tom.document.repository.DocumentRepository;
@@ -60,7 +60,7 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 	public DocumentServiceImpl(OllamaApi ollamaApi, DocumentRepository documentRepository,
 			@Qualifier("fileProcessingExecutor") ThreadPoolTaskExecutor fileProcessingExecutor,
 			OllamaService ollamaService, AssistantDocumentLinkService assistantDocumentLinkService,
-			ExternalProperties properties) {
+			MintyProperties properties) {
 		this.fileProcessingExecutor = fileProcessingExecutor;
 		this.ollamaService = ollamaService;
 		this.ollamaApi = ollamaApi;

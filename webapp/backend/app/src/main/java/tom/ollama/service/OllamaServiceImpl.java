@@ -24,7 +24,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import io.micrometer.observation.ObservationRegistry;
-import tom.config.ExternalProperties;
+import tom.api.MintyProperties;
 
 @Service
 public class OllamaServiceImpl implements OllamaService {
@@ -39,7 +39,7 @@ public class OllamaServiceImpl implements OllamaService {
 	private final String defaultModel;
 
 	public OllamaServiceImpl(OllamaApi ollamaApi, JdbcTemplate vectorJdbcTemplate, DataSource dataSource,
-			ExternalProperties properties) {
+			MintyProperties properties) {
 		String embeddingModelName = properties.get("ollamaEmbeddingModel");
 		int chatMemoryDepth = properties.getInt("chatMemoryDepth", 20);
 		defaultModel = properties.get("defaultModel");

@@ -13,7 +13,7 @@ import jakarta.persistence.Transient;
 import tom.api.AssistantId;
 import tom.api.DocumentId;
 import tom.api.UserId;
-import tom.workflow.converters.StringListToStringConverter;
+import tom.task.model.converters.StringListToStringConverter;
 
 @Entity
 public class Assistant {
@@ -38,7 +38,7 @@ public class Assistant {
 	public Assistant() {
 	}
 
-	public Assistant(tom.model.Assistant assistant) {
+	public Assistant(tom.api.model.Assistant assistant) {
 		this.id = assistant.id().getValue();
 		this.name = assistant.name();
 		this.prompt = assistant.prompt();
@@ -52,12 +52,12 @@ public class Assistant {
 		this.tools = assistant.tools();
 	}
 
-	public tom.model.Assistant toTaskAssistant() {
-		return new tom.model.Assistant(new AssistantId(id), name, model.toString(), temperature, topK, prompt,
+	public tom.api.model.Assistant toTaskAssistant() {
+		return new tom.api.model.Assistant(new AssistantId(id), name, model.toString(), temperature, topK, prompt,
 				associatedDocumentIds, tools, ownerId, shared, hasMemory);
 	}
 
-	public Assistant updateWith(tom.model.Assistant assistant) {
+	public Assistant updateWith(tom.api.model.Assistant assistant) {
 		setName(assistant.name());
 		setPrompt(assistant.prompt());
 		setModel(assistant.model());

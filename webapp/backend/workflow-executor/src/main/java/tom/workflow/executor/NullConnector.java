@@ -1,6 +1,6 @@
 package tom.workflow.executor;
 
-import tom.task.Packet;
+import tom.api.task.Packet;
 
 public class NullConnector extends Connector {
 

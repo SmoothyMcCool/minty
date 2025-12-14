@@ -1,0 +1,106 @@
+package tom.tasks.noop;
+
+import java.util.List;
+import java.util.Map;
+
+import tom.api.task.MintyTask;
+import tom.api.task.OutputPort;
+import tom.api.task.Packet;
+import tom.api.task.TaskConfigSpec;
+import tom.api.task.TaskLogger;
+import tom.api.task.TaskSpec;
+
+public class NullTask implements MintyTask {
+
+	@Override
+	public String getError() {
+		return null;
+	}
+
+	@Override
+	public void run() {
+		// Do nothing.
+	}
+
+	@Override
+	public boolean giveInput(int inputNum, Packet dataPacket) {
+		// Nothing to do.
+		return true;
+	}
+
+	@Override
+	public void setOutputConnectors(List<? extends OutputPort> outputs) {
+	}
+
+	@Override
+	public boolean readyToRun() {
+		return true;
+	}
+
+	@Override
+	public TaskSpec getSpecification() {
+		return new TaskSpec() {
+
+			@Override
+			public String expects() {
+				return "This task expects no input. It doesn't matter what you provide.";
+			}
+
+			@Override
+			public String produces() {
+				return "This task produces no output. It will swallow all packets it receives.";
+			}
+
+			@Override
+			public int numOutputs() {
+				return 0;
+			}
+
+			@Override
+			public int numInputs() {
+				return 1;
+			}
+
+			@Override
+			public TaskConfigSpec taskConfiguration() {
+				return new NullTaskConfig();
+			}
+
+			@Override
+			public TaskConfigSpec taskConfiguration(Map<String, String> configuration) {
+				return taskConfiguration();
+			}
+
+			@Override
+			public String taskName() {
+				return "Null Task";
+			}
+
+			@Override
+			public String group() {
+				return "Transform";
+			}
+
+		};
+	}
+
+	@Override
+	public void inputTerminated(int i) {
+		// Nothing to do.
+	}
+
+	@Override
+	public boolean failed() {
+		return false;
+	}
+
+	@Override
+	public Packet getResult() {
+		return null;
+	}
+
+	@Override
+	public void setLogger(TaskLogger workflowLogger) {
+	}
+
+}

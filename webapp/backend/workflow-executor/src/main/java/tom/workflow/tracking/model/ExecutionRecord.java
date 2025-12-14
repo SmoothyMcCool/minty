@@ -11,7 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
-import tom.task.ExecutionResult;
+import tom.api.task.ExecutionResult;
 import tom.workflow.converters.ExecutionResultConverter;
 
 @Entity

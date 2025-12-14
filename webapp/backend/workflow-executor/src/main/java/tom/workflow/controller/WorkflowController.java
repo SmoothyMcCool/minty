@@ -21,16 +21,16 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
 import tom.ApiError;
+import tom.api.task.enumspec.EnumSpec;
 import tom.controller.ResponseWrapper;
 import tom.meta.service.MetadataService;
 import tom.model.security.UserDetailsUser;
-import tom.task.enumspec.EnumSpec;
-import tom.workflow.model.OutputTaskSpecDescription;
+import tom.task.model.OutputTaskSpecDescription;
+import tom.task.model.TaskSpecDescription;
+import tom.task.registry.TaskRegistryService;
 import tom.workflow.model.ResultTemplate;
-import tom.workflow.model.TaskSpecDescription;
 import tom.workflow.model.Workflow;
 import tom.workflow.service.WorkflowService;
-import tom.workflow.taskregistry.TaskRegistryService;
 
 @Controller
 @RequestMapping("/api/workflow")
