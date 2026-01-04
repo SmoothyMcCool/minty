@@ -1,7 +1,7 @@
 import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { User } from './model/user';
-import { catchError, EMPTY, finalize, map, Observable, of } from 'rxjs';
+import { catchError, EMPTY, finalize, map, Observable, of, startWith, Subject, switchMap, takeUntil, timer } from 'rxjs';
 import { ApiResult } from './model/api-result';
 import { Router } from '@angular/router';
 import { AlertService } from './alert.service';
@@ -21,8 +21,11 @@ export class UserService {
 	private static readonly GetUser = 'api/user';
 
 	private user: User = null;
+	private timeoutTimer$ = new Subject<'start' | 'stop'>();
 
-	constructor(private alertService: AlertService, private http: HttpClient, private router: Router) { }
+	constructor(private alertService: AlertService, private http: HttpClient, private router: Router) {
+		this.startSessionTimeout();
+	}
 
 	loggedIn(): boolean {
 		return sessionStorage.getItem('x-auth-token') != undefined;
@@ -49,6 +52,7 @@ export class UserService {
 		return this.http.get<ApiResult>(UserService.Login, { headers: headers, observe: 'response' })
 			.pipe(
 				map((result: HttpResponse<ApiResult>) => {
+					this.timeoutTimer$.next('start');
 					sessionStorage.setItem('x-auth-token', result.headers.get('x-auth-token'));
 					this.user = result.body.data as User;
 					this.user.defaults = new Map(Object.entries(this.user.defaults));
@@ -76,7 +80,6 @@ export class UserService {
 			id: user.id,
 			name: user.name,
 			password: user.password,
-			displayMode: user.displayMode,
 			defaults: Object.fromEntries(user.defaults)
 		};
 		return this.http.post<ApiResult>(UserService.Update, body)
@@ -110,10 +113,25 @@ export class UserService {
 		this.http.post<ApiResult>(UserService.Logout, {})
 			.pipe(
 				finalize(() => {
+					this.timeoutTimer$.next('stop');
 					this.user = null;
 					sessionStorage.clear();
 					this.router.navigateByUrl('/login');
 				})
 			).subscribe();
+	}
+
+	startSessionTimeout() {
+		this.timeoutTimer$.pipe(
+			switchMap(state =>
+				state === 'start' ? timer(240 * 60 * 1000) : EMPTY // 240m timeout, to match backend
+			)
+		).subscribe(() => {
+			this.logout();
+		});
+	}
+
+	resetSessionTimeout() {
+		this.timeoutTimer$.next('start'); // reset timer
 	}
 }

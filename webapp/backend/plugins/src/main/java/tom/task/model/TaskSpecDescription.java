@@ -6,15 +6,15 @@ import java.util.Map;
 import jakarta.persistence.Convert;
 import tom.api.task.TaskConfigTypes;
 import tom.task.model.converters.StringListToStringConverter;
-import tom.task.model.converters.StringMapToStringConverter;
+import tom.task.model.converters.ObjectMapToStringConverter;
 import tom.task.model.converters.TaskConfigTypeMapToStringConverter;
 
 public class TaskSpecDescription {
 
 	private String taskName;
 	private String group;
-	@Convert(converter = StringMapToStringConverter.class)
-	private Map<String, String> configuration;
+	@Convert(converter = ObjectMapToStringConverter.class)
+	private Map<String, Object> configuration;
 	@Convert(converter = TaskConfigTypeMapToStringConverter.class)
 	private Map<String, TaskConfigTypes> configSpec;
 	@Convert(converter = StringListToStringConverter.class)
@@ -46,11 +46,11 @@ public class TaskSpecDescription {
 		this.taskName = taskName;
 	}
 
-	public Map<String, String> getConfiguration() {
+	public Map<String, Object> getConfiguration() {
 		return configuration;
 	}
 
-	public void setConfiguration(Map<String, String> configuration) {
+	public void setConfiguration(Map<String, Object> configuration) {
 		this.configuration = configuration;
 	}
 

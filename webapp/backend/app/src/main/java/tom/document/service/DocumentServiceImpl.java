@@ -4,10 +4,11 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,6 +28,7 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
@@ -35,7 +37,7 @@ import jakarta.annotation.PreDestroy;
 import jakarta.transaction.Transactional;
 import tom.api.DocumentId;
 import tom.api.UserId;
-import tom.api.MintyProperties;
+import tom.config.MintyConfiguration;
 import tom.document.model.DocumentState;
 import tom.document.model.MintyDoc;
 import tom.document.repository.DocumentRepository;
@@ -49,40 +51,49 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 	private final ThreadPoolTaskExecutor fileProcessingExecutor;
 	private final OllamaService ollamaService;
 	private final AssistantDocumentLinkService assistantDocumentLinkService;
-	private final OllamaApi ollamaApi;
 	private final DocumentRepository documentRepository;
+	private final JdbcTemplate vectorJdbcTemplate;
 	private final int keywordsPerDocument;
-	private final int targetChunkSize;
+	private final int documentTargetChunkSize;
+	private final int macroTargetChunkSize;
+	private final int embeddingBatchSize;
+	// private final int maxEmbeddingTokens;
 
-	private final String docFileStore;
-	private final String summarizingModel;
+	private final Path docFileStore;
+	private final ChatModel chatModel;
 
 	public DocumentServiceImpl(OllamaApi ollamaApi, DocumentRepository documentRepository,
 			@Qualifier("fileProcessingExecutor") ThreadPoolTaskExecutor fileProcessingExecutor,
 			OllamaService ollamaService, AssistantDocumentLinkService assistantDocumentLinkService,
-			MintyProperties properties) {
+			MintyConfiguration properties, JdbcTemplate vectorJdbcTemplate) {
 		this.fileProcessingExecutor = fileProcessingExecutor;
 		this.ollamaService = ollamaService;
-		this.ollamaApi = ollamaApi;
 		this.documentRepository = documentRepository;
 		this.assistantDocumentLinkService = assistantDocumentLinkService;
-		summarizingModel = properties.get("ollamaSummarizingModel");
-		docFileStore = properties.get("docFileStore");
-		keywordsPerDocument = properties.getInt("keywordsPerDocument", 5);
-		targetChunkSize = properties.getInt("targetChunkSize", 800);
+		this.vectorJdbcTemplate = vectorJdbcTemplate;
+		docFileStore = properties.getConfig().fileStores().docs();
+		keywordsPerDocument = properties.getConfig().ollama().embedding().keywordsPerDocument();
+		documentTargetChunkSize = properties.getConfig().ollama().embedding().documentTargetChunkSize();
+		macroTargetChunkSize = properties.getConfig().ollama().embedding().macroTargetChunkSize();
+		embeddingBatchSize = properties.getConfig().ollama().embedding().batchSize();
+		// maxEmbeddingTokens =
+		// properties.getConfig().ollama().embedding().maxEmbeddingTokens();
+
+		String summarizingModel = properties.getConfig().ollama().embedding().summarizingModel();
+		chatModel = OllamaChatModel.builder().ollamaApi(ollamaApi)
+				.defaultOptions(OllamaChatOptions.builder().model(summarizingModel).build()).build();
+
 	}
 
 	@PostConstruct
 	public void init() {
-		Path docPath = Paths.get(docFileStore);
-
-		if (!docPath.toFile().isDirectory()) {
+		if (!docFileStore.toFile().isDirectory()) {
 			logger.error(
 					"DocumentServiceImpl: Specified document storage path is not a directory! Cannot monitor for files.");
 			return;
 		}
 
-		File[] newFiles = docPath.toFile().listFiles();
+		File[] newFiles = docFileStore.toFile().listFiles();
 
 		if (newFiles == null) {
 			logger.error("Could not list files in " + docFileStore);
@@ -90,6 +101,7 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 		}
 
 		for (File newFile : newFiles) {
+			logger.info("Starting processing of document " + newFile.getName());
 			processFile(newFile);
 		}
 
@@ -117,16 +129,31 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 
 	@Override
 	public void transformAndStore(File file, MintyDoc doc) {
-		VectorStore vectorStore = ollamaService.getVectorStore();
-		ChatModel chatModel = OllamaChatModel.builder().ollamaApi(ollamaApi)
-				.defaultOptions(OllamaChatOptions.builder().model(summarizingModel).build()).build();
-
 		FileSystemResource resource = new FileSystemResource(file);
-		List<Document> documents = read(resource);
-		documents = split(documents);
-		documents = enrich(doc.getDocumentId(), documents, chatModel);
-		documents = summarize(documents, chatModel);
-		vectorStore.add(documents);
+		List<Document> rawDocuments = read(resource);
+
+		// Summarize larger sections first
+		List<Document> macroChunks = split(rawDocuments, macroTargetChunkSize);
+		macroChunks = normalize(macroChunks);
+		macroChunks = summarize(macroChunks, chatModel);
+		macroChunks = enrich(doc.getDocumentId(), macroChunks, chatModel);
+
+		// Now split into small chunks for embedding
+		List<Document> microChunks = split(macroChunks, documentTargetChunkSize);
+		for (Document document : microChunks) {
+			document.getMetadata().put("documentId", doc.getDocumentId());
+			document.getMetadata().put("source", doc.getTitle());
+		}
+
+		for (int i = 0; i < microChunks.size(); i += embeddingBatchSize) {
+			List<Document> batch = microChunks.subList(i, Math.min(i + embeddingBatchSize, microChunks.size()));
+			if (!addDocuments(batch, documentTargetChunkSize, 0)) {
+				String batchStr = batch.stream().map(d -> d.getText()).collect(Collectors.joining("\n-----\n"));
+				throw new DocumentProcessingException(
+						"Failed to store document despite repeated re-chunking. Failing. The failing chunk was: "
+								+ batchStr);
+			}
+		}
 	}
 
 	private List<Document> read(Resource resource) {
@@ -134,26 +161,52 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 		return reader.read();
 	}
 
-	private List<Document> split(List<Document> documents) {
+	private List<Document> split(List<Document> documents, int targetChunkSize) {
 		TokenTextSplitter splitter = TokenTextSplitter.builder().withChunkSize(targetChunkSize).build();
 		return splitter.apply(documents);
 	}
 
+	private List<Document> normalize(List<Document> documents) {
+		return documents.stream().map(doc -> {
+			String text = doc.getText();
+			if (text == null || text.isBlank())
+				return null;
+			String clean = text.replaceAll("\\s+", " ").replaceAll("data:image/[^;]+;base64,[A-Za-z0-9+/=]+", "[B64]")
+					.replaceAll("\\{[^}]{1000,}\\}", "[JSON_BLOCK]");
+			return new Document(clean, doc.getMetadata());
+		}).filter(Objects::nonNull).toList();
+
+	}
+
 	private List<Document> enrich(DocumentId documentId, List<Document> documents, ChatModel chatModel) {
 		KeywordMetadataEnricher keywordifier = new KeywordMetadataEnricher(chatModel, keywordsPerDocument);
-		documents = keywordifier.apply(documents);
+		List<Document> keywordedDocuments = keywordifier.apply(documents);
 
-		for (Document document : documents) {
-			document.getMetadata().put("documentId", documentId);
-		}
-
-		return documents;
+		return keywordedDocuments;
 	}
 
 	private List<Document> summarize(List<Document> documents, ChatModel chatModel) {
-		SummaryMetadataEnricher summarizer = new SummaryMetadataEnricher(chatModel,
-				List.of(SummaryType.PREVIOUS, SummaryType.CURRENT, SummaryType.NEXT));
+		SummaryMetadataEnricher summarizer = new SummaryMetadataEnricher(chatModel, List.of(SummaryType.CURRENT));
+		// List.of(SummaryType.PREVIOUS, SummaryType.CURRENT, SummaryType.NEXT));
 		return summarizer.apply(documents);
+	}
+
+	private boolean addDocuments(List<Document> documents, int targetChunkSize, int iteration) {
+
+		if (iteration >= 5) {
+			return false;
+		}
+
+		VectorStore vectorStore = ollamaService.getVectorStore();
+		try {
+			vectorStore.add(documents);
+			return true;
+		} catch (Exception e) {
+			logger.warn("Chunk too large. Splitting.");
+			// split again and retry
+			int newTarget = targetChunkSize / 2;
+			return addDocuments(split(documents, newTarget), newTarget, iteration + 1);
+		}
 	}
 
 	private void startTaskFor(Path file, DocumentId documentId) {
@@ -189,8 +242,10 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 			return false;
 		}
 
-		VectorStore vectorStore = ollamaService.getVectorStore();
-		vectorStore.delete(" documentId == \"" + documentId + "\"");
+		// Using the VectorStore delete method doesn't work as Spring AI doesn't seem to
+		// be able to successfully query by the documentId metadata that was added.
+		vectorJdbcTemplate.update("DELETE FROM Minty.vector_store WHERE JSON_VALUE(meta, '$.documentId') = ?",
+				documentId.getValue().toString());
 
 		documentRepository.deleteById(documentId.value());
 

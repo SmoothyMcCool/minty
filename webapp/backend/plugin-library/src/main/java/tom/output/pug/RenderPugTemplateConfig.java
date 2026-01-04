@@ -9,7 +9,7 @@ import tom.api.task.TaskConfigTypes;
 
 public class RenderPugTemplateConfig implements TaskConfigSpec {
 
-	private final String PugTemplate = "Pug Template";
+	public static final String PugTemplate = "Pug Template";
 
 	private String template;
 
@@ -17,10 +17,10 @@ public class RenderPugTemplateConfig implements TaskConfigSpec {
 		template = "";
 	}
 
-	public RenderPugTemplateConfig(Map<String, String> config) {
+	public RenderPugTemplateConfig(Map<String, Object> config) {
 		this();
 		if (config.containsKey(PugTemplate)) {
-			template = config.get(PugTemplate);
+			template = config.get(PugTemplate).toString();
 		}
 	}
 
@@ -46,7 +46,7 @@ public class RenderPugTemplateConfig implements TaskConfigSpec {
 	}
 
 	@Override
-	public Map<String, String> getValues() {
+	public Map<String, Object> getValues() {
 		return Map.of(PugTemplate, template);
 	}
 }

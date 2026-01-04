@@ -5,8 +5,8 @@ import java.util.UUID;
 
 import tom.api.UserId;
 import tom.workflow.controller.WorkflowRequest;
-import tom.workflow.model.Workflow;
 import tom.workflow.model.ResultTemplate;
+import tom.workflow.model.Workflow;
 
 public interface WorkflowService {
 
@@ -31,5 +31,9 @@ public interface WorkflowService {
 	ResultTemplate getResultTemplate(String templateName);
 
 	List<String> listResultTemplates();
+
+	boolean isWorkflowOwned(UserId userId, String name);
+
+	void cancelWorkflow(UserId userId, String name);
 
 }

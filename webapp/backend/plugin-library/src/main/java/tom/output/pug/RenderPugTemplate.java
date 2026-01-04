@@ -3,8 +3,10 @@ package tom.output.pug;
 import java.io.IOException;
 import java.util.Map;
 
-import tom.api.model.ServiceConsumer;
-import tom.api.services.TaskServices;
+import org.apache.hc.core5.http.ContentType;
+
+import tom.api.model.services.ServiceConsumer;
+import tom.api.services.PluginServices;
 import tom.api.task.ExecutionResult;
 import tom.api.task.OutputTask;
 import tom.api.task.OutputTaskSpec;
@@ -14,11 +16,11 @@ import tom.api.task.annotation.Output;
 @Output
 public class RenderPugTemplate implements OutputTask, ServiceConsumer {
 
-	private TaskServices taskServices;
+	private PluginServices pluginServices;
 	private RenderPugTemplateConfig configuration;
 
 	public RenderPugTemplate() {
-		this.taskServices = null;
+		this.pluginServices = null;
 		this.configuration = null;
 	}
 
@@ -28,13 +30,13 @@ public class RenderPugTemplate implements OutputTask, ServiceConsumer {
 	}
 
 	@Override
-	public void setTaskServices(TaskServices taskServices) {
-		this.taskServices = taskServices;
+	public void setPluginServices(PluginServices pluginServices) {
+		this.pluginServices = pluginServices;
 	}
 
 	@Override
 	public String execute(ExecutionResult data) throws IOException {
-		return taskServices.getRenderService().renderPug(configuration.getTemplate(), data);
+		return pluginServices.getRenderService().renderPug(configuration.getTemplate(), data);
 	}
 
 	@Override
@@ -43,7 +45,7 @@ public class RenderPugTemplate implements OutputTask, ServiceConsumer {
 
 			@Override
 			public String getFormat() {
-				return "text/html";
+				return ContentType.TEXT_HTML.getMimeType();
 			}
 
 			@Override
@@ -52,7 +54,7 @@ public class RenderPugTemplate implements OutputTask, ServiceConsumer {
 			}
 
 			@Override
-			public TaskConfigSpec taskConfiguration(Map<String, String> configuration) {
+			public TaskConfigSpec taskConfiguration(Map<String, Object> configuration) {
 				return new RenderPugTemplateConfig(configuration);
 			}
 

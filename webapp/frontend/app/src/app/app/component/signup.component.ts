@@ -2,9 +2,9 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { DisplayMode, User } from '../../model/user';
 import { UserService } from '../../user.service';
 import { environment } from 'src/environments/environment';
+import { User } from 'src/app/model/user';
 
 @Component({
 	selector: 'minty-signup',
@@ -13,6 +13,7 @@ import { environment } from 'src/environments/environment';
 	styleUrls: ['./signup.component.css']
 })
 export class SignupComponent {
+
 	user: User;
 	repeatPassword = '';
 	passwordMismatch = true;
@@ -25,8 +26,7 @@ export class SignupComponent {
 			id: '',
 			name: '',
 			password: '',
-			defaults: new Map(),
-			displayMode: DisplayMode.Boring
+			defaults: new Map()
 		};
 	}
 

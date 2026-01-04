@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.hc.core5.http.ContentType;
+
 import tom.api.task.ExecutionResult;
 import tom.api.task.OutputTask;
 import tom.api.task.OutputTaskSpec;
@@ -31,7 +33,7 @@ public class NullOutput implements OutputTask {
 
 			@Override
 			public String getFormat() {
-				return "text/plain";
+				return ContentType.TEXT_PLAIN.getMimeType();
 			}
 
 			@Override
@@ -54,7 +56,7 @@ public class NullOutput implements OutputTask {
 					}
 
 					@Override
-					public Map<String, String> getValues() {
+					public Map<String, Object> getValues() {
 						return Map.of();
 					}
 
@@ -62,7 +64,7 @@ public class NullOutput implements OutputTask {
 			}
 
 			@Override
-			public TaskConfigSpec taskConfiguration(Map<String, String> configuration) {
+			public TaskConfigSpec taskConfiguration(Map<String, Object> configuration) {
 				return taskConfiguration();
 			}
 

@@ -12,8 +12,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import tom.ApiError;
 import tom.api.ConversationId;
-import tom.api.conversation.model.Conversation;
-import tom.api.model.AssistantQuery;
+import tom.api.model.assistant.AssistantQuery;
+import tom.api.model.assistant.AssistantSpec;
+import tom.api.model.conversation.Conversation;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
 import tom.api.services.assistant.ConversationInUseException;
@@ -47,8 +48,9 @@ public class DiagrammingController {
 			@AuthenticationPrincipal UserDetailsUser user, @RequestParam("request") String request) {
 
 		AssistantQuery query = new AssistantQuery();
-		query.setAssistantId(AssistantManagementService.DiagrammingAssistantId);
-		Conversation conversation = conversationService.newConversation(user.getId(), query.getAssistantId());
+		AssistantSpec as = new AssistantSpec(AssistantManagementService.DiagrammingAssistantId, null);
+		query.setAssistantSpec(as);
+		Conversation conversation = conversationService.newConversation(user.getId(), as.getAssistantId());
 		query.setConversationId(conversation.getConversationId());
 		query.setQuery(request);
 

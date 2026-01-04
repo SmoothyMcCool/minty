@@ -4,14 +4,13 @@ import java.util.List;
 
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
-import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.vectorstore.VectorStore;
+
+import tom.config.model.ChatModelConfig;
 
 public interface OllamaService {
 
 	String getDefaultModel();
-
-	EmbeddingModel getEmbeddingModel();
 
 	VectorStore getVectorStore();
 
@@ -19,6 +18,6 @@ public interface OllamaService {
 
 	ChatMemory getChatMemory();
 
-	List<String> listModels();
+	List<ChatModelConfig> listModels();
 
 }

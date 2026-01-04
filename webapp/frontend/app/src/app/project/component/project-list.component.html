@@ -1,0 +1,21 @@
+<button class="btn btn-primary" (click)="newProject()">New Project</button>
+
+<ul class="list-group">
+	<li class="list-group-item list-group-item-action position-relative text-bg-light bg-opacity-75"
+		*ngFor="let project of projects" style="height: 2.5rem">
+		<div class="d-flex align-items-center h-100">
+			<span class="text-truncate clickable-text" (click)="navigateToProject(project.id)">
+				{{project.name}}
+			</span>
+			<span class="flex-grow-1"></span>
+			<button type="button" class="btn btn-sm p-0" style="font-size: 14px; color: red"
+				[disabled]="deleteInProgress" (click)="deleteProject(project)">
+				<i class="bi bi-trash3"></i>
+			</button>
+		</div>
+	</li>
+</ul>
+
+<minty-confirmation-dialog [title]="'Delete Project'" [message]="'This will permanently delete the project. Are you sure?'"
+	[visible]="confirmDeleteProjectVisible" (confirm)="confirmDeleteProject()"
+	(cancel)="confirmDeleteProjectVisible = false"></minty-confirmation-dialog>

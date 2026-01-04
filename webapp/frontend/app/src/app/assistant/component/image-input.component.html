@@ -1,0 +1,21 @@
+<div *ngIf="imageSupport; else noImageSupport" class="border border-black rounded p-1 text-center drop-textarea w-100" style="border-style: dashed !important;"
+	(dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)"
+	[class.dragging]="dragging">
+
+	<p *ngIf="!previewUrl" class="mb-0">Paste or drop an image here</p>
+
+	<div *ngIf="previewUrl" class="position-relative d-inline-block">
+
+		<img *ngIf="previewUrl" [src]="previewUrl" class="img-fluid rounded" alt="pasted image">
+		<button *ngIf="previewUrl" type="button" class="btn position-absolute top-0 end-0 m-1" (click)="clearImage()"
+			title="Remove image">
+			<i class="bi bi-x-circle"></i>
+		</button>
+
+	</div>
+</div>
+<ng-template #noImageSupport>
+	<div class="border border-black rounded p-1 text-center drop-textarea w-100" style="border-style: dashed !important;">
+		<p class="mb-0">This model doesn't support images.</p>
+	</div>
+</ng-template>

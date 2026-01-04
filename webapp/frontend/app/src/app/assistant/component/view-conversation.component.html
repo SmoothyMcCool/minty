@@ -2,6 +2,7 @@
 	<div class="container">
 		<h1>{{assistant.name}}<ng-container *ngIf="conversation && conversation.title"> -
 				{{conversation.title}}</ng-container></h1>
+
 		<div class="row mb-2">
 			<div class="col-2">
 				<h2>Prompt</h2>
@@ -14,11 +15,12 @@
 				</div>
 			</div>
 			<div class="col-10">
-				<div class="overflow-auto well p-3" style="white-space: pre-wrap; height: 200px;">
+				<div class="overflow-auto well p-3" style="white-space: pre-wrap; height: 100px;">
 					{{assistant.prompt}}
 				</div>
 			</div>
 		</div>
+
 		<div class="row mb-2 form-floating">
 			<div class="col form-floating">
 				<textarea style="height: 100px;" class="form-control" id="aiQuery" name="aiQuery"
@@ -26,6 +28,7 @@
 				<label class="ms-3" for="aiQuery">Put your input here</label>
 			</div>
 		</div>
+
 		<div class="row mb-2">
 			<div class="col-auto">
 				<button class="btn btn-primary mb-2" (click)="submit(userText)"
@@ -34,13 +37,8 @@
 				</button>
 			</div>
 			<div class="col">
-				<!--div class="border border-black rounded p-3  text-center drop-textarea w-100" style="border-style: dashed !important;" (dragover)="onDragOver($event)"
-					(dragleave)="onDragLeave($event)" (drop)="onDrop($event)" [class.dragging]="dragging"
-					contenteditable="true" (input)="onInput($event)">
-					<span *ngIf="!content" class="text-muted">
-						Drop an image here...
-					</span>
-				</div-->
+				<minty-image-input [imageSupport]="model && model.imageSupport" [reset]="shouldReset" (image)="onImageChanged($event)"></minty-image-input>
+
 			</div>
 			<div class="col-auto">
 				<button class="btn btn-danger" (click)="restartConversation()">
@@ -48,6 +46,34 @@
 				</button>
 			</div>
 		</div>
+
+		<div class="form-group mb-2" *ngIf="model">
+			<minty-slider [min]="model.defaultContext" [max]="model.maximumContext" [label]="'Context Size (Smaller is sometimes faster)'" [(ngModel)]="contextSize"></minty-slider>
+		</div>
+
+		<ng-container *ngIf="sources">
+			<div class="row mb-2">
+				Sources Used by the last Response (Warning: source information is not preserved!):
+			</div>
+			<ul class="list-group">
+				<li class="list-group-item list-group-item" *ngFor="let source of sources">
+					{{source}}
+				</li>
+			</ul>
+		</ng-container>
+
+		<div class="row mb-2" *ngIf="metrics">
+			<div class="col-auto">
+				<strong>Request Tokens:</strong>&nbsp;{{metrics.promptTokens}}
+			</div>
+			<div class="col-auto">
+				<strong>Response Tokens:</strong>&nbsp;{{metrics.completionTokens}}
+			</div>
+			<div class="col-auto">
+				<strong>Total Tokens:</strong>&nbsp;{{metrics.promptTokens + metrics.completionTokens}}
+			</div>
+		</div>
+
 		<div class="overflow-auto">
 			<minty-conversation [messages]="chatHistory" [responsePending]="waitingForResponse"
 				[queueDepth]="queueDepth"></minty-conversation>

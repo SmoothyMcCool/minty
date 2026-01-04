@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Assistant } from '../../model/assistant';
+import { Assistant, createAssistant } from '../../model/assistant';
 import { AssistantService } from '../../assistant.service';
 import { Router, RouterModule } from '@angular/router';
 import { DocumentService } from '../../document.service';
@@ -10,6 +10,7 @@ import { MintyDoc } from 'src/app/model/minty-doc';
 import { AssistantEditorComponent } from './assistant-editor.component';
 import { MintyTool } from 'src/app/model/minty-tool';
 import { ToolService } from 'src/app/tool.service';
+import { Model } from 'src/app/model/model';
 
 @Component({
 	selector: 'minty-new-assistant',
@@ -20,20 +21,8 @@ export class NewAssistantComponent implements OnInit {
 
 	documents: MintyDoc[] = [];
 	tools: MintyTool[] = [];
-	models: string[] = [];
-	assistant: Assistant = {
-		id: '',
-		name: '',
-		prompt: '',
-		model: '',
-		temperature: 0,
-		topK: 5,
-		tools: [],
-		ownerId: '',
-		shared: false,
-		hasMemory: false,
-		documentIds: []
-	};
+	models: Model[] = [];
+	assistant: Assistant = createAssistant();
 	assistantDocuments: MintyDoc[] = [];
 
 	constructor(
@@ -44,7 +33,7 @@ export class NewAssistantComponent implements OnInit {
 	}
 
 	ngOnInit(): void {
-		this.assistantService.models().subscribe((models: string[]) => {
+		this.assistantService.models().subscribe((models: Model[]) => {
 			this.models = models;
 		});
 		this.documentService.list().subscribe(docs => {

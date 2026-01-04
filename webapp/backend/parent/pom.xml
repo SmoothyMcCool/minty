@@ -45,9 +45,9 @@
 		<log4j.version>2.24.3</log4j.version>
 		<jackson.version>2.19.0</jackson.version>
 		<jakarta.annotation-api.version>3.0.0</jakarta.annotation-api.version>
+		<jakarta.persistence-api.version>3.2.0</jakarta.persistence-api.version>
 		<jakarta.servlet-api.version>6.1.0</jakarta.servlet-api.version>
 		<jakarta.transaction-api.version>2.0.1</jakarta.transaction-api.version>
-		<jakarta.persistence-api.version>3.2.0</jakarta.persistence-api.version>
 		<mariadb.client.version>3.5.3</mariadb.client.version>
 		<micrometer.version>1.16.0</micrometer.version>
 		<pug4j.version>2.3.1</pug4j.version>
@@ -57,7 +57,7 @@
 		<spring.session.version>3.5.3</spring.session.version>
 		<spring.ai.version>1.1.1</spring.ai.version>
 		<spring-pug4j.version>3.3.1</spring-pug4j.version>
-		<tika.version>3.2.1</tika.version>
+		<tika.version>3.2.3</tika.version>
 
 		<junit.jupiter.version>5.12.2</junit.jupiter.version>
 		<mockito.junit.jupiter.version>5.20.0</mockito.junit.jupiter.version>
@@ -154,8 +154,10 @@
 			<!-- Apache Tika -->
 			<dependency>
 				<groupId>org.apache.tika</groupId>
-				<artifactId>tika-core</artifactId>
+				<artifactId>tika-bom</artifactId>
 				<version>${tika.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
 			</dependency>
 
 			<!-- pug4j -->

@@ -11,7 +11,7 @@
   <div class="row mb-5">
     <div class="col">
       <p>
-        The <strong>Execute Python</strong> task runs a user‑supplied Python script
+        The <strong>Execute Python</strong> task runs a user-supplied Python script
         against the data contained in a single input <code>Packet</code>.
         The script is executed in a sandboxed Python service and the raw
         result of the script is returned as a new packet.
@@ -24,21 +24,8 @@
   <section class="mb-5">
     <h2>Input</h2>
     <p>
-      <strong>Port:</strong> 1 (index 0) – the task accepts exactly one input packet.
-      The packet must contain <strong>exactly one</strong> data element.
-      The value of that element must be a <code>Map</code> (JSON object) that will
-      be passed to the Python script as its input data.
-    </p>
-
-    <p>
-      <strong>Restrictions:</strong>
-      <ul class="mb-0">
-        <li>The packet must not contain more than one data element; otherwise the
-            task will fail with a runtime exception.</li>
-        <li>The single data element must be a map; primitive values will cause a
-            type mismatch error when the Python service attempts to deserialize
-            the input.</li>
-      </ul>
+      <strong>Port:</strong> 1 (index 0) - the task accepts exactly one input packet.
+      That packet will be passed to the Python script as its input data.
     </p>
   </section>
 
@@ -46,12 +33,12 @@
   <section class="mb-5">
     <h2>Output</h2>
     <p>
-      <strong>Port:</strong> 1 (index 0) – the task writes a single output packet.
+      <strong>Port:</strong> 1 (index 0) - the task writes a single output packet.
       The packet contains:
       <ul>
-        <li><code>Id</code> – copied from the input packet so that downstream
+        <li><code>Id</code> - copied from the input packet so that downstream
             steps can correlate the result with the original data.</li>
-        <li><code>Data</code> – the raw result returned by the Python script.
+        <li><code>Data</code> - the raw result returned by the Python script.
             This can be any JSON‑serialisable value (object, array, string,
             number, etc.).</li>
       </ul>
@@ -62,7 +49,7 @@
   <!-- Configuration section -->
   <section class="mb-5">
     <h2>Configuration</h2>
-    <p>The task is configured via a single user‑editable field that contains
+    <p>The task is configured via a single user-editable field that contains
     the Python code to execute:</p>
 
     <table class="table table-sm table-bordered">

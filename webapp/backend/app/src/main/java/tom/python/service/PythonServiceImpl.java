@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -19,28 +18,26 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import tom.api.services.python.PythonException;
 import tom.api.services.python.PythonResult;
 import tom.api.services.python.PythonService;
-import tom.api.MintyProperties;
+import tom.api.task.Packet;
+import tom.config.MintyConfiguration;
 
 @Service
 public class PythonServiceImpl implements PythonService {
 
 	private static final Logger logger = LogManager.getLogger(PythonServiceImpl.class);
 
-	private final String pythonScripts;
-	private final String tempFileDir;
+	private final Path tempFileDir;
 
-	public PythonServiceImpl(MintyProperties properties) {
-		pythonScripts = properties.get("pythonScripts");
-		tempFileDir = properties.get("tempFileStore");
+	public PythonServiceImpl(MintyConfiguration properties) {
+		tempFileDir = properties.getConfig().fileStores().temp();
 	}
 
 	@Override
-	public PythonResult execute(String pythonFile, List<Map<String, Object>> inputDictionary) throws PythonException {
-		Path inputFilePath = null;
+	public PythonResult execute(String pythonFile, Packet input) throws PythonException {
+		Path inputFilePath = tempFileDir;
 		Path outputFilePath = null;
 		List<String> logs = new ArrayList<>();
 
-		inputFilePath = Paths.get(tempFileDir);
 		if (!inputFilePath.toFile().isDirectory()) {
 			logs.add("Error: Specified tempFileStore is not a directory.");
 			return new PythonResult(null, logs);
@@ -51,9 +48,9 @@ public class PythonServiceImpl implements PythonService {
 			ObjectMapper mapper = new ObjectMapper();
 
 			inputFilePath = Files.createTempFile(inputFilePath, "py-out-", ".tom");
-			Files.writeString(inputFilePath, mapper.writeValueAsString(inputDictionary));
+			Files.writeString(inputFilePath, mapper.writeValueAsString(input));
 
-			outputFilePath = Files.createTempFile(Paths.get(tempFileDir), "py-out-", ".tom");
+			outputFilePath = Files.createTempFile(tempFileDir, "py-out-", ".tom");
 
 			ProcessBuilder processBuilder = new ProcessBuilder("python", pythonFile, inputFilePath.toString(),
 					outputFilePath.toString());
@@ -102,14 +99,13 @@ public class PythonServiceImpl implements PythonService {
 	}
 
 	@Override
-	public PythonResult executeCodeString(String code, List<Map<String, Object>> inputDictionary)
-			throws PythonException {
+	public PythonResult executeCodeString(String code, Packet input) throws PythonException {
 		Path tempPyFile = null;
 		try {
-			tempPyFile = Files.createTempFile(Path.of(pythonScripts), "tempPy-", ".py");
+			tempPyFile = Files.createTempFile(tempFileDir, "tempPy-", ".py");
 			Files.writeString(tempPyFile, code);
 
-			return execute(tempPyFile.toString(), inputDictionary);
+			return execute(tempPyFile.toString(), input);
 
 		} catch (IOException e) {
 			logger.warn("Exception while trying to run python codestring: ", e);

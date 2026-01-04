@@ -42,13 +42,14 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 	workflows: Workflow[] = [];
 	private subscription: Subscription;
 
+	pendingWorkflow: Workflow;
 	confirmWorkflowDeleteVisible = false;
 	confirmResultDeleteVisible = false;
-	confirmResultDuplicateWorkflowVisible = false;
-	workflowPendingDeletion: Workflow;
 	resultPendingDeletionId: string;
-	workflowPendingDuplicationId: string;
+	confirmResultDuplicateWorkflowVisible = false;
+	confirmCancelWorkflowVisible = false;
 	confirmDeleteAllResultsVisible = false;
+	sortOrder: string = 'alpha';
 
 	user: User;
 
@@ -83,18 +84,6 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 			});
 
 			this.workflowService.listWorkflows().subscribe((workflows) => {
-				workflows.sort((left, right) => {
-					if (!left.name && !right.name) {
-						return left.id.localeCompare(right.id);
-					}
-					if (!left.name) {
-						return 1;
-					}
-					if (!right.name) {
-						return -1;
-					}
-					return left.name.localeCompare(right.name);
-					});
 				this.workflows = workflows;
 			});
 		});
@@ -123,22 +112,36 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 	}
 
 	deleteWorkflow(workflow: Workflow) {
-		this.workflowPendingDeletion = workflow;
+		this.pendingWorkflow = workflow;
 		this.confirmWorkflowDeleteVisible = true;
 	}
 
 	confirmDeleteWorkflow() {
 		this.confirmWorkflowDeleteVisible = false;
-		this.workflowService.deleteWorkflow(this.workflowPendingDeletion.id).subscribe(() => {
+		this.workflowService.deleteWorkflow(this.pendingWorkflow.id).subscribe(() => {
 			this.workflowService.listWorkflows().subscribe((workflows) => {
 				this.workflows = workflows;
 			});
 		});
-		this.workflows = this.workflows.filter(item => item.id === this.workflowPendingDeletion.id);
+		this.workflows = this.workflows.filter(item => item.id === this.pendingWorkflow.id);
 	}
 
 	displayProgress(result: WorkflowState) {
 		this.workflowStatus = result.state;
+	}
+
+	cancelWorkflow(workflow: Workflow) {
+		this.confirmCancelWorkflowVisible = true;
+		this.pendingWorkflow = workflow;
+	}
+
+	confirmCancelWorkflow() {
+		this.confirmCancelWorkflowVisible = false;
+		this.workflowService.cancelWorkflow(this.pendingWorkflow.name).subscribe(() => {
+			this.workflowService.listWorkflows().subscribe((workflows) => {
+				this.workflows = workflows;
+			});
+		});
 	}
 
 	hideProgress() {
@@ -196,18 +199,18 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 		this.router.navigate(['workflow/', taskId]);
 	}
 
-	editWorkflow(workflowId: string) {
-		this.router.navigate(['/workflow/edit', workflowId]);
+	editWorkflow(workflow: Workflow) {
+		this.router.navigate(['/workflow/edit', workflow.id]);
 	}
 
-	duplicateWorkflow(workflowId: string) {
-		this.workflowPendingDuplicationId = workflowId;
+	duplicateWorkflow(workflow: Workflow) {
+		this.pendingWorkflow = workflow;
 		this.confirmResultDuplicateWorkflowVisible = true;
 	}
 
 	confirmDuplicateWorkflow() {
 		this.confirmResultDuplicateWorkflowVisible = false;
-		let w = this.workflows.find(w => w.id === this.workflowPendingDuplicationId);
+		let w = this.workflows.find(w => w.id === this.pendingWorkflow.id);
 		if (w) {
 			w.id = null;
 			this.workflowService.newWorkflow(w).subscribe(workflow => {
@@ -226,4 +229,5 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 			this.displayResults = this.results;
 		}
 	}
+
 }

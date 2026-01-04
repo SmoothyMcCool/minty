@@ -9,7 +9,7 @@ import tom.api.task.TaskConfigTypes;
 
 public class IdentifierConfig implements TaskConfigSpec {
 
-	private final String IdElement = "ID Element";
+	public static final String IdElement = "ID Element";
 
 	private String idElement;
 
@@ -50,7 +50,7 @@ public class IdentifierConfig implements TaskConfigSpec {
 	}
 
 	@Override
-	public Map<String, String> getValues() {
+	public Map<String, Object> getValues() {
 		return Map.of(IdElement, idElement);
 	}
 }

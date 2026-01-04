@@ -1,0 +1,46 @@
+<div class="d-flex align-items-center h-100">
+	<span class="text-truncate clickable-text" (click)="onSelect()">
+		{{node.name}}
+	</span>
+	<span class="badge text-bg-secondary mx-2">{{node.type}}</span>
+	<span class="flex-grow-1"></span>
+	<button class="btn btn-sm" style="font-size: 14px;" (click)="editProjectEntryInfo()">
+		<i class="bi bi-pencil-square"></i>
+	</button>
+	<button type="button" class="btn btn-sm p-0" style="font-size: 14px; color: red" (click)="deleteProjectEntry()">
+		<i class="bi bi-trash3"></i>
+	</button>
+</div>
+
+<div class="modal show d-block" tabindex="-1" *ngIf="editProjectEntryInfoVisible">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">Edit Project Entry</h5>
+				<button type="button" class="btn-close" (click)="onCancelEditProjectEntryInfo()" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<form role="form row">
+					<div class="col-12">
+						<label for="nameInput" class="form-label">Name</label>
+						<input type="text" class="form-control" id="nameInput" name="nameInput" [(ngModel)]="editName" required>
+					</div>
+					<div class="col-12">
+						<label for="typeSelect" class="form-label">File Type</label>
+						<select class="form-select" id="typeSelect" [(ngModel)]="editType" name="typeSelect" required>
+							<option value="folder">folder</option>
+							<option value="reqts">reqts</option>
+							<option value="design">design</option>
+							<option value="story">story</option>
+							<option value="file">file</option>
+						</select>
+					</div>
+				</form>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" (click)="onCancelEditProjectEntryInfo()">Cancel</button>
+				<button type="button" class="btn btn-primary" (click)="onConfirmProjectEntryInfo()">Confirm</button>
+			</div>
+		</div>
+	</div>
+</div>

@@ -9,16 +9,16 @@ import tom.api.task.TaskConfigTypes;
 
 public class DocumentEmitterConfig implements TaskConfigSpec {
 
-	private final String File = "File";
+	public static final String File = "File";
 	String base64;
 
 	public DocumentEmitterConfig() {
 		base64 = "";
 	}
 
-	public DocumentEmitterConfig(Map<String, String> config) {
+	public DocumentEmitterConfig(Map<String, Object> config) {
 		if (config.containsKey(File)) {
-			base64 = config.get(File);
+			base64 = config.get(File).toString();
 		}
 	}
 
@@ -44,7 +44,7 @@ public class DocumentEmitterConfig implements TaskConfigSpec {
 	}
 
 	@Override
-	public Map<String, String> getValues() {
+	public Map<String, Object> getValues() {
 		return Map.of(File, base64);
 	}
 }

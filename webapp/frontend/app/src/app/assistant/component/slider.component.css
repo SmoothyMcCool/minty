@@ -1,0 +1,11 @@
+.tabular-nums {
+	font-variant-numeric: tabular-nums;
+}
+#sliderComponent::-webkit-slider-thumb {
+  background: #2d26ff;
+  border: none;
+}
+
+#sliderComponent::-webkit-slider-runnable-track {
+  background: #888fde;
+}

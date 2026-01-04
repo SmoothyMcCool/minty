@@ -11,7 +11,7 @@ import { DocProperties, DocumentEditorComponent } from './document-editor.compon
 import { FormsModule } from '@angular/forms';
 import { Assistant } from '../model/assistant';
 import { Subscription } from 'rxjs';
-import { DisplayMode, User } from '../model/user';
+import { User } from '../model/user';
 
 @Component({
 	selector: 'minty-view-documents',
@@ -21,7 +21,6 @@ import { DisplayMode, User } from '../model/user';
 export class ViewDocumentsComponent implements OnInit, OnDestroy {
 
 	user: User;
-	DisplayMode = DisplayMode;
 
 	documents: MintyDoc[] = [];
 	displayDocuments: MintyDoc[] = [];
@@ -30,7 +29,6 @@ export class ViewDocumentsComponent implements OnInit, OnDestroy {
 	confirmDeleteDocumentDialogVisible = false;
 	documentToDelete: MintyDoc = null;
 
-	models: string[] = [];
 	assistants: Assistant[] = [];
 	addingDocument = false;
 	newDocument: MintyDoc = {
@@ -64,9 +62,6 @@ export class ViewDocumentsComponent implements OnInit, OnDestroy {
 		});
 		this.assistantService.list().subscribe(assistants => {
 			this.assistants = assistants;
-		});
-		this.assistantService.models().subscribe(models => {
-			this.models = models;
 		});
 		this.subscription = this.documentService.mintyDocListList$.subscribe((value: MintyDoc[]) => {
 			this.documents = value;
@@ -134,6 +129,7 @@ export class ViewDocumentsComponent implements OnInit, OnDestroy {
 
 			this.documentService.list().subscribe(documents => {
 				this.documents = documents;
+				this.filterChanged(this.filter); // Rerun the filter to trigger a screen refresh.
 			});
 		});
 	}

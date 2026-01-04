@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import tom.api.model.ServiceConsumer;
-import tom.api.services.TaskServices;
+import tom.api.model.services.ServiceConsumer;
+import tom.api.services.PluginServices;
 import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;
@@ -13,6 +13,7 @@ import tom.api.task.TaskConfigSpec;
 import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
+import tom.tasks.TaskGroup;
 
 @RunnableTask
 public class HtmlFormatter implements MintyTask, ServiceConsumer {
@@ -22,7 +23,7 @@ public class HtmlFormatter implements MintyTask, ServiceConsumer {
 	private TaskLogger logger;
 	private HtmlFormatterConfig config;
 	private Packet input;
-	private TaskServices taskServices;
+	private PluginServices pluginServices;
 	private boolean failed;
 	private String error;
 	private Packet result;
@@ -41,8 +42,8 @@ public class HtmlFormatter implements MintyTask, ServiceConsumer {
 	}
 
 	@Override
-	public void setTaskServices(TaskServices taskServices) {
-		this.taskServices = taskServices;
+	public void setPluginServices(PluginServices pluginServices) {
+		this.pluginServices = pluginServices;
 	}
 
 	@Override
@@ -59,7 +60,7 @@ public class HtmlFormatter implements MintyTask, ServiceConsumer {
 	public void run() {
 		String resultStr;
 		try {
-			resultStr = taskServices.getRenderService().renderPug(config.getTemplate(), input);
+			resultStr = pluginServices.getRenderService().renderPug(config.getTemplate(), input);
 			result = new Packet();
 			result.addText(resultStr);
 			result.setId(input.getId());
@@ -128,7 +129,7 @@ public class HtmlFormatter implements MintyTask, ServiceConsumer {
 			}
 
 			@Override
-			public TaskConfigSpec taskConfiguration(Map<String, String> configuration) {
+			public TaskConfigSpec taskConfiguration(Map<String, Object> configuration) {
 				return new HtmlFormatterConfig(configuration);
 			}
 
@@ -139,7 +140,7 @@ public class HtmlFormatter implements MintyTask, ServiceConsumer {
 
 			@Override
 			public String group() {
-				return "Transform";
+				return TaskGroup.TRANSFORM.toString();
 			}
 		};
 	}

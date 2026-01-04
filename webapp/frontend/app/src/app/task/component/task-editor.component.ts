@@ -5,6 +5,7 @@ import { Popover } from 'bootstrap';
 import { TaskRequest, TaskSpecification } from 'src/app/model/workflow/task-specification';
 import { TaskConfigurationEditorComponent } from './task-configuration-editor.component';
 import { EnumList } from 'src/app/model/workflow/enum-list';
+import { Model } from 'src/app/model/model';
 
 @Component({
 	selector: 'minty-task-editor',
@@ -34,6 +35,7 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor, OnDest
 	}
 	@Input() defaults: string[];
 	@Input() enumLists: EnumList[];
+	@Input() models: Model[];
 
 	@Output() taskNameChanged = new EventEmitter<{ oldName: string, newName: string }>();
 
@@ -41,7 +43,7 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor, OnDest
 
 	popoverInstance !: Popover;
 
-	onChange: any = (_: any) => {};
+	onChange: any = () => { };
 	onTouched: any = () => {};
 
 	constructor() {
@@ -72,7 +74,7 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor, OnDest
 
 	escapeHtml(str: string): string {
 		if (!str) {
-			return "";
+			return '';
 		}
 		return str
 			.replace(/&/g, '&amp;')

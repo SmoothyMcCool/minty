@@ -10,13 +10,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
-import tom.api.MintyProperties;
 import tom.api.UserId;
-import tom.api.model.ConfigurationConsumer;
-import tom.api.model.ServiceConsumer;
-import tom.api.services.TaskServices;
+import tom.api.model.services.ConfigurationConsumer;
+import tom.api.model.services.ServiceConsumer;
+import tom.api.services.PluginServices;
 import tom.api.tool.MintyTool;
-import tom.config.MintyPropertiesImpl;
+import tom.config.MintyConfiguration;
+import tom.config.MintyConfigurationImpl;
 import tom.tool.model.MintyToolDescription;
 
 @Service
@@ -26,14 +26,14 @@ public class ToolRegistryServiceImpl implements ToolRegistryService {
 
 	private final Map<String, Class<?>> tools;
 	private final List<MintyToolDescription> descriptions;
-	private final TaskServices taskServices;
-	private final MintyPropertiesImpl properties;
+	private final PluginServices pluginServices;
+	private final MintyConfigurationImpl configuration;
 
-	public ToolRegistryServiceImpl(TaskServices taskServices, MintyProperties properties) {
+	public ToolRegistryServiceImpl(PluginServices pluginServices, MintyConfiguration configuration) {
 		tools = new HashMap<>();
 		descriptions = new ArrayList<>();
-		this.taskServices = taskServices;
-		this.properties = (MintyPropertiesImpl) properties;
+		this.pluginServices = pluginServices;
+		this.configuration = (MintyConfigurationImpl) configuration;
 	}
 
 	@Override
@@ -47,11 +47,12 @@ public class ToolRegistryServiceImpl implements ToolRegistryService {
 			Class<?> clazz = tools.get(toolName);
 			MintyTool o = (MintyTool) clazz.getDeclaredConstructor().newInstance();
 			if (o instanceof ServiceConsumer) {
-				((ServiceConsumer) o).setTaskServices(taskServices);
+				((ServiceConsumer) o).setPluginServices(pluginServices);
 				((ServiceConsumer) o).setUserId(userId);
 			}
 			if (o instanceof ConfigurationConsumer) {
-				((ConfigurationConsumer) o).setProperties(properties.toMap());
+				((ConfigurationConsumer) o).setProperties(configuration.getSystemDefaults(),
+						configuration.getUserDefaults());
 			}
 			return o;
 

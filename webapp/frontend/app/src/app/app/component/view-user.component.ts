@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AlertService } from '../../alert.service';
-import { DisplayMode, User } from '../../model/user';
+import { User } from '../../model/user';
 import { UserService } from '../../user.service';
 
 @Component({
@@ -12,7 +12,6 @@ import { UserService } from '../../user.service';
 })
 export class ViewUserComponent implements OnInit {
 	user: User;
-	DisplayMode = DisplayMode;
 	repeatPassword = '';
 	passwordMismatch = true;
 	updatePassword = false;

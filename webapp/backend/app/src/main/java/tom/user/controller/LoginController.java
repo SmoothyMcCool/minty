@@ -1,5 +1,6 @@
 package tom.user.controller;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -19,7 +20,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import tom.ApiError;
 import tom.ApiException;
-import tom.api.MintyProperties;
+import tom.config.MintyConfiguration;
 import tom.controller.ResponseWrapper;
 import tom.meta.service.MetadataService;
 import tom.model.security.UserDetailsUser;
@@ -36,10 +37,10 @@ public class LoginController {
 	private final UserRepository userRepository;
 	private final UserServiceInternal userService;
 	private final MetadataService metadataService;
-	private final MintyProperties properties;
+	private final MintyConfiguration properties;
 
 	public LoginController(UserRepository userRepository, UserServiceInternal userService,
-			MetadataService metadataService, MintyProperties properties) {
+			MetadataService metadataService, MintyConfiguration properties) {
 		this.userRepository = userRepository;
 		this.userService = userService;
 		this.metadataService = metadataService;
@@ -55,10 +56,10 @@ public class LoginController {
 		}
 		User result = userService.getUserFromId(user.getId()).get();
 
-		int sessionTimeoutMinutes = properties.getInt("session.timeout", 30);
+		Duration sessionTimeoutMinutes = properties.getConfig().session().timeout();
 		HttpSession s = request.getSession(true);
 		if (s != null) {
-			s.setMaxInactiveInterval(sessionTimeoutMinutes * 60);
+			s.setMaxInactiveInterval((int) sessionTimeoutMinutes.toSeconds());
 		}
 
 		// Use this opportunity to scrub any no-longer-valid user defaults from the user

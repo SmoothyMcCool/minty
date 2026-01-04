@@ -15,11 +15,11 @@ import tom.tasks.TaskUtils;
 
 public class ConfluenceQueryConfig implements TaskConfigSpec {
 
-	private final String PageIds = "Page IDs";
-	private final String Username = "Username";
-	private final String AccessToken = "Confluence Access Token";
-	private final String BaseURL = "Confluence Base URL";
-	private final String UseBearerAuth = "Confluence Use Bearer Authorization";
+	public static final String PageIds = "Page IDs";
+	public static final String Username = "Username";
+	public static final String AccessToken = "Confluence Access Token";
+	public static final String BaseURL = "Confluence Base URL";
+	public static final String UseBearerAuth = "Confluence Use Bearer Authorization";
 
 	private List<String> pages;
 	private String username;
@@ -35,22 +35,22 @@ public class ConfluenceQueryConfig implements TaskConfigSpec {
 		useBearerAuth = false;
 	}
 
-	public ConfluenceQueryConfig(Map<String, String> config) throws JsonMappingException, JsonProcessingException {
+	public ConfluenceQueryConfig(Map<String, Object> config) throws JsonMappingException, JsonProcessingException {
 		this();
 		if (config.containsKey(PageIds)) {
-			pages = stringToList(config.get(PageIds));
+			pages = stringToList(config.get(PageIds).toString());
 		}
 		if (config.containsKey(Username)) {
-			username = config.get(Username);
+			username = config.get(Username).toString();
 		}
 		if (config.containsKey(AccessToken)) {
-			apiKey = config.get(AccessToken);
+			apiKey = config.get(AccessToken).toString();
 		}
 		if (config.containsKey(BaseURL)) {
-			baseUrl = config.get(BaseURL);
+			baseUrl = config.get(BaseURL).toString();
 		}
 		if (config.containsKey(UseBearerAuth)) {
-			useBearerAuth = Boolean.getBoolean(config.get(UseBearerAuth));
+			useBearerAuth = Boolean.getBoolean(config.get(UseBearerAuth).toString());
 		}
 	}
 
@@ -115,7 +115,7 @@ public class ConfluenceQueryConfig implements TaskConfigSpec {
 	}
 
 	@Override
-	public Map<String, String> getValues() {
+	public Map<String, Object> getValues() {
 		try {
 			return Map.of(PageIds, new ObjectMapper().writeValueAsString(pages), Username, username, AccessToken,
 					apiKey, BaseURL, baseUrl, UseBearerAuth, Boolean.toString(useBearerAuth));

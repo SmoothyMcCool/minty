@@ -1,0 +1,4 @@
+<markdown mermaid [data]="text" *ngIf="!edit"></markdown>
+
+<textarea *ngIf="edit" class="border rounded p-3 bg-light whitespace-preserve form-control" style="height: 70vh; overflow: auto;" [ngModel]="text" (ngModelChange)="onTextChange($event)"></textarea>
+

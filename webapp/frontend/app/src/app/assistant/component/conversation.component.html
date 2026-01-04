@@ -1,51 +1,24 @@
-<div class="form-check form-switch">
-	<input class="form-check-input" type="checkbox" id="renderDiagramsSwitch" [(ngModel)]="useMermaid">
-	<label class="form-check-label" for="renderDiagramsSwitch">Render Diagrams</label>
+<div class="row m-1">
+	<div class="col-auto">
+		<div class="form-check form-switch">
+			<input class="form-check-input" type="checkbox" id="renderDiagramsSwitch" [(ngModel)]="useMermaid">
+			<label class="form-check-label" for="renderDiagramsSwitch">Render Diagrams</label>
+		</div>
+	</div>
+	<div class="col-auto">
+		<div class="form-check form-switch">
+			<input class="form-check-input" type="checkbox" id="useMarkdownSwitch" [(ngModel)]="useMarkdown">
+			<label class="form-check-label" for="useMarkdownSwitch">Render Markdown</label>
+		</div>
+	</div>
 </div>
-<ng-container *ngFor="let message of messages; let i = index">
-	<ng-container *ngIf="message.user; else botMessage">
-		<div class="row flex-row-reverse m-2">
-			<div class="col-11 well-user p-2">
-				<ng-container *ngIf="useMermaid; else noMermaid">
-					<markdown clipboard mermaid [data]="message.message" [clipboardButtonTemplate]="clipboardTemplate"></markdown>
-				</ng-container>
-				<ng-template #noMermaid>
-					<markdown clipboard [data]="message.message" [clipboardButtonTemplate]="clipboardTemplate"></markdown>
-				</ng-template>
-			</div>
-		</div>
-	</ng-container>
-	<ng-template #botMessage>
-		<div class="row m-2">
-			<div class="col-11 well-bot p-2">
-				<div *ngIf="responsePending && i === 0">
-					<div class="spinner-grow spinner-grow-sm text-secondary me-1"></div>
-					<div class="spinner-grow spinner-grow-sm text-secondary me-1" style="animation-delay: 250ms;"></div>
-					<div class="spinner-grow spinner-grow-sm text-secondary me-1" style="animation-delay: 500ms;"></div>
-					<span *ngIf="queueDepth === 1; else depthOne">Waiting... You're next!</span>
-					<ng-template #depthOne>
-						<span *ngIf="queueDepth === 2; else depthLargerThanOne">Waiting... There is one task ahead of you.</span>
-					</ng-template>
-					<ng-template #depthLargerThanOne>
-						<span *ngIf="queueDepth !== undefined">Waiting... There are {{queueDepth - 1}} tasks ahead of you.</span>
-					</ng-template>
-				</div>
-				<ng-container *ngIf="useMermaid; else noMermaid">
-					<markdown clipboard mermaid [data]="message.message" [clipboardButtonTemplate]="clipboardTemplate"></markdown>
-				</ng-container>
-				<ng-template #noMermaid>
-					<markdown clipboard [data]="message.message" [clipboardButtonTemplate]="clipboardTemplate"></markdown>
-				</ng-template>
-			</div>
-		</div>
-	</ng-template>
+<ng-container *ngFor="let message of messages; let messageIndex = index; trackBy: trackByMessage">
+	<minty-chat-message
+		[message]="message"
+		[useMarkdown]="useMarkdown"
+		[useMermaid]="useMermaid"
+		[isFirst]="messageIndex === 0"
+		[responsePending]="responsePending"
+		[queueDepth]="queueDepth"
+	></minty-chat-message>
 </ng-container>
-
-<ng-template #clipboardTemplate>
-	<button class="btn btn-sm btn-light clipboard-button"
-		#copyButton
-		(click)="onCopyClick(copyButton)">
-		<i *ngIf="!isCopied(copyButton)" class="bi bi-copy"></i>
-		<i *ngIf="isCopied(copyButton)" class="bi bi-check-circle-fill text-success"></i>
-	</button>
-</ng-template>

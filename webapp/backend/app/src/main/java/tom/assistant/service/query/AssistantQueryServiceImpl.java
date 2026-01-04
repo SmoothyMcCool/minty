@@ -2,22 +2,31 @@ package tom.assistant.service.query;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.ChatClient.ChatClientRequestSpec;
+import org.springframework.ai.chat.client.ChatClientResponse;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.messages.AssistantMessage.ToolCall;
+import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.content.Media;
+import org.springframework.ai.document.Document;
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.ollama.api.OllamaApi;
 import org.springframework.ai.ollama.api.OllamaChatOptions;
@@ -26,26 +35,32 @@ import org.springframework.ai.vectorstore.SearchRequest.Builder;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskRejectedException;
+import org.springframework.http.MediaType;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PreDestroy;
+import reactor.core.publisher.Flux;
 import tom.api.ConversationId;
-import tom.api.MintyProperties;
 import tom.api.UserId;
-import tom.api.model.Assistant;
-import tom.api.model.AssistantQuery;
+import tom.api.model.assistant.Assistant;
+import tom.api.model.assistant.AssistantQuery;
+import tom.api.model.assistant.AssistantSpec;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
 import tom.api.services.assistant.ConversationInUseException;
+import tom.api.services.assistant.LlmMetric;
 import tom.api.services.assistant.LlmResult;
 import tom.api.services.assistant.QueueFullException;
 import tom.api.services.assistant.StreamResult;
 import tom.api.services.assistant.StringResult;
+import tom.config.MintyConfiguration;
+import tom.config.model.ChatModelConfig;
 import tom.ollama.service.OllamaService;
 import tom.tool.registry.ToolRegistryService;
 import tom.user.model.User;
 import tom.user.service.UserServiceInternal;
+import tom.util.StackTraceUtilities;
 
 @Service
 public class AssistantQueryServiceImpl implements AssistantQueryService {
@@ -59,10 +74,11 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	private final ToolRegistryService toolRegistryService;
 	private final ThreadPoolTaskExecutor llmExecutor;
 	private final Map<ConversationId, LlmResult> results;
+	private final List<ChatModelConfig> modelConfigs;
 
 	public AssistantQueryServiceImpl(AssistantManagementService assistantManagementService, OllamaService ollamaService,
 			OllamaApi ollamaApi, UserServiceInternal userService, ToolRegistryService toolRegistryService,
-			@Qualifier("llmExecutor") ThreadPoolTaskExecutor llmExecutor, MintyProperties properties) {
+			MintyConfiguration properties, @Qualifier("llmExecutor") ThreadPoolTaskExecutor llmExecutor) {
 		this.ollamaService = ollamaService;
 		this.ollamaApi = ollamaApi;
 		this.userService = userService;
@@ -70,6 +86,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		this.toolRegistryService = toolRegistryService;
 		this.llmExecutor = llmExecutor;
 		this.results = new ConcurrentHashMap<>();
+		this.modelConfigs = properties.getConfig().ollama().chatModels();
 	}
 
 	@PreDestroy
@@ -104,30 +121,40 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	}
 
 	private void askInternal(LlmRequest request) {
-		String result = "";
+		try {
+			String result = "";
 
-		User user = userService.getUserFromId(request.getUserId()).get();
+			User user = userService.getUserFromId(request.getUserId()).get();
 
-		ChatClientRequestSpec spec = prepareFromQuery(user, request.getQuery());
+			ChatClientRequestSpec spec = prepareFromQuery(user, request.getQuery());
 
-		if (spec == null) {
-			logger.warn("askStreaming: failed to generate chat request");
-			result = "Failed to generate chat request. Requested assistant doesn't exist or isn't shared with you.";
+			if (spec == null) {
+				logger.warn("askStreaming: failed to generate chat request");
+				result = "Failed to generate chat request. Requested assistant doesn't exist or isn't shared with you.";
 
-		} else {
-
-			ChatResponse chatResponse = spec.call().chatResponse();
-
-			if (chatResponse != null) {
-				result = chatResponse.getResult().getOutput().getText();
 			} else {
-				result = "Oh no! The LLM returned a blank result. Try again later.";
+
+				ChatResponse chatResponse = spec.call().chatResponse();
+
+				if (chatResponse != null) {
+					result = chatResponse.getResult().getOutput().getText();
+				} else {
+					result = "Oh no! The LLM returned a blank result. Try again later.";
+				}
+			}
+
+			StringResult sr = new StringResult();
+			sr.setValue(result);
+			results.put(request.getQuery().getConversationId(), sr);
+		} catch (Exception e) {
+			logger.warn("Caught exception while waiting for LLM response: ", e);
+			if (results.containsKey(request.getQuery().getConversationId())) {
+				StringResult sr = new StringResult();
+				sr.setValue("Failed to generate response." + StackTraceUtilities.StackTrace(e));
+				results.put(request.getQuery().getConversationId(), sr);
+				return;
 			}
 		}
-
-		StringResult sr = new StringResult();
-		sr.setValue(result);
-		results.put(request.getQuery().getConversationId(), sr);
 	}
 
 	@Override
@@ -137,10 +164,11 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			LlmRequest request = new LlmRequest(userId, query, Instant.now());
 			Runnable task = () -> askStreamingInternal(request);
 			request.setTask(task);
+
+			results.put(request.getQuery().getConversationId(), LlmResult.THINKING_STREAM_NOT_READY);
 			llmExecutor.execute(request);
 			logger.info("Enqueued task for conversation " + query.getConversationId());
 
-			results.put(request.getQuery().getConversationId(), LlmResult.STREAM_IN_PROGRESS);
 			return request.getQuery().getConversationId();
 
 		} catch (TaskRejectedException tre) {
@@ -219,20 +247,56 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 				return;
 			}
 
-			Stream<String> result = spec.stream().content().toStream();
+			Flux<ChatClientResponse> responses = spec.stream().chatClientResponse();
+			AtomicReference<Usage> usage = new AtomicReference<>();
+			List<ToolCall> toolCalls = new ArrayList<>();
+			Set<String> docsUsed = new HashSet<>();
 
-			if (result == null) {
-				sr.addChunk("Failed to generate response.");
+			responses.doOnNext(chatClientResponse -> {
+
+				ChatResponse chatResponse = chatClientResponse.chatResponse();
+				if (chatResponse == null) {
+					return;
+				}
+
+				String chunk = chatResponse.getResult().getOutput().getText();
+				if (chatResponse.hasToolCalls()) {
+					toolCalls.addAll(chatResponse.getResult().getOutput().getToolCalls());
+				}
+				@SuppressWarnings("unchecked")
+				List<Document> docs = (List<Document>) chatClientResponse.context()
+						.get(QuestionAnswerAdvisor.RETRIEVED_DOCUMENTS);
+				if (docs != null && !docs.isEmpty()) {
+					docs.forEach(doc -> {
+						logger.info("found source " + doc.getMetadata().get("source"));
+						docsUsed.add((String) doc.getMetadata().get("source"));
+					});
+				}
+
+				if (chunk != null) {
+					sr.addChunk(chunk);
+				}
+
+				usage.set(chatResponse.getMetadata().getUsage());
+
+			}).doOnTerminate(() -> {
+				sr.addUsage(new LlmMetric(usage.get().getPromptTokens(), usage.get().getCompletionTokens()));
+				if (!docsUsed.isEmpty()) {
+					sr.addSources(new ArrayList<>(docsUsed));
+				}
 				sr.markComplete();
-				return;
-			}
-
-			result.forEach(chunk -> {
-				sr.addChunk(chunk);
-			});
-
-			sr.markComplete();
-			results.remove(request.getQuery().getConversationId());
+				results.remove(request.getQuery().getConversationId());
+			}).doOnError(e -> {
+				logger.warn("Streaming failed for conversation {}", request.getQuery().getConversationId(), e);
+			}).onErrorResume(e -> {
+				if (results.containsKey(request.getQuery().getConversationId())) {
+					logger.warn("Caught exception while attempting to stream response: ", e);
+					StreamResult streamResult = (StreamResult) results.get(request.getQuery().getConversationId());
+					streamResult.addChunk("Failed to generate response.");
+					streamResult.markComplete();
+				}
+				return Flux.empty();
+			}).subscribe();
 
 		} catch (Exception e) {
 			if (results.containsKey(request.getQuery().getConversationId())) {
@@ -247,18 +311,28 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	}
 
 	private ChatClientRequestSpec prepareFromQuery(User user, AssistantQuery query) {
-		Assistant assistant = assistantManagementService.findAssistant(user.getId(), query.getAssistantId());
+		AssistantSpec assistantSpec = query.getAssistantSpec();
+		Assistant assistant = assistantSpec.useId()
+				? assistantManagementService.findAssistant(user.getId(), assistantSpec.getAssistantId())
+				: query.getAssistantSpec().getAssistant();
 		if (assistant == null) {
 			logger.warn(
 					"Tried to build a chat session from an assistant that doesn't exist or user cannot access. User: "
-							+ user.getName() + ", assistant: " + query.getAssistantId());
+							+ user.getName() + ", assistant: " + query.getAssistantSpec().toJson());
 			return null;
 		}
 
-		return prepare(user, query.getQuery(), query.getConversationId(), assistant);
+		Media image = null;
+		if (query.getContentType() != null) {
+			image = new Media(MediaType.parseMediaType(query.getContentType()), query.getImageData());
+		}
+
+		int contextSize = query.getContextSize() == 0 ? assistant.contextSize() : query.getContextSize();
+		return prepare(user, query.getQuery(), contextSize, query.getConversationId(), assistant, image);
 	}
 
-	private ChatClientRequestSpec prepare(User user, String query, ConversationId conversationId, Assistant assistant) {
+	private ChatClientRequestSpec prepare(User user, String query, int contextSize, ConversationId conversationId,
+			Assistant assistant, Media image) {
 
 		String model = assistant.model();
 
@@ -275,7 +349,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		if (assistant.documentIds().size() > 0) {
 			VectorStore vectorStore = ollamaService.getVectorStore();
 
-			String documentList = assistant.documentIds().stream().map(s -> "\"" + s + "\"")
+			String documentList = assistant.documentIds().stream().map(s -> "\"" + s.getValue().toString() + "\"")
 					.collect(Collectors.joining(", ", "[ ", " ]"));
 
 			Builder searchRequestBuilder = SearchRequest.builder().query(query);
@@ -288,27 +362,40 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			advisors.add(ragAdvisor);
 		}
 
-		ChatClient chatClient = ChatClient.builder(chatModel).defaultAdvisors(advisors).build();
+		Optional<ChatModelConfig> config = modelConfigs.stream().filter(item -> item.name().equals(assistant.model()))
+				.findFirst();
+		if (config.isPresent()) {
+			if (contextSize < config.get().defaultContext()) {
+				contextSize = config.get().defaultContext();
+			} else if (contextSize > config.get().maximumContext()) {
+				contextSize = config.get().maximumContext();
+			}
+		}
+
+		OllamaChatOptions o = OllamaChatOptions.builder().numCtx(contextSize).build();
+		ChatClient chatClient = ChatClient.builder(chatModel).defaultAdvisors(advisors).defaultOptions(o).build();
 
 		ChatClientRequestSpec spec;
 
+		org.springframework.ai.chat.messages.UserMessage.Builder message = UserMessage.builder().text(query);
+		if (image != null) {
+			message.media(List.of(image));
+		}
+
+		spec = chatClient.prompt();
+		if (!assistant.prompt().isBlank()) {
+			spec = spec.system(assistant.prompt());
+		}
+
 		if (assistant.hasMemory() && conversationId != null) {
-			spec = chatClient.prompt();
-			if (!assistant.prompt().isBlank()) {
-				spec = spec.system(assistant.prompt());
-			}
 
 			if (conversationId != null) {
 				final ConversationId finalConversationId = conversationId;
 				spec = spec.advisors(a -> a.param(ChatMemory.CONVERSATION_ID, finalConversationId.value().toString()));
 			}
-
-			spec = spec.user(query);
-
-		} else {
-			String fullPrompt = (assistant.prompt().isBlank() ? "" : assistant.prompt() + "\n") + query;
-			spec = chatClient.prompt(fullPrompt);
 		}
+
+		spec = spec.messages(List.of(message.build()));
 
 		for (String toolName : assistant.tools()) {
 			Object tc = toolRegistryService.getTool(toolName, user.getId());

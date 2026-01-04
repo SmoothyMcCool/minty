@@ -77,6 +77,21 @@ public class WorkflowController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
+	@RequestMapping(value = { "cancel" }, method = RequestMethod.DELETE)
+	public ResponseEntity<ResponseWrapper<Boolean>> cancelWorkflow(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("name") String name) {
+
+		if (!workflowService.isWorkflowOwned(user.getId(), name)) {
+			ResponseWrapper<Boolean> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
+					List.of(ApiError.NOT_OWNED));
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
+		workflowService.cancelWorkflow(user.getId(), name);
+		ResponseWrapper<Boolean> response = ResponseWrapper.SuccessResponse(true);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
 	@RequestMapping(value = { "/execute" }, method = RequestMethod.POST)
 	public ResponseEntity<ResponseWrapper<String>> executeWorkflow(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestBody WorkflowRequest request) {

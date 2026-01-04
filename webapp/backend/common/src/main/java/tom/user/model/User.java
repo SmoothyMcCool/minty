@@ -2,15 +2,17 @@ package tom.user.model;
 
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import tom.api.UserId;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class User {
 
 	private UserId id;
 	private String name;
 	private String password;
 	private Map<String, String> defaults;
-	private String displayMode;
 
 	public UserId getId() {
 		return id;
@@ -42,14 +44,6 @@ public class User {
 
 	public void setDefaults(Map<String, String> defaults) {
 		this.defaults = defaults;
-	}
-
-	public String getDisplayMode() {
-		return displayMode;
-	}
-
-	public void setDisplayMode(String displayMode) {
-		this.displayMode = displayMode;
 	}
 
 }

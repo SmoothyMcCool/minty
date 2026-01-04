@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS Assistant (
 	state VARCHAR(20),
 	prompt TEXT,
 	model TEXT,
+	contextSize INTEGER,
 	temperature DOUBLE,
 	topK INTEGER,
 	tools JSON,
@@ -161,6 +162,29 @@ CREATE TABLE IF NOT EXISTS SPRING_AI_CHAT_MEMORY (
 	type TEXT,
 	timestamp TIMESTAMP
 );
+CREATE TABLE IF NOT EXISTS Project (
+	id UUID NOT NULL,
+	ownerId UUID,
+	name TEXT,
+	PRIMARY KEY (id)
+);
+CREATE TABLE IF NOT EXISTS Project (
+	id UUID NOT NULL,
+	ownerId UUID,
+	name TEXT,
+	PRIMARY KEY (id)
+);
+CREATE TABLE IF NOT EXISTS ProjectEntry (
+	id UUID NOT NULL,
+	projectId UUID,
+	type TEXT,
+	name TEXT,
+	parentId UUID,
+	data LONGTEXT,
+	PRIMARY KEY (id),
+	FOREIGN KEY (parentId) REFERENCES ProjectEntry(id),
+	FOREIGN KEY (projectId) REFERENCES Project(id)
+);
 CREATE TABLE IF NOT EXISTS vector_store (
 	doc_id VARCHAR(255) PRIMARY KEY,
 	text TEXT,
@@ -168,9 +192,7 @@ CREATE TABLE IF NOT EXISTS vector_store (
 	meta JSON
 );
 
-
-
->>> Create tables for Spring Session
+-- Create tables for Spring Session
 CREATE TABLE SPRING_SESSION (
 	PRIMARY_ID CHAR(36) NOT NULL,
 	SESSION_ID CHAR(36) NOT NULL,
@@ -194,9 +216,7 @@ CREATE TABLE SPRING_SESSION_ATTRIBUTES (
 	CONSTRAINT SPRING_SESSION_ATTRIBUTES_FK FOREIGN KEY (SESSION_PRIMARY_ID) REFERENCES SPRING_SESSION(PRIMARY_ID) ON DELETE CASCADE
 ) ENGINE=InnoDB ROW_FORMAT=DYNAMIC;
 
-
-
->>>create user with super open privileges to do anything from anywhere
+-- create user with super open privileges to do anything from anywhere
 CREATE USER IF NOT EXISTS 'vectorUser'@'%' IDENTIFIED BY 'Password123';
 GRANT ALL PRIVILEGES ON *.* TO 'vectorUser'@'%' WITH GRANT OPTION;
 CREATE USER IF NOT EXISTS 'MintyUser'@'%' IDENTIFIED BY 'hothamcakes';

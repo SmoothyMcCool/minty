@@ -1,0 +1,16 @@
+<div class="d-flex align-items-top gap-2 mb-2 tabular-nums">
+	<label for="sliderComponent" class="form-label mb-0 text-nowrap">
+		{{label}}
+	</label>
+	<div class="flex-grow-1">
+		<input type="range" class="form-range w-100" [min]="min" [max]="max"
+			[ngModel]="value" (ngModelChange)="valueChanged($event)" id="sliderComponent" name="sliderComponent">
+		<div class="d-flex justify-content-between small text-muted">
+			<span>{{min}}</span>
+			<span>{{max}}</span>
+		</div>
+	</div>
+	<div class="text-end" style="width: 6ch;">
+		{{value}}
+	</div>
+</div>

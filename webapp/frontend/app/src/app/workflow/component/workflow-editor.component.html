@@ -26,6 +26,7 @@
 						[taskSpecification]="specFor(editTask)"
 						[defaults]="defaultsFor(editTask)"
 						[enumLists]="enumLists"
+						[models]="models"
 						(taskNameChanged)="onStepNameChanged($event)"></minty-task-editor>
 				<button type="button" class="btn btn-primary me-2" (click)="doneEditingStep()">Done</button>
 				<button type="button" class="btn btn-danger float-end" (click)="deleteStep()">Delete</button>
@@ -79,18 +80,18 @@
 		<!-- SVG for connections -->
 		<svg class="connections">
 			<!-- Existing connections -->
-			<line *ngFor="let c of workflow?.connections" [attr.x1]="getPortCenterX(c.writerId, c.writerPort, false)"
-				[attr.y1]="getPortCenterY(c.writerId, c.writerPort, false)"
-				[attr.x2]="getPortCenterX(c.readerId, c.readerPort, true)"
-				[attr.y2]="getPortCenterY(c.readerId, c.readerPort, true)" stroke="black" stroke-width="2" (click)="onConnectorClicked(c)">
-			</line>
+			<path *ngFor="let c of workflow?.connections" [attr.d]="getConnectionPoints(c).d"
+				[attr.stroke]="getConnectionPoints(c).isStraight ? 'black' : 'black'" stroke-width="2"
+				fill="none" (click)="onConnectorClicked(c)">
+			</path>
 
-			<!-- Temporary connection -->
+			<!-- Temporary connection (drag‑and‑drop) -->
 			<line *ngIf="tempConnection" [attr.x1]="tempConnection.fromX" [attr.y1]="tempConnection.fromY"
 				[attr.x2]="tempConnection.toX" [attr.y2]="tempConnection.toY" stroke="gray" stroke-width="2"
 				stroke-dasharray="5,5">
 			</line>
 		</svg>
+
 
 		<!-- Canvas elements -->
 		<minty-task-widget [task]="step" *ngFor="let step of workflow?.steps ; trackBy: trackStepById" cdkDrag cdkDragBoundary=".canvas"

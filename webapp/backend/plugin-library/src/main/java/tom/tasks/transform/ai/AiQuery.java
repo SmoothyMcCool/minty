@@ -10,9 +10,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import tom.api.ConversationId;
 import tom.api.UserId;
-import tom.api.model.AssistantQuery;
-import tom.api.model.ServiceConsumer;
-import tom.api.services.TaskServices;
+import tom.api.model.assistant.AssistantQuery;
+import tom.api.model.services.ServiceConsumer;
+import tom.api.services.PluginServices;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.ConversationInUseException;
 import tom.api.services.assistant.QueueFullException;
@@ -24,12 +24,15 @@ import tom.api.task.TaskConfigSpec;
 import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
+import tom.tasks.TaskGroup;
 
 @RunnableTask
 public class AiQuery implements MintyTask, ServiceConsumer {
 
+	private final String ConversationId = "Conversation ID";
+
 	private TaskLogger logger;
-	private TaskServices taskServices;
+	private PluginServices pluginServices;
 	private AiQueryConfig config;
 	private UserId userId;
 	private Packet result;
@@ -40,7 +43,7 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 	private boolean failed;
 
 	public AiQuery() {
-		taskServices = null;
+		pluginServices = null;
 		config = new AiQueryConfig();
 		userId = new UserId("");
 		result = new Packet();
@@ -57,8 +60,8 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 	}
 
 	@Override
-	public void setTaskServices(TaskServices taskServices) {
-		this.taskServices = taskServices;
+	public void setPluginServices(PluginServices pluginServices) {
+		this.pluginServices = pluginServices;
 	}
 
 	@Override
@@ -104,7 +107,7 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 	@Override
 	public void run() {
 		AssistantQuery query = new AssistantQuery();
-		query.setAssistantId(config.getAssistant());
+		query.setAssistantSpec(config.getAssistant());
 
 		for (String text : input.getText()) {
 			if (text != null && !text.isBlank()) {
@@ -113,8 +116,9 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 				query.setQuery(config.getQuery());
 			}
 
-			if (conversationId != null
-					&& taskServices.getAssistantManagementService().isAssistantConversational(query.getAssistantId())) {
+			if (conversationId != null && query.getAssistantSpec().useId()
+					&& pluginServices.getAssistantManagementService()
+							.isAssistantConversational(query.getAssistantSpec().getAssistantId())) {
 				query.setConversationId(new ConversationId(conversationId));
 			} else {
 				query.setConversationId(new ConversationId(UUID.randomUUID()));
@@ -124,7 +128,7 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 				ConversationId requestId = null;
 				while (true) {
 					try {
-						requestId = taskServices.getAssistantQueryService().ask(userId, query);
+						requestId = pluginServices.getAssistantQueryService().ask(userId, query);
 						break;
 
 					} catch (QueueFullException | ConversationInUseException e) {
@@ -137,7 +141,7 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 
 				String response = null;
 				while (true) {
-					StringResult llmResult = (StringResult) taskServices.getAssistantQueryService()
+					StringResult llmResult = (StringResult) pluginServices.getAssistantQueryService()
 							.getResultFor(requestId);
 					if (llmResult != null && llmResult.isComplete()) {
 						response = llmResult instanceof StringResult ? ((StringResult) llmResult).getValue() : null;
@@ -150,7 +154,7 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 				result = parseResponse(response);
 				result.setId(input.getId());
 				if (conversationId != null) {
-					result.getData().forEach(item -> item.put("Conversation ID", conversationId));
+					result.getData().forEach(item -> item.put(ConversationId, conversationId));
 				}
 
 			} catch (InterruptedException e) {
@@ -174,8 +178,8 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 
 		if (dataPacket.getData().size() > 0) {
 			Map<String, Object> data = dataPacket.getData().getFirst();
-			if (data != null && data.containsKey("Conversation ID")) {
-				conversationId = (String) data.get("Conversation ID");
+			if (data != null && data.containsKey(ConversationId)) {
+				conversationId = (String) data.get(ConversationId);
 			}
 		}
 		return true;
@@ -223,12 +227,12 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 
 			@Override
 			public TaskConfigSpec taskConfiguration() {
-				return new AiQueryConfig(
-						Map.of("Assistant", AssistantManagementService.DefaultAssistantId.getValue().toString()));
+				return new AiQueryConfig(Map.of(AiQueryConfig.Assistant,
+						AssistantManagementService.DefaultAssistantId.getValue().toString()));
 			}
 
 			@Override
-			public TaskConfigSpec taskConfiguration(Map<String, String> configuration) {
+			public TaskConfigSpec taskConfiguration(Map<String, Object> configuration) {
 				return new AiQueryConfig(configuration);
 			}
 
@@ -239,7 +243,7 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 
 			@Override
 			public String group() {
-				return "Transform";
+				return TaskGroup.TRANSFORM.toString();
 			}
 
 		};

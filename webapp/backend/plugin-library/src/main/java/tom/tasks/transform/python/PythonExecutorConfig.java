@@ -12,7 +12,7 @@ import tom.api.task.TaskConfigTypes;
 
 public class PythonExecutorConfig implements TaskConfigSpec {
 
-	private final String PythonCode = "Python Code";
+	public static final String PythonCode = "Python Code";
 
 	private String python;
 
@@ -20,10 +20,10 @@ public class PythonExecutorConfig implements TaskConfigSpec {
 		python = "";
 	}
 
-	public PythonExecutorConfig(Map<String, String> config) throws JsonMappingException, JsonProcessingException {
+	public PythonExecutorConfig(Map<String, Object> config) throws JsonMappingException, JsonProcessingException {
 		this();
 		if (config.containsKey(PythonCode)) {
-			python = config.get(PythonCode);
+			python = config.get(PythonCode).toString();
 		}
 	}
 
@@ -49,7 +49,7 @@ public class PythonExecutorConfig implements TaskConfigSpec {
 	}
 
 	@Override
-	public Map<String, String> getValues() {
+	public Map<String, Object> getValues() {
 		return Map.of(PythonCode, python);
 	}
 }

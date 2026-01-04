@@ -1,13 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Assistant } from '../../model/assistant';
+import { Assistant, createAssistant } from '../../model/assistant';
 import { AssistantService } from '../../assistant.service';
 import { Router, RouterModule } from '@angular/router';
 import { ConversationService } from '../../conversation.service';
 import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
 import { UserService } from 'src/app/user.service';
-import { Conversation } from 'src/app/model/conversation';
+import { Conversation } from 'src/app/model/conversation/conversation';
 import { FilterPipe } from 'src/app/pipe/filter-pipe';
 import { User } from 'src/app/model/user';
 import { PredicatePipe } from 'src/app/pipe/predicate-pipe';
@@ -25,22 +25,10 @@ export class AssistantsListComponent implements OnInit {
 	assistants: Assistant[] = [];
 	sharedAssistants: Assistant[] = [];
 	assistantFilter: string = '';
-	conversationSortOrder: string = 'alpha';
+	conversationSortOrder: string = 'lastUsed';
 
 	fileList: File[] = [];
-	workingAssistant: Assistant = {
-		id: '',
-		name: '',
-		prompt: '',
-		model: '',
-		temperature: 0,
-		topK: 5,
-		tools: [],
-		ownerId: '',
-		shared: false,
-		hasMemory: false,
-		documentIds: []
-	};
+	workingAssistant: Assistant = createAssistant();
 
 	deleteInProgress = false;
 

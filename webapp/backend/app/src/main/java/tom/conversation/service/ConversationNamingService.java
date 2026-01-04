@@ -11,8 +11,9 @@ import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
 import tom.api.ConversationId;
-import tom.api.conversation.model.Conversation;
-import tom.api.model.AssistantQuery;
+import tom.api.model.assistant.AssistantQuery;
+import tom.api.model.assistant.AssistantSpec;
+import tom.api.model.conversation.Conversation;
 import tom.api.services.UserService;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
@@ -20,7 +21,7 @@ import tom.api.services.assistant.AssistantRegistryService;
 import tom.api.services.assistant.ConversationInUseException;
 import tom.api.services.assistant.QueueFullException;
 import tom.api.services.assistant.StringResult;
-import tom.api.MintyProperties;
+import tom.config.MintyConfiguration;
 import tom.conversation.model.ConversationEntity;
 import tom.conversation.repository.ConversationRepository;
 import tom.ollama.service.OllamaService;
@@ -41,13 +42,13 @@ public class ConversationNamingService {
 	public ConversationNamingService(ConversationRepository conversationRepository,
 			AssistantQueryService assistantQueryService, AssistantRegistryService assistantRegistryService,
 			ConversationServiceInternal conversationService, OllamaService ollamaService,
-			MintyProperties properties) {
+			MintyConfiguration properties) {
 		this.conversationRepository = conversationRepository;
 		this.assistantQueryService = assistantQueryService;
 		this.assistantRegistryService = assistantRegistryService;
 		this.ollamaService = ollamaService;
 		this.conversationService = conversationService;
-		conversationNamingModel = properties.get("conversationNamingModel");
+		conversationNamingModel = properties.getConfig().ollama().conversationNamingModel();
 	}
 
 	@Scheduled(fixedDelay = 5000)
@@ -73,7 +74,9 @@ public class ConversationNamingService {
 				});
 
 				AssistantQuery assistantQuery = new AssistantQuery();
-				assistantQuery.setAssistantId(AssistantManagementService.ConversationNamingAssistantId);
+				AssistantSpec assistantSpec = new AssistantSpec(
+						AssistantManagementService.ConversationNamingAssistantId, null);
+				assistantQuery.setAssistantSpec(assistantSpec);
 				Conversation namingConversation = conversationService.newConversation(UserService.DefaultId,
 						AssistantManagementService.ConversationNamingAssistantId);
 				assistantQuery.setConversationId(namingConversation.getConversationId());

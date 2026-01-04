@@ -1,0 +1,98 @@
+# Output configuration
+output:
+  directory: d:/projects/Minty
+
+# Session settings
+session:
+  timeout: PT240M # 240 minutes
+
+# File store locations (relative to output.directory)
+fileStores:
+  docs: ${output.directory}/working/docs
+  temp: ${output.directory}/working/temp
+  plugins: ${output.directory}/working/plugins
+  workflowLogs: ${output.directory}/working/logs
+
+# Database configuration
+db:
+  #applicationDbUrl=jdbc:mariadb://localhost:3306/Minty
+  url: jdbc:mariadb://192.168.2.54:3306/Minty
+  port: 3306
+  name: Minty
+  user: MintyUser
+  password: hothamcakes
+  maxPacketSize: 1073741824
+  useCompression: true
+
+# LLM Parameters
+ollama:
+  uri: http://localhost:11434
+  defaultModel: gpt-oss:20b
+  chatModels:
+    - name: gemma3:4b
+      defaultContext: 32768
+      maximumContext: 131072
+      maxConcurrent: 12
+      imageSupport: true
+    - name: gemma3:12b
+      defaultContext: 16384
+      maximumContext: 131072
+      maxConcurrent: 8
+      imageSupport: true
+    - name: gpt-oss:20b
+      defaultContext: 32768
+      maximumContext: 131072
+      maxConcurrent: 6
+      imageSupport: false
+    - name: gpt-oss:120b
+      defaultContext: 4096
+      maximumContext: 131072
+      maxConcurrent: 2
+      imageSupport: false
+    - name: llama3.2:3b
+      defaultContext: 65536
+      maximumContext: 131072
+      maxConcurrent: 16
+      imageSupport: false
+  conversationNamingModel: gemma3:4b
+  diagrammingModel: gpt-oss:20b
+  chatMemoryDepth: 20
+  # The number of documents to retrieve when doing RAG.
+  defaultTopK: 5
+  apiTimeout: PT20M
+  # The maximum amount of time, in minutes, for an async response to complete. This is used for stream responses from the AI.
+  asyncResponseTimeout: PT20M
+  maxRequests: 20
+  # Embedding Parameters
+  embedding:
+    model: nomic-embed-text
+    summarizingModel: gemma3:12b
+    keywordsPerDocument: 5
+    encoding: o200k_base
+    macroTargetChunkSize: 5000
+    documentTargetChunkSize: 300
+    batchSize: 1
+    maxEmbeddingTokens: 700
+
+# Thread pool configuration
+threads:
+  # Default and maximum number of threads for task execution. AI processing does not run in these threads
+  taskDefault: 5
+  taskMax: 20
+  # Default and maximum number of threads for LLM queries.
+  llmDefault: 4
+  llmMax: 4
+  # Default and maximum number of threads for document processing.
+  documentDefault: 1
+  documentMax: 2
+  # Default and maximum number of threads for streaming LLM responses back to the client
+  streamDefault: 50
+  streamMax: 200
+  streamCapacity: 1000 # Max number of requests to enqueue.
+
+secret: TheColonelsSecretRecipeIsChickenGreaseSalt765346586723457683244567
+
+# System default values for various Tasks
+systemDefaults:
+  "Confluence Base URL": http://confluence.ca
+  "Confluence Use Bearer Authorization": true

@@ -45,4 +45,12 @@ public interface MintyTask extends Runnable {
 	default String html() {
 		return "";
 	}
+
+	default boolean terminalFailure() {
+		return false;
+	}
+
+	default boolean stepComplete() {
+		return false;
+	}
 }

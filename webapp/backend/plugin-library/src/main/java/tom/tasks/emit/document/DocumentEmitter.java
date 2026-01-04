@@ -5,8 +5,8 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
-import tom.api.model.ServiceConsumer;
-import tom.api.services.TaskServices;
+import tom.api.model.services.ServiceConsumer;
+import tom.api.services.PluginServices;
 import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;
@@ -14,6 +14,7 @@ import tom.api.task.TaskConfigSpec;
 import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
+import tom.tasks.TaskGroup;
 
 @RunnableTask
 public class DocumentEmitter implements MintyTask, ServiceConsumer {
@@ -23,13 +24,13 @@ public class DocumentEmitter implements MintyTask, ServiceConsumer {
 	private List<? extends OutputPort> outputs;
 	private boolean readyToRun;
 	private boolean failed;
-	private TaskServices taskServices;
+	private PluginServices pluginServices;
 
 	public DocumentEmitter() {
 		outputs = new ArrayList<>();
 		readyToRun = true; // Starts as true since this task takes no input.
 		failed = false;
-		taskServices = null;
+		pluginServices = null;
 	}
 
 	public DocumentEmitter(DocumentEmitterConfig config) {
@@ -50,7 +51,7 @@ public class DocumentEmitter implements MintyTask, ServiceConsumer {
 	@Override
 	public void run() {
 		byte[] data = Base64.getDecoder().decode(config.getBase64());
-		String text = taskServices.getDocumentService().fileBytesToText(data);
+		String text = pluginServices.getDocumentService().fileBytesToText(data);
 
 		Packet p = new Packet();
 		p.setId(null);
@@ -111,7 +112,7 @@ public class DocumentEmitter implements MintyTask, ServiceConsumer {
 			}
 
 			@Override
-			public TaskConfigSpec taskConfiguration(Map<String, String> configuration) {
+			public TaskConfigSpec taskConfiguration(Map<String, Object> configuration) {
 				return new DocumentEmitterConfig(configuration);
 			}
 
@@ -122,7 +123,7 @@ public class DocumentEmitter implements MintyTask, ServiceConsumer {
 
 			@Override
 			public String group() {
-				return "Emit";
+				return TaskGroup.EMIT.toString();
 			}
 		};
 	}
@@ -143,8 +144,8 @@ public class DocumentEmitter implements MintyTask, ServiceConsumer {
 	}
 
 	@Override
-	public void setTaskServices(TaskServices taskServices) {
-		this.taskServices = taskServices;
+	public void setPluginServices(PluginServices pluginServices) {
+		this.pluginServices = pluginServices;
 	}
 
 }

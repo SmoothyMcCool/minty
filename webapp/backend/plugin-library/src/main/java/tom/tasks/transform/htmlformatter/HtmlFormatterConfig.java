@@ -9,7 +9,7 @@ import tom.api.task.TaskConfigTypes;
 
 public class HtmlFormatterConfig implements TaskConfigSpec {
 
-	private final String PugTemplate = "Pug Template";
+	public static final String PugTemplate = "Pug Template";
 
 	private String template;
 
@@ -17,10 +17,10 @@ public class HtmlFormatterConfig implements TaskConfigSpec {
 		template = "";
 	}
 
-	public HtmlFormatterConfig(Map<String, String> config) {
+	public HtmlFormatterConfig(Map<String, Object> config) {
 		this();
 		if (config.containsKey(PugTemplate)) {
-			template = config.get(PugTemplate);
+			template = config.get(PugTemplate).toString();
 		}
 	}
 
@@ -46,7 +46,7 @@ public class HtmlFormatterConfig implements TaskConfigSpec {
 	}
 
 	@Override
-	public Map<String, String> getValues() {
+	public Map<String, Object> getValues() {
 		return Map.of(PugTemplate, template);
 	}
 }

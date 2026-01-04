@@ -11,6 +11,7 @@ import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
 import tom.tasks.Grouping;
+import tom.tasks.TaskGroup;
 
 @RunnableTask
 public class TextCollector implements MintyTask {
@@ -134,11 +135,11 @@ public class TextCollector implements MintyTask {
 
 			@Override
 			public TaskConfigSpec taskConfiguration() {
-				return new TextCollectorConfig(Map.of("Grouping", "All"));
+				return new TextCollectorConfig(Map.of(TextCollectorConfig.GroupingLabel, Grouping.All.toString()));
 			}
 
 			@Override
-			public TaskConfigSpec taskConfiguration(Map<String, String> configuration) {
+			public TaskConfigSpec taskConfiguration(Map<String, Object> configuration) {
 				return new TextCollectorConfig(configuration);
 			}
 
@@ -149,7 +150,7 @@ public class TextCollector implements MintyTask {
 
 			@Override
 			public String group() {
-				return "Transform";
+				return TaskGroup.TRANSFORM.toString();
 			}
 		};
 	}

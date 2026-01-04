@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
 import tom.api.UserId;
-import tom.api.MintyProperties;
+import tom.config.MintyConfiguration;
 import tom.workflow.executor.WorkflowRunner;
 import tom.workflow.tracking.controller.model.WorkflowResult;
 import tom.workflow.tracking.controller.model.WorkflowState;
@@ -29,13 +29,13 @@ public class WorkflowTrackingServiceImpl implements WorkflowTrackingService {
 
 	private final WorkflowExecutionRepository workflowExecutionRepository;
 	private final List<WorkflowRunner> runningWorkflows;
-	private final String logFileDirectory;
+	private final Path logFileDirectory;
 
 	public WorkflowTrackingServiceImpl(WorkflowExecutionRepository workflowExecutionRepository,
-			MintyProperties properties) {
+			MintyConfiguration properties) {
 		this.workflowExecutionRepository = workflowExecutionRepository;
 		runningWorkflows = new ArrayList<>();
-		logFileDirectory = properties.get("workflowLogs");
+		logFileDirectory = properties.getConfig().fileStores().workflowLogs();
 		if (logFileDirectory == null) {
 			throw new RuntimeException("workflowLogs property is not defined.");
 		}
@@ -147,4 +147,18 @@ public class WorkflowTrackingServiceImpl implements WorkflowTrackingService {
 		}
 	}
 
+	@Override
+	public void cancelWorkflow(UserId userId, String name) {
+		Optional<WorkflowRunner> maybeRunner = runningWorkflows.stream()
+				.filter(item -> item.getWorkflowName().equals(name) && item.getUser().equals(userId)).findFirst();
+
+		if (maybeRunner.isEmpty()) {
+			return;
+		}
+
+		WorkflowRunner runner = maybeRunner.get();
+		runner.cancel();
+
+		runningWorkflows.removeIf(workflow -> workflow.getWorkflowName().compareTo(runner.getWorkflowName()) == 0);
+	}
 }

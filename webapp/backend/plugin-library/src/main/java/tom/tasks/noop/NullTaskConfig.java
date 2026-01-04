@@ -12,7 +12,7 @@ public class NullTaskConfig implements TaskConfigSpec {
 	public NullTaskConfig() {
 	}
 
-	public NullTaskConfig(Map<String, String> config) {
+	public NullTaskConfig(Map<String, Object> config) {
 	}
 
 	@Override
@@ -31,7 +31,7 @@ public class NullTaskConfig implements TaskConfigSpec {
 	}
 
 	@Override
-	public Map<String, String> getValues() {
+	public Map<String, Object> getValues() {
 		return Map.of();
 	}
 }

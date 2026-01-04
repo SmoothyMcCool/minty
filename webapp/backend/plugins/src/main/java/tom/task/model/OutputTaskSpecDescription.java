@@ -6,13 +6,13 @@ import java.util.Map;
 import jakarta.persistence.Convert;
 import tom.api.task.TaskConfigTypes;
 import tom.task.model.converters.StringListToStringConverter;
-import tom.task.model.converters.StringMapToStringConverter;
+import tom.task.model.converters.ObjectMapToStringConverter;
 import tom.task.model.converters.TaskConfigTypeMapToStringConverter;
 
 public class OutputTaskSpecDescription {
 
 	private String taskName;
-	@Convert(converter = StringMapToStringConverter.class)
+	@Convert(converter = ObjectMapToStringConverter.class)
 	private Map<String, String> configuration;
 	@Convert(converter = TaskConfigTypeMapToStringConverter.class)
 	private Map<String, TaskConfigTypes> configSpec;

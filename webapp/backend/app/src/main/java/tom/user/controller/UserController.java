@@ -23,7 +23,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.servlet.http.HttpServletRequest;
 import tom.ApiError;
 import tom.ApiException;
-import tom.api.MintyProperties;
+import tom.config.MintyConfiguration;
 import tom.controller.ResponseWrapper;
 import tom.meta.service.MetadataService;
 import tom.model.security.UserDetailsUser;
@@ -41,10 +41,10 @@ public class UserController {
 	private final UserRepository userRepository;
 	private final UserServiceInternal userService;
 	private final MetadataService metadataService;
-	private final MintyProperties properties;
+	private final MintyConfiguration properties;
 
 	public UserController(UserRepository userRepository, UserServiceInternal userService,
-			MetadataService metadataService, MintyProperties properties) {
+			MetadataService metadataService, MintyConfiguration properties) {
 		this.userRepository = userRepository;
 		this.userService = userService;
 		this.metadataService = metadataService;
@@ -100,19 +100,20 @@ public class UserController {
 		// Create the user.
 		String hash = BCrypt.hashpw(user.getPassword(), BCrypt.gensalt());
 		user.setPassword(hash);
+
 		try {
-			user = userService.decrypt(userRepository.save(userService.encrypt(user)));
+			User savedUser = userService.decrypt(userRepository.save(userService.encrypt(user)));
+			savedUser.setPassword("");
+
+			metadataService.addUser(savedUser.getId());
+
+			ResponseWrapper<User> response = ResponseWrapper.SuccessResponse(savedUser);
+			return new ResponseEntity<>(response, HttpStatus.OK);
+
 		} catch (JsonProcessingException e) {
 			errors.add(ApiError.FAILED_TO_DECRYPT_USER);
 			throw new ApiException(errors);
 		}
-
-		user.setPassword("");
-
-		metadataService.addUser(user.getId());
-
-		ResponseWrapper<User> response = ResponseWrapper.SuccessResponse(user);
-		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	@PostMapping({ "/update" })
@@ -151,17 +152,18 @@ public class UserController {
 		} else {
 			user.setPassword(userDetails.getPassword());
 		}
+
 		try {
 			EncryptedUser updatedUser = userService.encrypt(user);
-			user = userService.decrypt(userRepository.save(updatedUser));
+			User savedUser = userService.decrypt(userRepository.save(updatedUser));
+			savedUser.setPassword("");
+			ResponseWrapper<User> response = ResponseWrapper.SuccessResponse(savedUser);
+			return new ResponseEntity<>(response, HttpStatus.OK);
+
 		} catch (JsonProcessingException e) {
 			errors.add(ApiError.FAILED_TO_DECRYPT_USER);
 			throw new ApiException(errors);
 		}
-
-		user.setPassword("");
-		ResponseWrapper<User> response = ResponseWrapper.SuccessResponse(user);
-		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	@GetMapping({ "/defaults/system" })
