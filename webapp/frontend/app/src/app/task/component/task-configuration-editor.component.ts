@@ -8,11 +8,13 @@ import { TaskSpecification } from 'src/app/model/workflow/task-specification';
 import { EnumList } from 'src/app/model/workflow/enum-list';
 import { PacketEditorComponent } from './packet-editor.component';
 import { DocumentEditorComponent } from './document-editor.component';
+import { AssistantConfigurationEditorComponent } from './assistant-configuration-editor.component';
+import { Model } from 'src/app/model/model';
 
 @Component({
 	selector: 'minty-task-config-editor',
 	templateUrl: 'task-configuration-editor.component.html',
-	imports: [CommonModule, FormsModule, MapEditorComponent, StringListEditorComponent, EnumListEditorComponent, PacketEditorComponent, DocumentEditorComponent],
+	imports: [CommonModule, FormsModule, MapEditorComponent, StringListEditorComponent, EnumListEditorComponent, PacketEditorComponent, DocumentEditorComponent, AssistantConfigurationEditorComponent],
 	providers: [
 		{
 			provide: NG_VALUE_ACCESSOR,
@@ -26,6 +28,8 @@ export class TaskConfigurationEditorComponent implements ControlValueAccessor {
 	@Input() defaults: string[] = [];
 	@Input() taskSpecification: TaskSpecification;
 	@Input() enumLists: EnumList[];
+	@Input() models: Model[];
+
 	config: Map<string, string> = new Map();
 	onChange: any = () => {};
 	onTouched: any = () => {};

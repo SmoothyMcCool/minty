@@ -188,7 +188,7 @@ public class ConfluenceQuery implements MintyTask {
 			}
 
 			@Override
-			public TaskConfigSpec taskConfiguration(Map<String, String> configuration) {
+			public TaskConfigSpec taskConfiguration(Map<String, Object> configuration) {
 				try {
 					return new ConfluenceQueryConfig(configuration);
 				} catch (JsonProcessingException e) {

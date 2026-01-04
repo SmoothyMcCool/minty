@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, forwardRef, Input, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { OutputTaskSpecification, TaskRequest, TaskSpecification } from 'src/app/model/workflow/task-specification';
+import { Connection, OutputTaskSpecification, TaskRequest, TaskSpecification } from 'src/app/model/workflow/task-specification';
 import { Workflow } from 'src/app/model/workflow/workflow';
 import { TaskWidgetComponent } from './task-widget.component';
 import { CdkDragMove, DragDropModule } from '@angular/cdk/drag-drop';
@@ -10,6 +10,8 @@ import { TaskEditorComponent } from 'src/app/task/component/task-editor.componen
 import { WorkflowService } from '../workflow.service';
 import { EnumList } from 'src/app/model/workflow/enum-list';
 import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
+import { AssistantService } from 'src/app/assistant.service';
+import { Model } from 'src/app/model/model';
 
 @Component({
 	selector: 'minty-workflow-editor',
@@ -28,7 +30,7 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 
 	private _taskSpecifications: TaskSpecification[] = [];
 	@Input()
-	set taskSpecifications(value: TaskSpecification[]){
+	set taskSpecifications(value: TaskSpecification[]) {
 		this._taskSpecifications = value;
 		if (this._taskSpecifications) {
 			this._taskSpecifications.forEach(spec => this.specGroups.push(spec.group))
@@ -47,22 +49,26 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 	hoveredPort: { task: TaskRequest; portIndex: number; isInput: boolean } | null = null;
 	tempConnection: any = null;
 
-	onChange: any = () => {};
-	onTouched: any = () => {};
+	onChange: any = () => { };
+	onTouched: any = () => { };
 
 	workflow: Workflow;
 	editTask: TaskRequest = undefined;
 	specGroups: string[] = [];
 	enumLists: EnumList[];
+	models: Model[];
 
 	confirmDeleteStepVisible: boolean = false;
 
-	constructor(private workflowService: WorkflowService) {
+	constructor(private workflowService: WorkflowService, private assistantService: AssistantService) {
 	}
 
 	ngOnInit() {
 		this.workflowService.listEnumLists().subscribe(enumLists => {
 			this.enumLists = enumLists;
+		});
+		this.assistantService.models().subscribe(models => {
+			this.models = models;
 		})
 	}
 
@@ -281,12 +287,18 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 		this.doneEditingStep();
 	}
 
-	onConnectorClicked(c) {
+	onConnectorClicked(c: Connection) {
 		console.log(JSON.stringify(c, undefined, 2));
 	}
 
 	cancelConnection() {
 		this.tempConnection = null;
+	}
+
+	getTaskWidgetBoundingBox(elementId: string): {x: number, y: number, width: number, height: number } {
+		const widget = this.taskWidgets.find(w => w.task.id === elementId);
+		const step = this.workflow.steps.find(step => step.id === elementId);
+		return { x: step.layout.x, y: step.layout.y, width: widget.rect.width, height: widget.rect.height };
 	}
 
 	getPortCenterX(elementId: string, portIndex: number, isInput: boolean): number {
@@ -326,7 +338,7 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 		return result;
 	}
 
-	onStepNameChanged(data: {oldId: string, newId: string}) {
+	onStepNameChanged(data: { oldId: string, newId: string }) {
 		this.workflow.connections.forEach(connection => {
 			if (connection.readerId === data.oldId) {
 				connection.readerId = data.newId;
@@ -367,4 +379,56 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 	trackStepById(_index: number, step: TaskRequest) {
 		return step.id;
 	}
+
+	getConnectionPoints(c: Connection) {
+		const writerX = this.getPortCenterX(c.writerId, c.writerPort, false);
+		const writerY = this.getPortCenterY(c.writerId, c.writerPort, false);
+
+		const readerX = this.getPortCenterX(c.readerId, c.readerPort, true);
+		const readerY = this.getPortCenterY(c.readerId, c.readerPort, true);
+
+		const offset = 20; // how far we dip below / go around
+
+		// If this is a self-connection.
+		if (c.writerId === c.readerId) {
+			const box = this.getTaskWidgetBoundingBox(c.writerId);
+			const rightX = box.x - offset;
+			const downY = writerY + offset; // drop below the widget
+			const topY = readerY - offset; // rise above reader
+
+			return {
+				d: `M ${writerX} ${writerY} ` + // start at bottom port
+					`L ${writerX} ${downY} ` +  // drop
+					`L ${rightX} ${downY} ` +   // horizontal around the right edge
+					`L ${rightX} ${topY} ` +    // climb up to the top port
+					`L ${readerX} ${topY}` +    // drop
+					`L ${readerX} ${readerY}`,  // finish at reader port
+				isStraight: false
+			};
+		}
+
+		// If writer is above the reader, draw a straight line
+		if (writerY < readerY) {
+			return {
+				d: `M ${writerX} ${writerY} L ${readerX} ${readerY}`,
+				isStraight: true
+			};
+		}
+
+		// Writer is higher, draw a U‑shaped poly‑line
+		const midY = writerY + offset; // drop below writer
+		const topY = readerY - offset; // rise above reader
+		const readerWriterMidpoint = (readerX + writerX) / 2;
+
+		return {
+			d: `M ${writerX} ${writerY} ` +            // start
+				`L ${writerX} ${midY} ` +              // drop
+				`L ${readerWriterMidpoint} ${midY} ` + // horizontal
+				`L ${readerWriterMidpoint} ${topY} ` + // rise
+				`L ${readerX} ${topY} ` +              // horizontal
+				`L ${readerX} ${readerY}`,             // finish
+			isStraight: false
+		};
+	}
+
 }

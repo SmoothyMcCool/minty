@@ -1,7 +1,7 @@
 package tom.workflow.executor;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -20,6 +20,7 @@ import tom.api.task.TaskSpec;
 import tom.task.model.TaskRequest;
 import tom.task.registry.TaskRegistryService;
 import tom.util.StackTraceUtilities;
+import tom.workflow.futureutil.FutureUtils;
 import tom.workflow.model.Connection;
 import tom.workflow.model.Workflow;
 import tom.workflow.tracking.model.WorkflowExecution;
@@ -37,15 +38,16 @@ public class WorkflowRunner {
 	private final WorkflowTrackingService workflowTrackingService;
 	private final AsyncTaskExecutor taskExecutor;
 	private final Workflow workflow;
+	List<CompletableFuture<Void>> tasks;
 	private boolean workflowComplete;
 	private UserId userId;
 	private WorkflowExecution executionState;
 	private WorkflowLoggerImpl logger;
-	private String logFolder;
+	private Path logFolder;
 
 	public WorkflowRunner(UserId userId, Workflow workflow, TaskRegistryService taskRegistryService,
 			WorkflowTrackingService workflowTrackingService, AsyncTaskExecutor taskExecutor,
-			String workflowLoggingFolder) {
+			Path workflowLoggingFolder) {
 		workflowComplete = false;
 		this.userId = userId;
 		this.workflow = workflow;
@@ -54,6 +56,7 @@ public class WorkflowRunner {
 		this.taskExecutor = taskExecutor;
 		this.executionState = null;
 		logFolder = workflowLoggingFolder;
+		tasks = new ArrayList<>();
 	}
 
 	public WorkflowExecution getExecutionState() {
@@ -105,8 +108,6 @@ public class WorkflowRunner {
 
 	public void start() {
 
-		List<CompletableFuture<Void>> tasks = new ArrayList<>();
-
 		executionState = new WorkflowExecution();
 		executionState.setOwnerId(userId);
 		executionState.getResult().start();
@@ -138,7 +139,7 @@ public class WorkflowRunner {
 					return first.left.getReaderPort() - second.left.getReaderPort();
 				}).collect(Collectors.collectingAndThen(Collectors.toList(), list -> {
 
-					TaskSpec spec = taskRegistryService.getSpecForTask(request.getTaskName());
+					TaskSpec spec = taskRegistryService.getSpecForTask(request);
 					if (spec == null) {
 						throw new RuntimeException("Invalid task specified! " + request.getTaskName());
 					}
@@ -160,7 +161,7 @@ public class WorkflowRunner {
 					return first.left.getWriterPort() - second.left.getWriterPort();
 				}).collect(Collectors.collectingAndThen(Collectors.toList(), list -> {
 
-					TaskSpec spec = taskRegistryService.getSpecForTask(request.getTaskName());
+					TaskSpec spec = taskRegistryService.getSpecForTask(request);
 					if (spec == null) {
 						throw new RuntimeException("Invalid task specified! " + request.getTaskName());
 					}
@@ -198,10 +199,12 @@ public class WorkflowRunner {
 				tasks.add(future);
 			}
 
-			CompletableFuture<Void> allDone = allOfFailFast(tasks);
+			CompletableFuture<Void> allDone = FutureUtils.allOfFailFast(tasks, logger);
 			allDone.whenComplete((r, ex) -> {
 				if (ex != null) {
 					logger.warn("A task failed with exception: ", ex);
+				} else {
+					logger.info("Workflow complete.");
 				}
 				workflowComplete();
 			});
@@ -217,20 +220,8 @@ public class WorkflowRunner {
 		return userId;
 	}
 
-	private <T> CompletableFuture<Void> allOfFailFast(Collection<? extends CompletableFuture<? extends T>> futures) {
-		CompletableFuture<Void> failFast = new CompletableFuture<>();
-
-		for (CompletableFuture<? extends T> f : futures) {
-			f.whenComplete((r, ex) -> {
-				if (ex != null) {
-					logger.warn("Future ended with exception!", ex);
-					failFast.completeExceptionally(ex);
-				}
-			});
-		}
-
-		CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenRun(() -> failFast.complete(null));
-
-		return failFast;
+	public void cancel() {
+		tasks.forEach(future -> future.cancel(true));
 	}
+
 }

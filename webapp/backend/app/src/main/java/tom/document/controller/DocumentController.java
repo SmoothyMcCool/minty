@@ -3,6 +3,7 @@ package tom.document.controller;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,12 +14,18 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
 import tom.ApiError;
 import tom.api.DocumentId;
-import tom.api.MintyProperties;
+import tom.config.MintyConfiguration;
 import tom.controller.ResponseWrapper;
 import tom.document.model.MintyDoc;
 import tom.document.service.DocumentServiceInternal;
@@ -30,12 +37,12 @@ public class DocumentController {
 
 	private static final Logger logger = LogManager.getLogger(DocumentController.class);
 
-	private final String docFileStore;
+	private final Path docFileStore;
 	private final DocumentServiceInternal documentService;
 
-	public DocumentController(DocumentServiceInternal documentService, MintyProperties properties) {
+	public DocumentController(DocumentServiceInternal documentService, MintyConfiguration properties) {
 		this.documentService = documentService;
-		docFileStore = properties.get("docFileStore");
+		docFileStore = properties.getConfig().fileStores().docs();
 	}
 
 	@PostMapping({ "/add" })
@@ -97,6 +104,7 @@ public class DocumentController {
 					HttpStatus.OK);
 		}
 
+		logger.info("User " + user.getId() + "deleted document " + documentId);
 		return new ResponseEntity<>(ResponseWrapper.SuccessResponse(true), HttpStatus.OK);
 	}
 

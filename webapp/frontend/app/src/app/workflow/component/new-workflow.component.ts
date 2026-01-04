@@ -21,7 +21,6 @@ export class NewWorkflowComponent implements OnInit {
 
 	taskSpecifications: TaskSpecification[] = [];
 	outputTaskSpecifications: OutputTaskSpecification[];
-	showTemplateUploader = false;
 	defaults: Map<string, string>;
 
 	resultTemplate: ResultTemplate = {
@@ -81,23 +80,6 @@ export class NewWorkflowComponent implements OnInit {
 		if (newFile && newFile.length == 1) {
 			this.resultTemplate.file = newFile[0];
 		}
-	}
-
-	uploadFile() {
-		if (!this.resultTemplate.file || !this.resultTemplate.name) {
-				this.alertService.postFailure('You have to give a title and actual file, k?');
-				return;
-			}
-
-			this.workflowService.addResultTemplate(this.resultTemplate).subscribe((message) => {
-				this.alertService.postSuccess(message);
-				this.showTemplateUploader = false;
-				this.resultTemplate = {
-					id: '',
-					name: '',
-					file: undefined
-				};
-			});
 	}
 
 }

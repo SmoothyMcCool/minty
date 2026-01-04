@@ -17,7 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import tom.api.UserId;
 import tom.api.services.UserService;
-import tom.api.MintyProperties;
+import tom.config.MintyConfiguration;
 import tom.user.model.User;
 import tom.user.repository.EncryptedUser;
 import tom.user.repository.UserRepository;
@@ -30,9 +30,9 @@ public class UserServiceImpl implements UserServiceInternal {
 	private final String secret;
 	private final UserRepository userRepository;
 
-	public UserServiceImpl(UserRepository userRepository, MintyProperties properties) {
+	public UserServiceImpl(UserRepository userRepository, MintyConfiguration properties) {
 		this.userRepository = userRepository;
-		secret = properties.get("secret");
+		secret = properties.getConfig().secret();
 	}
 
 	@Override

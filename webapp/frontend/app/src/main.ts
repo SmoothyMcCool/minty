@@ -35,6 +35,9 @@ import { WorkflowsPugHelpComponent } from './app/help/component/workflows-pug-he
 import { WorkflowsTasksHelpComponent } from './app/help/component/workflows-tasks-help.component';
 import { WorkflowsEditingHelpComponent } from './app/help/component/workflows-editing-help.component';
 import { WorkflowsTasksCreateComponent } from './app/help/component/workflows-tasks-create.component';
+import { ViewProjectComponent } from './app/project/component/view-project.component';
+import { ProjectListComponent } from './app/project/component/project-list.component';
+import { EditProjectComponent } from './app/project/component/edit-project.component';
 
 export function clipboardOptionsFactory(): ClipboardOptions {
 	return {};
@@ -52,28 +55,20 @@ bootstrapApplication(AppComponent, {
 				pathMatch: 'full'
 			},
 			{
-				path: 'login',
-				component: LoginComponent,
-			},
-			{
-				path: 'signup',
-				component: SignupComponent,
-			},
-			{
 				path: 'assistants',
 				component: ViewAssistantsComponent,
 				children: [
 					{
-						path: 'new',
-						component: NewAssistantComponent
+						path: '',
+						component: AssistantsListComponent
 					},
 					{
 						path: 'edit/:id',
 						component: EditAssistantComponent
 					},
 					{
-						path: '',
-						component: AssistantsListComponent
+						path: 'new',
+						component: NewAssistantComponent
 					}
 				]
 			},
@@ -82,34 +77,12 @@ bootstrapApplication(AppComponent, {
 				component: ViewConversationComponent
 			},
 			{
-				path: 'workflow',
-				component: ViewWorkflowComponent,
-				children: [
-					{
-						path: 'new',
-						component: NewWorkflowComponent
-					},
-					{
-						path: 'edit/:id',
-						component: EditWorkflowComponent
-					},
-					{
-						path: ':id',
-						component: RunWorkflowComponent
-					},
-					{
-						path: '',
-						component: WorkflowListComponent
-					}
-				]
+				path: 'diagrams',
+				component: ViewDiagramsComponent
 			},
 			{
 				path: 'documents',
 				component: ViewDocumentsComponent
-			},
-			{
-				path: 'diagrams',
-				component: ViewDiagramsComponent
 			},
 			{
 				path: 'help',
@@ -124,13 +97,13 @@ bootstrapApplication(AppComponent, {
 								component: AssistantsHelpEditingComponent
 							},
 							{
-								path: 'premade',
-								component: AssistantsHelpPremadeComponent
-							},
-							{
 								path: 'ideas',
 								component: AssistantsHelpIdeasComponent
 							},
+							{
+								path: 'premade',
+								component: AssistantsHelpPremadeComponent
+							}
 						]
 					},
 					{
@@ -142,20 +115,19 @@ bootstrapApplication(AppComponent, {
 						component: WorkflowsHelpComponent,
 						children: [
 							{
+								path: 'custom',
+								component: WorkflowsTasksCreateComponent
+							},{
 								path: 'editing',
 								component: WorkflowsEditingHelpComponent
 							},
 							{
-								path: 'tasks',
-								component: WorkflowsTasksHelpComponent
-							},
-							{
-								path: 'custom',
-								component: WorkflowsTasksCreateComponent
-							},
-							{
 								path: 'pug',
 								component: WorkflowsPugHelpComponent
+							},
+							{
+								path: 'tasks',
+								component: WorkflowsTasksHelpComponent
 							}
 						]
 					}
@@ -163,12 +135,56 @@ bootstrapApplication(AppComponent, {
 				]
 			},
 			{
-				path: 'user',
-				component: ViewUserComponent
+				path: 'login',
+				component: LoginComponent,
+			},
+			{
+				path: 'projects',
+				component: ViewProjectComponent,
+				children: [
+					{
+						path: '',
+						component: ProjectListComponent
+					},
+					{
+						path: ':id',
+						component: EditProjectComponent
+					},
+				]
+			},
+			{
+				path: 'signup',
+				component: SignupComponent,
 			},
 			{
 				path: 'statistics',
 				component: ViewStatisticsComponent
+			},
+			{
+				path: 'user',
+				component: ViewUserComponent
+			},
+			{
+				path: 'workflow',
+				component: ViewWorkflowComponent,
+				children: [
+					{
+						path: '',
+						component: WorkflowListComponent
+					},
+					{
+						path: 'edit/:id',
+						component: EditWorkflowComponent
+					},
+					{
+						path: 'new',
+						component: NewWorkflowComponent
+					},
+					{
+						path: ':id',
+						component: RunWorkflowComponent
+					}
+				]
 			}
 		],
 		withInMemoryScrolling({

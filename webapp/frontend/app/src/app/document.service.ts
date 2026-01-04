@@ -1,8 +1,8 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResult } from './model/api-result';
-import { catchError, map } from 'rxjs/operators';
-import { EMPTY, Observable, timer } from 'rxjs';
+import { catchError, map, shareReplay, switchMap } from 'rxjs/operators';
+import { EMPTY, Observable, of, Subscription, timer } from 'rxjs';
 import { AlertService } from './alert.service';
 import { MintyDoc } from './model/minty-doc';
 import { TrackableSubject } from './trackable-subject';
@@ -22,33 +22,23 @@ export class DocumentService {
 	mintyDocListList$: Observable<MintyDoc[]> = this.mintyDocListSubject.asObservable();
 
 	constructor(private http: HttpClient, private alertService: AlertService) {
-		this.doListRefresh();
+		this.startPolling();
 	}
 
-	private refreshDocumentList() {
-		timer(10000)
-			.subscribe(() => {
-				this.doListRefresh();
-			});
-	}
-
-	private doListRefresh() {
-		if (!this.mintyDocListSubject.hasSubscribers()) {
-			this.refreshDocumentList();
-			return;
-		}
-
-		this.list()
+	private startPolling() {
+		this.mintyDocListList$ = timer(0, 5000)
 			.pipe(
-				catchError(() => {
-					this.refreshDocumentList();
-					return EMPTY;
-				}),
-				map((result: MintyDoc[]) => {
-					this.mintyDocListSubject.next(result);
-					this.refreshDocumentList();
+				switchMap(() => this.list().pipe(
+					catchError(err => {
+						this.alertService.postFailure(JSON.stringify(err));
+						return of([] as MintyDoc[]);
+					}))
+				),
+				shareReplay({
+					bufferSize: 1,
+					refCount: true
 				})
-			).subscribe();
+			);
 	}
 
 	add(document: MintyDoc): Observable<MintyDoc> {

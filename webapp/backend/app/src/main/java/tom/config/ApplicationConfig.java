@@ -1,8 +1,10 @@
 package tom.config;
 
+import java.io.IOException;
+import java.net.URI;
 import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import javax.sql.DataSource;
 
@@ -37,7 +39,9 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
+import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.JacksonXmlAnnotationIntrospector;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
@@ -45,7 +49,6 @@ import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import de.neuland.pug4j.PugConfiguration;
 import de.neuland.pug4j.filter.MarkdownFilter;
 import de.neuland.pug4j.template.FileTemplateLoader;
-import tom.api.MintyProperties;
 
 @Configuration
 @EnableWebMvc
@@ -56,15 +59,15 @@ public class ApplicationConfig implements WebMvcConfigurer {
 
 	private static final Logger logger = LogManager.getLogger(ApplicationConfig.class);
 
-	MintyPropertiesImpl props;
+	MintyConfigurationImpl properties;
 
-	public ApplicationConfig(MintyPropertiesImpl properties) {
-		this.props = properties;
+	public ApplicationConfig(MintyConfigurationImpl properties) {
+		this.properties = properties;
 	}
 
 	@Bean
-	static MintyProperties properties() {
-		return new MintyPropertiesImpl();
+	static MintyConfiguration properties() throws StreamReadException, DatabindException, IOException {
+		return new MintyConfigurationImpl();
 	}
 
 	@Bean
@@ -72,12 +75,24 @@ public class ApplicationConfig implements WebMvcConfigurer {
 		return HeaderHttpSessionIdResolver.xAuthToken();
 	}
 
+	@Bean("streamingExecutor")
+	public ThreadPoolTaskExecutor streamingExecutor() {
+		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+		executor.setCorePoolSize(properties.getConfig().threads().streamDefault());
+		executor.setMaxPoolSize(properties.getConfig().threads().streamMax());
+		executor.setQueueCapacity(properties.getConfig().threads().streamCapacity());
+		executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+		executor.setThreadNamePrefix("streaming-");
+		executor.initialize();
+		return executor;
+	}
+
 	@Bean
 	@Qualifier("taskExecutor")
 	ThreadPoolTaskExecutor taskExecutor() {
 		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-		taskExecutor.setCorePoolSize(props.getInt("defaultTaskThreads", 5));
-		taskExecutor.setMaxPoolSize(props.getInt("maximumTaskThreads", 20));
+		taskExecutor.setCorePoolSize(properties.getConfig().threads().taskDefault());
+		taskExecutor.setMaxPoolSize(properties.getConfig().threads().taskMax());
 		return taskExecutor;
 	}
 
@@ -85,8 +100,8 @@ public class ApplicationConfig implements WebMvcConfigurer {
 	@Qualifier("fileProcessingExecutor")
 	ThreadPoolTaskExecutor fileProcessingExecutor() {
 		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-		taskExecutor.setCorePoolSize(props.getInt("defaultDocumentThreads", 1));
-		taskExecutor.setMaxPoolSize(props.getInt("maximumDocumentThreads", 2));
+		taskExecutor.setCorePoolSize(properties.getConfig().threads().documentDefault());
+		taskExecutor.setMaxPoolSize(properties.getConfig().threads().documentMax());
 		return taskExecutor;
 	}
 
@@ -94,9 +109,9 @@ public class ApplicationConfig implements WebMvcConfigurer {
 	@Qualifier("llmExecutor")
 	ThreadPoolTaskExecutor llmExecutor() {
 		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-		taskExecutor.setCorePoolSize(props.getInt("defaultLlmThreads", 2));
-		taskExecutor.setMaxPoolSize(props.getInt("maximumLlmThreads", 2));
-		taskExecutor.setQueueCapacity(props.getInt("llmMaxRequests", 100));
+		taskExecutor.setCorePoolSize(properties.getConfig().threads().llmDefault());
+		taskExecutor.setMaxPoolSize(properties.getConfig().threads().llmMax());
+		taskExecutor.setQueueCapacity(properties.getConfig().ollama().maxRequests());
 		return taskExecutor;
 	}
 
@@ -145,16 +160,16 @@ public class ApplicationConfig implements WebMvcConfigurer {
 
 	@Bean
 	OllamaApi ollamaApi() {
-		String ollamaUri = props.get("ollamaUri");
+		URI ollamaUri = properties.getConfig().ollama().uri();
 		logger.info("ollama URI is " + ollamaUri);
 		SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
 
-		Integer ollamaTimeout = props.getInt("ollamaApiTimeoutMinutes", 20);
-		factory.setReadTimeout(Duration.ofMinutes(ollamaTimeout));
+		Duration ollamaTimeout = properties.getConfig().ollama().apiTimeout();
+		factory.setReadTimeout(ollamaTimeout);
 
 		RestClient.Builder restClientBuilder = RestClient.builder().requestFactory(factory);
 
-		return OllamaApi.builder().baseUrl(ollamaUri).restClientBuilder(restClientBuilder).build();
+		return OllamaApi.builder().baseUrl(ollamaUri.toString()).restClientBuilder(restClientBuilder).build();
 	}
 
 	@Override
@@ -191,7 +206,7 @@ public class ApplicationConfig implements WebMvcConfigurer {
 
 	@Override
 	public void configureAsyncSupport(@NonNull AsyncSupportConfigurer configurer) {
-		Integer asyncResponseTimeout = props.getInt("asyncResponseTimeout", 20);
-		configurer.setDefaultTimeout(TimeUnit.MINUTES.toMillis(asyncResponseTimeout));
+		Duration asyncResponseTimeout = properties.getConfig().ollama().asyncResponseTimeout();
+		configurer.setDefaultTimeout(asyncResponseTimeout.toMillis());
 	}
 }

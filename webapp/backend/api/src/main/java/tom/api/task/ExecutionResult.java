@@ -2,9 +2,9 @@ package tom.api.task;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ExecutionResult {
 
@@ -18,8 +18,8 @@ public class ExecutionResult {
 		startTime = Instant.now();
 		endTime = Instant.now();
 		logFile = "";
-		results = new HashMap<>();
-		errors = new HashMap<>();
+		results = new ConcurrentHashMap<>();
+		errors = new ConcurrentHashMap<>();
 	}
 
 	public ExecutionResult(List<String> stepNames) {

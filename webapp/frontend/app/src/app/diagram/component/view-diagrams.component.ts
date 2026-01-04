@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UserService } from 'src/app/user.service';
-import { DisplayMode, User } from 'src/app/model/user';
 import { DiagramService } from '../diagram.service';
 import { Diagram } from 'src/app/model/diagram/diagram';
 import { MarkdownModule } from 'ngx-markdown';
@@ -13,9 +12,6 @@ import { MarkdownModule } from 'ngx-markdown';
 	templateUrl: 'view-diagrams.component.html'
 })
 export class ViewDiagramsComponent implements OnInit {
-
-	user: User;
-	DisplayMode = DisplayMode;
 
 	conversation: string;
 	response: string;
@@ -32,7 +28,6 @@ export class ViewDiagramsComponent implements OnInit {
 
 	ngOnInit(): void {
 		this.userService.getUser().subscribe(user => {
-			this.user = user;
 			this.conversation = 'Make me a sequence diagram of Alice saying hello to Bob.';
 			this.diagramService.ask(this.conversation).subscribe(requestId => {
 				this.diagramService.get(requestId).subscribe(response => {

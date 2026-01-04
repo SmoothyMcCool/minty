@@ -10,6 +10,7 @@ import tom.api.task.TaskConfigSpec;
 import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
+import tom.tasks.TaskGroup;
 import tom.tasks.noop.NullTaskConfig;
 
 @RunnableTask
@@ -132,7 +133,7 @@ public class GroupBy implements MintyTask {
 			}
 
 			@Override
-			public TaskConfigSpec taskConfiguration(Map<String, String> configuration) {
+			public TaskConfigSpec taskConfiguration(Map<String, Object> configuration) {
 				return new NullTaskConfig(configuration);
 			}
 
@@ -143,7 +144,7 @@ public class GroupBy implements MintyTask {
 
 			@Override
 			public String group() {
-				return "Flow Control";
+				return TaskGroup.FLOW_CONTROL.toString();
 			}
 		};
 	}

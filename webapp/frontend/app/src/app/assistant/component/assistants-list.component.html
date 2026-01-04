@@ -4,17 +4,17 @@
 			<h4>Active Conversations</h4>
 			<form>
 				<div class="form-check">
-					<input class="form-check-input" type="radio" name="orderAlphabetical" id="orderAlphabetical"
-						[(ngModel)]="conversationSortOrder" value="alpha" (change)="sortConversationsBy('alpha')" checked>
-					<label class="form-check-label" for="orderAlphabetical">
-						Order A-Z
+					<input class="form-check-input" type="radio" name="orderLastUsed" id="orderLastUsed"
+						[(ngModel)]="conversationSortOrder" value="lastUsed" (change)="sortConversationsBy('lastUsed')" checked>
+					<label class="form-check-label" for="orderLastUsed">
+						Order by Last Used
 					</label>
 				</div>
 				<div class="form-check">
-					<input class="form-check-input" type="radio" name="orderLastUsed" id="orderLastUsed"
-						[(ngModel)]="conversationSortOrder" value="lastUsed" (change)="sortConversationsBy('lastUsed')">
-					<label class="form-check-label" for="orderLastUsed">
-						Order by Last Used
+					<input class="form-check-input" type="radio" name="orderAlphabetical" id="orderAlphabetical"
+						[(ngModel)]="conversationSortOrder" value="alpha" (change)="sortConversationsBy('alpha')">
+					<label class="form-check-label" for="orderAlphabetical">
+						Order A-Z
 					</label>
 				</div>
 			</form>
@@ -40,7 +40,7 @@
 		</div>
 		<div class="col-8 col-sm-6">
 
-			<div class="row">
+			<div class="row mb-2">
 				<form>
 					<div class="form-group well mb-2 p-2">
 						<label class="" for="assistantFilter">Filter</label>
@@ -50,8 +50,9 @@
 				</form>
 				<h4>My Assistants</h4>
 				<ng-container *ngIf="assistants.length > 0; else noAssistants">
-					<div class="col-12" *ngFor="let assistant of assistantPassesFilter(false)">
-						<div class="card text-bg-light bg-opacity-75">
+					<ul class="list-group">
+						<li class="list-group-item list-group-item-action position-relative text-bg-light bg-opacity-75"
+							*ngFor="let assistant of assistantPassesFilter(false)" style="height: 2.5rem">
 							<div class="position-absolute top-0 end-0" *ngIf="isOwned(assistant)">
 								<button class="btn btn-sm" style="font-size: 14px;"
 									(click)="editAssistant(assistant.id)">
@@ -62,20 +63,16 @@
 									<i class="bi bi-trash3"></i>
 								</button>
 							</div>
-							<div class="card-body">
-								<div class="row align-items-center g-2">
-									<button class="btn btn-primary col-auto"
-										(click)="startConversation(assistant)">Let's Rap!</button>
-									<div class="col-auto">
-										<h5 class="card-title mb-0">{{assistant.name}}</h5>
-									</div>
-									<div class="col-auto">
-										<span class="badge text-bg-secondary mx-2">{{assistant.model}}</span>
-									</div>
+							<div class="row align-items-center g-2">
+								<span class="text-truncate clickable-text col-auto" (click)="startConversation(assistant)">
+									{{assistant.name}}
+								</span>
+								<div class="col-auto">
+									<span class="badge text-bg-secondary mx-2">{{assistant.model}}</span>
 								</div>
 							</div>
-						</div>
-					</div>
+						</li>
+					</ul>
 				</ng-container>
 				<ng-template #noAssistants>
 					<p class="font-monospace ms-4">If you had any assistants they would be listed here.</p>
@@ -84,8 +81,9 @@
 			<div class="row">
 				<h4>Shared Assistants</h4>
 				<ng-container *ngIf="sharedAssistants.length > 0; else noSharedAssistants">
-					<div class="col-12" *ngFor="let assistant of assistantPassesFilter(true)">
-						<div class="card text-bg-light bg-opacity-75">
+					<ul class="list-group">
+						<li class="list-group-item list-group-item-action position-relative text-bg-light bg-opacity-75"
+							*ngFor="let assistant of assistantPassesFilter(true)" style="height: 2.5rem">
 							<div class="position-absolute top-0 end-0" *ngIf="isOwned(assistant)">
 								<button class="btn btn-sm" style="font-size: 14px;"
 									(click)="editAssistant(assistant.id)">
@@ -96,20 +94,16 @@
 									<i class="bi bi-trash3"></i>
 								</button>
 							</div>
-							<div class="card-body">
-								<div class="row align-items-center g-2">
-									<button class="btn btn-primary col-auto"
-										(click)="startConversation(assistant)">Let's Rap!</button>
-									<div class="col-auto">
-										<h5 class="card-title mb-0">{{assistant.name}}</h5>
-									</div>
-									<div class="col-auto">
-										<span class="badge text-bg-secondary mx-2">{{assistant.model}}</span>
-									</div>
+							<div class="row align-items-center g-2">
+								<span class="text-truncate clickable-text col-auto" (click)="startConversation(assistant)">
+									{{assistant.name}}
+								</span>
+								<div class="col-auto">
+									<span class="badge text-bg-secondary mx-2">{{assistant.model}}</span>
 								</div>
 							</div>
-						</div>
-					</div>
+						</li>
+					</ul>
 				</ng-container>
 				<ng-template #noSharedAssistants>
 					<p class="font-monospace ms-4">If any assistants had been shared with you they'd be listed

@@ -7,7 +7,7 @@
 						<label for="numberInput-{{item.key}}">{{item.key}} (System or User Default)</label>
 					</ng-container>
 					<ng-template #notDefaultNumber>
-						<label for="numberInput-{{item.key}}">{{item.key}}</label>
+						<label for="numberInput-{{item.key}}" class="fs-4">{{item.key}}</label>
 					</ng-template>
 					<input type="number" step="1" class="form-control form-control-sm" id="numberInput-{{item.key}}"
 						name="numberInput-{{item.key}}" [ngModel]="getConfig(item.key)"
@@ -17,10 +17,10 @@
 			<ng-container *ngSwitchCase="'Boolean'">
 				<div class="mb-3">
 					<ng-container *ngIf="defaults && defaults.includes(item.key); else notDefaultNumber">
-						<label for="booleanInput-{{item.key}}">{{item.key}} (System or User Default)</label>
+						<label for="booleanInput-{{item.key}}" class="fs-4">{{item.key}} (System or User Default)</label>
 					</ng-container>
 					<ng-template #notDefaultNumber>
-						<label for="booleanInput-{{item.key}}">{{item.key}}</label>
+						<label for="booleanInput-{{item.key}}" class="fs-4">{{item.key}}</label>
 					</ng-template>
 					<div class="form-group mb-2">
 						<input type="checkbox" class="form-check-input me-2" id="booleanInput-{{item.key}}"
@@ -32,10 +32,10 @@
 			<ng-container *ngSwitchCase="'String'">
 				<div class="mb-3">
 					<ng-container *ngIf="defaults && defaults.includes(item.key); else notDefaultNumber">
-						<label for="stringInput-{{item.key}}">{{item.key}} (System or User Default)</label>
+						<label for="stringInput-{{item.key}}" class="fs-4">{{item.key}} (System or User Default)</label>
 					</ng-container>
 					<ng-template #notDefaultNumber>
-						<label for="stringInput-{{item.key}}">{{item.key}}</label>
+						<label for="stringInput-{{item.key}}" class="fs-4">{{item.key}}</label>
 					</ng-template>
 					<input [type]="(item.key || '').toLowerCase().includes('password') ? 'password' : 'text'" class="form-control form-control-sm" id="stringInput-{{item.key}}" name="stringInput-{{item.key}}"
 						[ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)" [readonly]="defaults?.includes(item.key)">
@@ -43,7 +43,7 @@
 			</ng-container>
 			<ng-container *ngSwitchCase="'TextArea'">
 				<div class="mb-3">
-					<label for="textInput-{{item.key}}">{{item.key}}</label>
+					<label for="textInput-{{item.key}}" class="fs-4">{{item.key}}</label>
 					<textarea id="textInput-{{item.key}}" name="textInput-{{item.key}}" type="text" style="height: 200px;" class="form-control form-control-sm font-monospace" [ngModel]="getConfig(item.key)"
 						(ngModelChange)="valueChanged(item.key, $event)" autocomplete="off" required></textarea>
 				</div>
@@ -55,26 +55,32 @@
 			</ng-container>
 			<ng-container *ngSwitchCase="'StringList'">
 				<div class="mb-3">
-					<label for="stringListInput-{{item.key}}">{{item.key}}</label>
+					<label for="stringListInput-{{item.key}}" class="fs-4">{{item.key}}</label>
 					<minty-stringlist-editor name="stringListInput-{{item.key}}" [ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)"></minty-stringlist-editor>
 				</div>
 			</ng-container>
 			<ng-container *ngSwitchCase="'EnumList'">
 				<div class="mb-3">
-					<label for="enumListInput-{{item.key}}">{{item.key}}</label>
+					<label for="enumListInput-{{item.key}}" class="fs-4">{{item.key}}</label>
 					<minty-enumlist-editor name="enumListInput-{{item.key}}" [choices]="getChoicesFor(item.key)" [ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)"></minty-enumlist-editor>
 				</div>
 			</ng-container>
 			<ng-container *ngSwitchCase="'Packet'">
 				<div class="mb-3">
-					<label for="packetInput-{{item.key}}">{{item.key}}</label>
+					<label for="packetInput-{{item.key}}" class="fs-4">{{item.key}}</label>
 					<minty-packet-editor name="packetInput-{{item.key}}" [ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)"></minty-packet-editor>
 				</div>
 			</ng-container>
 			<ng-container *ngSwitchCase="'Document'">
 				<div class="mb-3">
-					<label for="documentInput-{{item.key}}">{{item.key}}</label>
+					<label for="documentInput-{{item.key}}" class="fs-4">{{item.key}}</label>
 					<minty-document-editor name="documentInput-{{item.key}}" [ngModel]="" (ngModelChange)="valueChanged(item.key, $event)"></minty-document-editor>
+				</div>
+			</ng-container>
+			<ng-container *ngSwitchCase="'Assistant'">
+				<div class="mb-3">
+					<label for="assistantInput-{{item.key}}" class="fs-4">{{item.key}}</label>
+					<minty-assistant-configuration-editor [models]="models" [choices]="getChoicesFor(item.key)" name="assistantInput-{{item.key}}" [ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)"></minty-assistant-configuration-editor>
 				</div>
 			</ng-container>
 			<ng-container *ngSwitchDefault>

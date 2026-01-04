@@ -1,0 +1,45 @@
+<div class="container-fluid py-3">
+	<div class="row">
+		<!-- Left pane – tree view -->
+		<div class="col-3 border-end">
+			<h5 class="mb-3">Files</h5>
+			<ul class="list-group">
+				<li class="list-group-item list-group-item-action position-relative text-bg-light bg-opacity-75" style="height: 2.5rem" *ngFor="let node of entries">
+					<minty-project-node [node]="node" [selected]="selectedEntryInfo"
+						(select)="onSelect(node)" (update)="onUpdateEntryInfo($event)"></minty-project-node>
+				</li>
+				<li class="list-group-item list-group-item-action position-relative text-bg-light bg-opacity-75" style="height: 2.5rem">
+					<button class="btn" (click)="addFile()" title="add file">
+						<i class="bi bi-file-earmark-plus"></i>
+					</button>
+				</li>
+			</ul>
+		</div>
+
+		<!-- Right pane – file viewer -->
+		<div class="col-9" *ngIf="selectedEntry; else noSelection">
+			<div class="row">
+				<div class="col-auto">
+					<ng-container *ngIf="!editFile; else editMode">
+						<button class="btn" (click)="editCurrentFile()" title="edit">
+							<i class="bi bi-pencil-square"></i>
+						</button>
+					</ng-container>
+					<ng-template #editMode>
+						<button class="btn" (click)="saveChangesToCurrentFile()" title="save">
+							<i class="bi bi-floppy"></i>
+						</button>
+						<button class="btn" (click)="cancelEditingCurrentFile()" title="cancel">
+							<i class="bi bi-x-circle"></i>
+						</button>
+					</ng-template>
+				</div>
+			</div>
+			<h1>{{selectedEntryInfo.name}}</h1>
+			<minty-project-entry-viewer [ngModel]="selectedEntry.data" (ngModelChange)="onFileContentsChanged($event)" [edit]="editFile"></minty-project-entry-viewer>
+		</div>
+		<ng-template #noSelection>
+			<h5 class="col-9 text-muted">Select a file to view its contents</h5>
+		</ng-template>
+	</div>
+</div>

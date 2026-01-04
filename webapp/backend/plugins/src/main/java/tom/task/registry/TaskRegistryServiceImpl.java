@@ -16,10 +16,10 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import tom.api.MintyProperties;
 import tom.api.UserId;
-import tom.api.model.ServiceConsumer;
-import tom.api.services.TaskServices;
+import tom.api.model.assistant.AssistantSpec;
+import tom.api.model.services.ServiceConsumer;
+import tom.api.services.PluginServices;
 import tom.api.task.MintyTask;
 import tom.api.task.OutputTask;
 import tom.api.task.OutputTaskSpec;
@@ -29,7 +29,8 @@ import tom.api.task.TaskConfigTypes;
 import tom.api.task.TaskSpec;
 import tom.api.task.enumspec.EnumSpec;
 import tom.api.task.enumspec.EnumSpecCreator;
-import tom.config.MintyPropertiesImpl;
+import tom.config.MintyConfiguration;
+import tom.config.MintyConfigurationImpl;
 import tom.task.model.OutputTaskSpecDescription;
 import tom.task.model.TaskRequest;
 import tom.task.model.TaskSpecDescription;
@@ -46,20 +47,20 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 	private final Map<String, String> taskHelpFiles;
 	private final Map<String, String> outputHelpFiles;
 	private final List<Class<? extends EnumSpecCreator>> enumSpecCreators;
-	private final TaskServices taskServices;
+	private final PluginServices pluginServices;
 	private final UserServiceInternal userService;
-	private final MintyPropertiesImpl properties;
+	private final MintyConfigurationImpl properties;
 
-	public TaskRegistryServiceImpl(TaskServices taskServices, UserServiceInternal userService,
-			MintyProperties properties) {
+	public TaskRegistryServiceImpl(PluginServices pluginServices, UserServiceInternal userService,
+			MintyConfiguration properties) {
 		runnableTasks = new HashMap<>();
 		outputTasks = new HashMap<>();
 		taskHelpFiles = new HashMap<>();
 		outputHelpFiles = new HashMap<>();
 		enumSpecCreators = new ArrayList<>();
-		this.properties = (MintyPropertiesImpl) properties;
+		this.properties = (MintyConfigurationImpl) properties;
 
-		this.taskServices = taskServices;
+		this.pluginServices = pluginServices;
 		this.userService = userService;
 	}
 
@@ -173,10 +174,10 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 			List<String> userCfgVars = mt.getSpecification().taskConfiguration().getUserConfigVariables();
 
 			for (String cfgVar : sysCfgVars) {
-				request.getConfiguration().put(cfgVar, properties.get(request.getTaskName() + "::" + cfgVar));
+				request.getConfiguration().put(cfgVar, properties.getSystemDefaults().get(cfgVar));
 			}
 			for (String cfgVar : userCfgVars) {
-				request.getConfiguration().put(cfgVar, user.getDefaults().get(request.getTaskName() + "::" + cfgVar));
+				request.getConfiguration().put(cfgVar, user.getDefaults().get(cfgVar));
 			}
 
 			TaskConfigSpec taskConfig = mt.getSpecification().taskConfiguration(request.getConfiguration());
@@ -191,7 +192,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 			}
 
 			if (task instanceof ServiceConsumer) {
-				((ServiceConsumer) task).setTaskServices(taskServices);
+				((ServiceConsumer) task).setPluginServices(pluginServices);
 				((ServiceConsumer) task).setUserId(userId);
 			}
 
@@ -233,7 +234,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 			}
 
 			if (task instanceof ServiceConsumer) {
-				((ServiceConsumer) task).setTaskServices(taskServices);
+				((ServiceConsumer) task).setPluginServices(pluginServices);
 				((ServiceConsumer) task).setUserId(userId);
 			}
 
@@ -271,11 +272,22 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 	}
 
 	@Override
-	public TaskSpec getSpecForTask(String taskName) {
-		Class<?> taskClass = runnableTasks.get(taskName).left;
+	public TaskSpec getSpecForTask(TaskRequest request) {
+		Class<?> taskClass = runnableTasks.get(request.getTaskName()).left;
 
 		try {
 			MintyTask task = (MintyTask) taskClass.getDeclaredConstructor().newInstance();
+			TaskConfigSpec taskConfig = task.getSpecification().taskConfiguration(request.getConfiguration());
+
+			Constructor<?>[] constructors = taskClass.getConstructors();
+			for (Constructor<?> constructor : constructors) {
+				if (constructor.getParameterCount() == 1
+						&& constructor.getParameterTypes()[0].isAssignableFrom(taskConfig.getClass())) {
+
+					task = (MintyTask) constructor.newInstance(taskConfig);
+				}
+			}
+
 			return task.getSpecification();
 
 		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
@@ -391,12 +403,12 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 
 	@Override
 	public boolean hasTask(String fileName) {
-		return taskHelpFiles.containsKey(fileName);
+		return runnableTasks.containsKey(fileName);
 	}
 
 	@Override
 	public boolean hasOutputTask(String fileName) {
-		return outputHelpFiles.containsKey(fileName);
+		return outputTasks.containsKey(fileName);
 	}
 
 	@Override
@@ -438,6 +450,9 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 					yield result;
 				}
 				case TaskConfigTypes.Document -> "";
+				case TaskConfigTypes.Assistant -> {
+					yield new AssistantSpec().toJson();
+				}
 				};
 
 				taskCfg.put(innerEntry.getKey(), value);
@@ -454,7 +469,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 		for (Class<? extends EnumSpecCreator> creatorClass : enumSpecCreators) {
 			try {
 				EnumSpecCreator creator = creatorClass.getDeclaredConstructor().newInstance();
-				creator.setTaskServices(taskServices);
+				creator.setPluginServices(pluginServices);
 				specs.add(creator.getEnumList(userId));
 
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException

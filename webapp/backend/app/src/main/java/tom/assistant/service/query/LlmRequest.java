@@ -3,7 +3,7 @@ package tom.assistant.service.query;
 import java.time.Instant;
 
 import tom.api.UserId;
-import tom.api.model.AssistantQuery;
+import tom.api.model.assistant.AssistantQuery;
 
 public class LlmRequest implements Runnable {
 

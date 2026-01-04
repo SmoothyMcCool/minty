@@ -17,15 +17,13 @@ import org.springframework.transaction.PlatformTransactionManager;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
-import tom.api.MintyProperties;
-
 @Configuration
 @EnableJpaRepositories("tom")
 public class DatabaseConfig {
 
-	private final MintyProperties props;
+	private final MintyConfiguration props;
 
-	public DatabaseConfig(MintyProperties properties) {
+	public DatabaseConfig(MintyConfiguration properties) {
 		props = properties;
 	}
 
@@ -33,12 +31,12 @@ public class DatabaseConfig {
 	@SpringSessionDataSource
 	DataSource applicationDataSource() {
 		HikariConfig config = new HikariConfig();
-		config.setJdbcUrl(props.get("applicationDbUrl"));
-		config.setUsername(props.get("applicationDbUser"));
-		config.setPassword(props.get("applicationDbPassword"));
+		config.setJdbcUrl(props.getConfig().db().url());
+		config.setUsername(props.getConfig().db().user());
+		config.setPassword(props.getConfig().db().password());
 		config.setDriverClassName("org.mariadb.jdbc.Driver");
-		config.addDataSourceProperty("maxAllowedPacket", props.get("applicationDbMaxAllowedPacket"));
-		config.addDataSourceProperty("compress", props.get("applicationDbCompress"));
+		config.addDataSourceProperty("maxAllowedPacket", props.getConfig().db().maxPacketSize());
+		config.addDataSourceProperty("compress", props.getConfig().db().useCompression());
 		config.setMaximumPoolSize(20);
 
 		return new HikariDataSource(config);

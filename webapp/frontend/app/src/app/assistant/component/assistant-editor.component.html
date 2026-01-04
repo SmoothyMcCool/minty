@@ -19,8 +19,11 @@
 	<div class="form-group mb-2">
 		<label for="model">Model</label>
 		<select class="form-select bg-opacity-75" name="model" [ngModel]="assistant.model" (ngModelChange)="modelChanged($event)">
-			<option *ngFor="let model of models" value="{{model}}">{{model}}</option>
+			<option *ngFor="let model of models" value="{{model.name}}">{{model.name}}</option>
 		</select>
+	</div>
+	<div class="form-group mb-2" *ngIf="assistant.model">
+		<minty-slider [min]="minContext" [max]="maxContext" [label]="'Default Context Size'" [(ngModel)]="assistant.contextSize"></minty-slider>
 	</div>
 	<div class="form-group mb-2">
 		<label for="assistantTemperature">Temperature</label>

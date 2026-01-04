@@ -9,7 +9,7 @@ import tom.api.task.TaskConfigTypes;
 
 public class TextFormatterConfig implements TaskConfigSpec {
 
-	private final String Format = "Format";
+	public static final String Format = "Format";
 
 	private String formatStr;
 
@@ -17,10 +17,10 @@ public class TextFormatterConfig implements TaskConfigSpec {
 		formatStr = "";
 	}
 
-	public TextFormatterConfig(Map<String, String> config) {
+	public TextFormatterConfig(Map<String, Object> config) {
 		this();
 		if (config.containsKey(Format)) {
-			formatStr = config.get(Format);
+			formatStr = config.get(Format).toString();
 		}
 
 		if (formatStr == null || formatStr.isBlank()) {
@@ -50,7 +50,7 @@ public class TextFormatterConfig implements TaskConfigSpec {
 	}
 
 	@Override
-	public Map<String, String> getValues() {
+	public Map<String, Object> getValues() {
 		return Map.of(Format, formatStr);
 	}
 

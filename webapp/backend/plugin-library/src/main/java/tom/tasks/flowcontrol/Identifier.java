@@ -10,6 +10,7 @@ import tom.api.task.TaskConfigSpec;
 import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
+import tom.tasks.TaskGroup;
 import tom.tasks.noop.NullTaskConfig;
 
 @RunnableTask
@@ -63,35 +64,37 @@ public class Identifier implements MintyTask {
 	private Object findKeyFromObject(String path, Object current) {
 		String[] keys = path.split("\\.");
 
+		Object o = current;
+
 		for (String key : keys) {
 
-			if (current instanceof Map) {
-				current = ((Map<?, ?>) current).get(key);
+			if (o instanceof Map) {
+				o = ((Map<?, ?>) o).get(key);
 
-			} else if (current instanceof List) {
+			} else if (o instanceof List) {
 				try {
 					int index = Integer.parseInt(key);
-					List<?> list = (List<?>) current;
+					List<?> list = (List<?>) o;
 					if (index < 0 || index >= list.size()) {
-						current = null;
+						o = null;
 						break;
 					}
-					current = list.get(index);
+					o = list.get(index);
 				} catch (NumberFormatException e) {
-					current = null;
+					o = null;
 					break;
 				}
 
 			} else {
-				current = null;
+				o = null;
 				break;
 			}
 
-			if (current == null) {
+			if (o == null) {
 				break;
 			}
 		}
-		return current;
+		return o;
 	}
 
 	@Override
@@ -140,7 +143,7 @@ public class Identifier implements MintyTask {
 			}
 
 			@Override
-			public TaskConfigSpec taskConfiguration(Map<String, String> configuration) {
+			public TaskConfigSpec taskConfiguration(Map<String, Object> configuration) {
 				return new NullTaskConfig(configuration);
 			}
 
@@ -151,7 +154,7 @@ public class Identifier implements MintyTask {
 
 			@Override
 			public String group() {
-				return "Flow Control";
+				return TaskGroup.FLOW_CONTROL.toString();
 			}
 		};
 	}

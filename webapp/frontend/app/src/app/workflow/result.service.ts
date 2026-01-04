@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { catchError, map } from 'rxjs/operators';
-import { EMPTY, Observable, throwError, timer } from 'rxjs';
+import { catchError, map, shareReplay, switchMap } from 'rxjs/operators';
+import { EMPTY, Observable, of, Subscription, throwError, timer } from 'rxjs';
 import { TrackableSubject } from '../trackable-subject';
 import { AlertService } from '../alert.service';
 import { ApiResult } from '../model/api-result';
@@ -16,7 +16,7 @@ export class ResultService {
 	private static mimeToExtension = {
 		'text/plain': 'txt',
 		'text/html': 'html',
-		'text/json': 'json',
+		'application/json': 'json',
 	};
 
 	private workflowResultListSubject: TrackableSubject<WorkflowState[]> = new TrackableSubject<WorkflowState[]>();
@@ -28,33 +28,24 @@ export class ResultService {
 	private static readonly DeleteWorkflowResult = 'api/result';
 
 	constructor(private http: HttpClient, private alertService: AlertService) {
-		this.doWorkflowRefresh();
+		this.startPolling();
 	}
 
-	private refreshWorkflowResultList() {
-		timer(5000)
-			.subscribe(() => {
-				this.doWorkflowRefresh();
-			});
-	}
+	private startPolling() {
 
-	private doWorkflowRefresh() {
-		if (!this.workflowResultListSubject.hasSubscribers()) {
-			this.refreshWorkflowResultList();
-			return;
-		}
-
-		this.getWorkflowResultList()
+		this.workflowResultList$ = timer(0, 5000)
 			.pipe(
-				catchError(() => {
-					this.refreshWorkflowResultList();
-					return EMPTY;
-				}),
-				map((result: WorkflowState[]) => {
-					this.workflowResultListSubject.next(result);
-					this.refreshWorkflowResultList();
+				switchMap(() => this.getWorkflowResultList().pipe(
+					catchError(err => {
+						this.alertService.postFailure(JSON.stringify(err));
+						return of([] as WorkflowState[]);
+					}))
+				),
+				shareReplay({
+					bufferSize: 1,
+					refCount: true
 				})
-			).subscribe();
+			);
 	}
 
 	getWorkflowResultList(): Observable<WorkflowState[]> {
@@ -65,7 +56,7 @@ export class ResultService {
 					return throwError(() => new Error(error));
 				}),
 				map((result: ApiResult) => {
-					return result.data as WorkflowState[];
+					return this.sortResults(result.data as WorkflowState[]);
 				})
 			);
 	}
@@ -157,4 +148,18 @@ export class ResultService {
 			);
 	}
 
+	private sortResults(results: WorkflowState[]): WorkflowState[] {
+		return results.sort((left, right) => {
+			if (!left.name && !right.name) {
+				return left.id.localeCompare(right.id);
+			}
+			if (!left.name) {
+				return 1;
+			}
+			if (!right.name) {
+				return -1;
+			}
+			return left.name.localeCompare(right.name);
+		});
+	}
 }

@@ -12,12 +12,12 @@ import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 import tom.api.AssistantId;
 import tom.api.DocumentId;
-import tom.api.MintyProperties;
 import tom.api.UserId;
-import tom.api.model.Assistant;
+import tom.api.model.assistant.Assistant;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantRegistryService;
 import tom.assistant.repository.AssistantRepository;
+import tom.config.MintyConfiguration;
 import tom.conversation.service.ConversationServiceInternal;
 import tom.document.service.AssistantDocumentLinkService;
 import tom.ollama.service.OllamaService;
@@ -32,12 +32,12 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 	private final AssistantRegistryService assistantRegistryService;
 	private ConversationServiceInternal conversationService;
 	private final OllamaService ollamaService;
-	private final MintyProperties properties;
+	private final MintyConfiguration properties;
 
 	public AssistantManagementServiceImpl(AssistantRepository assistantRepository,
 			AssistantDocumentLinkService assistantDocumentLinkService,
 			AssistantRegistryService assistantRegistryService, OllamaService ollamaService,
-			MintyProperties properties) {
+			MintyConfiguration properties) {
 		this.assistantRepository = assistantRepository;
 		this.assistantDocumentLinkService = assistantDocumentLinkService;
 		this.assistantRegistryService = assistantRegistryService;
@@ -109,9 +109,10 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 			return assistantRegistryService.createDefaultAssistant(ollamaService.getDefaultModel().toString());
 		} else if (assistantId.equals(AssistantManagementService.ConversationNamingAssistantId)) {
 			return assistantRegistryService
-					.createConversationNamingAssistant(properties.get("conversationNamingModel"));
+					.createConversationNamingAssistant(properties.getConfig().ollama().conversationNamingModel());
 		} else if (assistantId.equals(AssistantManagementService.DiagrammingAssistantId)) {
-			return assistantRegistryService.createDiagrammingAssistant(properties.get("diagrammingModel"));
+			return assistantRegistryService
+					.createDiagrammingAssistant(properties.getConfig().ollama().diagrammingModel());
 		}
 
 		try {

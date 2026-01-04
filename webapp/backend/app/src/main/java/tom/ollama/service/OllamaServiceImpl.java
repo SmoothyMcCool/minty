@@ -1,6 +1,5 @@
 package tom.ollama.service;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -23,15 +22,20 @@ import org.springframework.ai.vectorstore.mariadb.MariaDBVectorStore;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+
 import io.micrometer.observation.ObservationRegistry;
-import tom.api.MintyProperties;
+import tom.config.MintyConfiguration;
+import tom.config.model.ChatModelConfig;
 
 @Service
 public class OllamaServiceImpl implements OllamaService {
 
 	private static final Logger logger = LogManager.getLogger(OllamaServiceImpl.class);
 
-	private final List<String> models;
+	private final List<ChatModelConfig> models;
 	private final MariaDBVectorStore vectorStore;
 	private final ChatMemoryRepository chatMemoryRepository;
 	private final ChatMemory chatMemory;
@@ -39,18 +43,22 @@ public class OllamaServiceImpl implements OllamaService {
 	private final String defaultModel;
 
 	public OllamaServiceImpl(OllamaApi ollamaApi, JdbcTemplate vectorJdbcTemplate, DataSource dataSource,
-			MintyProperties properties) {
-		String embeddingModelName = properties.get("ollamaEmbeddingModel");
-		int chatMemoryDepth = properties.getInt("chatMemoryDepth", 20);
-		defaultModel = properties.get("defaultModel");
+			MintyConfiguration properties) {
+		String embeddingModelName = properties.getConfig().ollama().embedding().model();
+		int chatMemoryDepth = properties.getConfig().ollama().chatMemoryDepth();
+		defaultModel = properties.getConfig().ollama().defaultModel();
 
-		String modelsStr = properties.get("ollamaChatModels");
-		if (modelsStr == null || modelsStr.trim().isEmpty()) {
-			throw new IllegalArgumentException("ollamaChatModels must not be null or empty");
+		models = properties.getConfig().ollama().chatModels();
+
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			mapper.findAndRegisterModules();
+			mapper.enable(SerializationFeature.INDENT_OUTPUT);
+			logger.info("Registering models " + mapper.writeValueAsString(models));
+		} catch (JsonProcessingException e) {
+			// Just ignore. Startup logging. If this didn't work we got an exception for a
+			// malformed file before this anyway.
 		}
-		models = Arrays.asList(modelsStr.split(","));
-
-		logger.info("Registering models " + models.toString());
 
 		OllamaEmbeddingOptions embeddingOptions = OllamaEmbeddingOptions.builder().model(embeddingModelName).build();
 		embeddingModel = new OllamaEmbeddingModel(ollamaApi, embeddingOptions, ObservationRegistry.NOOP,
@@ -68,13 +76,8 @@ public class OllamaServiceImpl implements OllamaService {
 	}
 
 	@Override
-	public List<String> listModels() {
+	public List<ChatModelConfig> listModels() {
 		return Collections.unmodifiableList(models);
-	}
-
-	@Override
-	public EmbeddingModel getEmbeddingModel() {
-		return embeddingModel;
 	}
 
 	@Override

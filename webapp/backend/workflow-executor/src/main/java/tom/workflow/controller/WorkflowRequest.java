@@ -7,14 +7,14 @@ import java.util.UUID;
 public class WorkflowRequest {
 
 	private UUID id;
-	private List<Map<String, String>> taskConfigurationList = List.of();
-	private Map<String, String> outputConfiguration = Map.of();
+	private List<Map<String, Object>> taskConfigurationList = List.of();
+	private Map<String, Object> outputConfiguration = Map.of();
 
 	public WorkflowRequest() {
 	}
 
-	public WorkflowRequest(UUID id, List<Map<String, String>> taskConfigurationList,
-			Map<String, String> outputConfiguration) {
+	public WorkflowRequest(UUID id, List<Map<String, Object>> taskConfigurationList,
+			Map<String, Object> outputConfiguration) {
 		this.id = id;
 		this.taskConfigurationList = taskConfigurationList;
 		this.outputConfiguration = outputConfiguration;
@@ -28,19 +28,19 @@ public class WorkflowRequest {
 		this.id = id;
 	}
 
-	public List<Map<String, String>> getTaskConfigurationList() {
+	public List<Map<String, Object>> getTaskConfigurationList() {
 		return taskConfigurationList;
 	}
 
-	public void setTaskConfigurationList(List<Map<String, String>> taskConfigurationList) {
+	public void setTaskConfigurationList(List<Map<String, Object>> taskConfigurationList) {
 		this.taskConfigurationList = taskConfigurationList;
 	}
 
-	public Map<String, String> getOutputConfiguration() {
+	public Map<String, Object> getOutputConfiguration() {
 		return outputConfiguration;
 	}
 
-	public void setOutputConfiguration(Map<String, String> outputConfiguration) {
+	public void setOutputConfiguration(Map<String, Object> outputConfiguration) {
 		this.outputConfiguration = outputConfiguration;
 	}
 

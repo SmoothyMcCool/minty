@@ -12,7 +12,7 @@ public class JsonOutputConfig implements TaskConfigSpec {
 	public JsonOutputConfig() {
 	}
 
-	public JsonOutputConfig(Map<String, String> config) {
+	public JsonOutputConfig(Map<String, Object> config) {
 	}
 
 	@Override
@@ -32,7 +32,7 @@ public class JsonOutputConfig implements TaskConfigSpec {
 	}
 
 	@Override
-	public Map<String, String> getValues() {
+	public Map<String, Object> getValues() {
 		return Map.of();
 	}
 }

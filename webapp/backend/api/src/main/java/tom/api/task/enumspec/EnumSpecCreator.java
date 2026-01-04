@@ -1,7 +1,7 @@
 package tom.api.task.enumspec;
 
 import tom.api.UserId;
-import tom.api.services.TaskServices;
+import tom.api.services.PluginServices;
 
 public interface EnumSpecCreator {
 
@@ -9,7 +9,7 @@ public interface EnumSpecCreator {
 
 	String getName();
 
-	default void setTaskServices(TaskServices taskServices) {
+	default void setPluginServices(PluginServices pluginServices) {
 
 	}
 

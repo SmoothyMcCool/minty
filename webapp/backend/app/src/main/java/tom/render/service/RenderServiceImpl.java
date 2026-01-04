@@ -5,7 +5,6 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +21,7 @@ import de.neuland.pug4j.template.PugTemplate;
 import tom.api.services.RenderService;
 import tom.api.task.ExecutionResult;
 import tom.api.task.Packet;
-import tom.api.MintyProperties;
+import tom.config.MintyConfiguration;
 import tom.workflow.service.WorkflowService;
 
 @Service
@@ -30,13 +29,13 @@ public class RenderServiceImpl implements RenderService {
 
 	private final PugConfiguration pugConfiguration;
 	private final WorkflowService workflowService;
-	private final String tempFolder;
+	private final Path tempFolder;
 
 	public RenderServiceImpl(PugConfiguration pugConfiguration, WorkflowService workflowService,
-			MintyProperties properties) {
+			MintyConfiguration properties) {
 		this.pugConfiguration = pugConfiguration;
 		this.workflowService = workflowService;
-		this.tempFolder = properties.get("tempFileStore");
+		this.tempFolder = properties.getConfig().fileStores().temp();
 	}
 
 	@Override
@@ -73,7 +72,7 @@ public class RenderServiceImpl implements RenderService {
 
 		try (StringWriter writer = new StringWriter()) {
 
-			tempFilePath = Files.createTempFile(Paths.get(tempFolder), "pug-" + UUID.randomUUID(), ".pug");
+			tempFilePath = Files.createTempFile(tempFolder, "pug-" + UUID.randomUUID(), ".pug");
 			Files.write(tempFilePath, template.getBytes(StandardCharsets.UTF_8));
 
 			PugTemplate pugTemplate = pugConfiguration.getTemplate(tempFilePath.toString());

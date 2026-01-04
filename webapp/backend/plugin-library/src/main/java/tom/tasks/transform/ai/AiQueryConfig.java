@@ -4,53 +4,52 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import tom.api.AssistantId;
-import tom.api.services.assistant.AssistantManagementService;
+import tom.api.model.assistant.AssistantSpec;
 import tom.api.task.TaskConfigSpec;
 import tom.api.task.TaskConfigTypes;
 import tom.tasks.TaskUtils;
 
 public class AiQueryConfig implements TaskConfigSpec {
 
-	private final String Assistant = "Assistant";
-	private final String Query = "Query";
+	public static final String Assistant = "Assistant";
+	public static final String Query = "Query";
 
-	private AssistantId assistant;
+	private AssistantSpec assistant;
 	private String query;
 
 	public AiQueryConfig() {
-		assistant = AssistantManagementService.DefaultAssistantId;
+		assistant = new AssistantSpec();
 		query = "";
 	}
 
-	public AiQueryConfig(Map<String, String> config) {
+	public AiQueryConfig(Map<String, Object> config) {
 		this();
 		if (config.containsKey(Assistant)) {
-			assistant = new AssistantId(config.get(Assistant));
+			assistant = TaskUtils.safeConvert(config.get(Assistant), AssistantSpec.class);
 		}
 		if (config.containsKey(Query)) {
-			query = config.get(Query);
+			query = config.get(Query).toString();
 		}
 	}
 
 	@Override
 	public Map<String, TaskConfigTypes> getConfig() {
 		Map<String, TaskConfigTypes> cfg = new HashMap<>();
-		cfg.put(Assistant, TaskConfigTypes.EnumList);
+		cfg.put(Assistant, TaskConfigTypes.Assistant);
 		cfg.put(Query, TaskConfigTypes.TextArea);
 		return cfg;
 	}
 
 	public void updateFrom(Map<String, Object> map) {
 		if (map.containsKey(Assistant)) {
-			assistant = TaskUtils.safeConvert(map.get(Assistant), AssistantId.class);
+			assistant = TaskUtils.safeConvert(map.get(Assistant), AssistantSpec.class);
 		}
 		if (map.containsKey(Query)) {
 			query = TaskUtils.safeConvert(map.get(Query), String.class);
 		}
 	}
 
-	public AssistantId getAssistant() {
+	public AssistantSpec getAssistant() {
 		return assistant;
 	}
 
@@ -69,7 +68,7 @@ public class AiQueryConfig implements TaskConfigSpec {
 	}
 
 	@Override
-	public Map<String, String> getValues() {
-		return Map.of(Assistant, assistant.getValue().toString(), Query, query);
+	public Map<String, Object> getValues() {
+		return Map.of(Assistant, assistant != null ? assistant.toJson() : "", Query, query);
 	}
 }

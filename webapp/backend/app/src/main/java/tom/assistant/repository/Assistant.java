@@ -24,6 +24,7 @@ public class Assistant {
 	private String name;
 	private String prompt;
 	private String model;
+	private Integer contextSize;
 	private Double temperature;
 	private Integer topK;
 	private UserId ownerId;
@@ -38,11 +39,12 @@ public class Assistant {
 	public Assistant() {
 	}
 
-	public Assistant(tom.api.model.Assistant assistant) {
+	public Assistant(tom.api.model.assistant.Assistant assistant) {
 		this.id = assistant.id().getValue();
 		this.name = assistant.name();
 		this.prompt = assistant.prompt();
 		this.model = assistant.model();
+		this.contextSize = assistant.contextSize();
 		this.temperature = assistant.temperature();
 		this.topK = assistant.topK();
 		this.ownerId = assistant.ownerId();
@@ -52,15 +54,16 @@ public class Assistant {
 		this.tools = assistant.tools();
 	}
 
-	public tom.api.model.Assistant toTaskAssistant() {
-		return new tom.api.model.Assistant(new AssistantId(id), name, model.toString(), temperature, topK, prompt,
-				associatedDocumentIds, tools, ownerId, shared, hasMemory);
+	public tom.api.model.assistant.Assistant toTaskAssistant() {
+		return new tom.api.model.assistant.Assistant(new AssistantId(id), name, model.toString(), contextSize,
+				temperature, topK, prompt, associatedDocumentIds, tools, ownerId, shared, hasMemory);
 	}
 
-	public Assistant updateWith(tom.api.model.Assistant assistant) {
+	public Assistant updateWith(tom.api.model.assistant.Assistant assistant) {
 		setName(assistant.name());
 		setPrompt(assistant.prompt());
 		setModel(assistant.model());
+		setContextSize(assistant.contextSize());
 		setTemperature(assistant.temperature());
 		setTopK(assistant.topK());
 		setShared(assistant.shared());
@@ -100,6 +103,14 @@ public class Assistant {
 
 	public void setModel(String model) {
 		this.model = model;
+	}
+
+	public Integer getContextSize() {
+		return contextSize;
+	}
+
+	public void setContextSize(Integer contextSize) {
+		this.contextSize = contextSize;
 	}
 
 	public Double getTemperature() {

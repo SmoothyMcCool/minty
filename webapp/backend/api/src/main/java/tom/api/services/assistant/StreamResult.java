@@ -1,5 +1,6 @@
 package tom.api.services.assistant;
 
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -7,6 +8,8 @@ import java.util.concurrent.TimeUnit;
 public final class StreamResult implements LlmResult {
 
 	private final BlockingQueue<String> chunks = new LinkedBlockingQueue<>();
+	private LlmMetric metric = null;
+	private List<String> sources = null;
 	private volatile boolean complete = false;
 
 	public StreamResult() {
@@ -36,5 +39,21 @@ public final class StreamResult implements LlmResult {
 
 	public boolean isComplete() {
 		return complete && chunks.isEmpty();
+	}
+
+	public void addUsage(LlmMetric llmMetric) {
+		metric = llmMetric;
+	}
+
+	public LlmMetric getUsage() {
+		return metric;
+	}
+
+	public List<String> getSources() {
+		return sources;
+	}
+
+	public void addSources(List<String> docsUsed) {
+		sources = docsUsed;
 	}
 }

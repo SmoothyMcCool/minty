@@ -23,6 +23,19 @@ public class Packet {
 		data = new ArrayList<>();
 	}
 
+	public Packet(Packet other) {
+		try {
+			String json = other.toJson();
+			Packet clone = mapper.readValue(json, Packet.class);
+
+			this.id = clone.id;
+			this.text = clone.text;
+			this.data = clone.data;
+		} catch (JsonProcessingException e) {
+			throw new IllegalStateException("Failed to clone Packet", e);
+		}
+	}
+
 	public String getId() {
 		return id;
 	}

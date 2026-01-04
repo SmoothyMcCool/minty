@@ -23,4 +23,6 @@ public interface WorkflowTrackingService {
 	WorkflowResult getResult(UserId userId, UUID workflowId);
 
 	String getLog(UserId userId, UUID workflowId);
+
+	void cancelWorkflow(UserId userId, String name);
 }

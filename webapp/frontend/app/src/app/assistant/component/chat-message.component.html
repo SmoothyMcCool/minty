@@ -1,0 +1,33 @@
+
+
+<div class="row m-2" [class.flex-row-reverse]="message.user">
+	<div class="col-11 p-2" [class.well-user]="message.user" [class.well-bot]="!message.user">
+		<div *ngIf="responsePending && isFirst && !message.user">
+			<div class="spinner-grow spinner-grow-sm text-secondary me-1"></div>
+			<div class="spinner-grow spinner-grow-sm text-secondary me-1" style="animation-delay: 250ms;"></div>
+			<div class="spinner-grow spinner-grow-sm text-secondary me-1" style="animation-delay: 500ms;"></div>
+			<span *ngIf="queueDepth === 1; else depthOne">Waiting... You're next!</span>
+			<ng-template #depthOne>
+				<span *ngIf="queueDepth === 2; else depthLargerThanOne">Waiting... There is one task ahead of you.</span>
+			</ng-template>
+			<ng-template #depthLargerThanOne>
+				<span *ngIf="queueDepth !== undefined">Waiting... There are {{queueDepth - 1}} tasks ahead of you.</span>
+			</ng-template>
+		</div>
+		<ng-container *ngIf="useMarkdown; else noMarkdown">
+			<markdown clipboard [mermaid]="useMermaid" [data]="message.message" [clipboardButtonTemplate]="clipboardTemplate"></markdown>
+		</ng-container>
+		<ng-template #noMarkdown>
+			<pre>{{message.message}}</pre>
+		</ng-template>
+	</div>
+</div>
+
+<ng-template #clipboardTemplate>
+	<button class="btn btn-sm btn-light clipboard-button"
+		#copyButton
+		(click)="onCopyClick(copyButton)">
+		<i *ngIf="!isCopied(copyButton)" class="bi bi-copy"></i>
+		<i *ngIf="isCopied(copyButton)" class="bi bi-check-circle-fill text-success"></i>
+	</button>
+</ng-template>

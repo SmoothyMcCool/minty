@@ -46,7 +46,6 @@ public class DocumentProcessingTask implements Runnable {
 			}
 
 			documentService.transformAndStore(file, doc);
-			file.delete();
 
 			synchronized (DocumentProcessingTask.class) {
 				String parent = file.getParent();
@@ -70,7 +69,10 @@ public class DocumentProcessingTask implements Runnable {
 		} catch (Exception e) {
 			logger.error("File processing failed: ", e);
 			if (doc != null) {
+				logger.info("Marked document as failed: " + doc.getTitle());
 				documentService.markDocumentFailed(doc);
+			} else {
+				logger.warn("doc was null, could not mark as failed.");
 			}
 		} finally {
 			file.delete();

@@ -10,8 +10,8 @@ import tom.tasks.Grouping;
 
 public class TextCollectorConfig implements TaskConfigSpec {
 
-	public final String GroupingLabel = "Grouping";
-	private final String Separator = "Separator";
+	public static final String GroupingLabel = "Grouping";
+	public static final String Separator = "Separator";
 
 	private Grouping grouping;
 	private String separator;
@@ -21,13 +21,13 @@ public class TextCollectorConfig implements TaskConfigSpec {
 		separator = "";
 	}
 
-	public TextCollectorConfig(Map<String, String> config) {
+	public TextCollectorConfig(Map<String, Object> config) {
 		this();
 		if (config.containsKey(GroupingLabel)) {
-			grouping = Grouping.valueOf(config.get(GroupingLabel));
+			grouping = Grouping.valueOf(config.get(GroupingLabel).toString());
 		}
 		if (config.containsKey(Separator)) {
-			separator = config.get(Separator);
+			separator = config.get(Separator).toString();
 		}
 	}
 
@@ -58,7 +58,7 @@ public class TextCollectorConfig implements TaskConfigSpec {
 	}
 
 	@Override
-	public Map<String, String> getValues() {
+	public Map<String, Object> getValues() {
 		return Map.of(GroupingLabel, grouping.toString(), Separator, separator);
 	}
 }

@@ -9,7 +9,7 @@ import tom.api.task.TaskConfigTypes;
 
 public class PacketEmitterConfig implements TaskConfigSpec {
 
-	private final String DataToEmit = "Data to Emit";
+	public static final String DataToEmit = "Data to Emit";
 
 	String data;
 
@@ -17,10 +17,10 @@ public class PacketEmitterConfig implements TaskConfigSpec {
 		data = "";
 	}
 
-	public PacketEmitterConfig(Map<String, String> config) {
+	public PacketEmitterConfig(Map<String, Object> config) {
 		this();
 		if (config.containsKey(DataToEmit)) {
-			data = config.get(DataToEmit);
+			data = config.get(DataToEmit).toString();
 		}
 	}
 
@@ -46,7 +46,7 @@ public class PacketEmitterConfig implements TaskConfigSpec {
 	}
 
 	@Override
-	public Map<String, String> getValues() {
+	public Map<String, Object> getValues() {
 		return Map.of(DataToEmit, data);
 	}
 }

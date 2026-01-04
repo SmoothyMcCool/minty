@@ -6,10 +6,12 @@ import { RouterModule } from '@angular/router';
 import { FilterPipe } from '../../pipe/filter-pipe';
 import { MintyDoc } from 'src/app/model/minty-doc';
 import { MintyTool } from 'src/app/model/minty-tool';
+import { Model } from 'src/app/model/model';
+import { SliderComponent } from './slider.component';
 
 @Component({
 	selector: 'minty-assistant-editor',
-	imports: [CommonModule, FormsModule, RouterModule, FilterPipe],
+	imports: [CommonModule, FormsModule, RouterModule, FilterPipe, SliderComponent],
 	templateUrl: 'assistant-editor.component.html',
 	providers: [
 		{
@@ -21,7 +23,7 @@ import { MintyTool } from 'src/app/model/minty-tool';
 })
 export class AssistantEditorComponent implements ControlValueAccessor {
 
-	@Input() models: string[] = [];
+	@Input() models: Model[] = [];
 	private _documents: MintyDoc[] = [];
 	@Input()
 	set documents(value: MintyDoc[]) {
@@ -45,6 +47,8 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 
 	assistantDocuments: MintyDoc[] = [];
 	assistant: Assistant;
+	minContext: number;
+	maxContext: number;
 
 	assistantTools: MintyTool[] = [];
 
@@ -57,6 +61,13 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 	modelChanged(model: string) {
 		this.assistant.model = model;
 		this.assistant.documentIds = [];
+		this.minContext = this.models.find(m => m.name === model).defaultContext;
+		this.maxContext = this.models.find(m => m.name === model).maximumContext;
+		if (this.assistant.contextSize < this.minContext) {
+			this.assistant.contextSize = this.minContext;
+		} else if (this.assistant.contextSize > this.maxContext) {
+			this.assistant.contextSize = this.maxContext;
+		}
 	}
 
 	addDoc(doc: MintyDoc) {
@@ -67,13 +78,14 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 		this.assistantDocuments.push(doc);
 		this._documents = this._documents.filter(d => d.documentId !== doc.documentId);
 		// New object for better chances at sane change detection.
-		this.assistant.documentIds = [...this.assistant.documentIds];
+		this.assistantDocuments = [...this.assistantDocuments];
 	}
 
 	removeDoc(doc: MintyDoc) {
 		this.assistant.documentIds = this.assistant.documentIds.filter(el => el !== doc.documentId);
-		this.assistantDocuments = this.documents.filter(doc => this.assistant.documentIds.find(id => id === doc.documentId) != undefined);
-		this.documents.push(doc);
+		this.assistantDocuments = this.assistantDocuments.filter(doc => this.assistant.documentIds.findIndex(id => id === doc.documentId) !== -1);
+		this._documents.push(doc);
+		this._documents = [...this._documents];
 	}
 
 	addTool(tool: MintyTool) {
@@ -84,24 +96,25 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 		this.assistantTools.push(tool);
 		this._tools = this._tools.filter(t => t.name !== tool.name);
 		// New object for better chances at sane change detection.
-		this.assistant.tools = [...this.assistant.tools];
+		this.assistantTools = [...this.assistantTools];
 	}
 
 	removeTool(tool: MintyTool) {
 		this.assistant.tools = this.assistant.tools.filter(el => el !== tool.name);
-		this.assistantTools = this.tools.filter(tool => this.assistant.tools.find(id => id.localeCompare(tool.name) === 0) != undefined);
-		this.tools.push(tool);
+		this.assistantTools = this.assistantTools.filter(tool => this.assistant.tools.findIndex(at => at.localeCompare(tool.name) === 0) !== -1);
+		this._tools.push(tool);
+		this._tools = [...this._tools];
 	}
 
 	writeValue(obj: any): void {
 		this.assistant = obj;
-		this.tools = this.tools;
+		this.tools = [...this.tools];
 	}
 	registerOnChange(fn: any): void {
-		this.assistant = fn;
+		this.onChange = fn;
 	}
 	registerOnTouched(fn: any): void {
-		this.assistant = fn;
+		this.onTouched = fn;
 	}
 	setDisabledState(isDisabled: boolean): void {
 		// Nah.

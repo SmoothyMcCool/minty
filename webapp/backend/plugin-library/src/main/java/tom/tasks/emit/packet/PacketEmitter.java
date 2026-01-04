@@ -15,6 +15,7 @@ import tom.api.task.TaskConfigSpec;
 import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
+import tom.tasks.TaskGroup;
 
 @RunnableTask
 public class PacketEmitter implements MintyTask {
@@ -124,7 +125,7 @@ public class PacketEmitter implements MintyTask {
 			}
 
 			@Override
-			public TaskConfigSpec taskConfiguration(Map<String, String> configuration) {
+			public TaskConfigSpec taskConfiguration(Map<String, Object> configuration) {
 				return new PacketEmitterConfig(configuration);
 			}
 
@@ -135,7 +136,7 @@ public class PacketEmitter implements MintyTask {
 
 			@Override
 			public String group() {
-				return "Emit";
+				return TaskGroup.EMIT.toString();
 			}
 		};
 	}

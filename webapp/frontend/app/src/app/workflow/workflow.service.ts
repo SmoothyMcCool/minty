@@ -15,6 +15,7 @@ export class WorkflowService {
 
 	private static readonly GetWorkflow = 'api/workflow'; // Retrieve a workflow by ID
 	private static readonly DeleteWorkflow = 'api/workflow'; // Delete a workflow
+	private static readonly CancelWorkflow = 'api/workflow/cancel'; // Cancel an in progress a workflow
 	private static readonly ListWorkflows = 'api/workflow/list'; // Retrieve all workflows
 	private static readonly ExecuteWorkflow = 'api/workflow/execute'; // Run a workflow
 	private static readonly NewWorkflow = 'api/workflow/new'; // Create a new workflow
@@ -97,7 +98,23 @@ export class WorkflowService {
 					return EMPTY;
 				}),
 				map((result: ApiResult) => {
-					return Array.from(result.data as any[]).map(element => this.objectify(element));
+					return this.sortWorkflows(Array.from(result.data as any[]).map(element => this.objectify(element)));
+				})
+			);
+	}
+
+	cancelWorkflow(name: string): Observable<void> {
+		let params: HttpParams = new HttpParams();
+		params = params.append('name', name);
+
+		return this.http.delete<ApiResult>(WorkflowService.CancelWorkflow, { params: params })
+			.pipe(
+				catchError(error => {
+					this.alertService.postFailure(JSON.stringify(error));
+					return EMPTY;
+				}),
+				map((result: ApiResult) => {
+					return;
 				})
 			);
 	}
@@ -208,7 +225,7 @@ export class WorkflowService {
 					return EMPTY;
 				}),
 				map((result: ApiResult) => {
-					return Array.from(result.data as any[]).map(element => this.objectify(element));
+					return this.sortWorkflows(Array.from(result.data as any[]).map(element => this.objectify(element)));
 				})
 			);
 	}
@@ -381,5 +398,20 @@ export class WorkflowService {
 			}
 		}
 		return w;
+	}
+
+	private sortWorkflows(workflows: Workflow[]): Workflow[] {
+		return workflows.sort((left, right) => {
+			if (!left.name && !right.name) {
+				return left.id.localeCompare(right.id);
+			}
+			if (!left.name) {
+				return 1;
+			}
+			if (!right.name) {
+				return -1;
+			}
+			return left.name.localeCompare(right.name);
+		});
 	}
 }

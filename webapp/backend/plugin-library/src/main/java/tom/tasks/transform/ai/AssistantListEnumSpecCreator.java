@@ -4,15 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import tom.api.UserId;
-import tom.api.model.Assistant;
-import tom.api.services.TaskServices;
+import tom.api.model.assistant.Assistant;
+import tom.api.services.PluginServices;
 import tom.api.task.enumspec.EnumSpec;
 import tom.api.task.enumspec.EnumSpecCreator;
 import tom.api.task.enumspec.NameValuePair;
 
 public class AssistantListEnumSpecCreator implements EnumSpecCreator {
 
-	private TaskServices taskServices;
+	private PluginServices pluginServices;
 	private final String enumName;
 
 	public AssistantListEnumSpecCreator() {
@@ -21,7 +21,7 @@ public class AssistantListEnumSpecCreator implements EnumSpecCreator {
 
 	@Override
 	public EnumSpec getEnumList(UserId userId) {
-		List<Assistant> assistants = taskServices.getAssistantManagementService().listAssistants(userId);
+		List<Assistant> assistants = pluginServices.getAssistantManagementService().listAssistants(userId);
 
 		List<NameValuePair> pairs = new ArrayList<>();
 		for (Assistant assistant : assistants) {
@@ -40,7 +40,7 @@ public class AssistantListEnumSpecCreator implements EnumSpecCreator {
 	}
 
 	@Override
-	public void setTaskServices(TaskServices taskServices) {
-		this.taskServices = taskServices;
+	public void setPluginServices(PluginServices pluginServices) {
+		this.pluginServices = pluginServices;
 	}
 }

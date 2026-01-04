@@ -12,8 +12,8 @@ import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
-import tom.api.model.Assistant;
-import tom.api.model.AssistantBuilder;
+import tom.api.model.assistant.Assistant;
+import tom.api.model.assistant.AssistantBuilder;
 import tom.api.services.UserService;
 import tom.api.services.assistant.AssistantManagementService;
 
@@ -40,10 +40,11 @@ public class AssistantRegistry {
 			});
 
 			builder.id(AssistantManagementService.DefaultAssistantId).name((String) asstData.get("name"))
-					.model((String) asstData.get("model")).temperature((Double) asstData.get("temperature"))
-					.topK((Integer) asstData.get("topK")).prompt((String) asstData.get("prompt")).tools(tools)
-					.ownerId(UserService.DefaultId).shared((Boolean) asstData.get("shared"))
-					.hasMemory((Boolean) asstData.get("hasMemory")).documentIds(List.of());
+					.model((String) asstData.get("model")).contextSize((Integer) asstData.get("contextSize"))
+					.temperature((Double) asstData.get("temperature")).topK((Integer) asstData.get("topK"))
+					.prompt((String) asstData.get("prompt")).tools(tools).ownerId(UserService.DefaultId)
+					.shared((Boolean) asstData.get("shared")).hasMemory((Boolean) asstData.get("hasMemory"))
+					.documentIds(List.of());
 			Assistant assistant = builder.build();
 			assistants.put(assistant.name(), assistant);
 		}

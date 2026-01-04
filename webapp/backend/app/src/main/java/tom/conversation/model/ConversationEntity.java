@@ -12,7 +12,7 @@ import jakarta.persistence.Table;
 import tom.api.AssistantId;
 import tom.api.ConversationId;
 import tom.api.UserId;
-import tom.api.conversation.model.Conversation;
+import tom.api.model.conversation.Conversation;
 import tom.repository.converter.UserIdConverter;
 
 @Entity

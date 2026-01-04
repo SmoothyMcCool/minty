@@ -5,8 +5,8 @@ import { catchError, map } from 'rxjs/operators';
 import { EMPTY, Observable } from 'rxjs';
 import { AlertService } from './alert.service';
 import { Assistant } from './model/assistant';
-import { ChatMessage } from './model/chat-message';
-import { Conversation } from './model/conversation';
+import { ChatMessage } from './model/conversation/chat-message';
+import { Conversation } from './model/conversation/conversation';
 
 @Injectable({
 	providedIn: 'root'

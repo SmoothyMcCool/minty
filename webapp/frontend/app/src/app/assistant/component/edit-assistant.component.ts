@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Assistant } from '../../model/assistant';
+import { Assistant, createAssistant } from '../../model/assistant';
 import { AssistantService } from '../../assistant.service';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FilterPipe } from '../../pipe/filter-pipe';
@@ -10,6 +10,7 @@ import { DocumentService } from 'src/app/document.service';
 import { AssistantEditorComponent } from './assistant-editor.component';
 import { MintyTool } from 'src/app/model/minty-tool';
 import { ToolService } from 'src/app/tool.service';
+import { Model } from 'src/app/model/model';
 
 @Component({
 	selector: 'minty-edit-assistant',
@@ -18,22 +19,10 @@ import { ToolService } from 'src/app/tool.service';
 })
 export class EditAssistantComponent implements OnInit {
 
-	models: string[] = [];
+	models: Model[] = [];
 	documents: MintyDoc[] = [];
 	tools: MintyTool[] = [];
-	assistant: Assistant = {
-		id: '',
-		name: '',
-		prompt: '',
-		model: '',
-		temperature: 0,
-		topK: 5,
-		tools: [],
-		ownerId: '',
-		shared: false,
-		hasMemory: false,
-		documentIds: []
-	};
+	assistant: Assistant = createAssistant();
 
 	constructor(
 		private route: ActivatedRoute,
@@ -52,7 +41,7 @@ export class EditAssistantComponent implements OnInit {
 				});
 			});
 		});
-		this.assistantService.models().subscribe((models: string[]) => {
+		this.assistantService.models().subscribe((models: Model[]) => {
 			this.models = models;
 		});
 		this.toolService.list().subscribe((tools: MintyTool[]) => {

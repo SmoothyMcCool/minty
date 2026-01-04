@@ -26,7 +26,7 @@ public interface TaskRegistryService {
 
 	Map<String, String> getConfigForOutputTask(String outputName);
 
-	TaskSpec getSpecForTask(String taskName);
+	TaskSpec getSpecForTask(TaskRequest request);
 
 	List<EnumSpec> getEnumerations(UserId userId);
 

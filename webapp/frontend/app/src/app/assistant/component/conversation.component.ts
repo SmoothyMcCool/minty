@@ -1,29 +1,24 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
-import { ChatMessage } from '../../model/chat-message';
-import { MarkdownModule } from 'ngx-markdown';
+import { ChatMessage } from '../../model/conversation/chat-message';
+import { ChatMessageComponent } from './chat-message.component';
 import { FormsModule } from '@angular/forms';
 
 @Component({
 	selector: 'minty-conversation',
-	imports: [CommonModule, MarkdownModule, FormsModule],
+	imports: [CommonModule, FormsModule, ChatMessageComponent],
 	templateUrl: 'conversation.component.html',
 	styleUrls: ['conversation.component.css'],
 })
 export class ConversationComponent {
 	useMermaid = true;
-	copiedButtons = new WeakSet<HTMLElement>();
+	useMarkdown = true;
 
 	@Input() messages: ChatMessage[];
 	@Input() responsePending: boolean;
 	@Input() queueDepth: number;
 
-	onCopyClick(button: HTMLElement) {
-		this.copiedButtons.add(button);
-		setTimeout(() => this.copiedButtons.delete(button), 1000);
-	}
-
-	isCopied(button: HTMLElement | null): boolean {
-		return !!button && this.copiedButtons.has(button);
+	trackByMessage(index: number, message: ChatMessage) {
+		return index;
 	}
 };

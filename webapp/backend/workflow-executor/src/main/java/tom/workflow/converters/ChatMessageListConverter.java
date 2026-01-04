@@ -3,7 +3,7 @@ package tom.workflow.converters;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import jakarta.persistence.Converter;
-import tom.api.model.ChatMessage;
+import tom.api.model.conversation.ChatMessage;
 import tom.util.ClassConverter;
 
 @Converter

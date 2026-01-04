@@ -23,7 +23,6 @@ import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
-import tom.api.MintyProperties;
 import tom.api.task.MintyTask;
 import tom.api.task.OutputTask;
 import tom.api.task.TaskConfigSpec;
@@ -31,7 +30,8 @@ import tom.api.task.annotation.Output;
 import tom.api.task.annotation.RunnableTask;
 import tom.api.task.enumspec.EnumSpecCreator;
 import tom.api.tool.MintyTool;
-import tom.config.MintyPropertiesImpl;
+import tom.config.MintyConfiguration;
+import tom.config.MintyConfigurationImpl;
 import tom.task.registry.TaskLoadFailureException;
 import tom.task.registry.TaskRegistryService;
 import tom.tool.registry.ToolLoadFailureException;
@@ -42,25 +42,25 @@ public class PluginLoader {
 
 	private final Logger logger = LogManager.getLogger(PluginLoader.class);
 
-	private final String pluginLibrary;
+	private final Path pluginLibrary;
 
 	private final ToolRegistryService toolRegistryService;
 	private final TaskRegistryService taskRegistryService;
-	private final MintyPropertiesImpl properties;
+	private final MintyConfigurationImpl properties;
 
 	public PluginLoader(ToolRegistryService toolRegistryService, TaskRegistryService taskRegistryService,
-			MintyProperties properties) {
+			MintyConfiguration properties) {
 		this.toolRegistryService = toolRegistryService;
 		this.taskRegistryService = taskRegistryService;
-		this.properties = (MintyPropertiesImpl) properties;
-		pluginLibrary = properties.get("pluginLibrary");
+		this.properties = (MintyConfigurationImpl) properties;
+		pluginLibrary = properties.getConfig().fileStores().plugins();
 	}
 
 	@PostConstruct
 	public void initialize() {
 		logger.info("Searching for plugins at " + pluginLibrary);
 
-		try (Stream<Path> stream = Files.list(Path.of(pluginLibrary))) {
+		try (Stream<Path> stream = Files.list(pluginLibrary)) {
 			List<Path> paths = stream.filter(file -> file.toString().endsWith(".jar")).toList();
 
 			List<String> classes = new ArrayList<>();
@@ -109,7 +109,7 @@ public class PluginLoader {
 
 			// Now that we have processed all classes, let's try to read out our default
 			// values
-			properties.readSystemDefaults();
+			properties.validateSystemDefaults();
 
 		}
 

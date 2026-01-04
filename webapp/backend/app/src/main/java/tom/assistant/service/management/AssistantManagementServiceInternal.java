@@ -1,7 +1,7 @@
 package tom.assistant.service.management;
 
 import tom.api.AssistantId;
-import tom.api.model.Assistant;
+import tom.api.model.assistant.Assistant;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.conversation.service.ConversationServiceInternal;
 

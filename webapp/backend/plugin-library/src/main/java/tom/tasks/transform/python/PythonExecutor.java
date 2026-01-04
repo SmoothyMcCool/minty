@@ -5,8 +5,8 @@ import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import tom.api.model.ServiceConsumer;
-import tom.api.services.TaskServices;
+import tom.api.model.services.ServiceConsumer;
+import tom.api.services.PluginServices;
 import tom.api.services.python.PythonException;
 import tom.api.services.python.PythonResult;
 import tom.api.task.MintyTask;
@@ -16,6 +16,7 @@ import tom.api.task.TaskConfigSpec;
 import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
+import tom.tasks.TaskGroup;
 
 /*
 import json
@@ -50,14 +51,14 @@ public class PythonExecutor implements MintyTask, ServiceConsumer {
 	private TaskLogger logger;
 	private PythonExecutorConfig configuration;
 	private Packet result;
-	private TaskServices taskServices;
+	private PluginServices pluginServices;
 	private String error;
 	private Packet input;
 	private boolean failed;
 
 	public PythonExecutor() {
 		result = null;
-		taskServices = null;
+		pluginServices = null;
 		error = null;
 		input = null;
 		outputs = null;
@@ -80,8 +81,8 @@ public class PythonExecutor implements MintyTask, ServiceConsumer {
 	}
 
 	@Override
-	public void setTaskServices(TaskServices taskServices) {
-		this.taskServices = taskServices;
+	public void setPluginServices(PluginServices pluginServices) {
+		this.pluginServices = pluginServices;
 	}
 
 	@Override
@@ -92,8 +93,7 @@ public class PythonExecutor implements MintyTask, ServiceConsumer {
 		try {
 			logger.debug("PythonExecutor: Executing " + configuration.getPython());
 
-			PythonResult pyResult = taskServices.getPythonService().executeCodeString(configuration.getPython(),
-					input.getData());
+			PythonResult pyResult = pluginServices.getPythonService().executeCodeString(configuration.getPython(), input);
 
 			logger.info("Python complete. Logs:");
 			pyResult.logs().forEach(log -> logger.info(log));
@@ -172,7 +172,7 @@ public class PythonExecutor implements MintyTask, ServiceConsumer {
 			}
 
 			@Override
-			public TaskConfigSpec taskConfiguration(Map<String, String> configuration) {
+			public TaskConfigSpec taskConfiguration(Map<String, Object> configuration) {
 				try {
 					return new PythonExecutorConfig(configuration);
 				} catch (JsonProcessingException e) {
@@ -187,7 +187,7 @@ public class PythonExecutor implements MintyTask, ServiceConsumer {
 
 			@Override
 			public String group() {
-				return "Transform";
+				return TaskGroup.TRANSFORM.toString();
 			}
 
 		};

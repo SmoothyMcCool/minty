@@ -1,5 +1,7 @@
 package tom.workflow.executor;
 
+import java.nio.file.Path;
+
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LogEvent;
@@ -17,16 +19,16 @@ public class WorkflowLoggerImpl implements AutoCloseable, TaskLogger {
 	private static final Configuration cfg = ctx.getConfiguration();
 
 	private final FileAppender appender;
-	private final String filePath;
+	private final Path filePath;
 	private final String fileName;
 
-	public WorkflowLoggerImpl(String path, String unsanitizedFilename) {
+	public WorkflowLoggerImpl(Path path, String unsanitizedFilename) {
 		PatternLayout layout = PatternLayout.newBuilder().withPattern("[%d{HH:mm:ss}] %-5p - %m%n")
 				.withConfiguration(cfg).build();
 
 		fileName = sanitize(unsanitizedFilename);
-		filePath = path + "/" + fileName;
-		this.appender = FileAppender.newBuilder().setName("FileLogger-" + fileName).withFileName(filePath)
+		filePath = path.resolve(fileName);
+		this.appender = FileAppender.newBuilder().setName("FileLogger-" + fileName).withFileName(filePath.toString())
 				.setLayout(layout).withAppend(true).setConfiguration(cfg).build();
 
 		this.appender.start();

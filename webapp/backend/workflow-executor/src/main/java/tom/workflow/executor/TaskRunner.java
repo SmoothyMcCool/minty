@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.springframework.core.task.AsyncTaskExecutor;
 
@@ -13,6 +14,7 @@ import tom.api.task.Packet;
 import tom.api.task.TaskLogger;
 import tom.task.model.TaskRequest;
 import tom.task.registry.TaskRegistryService;
+import tom.workflow.futureutil.FutureUtils;
 import tom.workflow.tracking.model.ExecutionStepState;
 
 public class TaskRunner {
@@ -78,11 +80,12 @@ public class TaskRunner {
 	}
 
 	public void run() throws InterruptedException {
-		boolean allTasksSpawned = false;
+		AtomicBoolean allTasksSpawned = new AtomicBoolean(false);
 
-		while (!allTasksSpawned) {
+		while (!allTasksSpawned.get()) {
 
 			MintyTask task = taskRegistryService.newTask(userId, request);
+			logger.info("New task created for " + request.getStepName());
 			if (task == null) {
 				failed = true;
 				return;
@@ -97,24 +100,40 @@ public class TaskRunner {
 			// immediately.
 			if (numInputs == 0) {
 				task.inputTerminated(0);
-				allTasksSpawned = true; // Make sure the task only runs once.
+				allTasksSpawned.set(true); // Make sure the task only runs once.
 			} else {
-				for (int i = 0; i < numInputs; i++) {
+				for (int i = 0; i < numInputs && !allTasksSpawned.get(); i++) {
 					boolean inputDone = false;
-					while (!inputDone) {
+
+					if (inputs.get(i).isComplete()) {
+						continue;
+					}
+
+					while (!inputDone && !allTasksSpawned.get()) {
 						try {
 							Packet packet = inputs.get(i).read();
 
 							if (packet != null) {
-								if (task.wantsInput(i, packet)) {
-									inputDone = task.giveInput(i, packet);
-								} else {
-									inputs.get(i).replace(packet);
+								if (packet == Connector.WRITING_COMPLETE) {
+									logger.info("Task " + request.getStepName() + " input terminated on port " + i);
+									task.inputTerminated(i);
 									inputDone = true;
+								} else {
+
+									if (task.wantsInput(i, packet)) {
+										logger.info("Task " + request.getStepName() + " taking packet on port " + i);
+										inputDone = task.giveInput(i, packet);
+									} else {
+										logger.info(
+												"Task " + request.getStepName() + " didn't want packet on port " + i);
+										inputs.get(i).replace(packet);
+										inputDone = true;
+									}
 								}
 							} else {
-								task.inputTerminated(i);
-								inputDone = true;
+								// If packet is null, that means the wait just timed out. We just have to break
+								// every so often so we can catch situations where allTasksSpawned becomes true
+								// from already running tasks, while we wait.
 							}
 
 						} catch (Exception e) {
@@ -131,6 +150,10 @@ public class TaskRunner {
 						break;
 					}
 				}
+
+				if (allTasksSpawned.get()) {
+					break;
+				}
 			}
 
 			if (task.readyToRun()) {
@@ -139,7 +162,9 @@ public class TaskRunner {
 				CompletableFuture<Void> future = taskExecutor.submitCompletable(() -> {
 					boolean failed = false;
 					try {
+						logger.info("Task " + request.getStepName() + " about to run");
 						task.run();
+						logger.info("Task " + request.getStepName() + " complete");
 					} catch (Exception e) {
 						logger.warn("TaskRunner: Task failed due to exception: ", e);
 						failed = true;
@@ -151,12 +176,25 @@ public class TaskRunner {
 							errors.add(task.getError());
 						}
 						executionState.failTask();
+
+						if (task.terminalFailure()) {
+							logger.warn("Task " + request.getStepName()
+									+ " failed with a terminal error. Task is stopping.");
+							throw new TerminalTaskError("Task " + request.getStepName()
+									+ " failed with a terminal error. Task is stopping.");
+						}
 					} else {
+						logger.info("Task " + request.getStepName() + " completed");
 						Packet result = task.getResult();
 						if (result != null) {
 							results.add(result);
 						}
 						executionState.completeTask();
+
+						if (task.stepComplete()) {
+							logger.info("Task " + request.getStepName() + " is terminated");
+							allTasksSpawned.set(true);
+						}
 					}
 
 					return null;
@@ -168,7 +206,7 @@ public class TaskRunner {
 				// If the task is not ready to run, then there are no longer sufficient inputs
 				// to spawn more tasks. So no more task spawning. This step completes when
 				// current active tasks complete.
-				allTasksSpawned = true;
+				allTasksSpawned.set(true);
 			}
 
 			// If all inputs are done, then we are also done.
@@ -180,16 +218,16 @@ public class TaskRunner {
 				}
 			}
 			if (allInputsComplete) {
-				allTasksSpawned = true;
+				allTasksSpawned.set(true);
 			}
 		}
 
-		CompletableFuture<Void> allDone = CompletableFuture.allOf(activeTasks.toArray(new CompletableFuture[0]));
+		CompletableFuture<Void> allDone = FutureUtils.allOfFailFast(activeTasks, logger);
 
 		allDone.thenRun(() -> {
 			done = true;
+			logger.info("Task " + request.getStepName() + " signalling to all outputs that task is complete.");
 			outputs.forEach(output -> output.complete());
-			executionState.getCompletedTasks();
 		});
 
 		allDone.join();

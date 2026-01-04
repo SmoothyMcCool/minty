@@ -1,5 +1,6 @@
 package tom.workflow.service;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -11,8 +12,9 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
+import tom.NotOwnedException;
 import tom.api.UserId;
-import tom.api.MintyProperties;
+import tom.config.MintyConfiguration;
 import tom.task.model.TaskRequest;
 import tom.task.registry.TaskRegistryService;
 import tom.workflow.controller.WorkflowRequest;
@@ -21,6 +23,7 @@ import tom.workflow.model.ResultTemplate;
 import tom.workflow.model.Workflow;
 import tom.workflow.repository.ResultTemplateRepository;
 import tom.workflow.repository.WorkflowRepository;
+import tom.workflow.tracking.controller.model.WorkflowState;
 import tom.workflow.tracking.service.WorkflowTrackingService;
 
 @Service
@@ -33,17 +36,17 @@ public class WorkflowServiceImpl implements WorkflowService {
 	private final TaskRegistryService taskRegistryService;
 	private final WorkflowTrackingService workflowTrackingService;
 	private final AsyncTaskExecutor taskExecutor;
-	private final String workflowLoggingFolder;
+	private final Path workflowLoggingFolder;
 
 	public WorkflowServiceImpl(WorkflowRepository workflowRepository, ResultTemplateRepository resultTemplateRepository,
 			TaskRegistryService taskRegistryService, WorkflowTrackingService workflowTrackingService,
-			@Qualifier("taskExecutor") ThreadPoolTaskExecutor taskExecutor, MintyProperties properties) {
+			@Qualifier("taskExecutor") ThreadPoolTaskExecutor taskExecutor, MintyConfiguration properties) {
 		this.workflowRepository = workflowRepository;
 		this.resultTemplateRepository = resultTemplateRepository;
 		this.taskRegistryService = taskRegistryService;
 		this.workflowTrackingService = workflowTrackingService;
 		this.taskExecutor = taskExecutor;
-		workflowLoggingFolder = properties.get("workflowLogs");
+		workflowLoggingFolder = properties.getConfig().fileStores().workflowLogs();
 		if (workflowLoggingFolder == null) {
 			throw new RuntimeException("Workflow log folder location is not defined.");
 		}
@@ -131,6 +134,14 @@ public class WorkflowServiceImpl implements WorkflowService {
 	}
 
 	@Override
+	public void cancelWorkflow(UserId userId, String name) {
+		if (!isWorkflowOwned(userId, name)) {
+			throw new NotOwnedException("User does not own this workflow.");
+		}
+		workflowTrackingService.cancelWorkflow(userId, name);
+	}
+
+	@Override
 	public boolean isAllowedToExecute(UUID workflowId, UserId userId) {
 		return this.getWorkflow(userId, workflowId) != null;
 	}
@@ -142,6 +153,19 @@ public class WorkflowServiceImpl implements WorkflowService {
 			return false;
 		}
 		return workflow.getOwnerId().equals(userId);
+	}
+
+	@Override
+	public boolean isWorkflowOwned(UserId userId, String name) {
+		List<WorkflowState> runningWorkflows = workflowTrackingService.getWorkflowList(userId);
+		boolean found = false;
+		for (WorkflowState workflow : runningWorkflows) {
+			if (workflow.name().equals(name)) {
+				found = true;
+				break;
+			}
+		}
+		return found;
 	}
 
 	@Override
@@ -159,4 +183,5 @@ public class WorkflowServiceImpl implements WorkflowService {
 	public List<String> listResultTemplates() {
 		return resultTemplateRepository.findAllTemplateNames();
 	}
+
 }

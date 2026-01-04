@@ -1,0 +1,16 @@
+<div class="form-group mb-2">
+	<div class="form-check form-switch ms-2">
+		<input class="form-check-input" type="checkbox" id="idMode" [ngModel]="idMode"
+			(ngModelChange)="idModeChanged($event)">
+		<label class="form-check-label" for="idMode">Custom Assistant</label>
+	</div>
+	<div class="mb-3" *ngIf="idMode">
+		<minty-assistant-editor name="assistantInput" [models]="models" [ngModel]="assistant"
+			(ngModelChange)="assistantChanged($event)"></minty-assistant-editor>
+	</div>
+	<div class="mb-3" *ngIf="!idMode">
+		<label for="enumListInput">Assistant</label>
+		<minty-enumlist-editor name="enumListInput" [choices]="choices" [ngModel]="assistantId"
+			(ngModelChange)="idChanged($event)"></minty-enumlist-editor>
+	</div>
+</div>

@@ -16,6 +16,7 @@ import tom.api.task.TaskConfigSpec;
 import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
+import tom.tasks.TaskGroup;
 
 @RunnableTask
 public class TextFormatter implements MintyTask {
@@ -165,7 +166,7 @@ public class TextFormatter implements MintyTask {
 			}
 
 			@Override
-			public TaskConfigSpec taskConfiguration(Map<String, String> configuration) {
+			public TaskConfigSpec taskConfiguration(Map<String, Object> configuration) {
 				return new TextFormatterConfig(configuration);
 			}
 
@@ -176,7 +177,7 @@ public class TextFormatter implements MintyTask {
 
 			@Override
 			public String group() {
-				return "Transform";
+				return TaskGroup.TRANSFORM.toString();
 			}
 		};
 	}

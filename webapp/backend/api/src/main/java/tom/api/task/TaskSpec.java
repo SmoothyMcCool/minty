@@ -28,7 +28,7 @@ public interface TaskSpec {
 
 	// Description of the configuration object for this task, populated with the
 	// given configuration.
-	TaskConfigSpec taskConfiguration(Map<String, String> configuration);
+	TaskConfigSpec taskConfiguration(Map<String, Object> configuration);
 
 	// Name of the task to run
 	String taskName();

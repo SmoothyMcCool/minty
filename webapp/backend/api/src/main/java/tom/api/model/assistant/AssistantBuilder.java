@@ -1,0 +1,116 @@
+package tom.api.model.assistant;
+
+import java.util.List;
+import java.util.Objects;
+
+import tom.api.AssistantId;
+import tom.api.DocumentId;
+import tom.api.UserId;
+
+public class AssistantBuilder {
+	private AssistantId id;
+	private String name;
+	private String model;
+	private Integer contextSize;
+	private Double temperature;
+	private Integer topK;
+	private String prompt;
+	private UserId ownerId;
+	private boolean shared;
+	private boolean hasMemory;
+	private List<DocumentId> documentIds;
+	private List<String> tools;
+
+	public AssistantBuilder() {
+
+	}
+
+	public AssistantBuilder(Assistant assistant) {
+		id = assistant.id();
+		name = assistant.name();
+		model = assistant.model();
+		contextSize = assistant.contextSize();
+		temperature = assistant.temperature();
+		topK = assistant.topK();
+		prompt = assistant.prompt();
+		ownerId = assistant.ownerId();
+		shared = assistant.shared();
+		hasMemory = assistant.hasMemory();
+		documentIds = assistant.documentIds();
+		tools = assistant.tools();
+	}
+
+	public AssistantBuilder id(AssistantId id) {
+		this.id = id;
+		return this;
+	}
+
+	public AssistantBuilder name(String name) {
+		this.name = name;
+		return this;
+	}
+
+	public AssistantBuilder model(String model) {
+		this.model = model;
+		return this;
+	}
+
+	public AssistantBuilder contextSize(Integer contextSize) {
+		this.contextSize = contextSize;
+		return this;
+	}
+
+	public AssistantBuilder temperature(Double temperature) {
+		this.temperature = temperature;
+		return this;
+	}
+
+	public AssistantBuilder topK(int topK) {
+		this.topK = topK;
+		return this;
+	}
+
+	public AssistantBuilder prompt(String prompt) {
+		this.prompt = prompt;
+		return this;
+	}
+
+	public AssistantBuilder documentIds(List<DocumentId> documentIds) {
+		this.documentIds = documentIds;
+		return this;
+	}
+
+	public AssistantBuilder tools(List<String> tools) {
+		this.tools = tools;
+		return this;
+	}
+
+	public AssistantBuilder ownerId(UserId ownerId) {
+		this.ownerId = ownerId;
+		return this;
+	}
+
+	public AssistantBuilder shared(boolean shared) {
+		this.shared = shared;
+		return this;
+	}
+
+	public AssistantBuilder hasMemory(boolean hasMemory) {
+		this.hasMemory = hasMemory;
+		return this;
+	}
+
+	public Assistant build() {
+		return new Assistant(Objects.requireNonNull(id, "id must not be null"),
+				Objects.requireNonNull(name, "name must not be null"),
+				Objects.requireNonNull(model, "model must not be null"),
+				Objects.requireNonNull(contextSize, "contextSize must not be null"),
+				Objects.requireNonNull(temperature, "temperature must not be null"),
+				Objects.requireNonNull(topK, "topK must not be null"),
+				Objects.requireNonNull(prompt, "prompt must not be null"),
+				Objects.requireNonNull(documentIds, "documentIds must not be null"),
+				Objects.requireNonNull(tools, "tools must not be null"),
+				Objects.requireNonNull(ownerId, "ownerId must not be null"), shared, hasMemory);
+	}
+
+}

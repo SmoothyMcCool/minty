@@ -5,6 +5,9 @@ import { catchError, map } from 'rxjs/operators';
 import { EMPTY, Observable } from 'rxjs';
 import { AlertService } from './alert.service';
 import { Assistant } from './model/assistant';
+import { AssistantSpec } from './model/workflow/assistant-spec';
+import { Model } from './model/model';
+import { StreamingResponse } from './model/conversation/streaming-response';
 
 @Injectable({
 	providedIn: 'root'
@@ -90,7 +93,7 @@ export class AssistantService {
 			);
 	}
 
-	models(): Observable<string[]> {
+	models(): Observable<Model[]> {
 		return this.http.get<ApiResult>(AssistantService.ListModels)
 			.pipe(
 				catchError(error => {
@@ -98,7 +101,7 @@ export class AssistantService {
 					return EMPTY;
 				}),
 				map((result: ApiResult) => {
-					return result.data as string[];
+					return result.data as Model[];
 				})
 			);
 	}
@@ -122,14 +125,24 @@ export class AssistantService {
 			);
 	}
 
-	ask(conversationId: string, assistantId: string, query: string): Observable<string> {
-		const body = {
-			conversationId: conversationId,
-			assistantId: assistantId,
-			query: query
-		};
+	ask(conversationId: string, assistantId: string, query: string, image: File, contextSize: number): Observable<string> {
+		
+		const form = new FormData();
+		form.append('conversationId', conversationId);
+		form.append('query', query);
+		form.append('contextSize', '' + contextSize);
+		if (image) {
+			form.append('image', image);
+		}
 
-		return this.http.post<ApiResult>(AssistantService.AskAssistant, body)
+		const assistantSpec: AssistantSpec = {
+			assistantId: assistantId,
+			assistant: null
+		};
+		form.append('assistant', new Blob([JSON.stringify(assistantSpec)], { type: "application/json" }));
+		
+
+		return this.http.post<ApiResult>(AssistantService.AskAssistant, form)
 			.pipe(
 				catchError(error => {
 					this.alertService.postFailure(JSON.stringify(error));
@@ -141,10 +154,10 @@ export class AssistantService {
 			);
 	}
 
-	getStream(streamId: string): Observable<string> {
+	getStream(streamId: string): Observable<StreamingResponse> {
 
 		// Hideous, but it works?!?!?!
-		return new Observable<string>(observer => {
+		return new Observable<StreamingResponse>(observer => {
 			fetch(AssistantService.GetResponseStream, {
 				method: 'POST',
 				headers: {
@@ -155,34 +168,33 @@ export class AssistantService {
 				body: JSON.stringify(streamId)
 
 			}).then(response => {
-				const reader = response.body?.getReader();
-				const decoder = new TextDecoder();
+				const reader = response.body!.getReader();
+				const streamState = {
+					buffer: '',
+					decoder: new TextDecoder()
+				};
 
-				async function read() {
+				(async () => {
 					try {
-						const { done, value } = await reader.read();
+						while (true) {
+							const messages = await this.readJsonStream(reader, streamState);
 
-						if (done) {
-							observer.complete();
-							return;
+							if (!messages) {
+								observer.complete();
+								return;
+							}
+
+							for (const message of messages) {
+								observer.next(message);
+							}
 						}
 
-						const chunk = decoder.decode(value, { stream: true });
-						const notReadyMarker = '~~Not~ready~~';
-						if (chunk.startsWith(notReadyMarker)) {
-							observer.next(chunk);
-							observer.error(new Error('Not ready'));
-							return;
-						}
-						observer.next(chunk);
-						read();
 					} catch (error) {
-						console.log('Error readyin stream: ', error);
+						console.log('Error reading stream: ', error);
 						observer.error(error);
 					}
-				}
+				})();
 
-				read();
 			}).catch(err => observer.error(err));
 		});
 	}
@@ -232,4 +244,34 @@ export class AssistantService {
 			);
 	}
 
+	private async readJsonStream(reader: ReadableStreamDefaultReader<Uint8Array>, state: { buffer: string, decoder: TextDecoder }): Promise<StreamingResponse[] | null> {
+
+		const { done, value } = await reader.read();
+		if (done) {
+			return null;
+		}
+
+		state.buffer += state.decoder.decode(value, { stream: true });
+
+		const results: StreamingResponse[] = [];
+		const lines = state.buffer.split('\n');
+
+		// Keep the incomplete JSON fragment
+		state.buffer = lines.pop() ?? '';
+
+		for (const line of lines) {
+			const trimmed = line.trim();
+			if (!trimmed) {
+				continue;
+			}
+
+			try {
+				results.push(JSON.parse(trimmed) as StreamingResponse);
+			} catch {
+				throw new Error(`Invalid JSON in stream: ${trimmed}`);
+			}
+		}
+
+		return results;
+	}
 }
