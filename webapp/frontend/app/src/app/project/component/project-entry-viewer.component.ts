@@ -10,12 +10,12 @@ import { MarkdownModule } from "ngx-markdown";
 	providers: [
 		{
 			provide: NG_VALUE_ACCESSOR,
-			useExisting: forwardRef(() => ProjectEntryViewerComponent),
+			useExisting: forwardRef(() => NodeViewerComponent),
 			multi: true
 		}
 	]
 })
-export class ProjectEntryViewerComponent implements ControlValueAccessor {
+export class NodeViewerComponent implements ControlValueAccessor {
 
 	@Input() edit: boolean;
 

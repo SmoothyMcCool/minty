@@ -1,7 +1,7 @@
 import { CommonModule } from "@angular/common";
 import { Component, EventEmitter, Input, Output } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { ProjectEntryInfo } from "src/app/model/project/project-entry-info";
+import { NodeInfo } from "src/app/model/project/node-info";
 
 @Component({
 	selector: 'minty-project-node',
@@ -10,36 +10,41 @@ import { ProjectEntryInfo } from "src/app/model/project/project-entry-info";
 })
 export class ProjectNodeComponent {
 
-	@Input() node!: ProjectEntryInfo;
-	@Input() selected!: ProjectEntryInfo | null;
-	@Output() select = new EventEmitter<ProjectEntryInfo>();
-	@Output() update = new EventEmitter<ProjectEntryInfo>();
+	@Input() node!: NodeInfo;
+	@Input() selected!: NodeInfo | null;
+	@Output() select = new EventEmitter<NodeInfo>();
+	@Output() update = new EventEmitter<NodeInfo>();
+	@Output() delete = new EventEmitter<NodeInfo>();
 
-	editProjectEntryInfoVisible = false;
+	editNodeInfoVisible = false;
 	editName: string;
-	editType: 'folder' | 'reqts' | 'design' | 'story' | 'file' | 'unknown';
+	editType: 'Folder' | 'File';
 
-	editProjectEntryInfo() {
+	editNodeInfo() {
 		this.editName = this.node.name;
 		this.editType = this.node.type;
-		this.editProjectEntryInfoVisible = true;
+		this.editNodeInfoVisible = true;
 	}
 
-	onConfirmProjectEntryInfo() {
-		const entryInfo: ProjectEntryInfo = {
-			id: this.node.id,
+	onConfirmNodeInfo() {
+		const entryInfo: NodeInfo = {
+			nodeId: this.node.nodeId,
 			type: this.editType,
 			name: this.editName,
-			parent: null
+			parentId: null
 		};
 		this.update.emit(entryInfo);
 	}
 
-	onCancelEditProjectEntryInfo() {
-		this.editProjectEntryInfoVisible = false;
+	onCancelEditNodeInfo() {
+		this.editNodeInfoVisible = false;
 	}
 
 	onSelect() {
 		this.select.emit(this.node);
+	}
+
+	deleteNode() {
+		this.delete.emit(this.node);
 	}
 }

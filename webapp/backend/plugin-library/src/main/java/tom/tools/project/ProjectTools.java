@@ -1,6 +1,5 @@
 package tom.tools.project;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -8,11 +7,12 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 
+import tom.api.NodeId;
 import tom.api.ProjectId;
 import tom.api.UserId;
-import tom.api.model.project.ProjectEntry;
-import tom.api.model.project.ProjectEntryInfo;
-import tom.api.model.project.ProjectEntryType;
+import tom.api.model.project.Node;
+import tom.api.model.project.NodeInfo;
+import tom.api.model.project.NodeType;
 import tom.api.model.services.ServiceConsumer;
 import tom.api.services.PluginServices;
 import tom.api.tool.MintyTool;
@@ -39,138 +39,201 @@ public class ProjectTools implements MintyTool, ServiceConsumer {
 	}
 
 	@Tool(name = "list_files", description = "List all files in the project")
-	MintyToolResponse<List<String>> listFiles(@ToolParam() String projectId) {
-		List<String> response;
-
+	MintyToolResponse<List<NodeInfo>> listFiles(@ToolParam() String projectId) {
 		try {
-			List<ProjectEntryInfo> entries = pluginServices.getProjectService().listProjectEntries(userId,
-					new ProjectId(projectId));
+			List<NodeInfo> entries = pluginServices.getProjectService().listNodes(userId, new ProjectId(projectId));
 			logger.info("list_files returning: " + entries.stream().map(entry -> entry.getName()).toList().toString());
-			if (entries.isEmpty()) {
-				response = List.of("This project doesn't contain any files yet.");
-			}
-			response = entries.stream().map(entry -> entry.getName()).toList();
+			return MintyToolResponse.SuccessResponse(entries);
 		} catch (Exception e) {
-			String error = "Failed to list files for project " + projectId;
+			String error = "Failed to list files for project " + projectId + ". " + e.getMessage();
 			logger.warn(error);
 			return MintyToolResponse.FailureResponse(error);
 		}
-
-		return MintyToolResponse.SuccessResponse(response);
-	}
-
-	@Tool(name = "list_requirement_documents", description = "List all files in the project that store requirements.")
-	MintyToolResponse<List<String>> listRequirementDocuments(@ToolParam() String projectId) {
-		List<String> response;
-		List<ProjectEntryInfo> entries;
-
-		try {
-			entries = listFilesOfType(userId, new ProjectId(projectId), ProjectEntryType.RequirementsDoc);
-			logger.info("list_requirement_documents returning: "
-					+ entries.stream().map(entry -> entry.getName()).toList().toString());
-			response = entries.stream().map(entry -> entry.getName()).toList();
-		} catch (Exception e) {
-			String error = "Failed to list files for project " + projectId;
-			logger.warn(error);
-			return MintyToolResponse.FailureResponse(error);
-		}
-
-		return MintyToolResponse.SuccessResponse(response);
-	}
-
-	@Tool(name = "list_design_documents", description = "List all files in the project that store system design, software design, and architecture.")
-	MintyToolResponse<List<String>> listDesignDocuments(@ToolParam() String projectId) {
-		List<String> response;
-		List<ProjectEntryInfo> entries;
-
-		try {
-			entries = listFilesOfType(userId, new ProjectId(projectId), ProjectEntryType.DesignDoc);
-			logger.info("list_design_documents returning: "
-					+ entries.stream().map(entry -> entry.getName()).toList().toString());
-			response = entries.stream().map(entry -> entry.getName()).toList();
-		} catch (Exception e) {
-			String error = "Failed to list files for project " + projectId;
-			logger.warn(error);
-			return MintyToolResponse.FailureResponse(error);
-		}
-
-		return MintyToolResponse.SuccessResponse(response);
-	}
-
-	@Tool(name = "list_user_stories", description = "List all files in the project that store Agile stories for development teams.")
-	MintyToolResponse<List<String>> listStoryFiles(@ToolParam() String projectId) {
-		List<String> response;
-		List<ProjectEntryInfo> entries;
-
-		try {
-			entries = listFilesOfType(userId, new ProjectId(projectId), ProjectEntryType.Story);
-			logger.info("list_user_stories returning: "
-					+ entries.stream().map(entry -> entry.getName()).toList().toString());
-			response = entries.stream().map(entry -> entry.getName()).toList();
-		} catch (Exception e) {
-			String error = "Failed to list files for project " + projectId;
-			logger.warn(error);
-			return MintyToolResponse.FailureResponse(error);
-		}
-
-		return MintyToolResponse.SuccessResponse(response);
-	}
-
-	@Tool(name = "list_code_files", description = "List all files in the project that contain code implementation.")
-	MintyToolResponse<List<String>> listCodeFiles(@ToolParam() String projectId) {
-		List<String> response;
-		List<ProjectEntryInfo> entries;
-
-		try {
-			entries = listFilesOfType(userId, new ProjectId(projectId), ProjectEntryType.File);
-			logger.info(
-					"list_code_files returning: " + entries.stream().map(entry -> entry.getName()).toList().toString());
-			response = entries.stream().map(entry -> entry.getName()).toList();
-		} catch (Exception e) {
-			String error = "Failed to list files for project " + projectId;
-			logger.warn(error);
-			return MintyToolResponse.FailureResponse(error);
-		}
-
-		return MintyToolResponse.SuccessResponse(response);
 	}
 
 	@Tool(name = "get_file_contents", description = "Get the contents of a specific file")
-	MintyToolResponse<String> getFileContents(@ToolParam() String projectId, @ToolParam() String fileName) {
+	MintyToolResponse<String> getFileContents(@ToolParam() String projectId, @ToolParam() String nodeId) {
 		String response;
-		ProjectEntry entry = pluginServices.getProjectService().getProjectEntryByName(userId, new ProjectId(projectId),
-				fileName);
 
-		if (entry == null) {
+		Node node = pluginServices.getProjectService().getNode(userId, new ProjectId(projectId), new NodeId(nodeId));
+
+		if (node == null) {
 			response = "Could not retrieve file.";
 			return MintyToolResponse.FailureResponse(response);
 		} else {
-			response = entry.toString();
+			response = node.toString();
 		}
 
 		logger.info("get_file_contents returning: " + response);
 		return MintyToolResponse.SuccessResponse(response);
 	}
 
-	@Tool(name = "create_or_update_requirement_document", description = "Create a file or replace the contents of an existing requirements document")
-	MintyToolResponse<String> createOrUpdateRequirementsDocument(@ToolParam() String projectId,
-			@ToolParam() String fileName, @ToolParam() String fileContents) {
-		return createOrUpdateFileOfType(userId, new ProjectId(projectId), ProjectEntryType.RequirementsDoc, fileName,
-				fileContents);
+	@Tool(name = "create_file", description = "Create a new file")
+	MintyToolResponse<NodeInfo> createFile(@ToolParam() String projectId,
+			@ToolParam(description = "The name of the file.") String name,
+			@ToolParam(required = false, description = "The parent of the new node. If null, it will be created at the root level. "
+					+ "This parameter must be as supplied by the tool. You must create the parent first if you do not have a UUID already.") String parentId,
+			@ToolParam() String fileContents) {
+
+		try {
+			NodeInfo nodeInfo = new NodeInfo();
+			nodeInfo.setName(name);
+			nodeInfo.setParentId(new NodeId(parentId));
+			nodeInfo.setType(NodeType.File);
+
+			Node node = new Node(nodeInfo, fileContents);
+
+			ProjectId pid = new ProjectId(projectId);
+			// This will throw if the parent doesn't exist.
+			pluginServices.getProjectService().getNode(userId, pid, new NodeId(parentId));
+
+			pluginServices.getProjectService().createOrUpdateNode(userId, pid, node);
+			logger.info("createFile created " + name);
+
+			return MintyToolResponse.SuccessResponse(nodeInfo);
+
+		} catch (Exception e) {
+			logger.warn("Failed to create file {} in project {}.", name, projectId);
+			return MintyToolResponse
+					.FailureResponse("Failed to create file. Ensure all folders in path exist. " + e.getMessage());
+		}
 	}
 
-	@Tool(name = "create_or_update_design_document", description = "Create a file or replace the contents of an existing system design, software design, or architecture document")
-	MintyToolResponse<String> createOrUpdateDesignDocument(@ToolParam() String projectId, @ToolParam() String fileName,
-			@ToolParam() String fileContents) {
-		return createOrUpdateFileOfType(userId, new ProjectId(projectId), ProjectEntryType.DesignDoc, fileName,
-				fileContents);
+	@Tool(name = "update_file_information", description = "Update the metadata or location of an existing file")
+	MintyToolResponse<NodeInfo> updateFileInfo(@ToolParam() String projectId, @ToolParam() String nodeId,
+			@ToolParam(required = false) String fileName,
+			@ToolParam(required = false, description = "The parent of the new node. If null, it will be created at the root level. "
+					+ "This parameter must be as supplied by the tool. You must create the parent first if you do not have a UUID already from the project.") String parentId) {
+
+		try {
+			Node node = pluginServices.getProjectService().getNode(userId, new ProjectId(projectId),
+					new NodeId(nodeId));
+
+			if (node == null) {
+				logger.warn("updateFileInfo: File does not exist project {}.", nodeId, projectId);
+				return MintyToolResponse.FailureResponse("File does not exist at given nodeId");
+			}
+
+			NodeInfo nodeInfo = node.info();
+
+			if (fileName != null) {
+				nodeInfo.setName(fileName);
+			}
+			if (parentId != null) {
+				nodeInfo.setParentId(new NodeId(parentId));
+			}
+
+			ProjectId pid = new ProjectId(projectId);
+			// This will throw if the parent doesn't exist.
+			pluginServices.getProjectService().getNode(userId, pid, new NodeId(parentId));
+
+			pluginServices.getProjectService().updateNodeInfo(userId, pid, nodeInfo);
+			logger.info("updateFileInfo updated " + fileName);
+
+			return MintyToolResponse.SuccessResponse(nodeInfo);
+
+		} catch (Exception e) {
+			logger.warn("Failed to update file {} in project {}.", fileName, projectId);
+			return MintyToolResponse
+					.FailureResponse("Failed to update file. Maybe not all parent folders exist? " + e.getMessage());
+		}
 	}
 
-	@Tool(name = "create_or_update_code_file", description = "Create a file or replace the contents of an existing code file")
-	MintyToolResponse<String> createOrUpdateCodeFile(@ToolParam() String projectId, @ToolParam() String fileName,
+	@Tool(name = "update_file_contents", description = "Update the contents of an existing file")
+	MintyToolResponse<NodeInfo> updateFileContents(@ToolParam() String projectId, @ToolParam() String nodeId,
 			@ToolParam() String fileContents) {
-		return createOrUpdateFileOfType(userId, new ProjectId(projectId), ProjectEntryType.File, fileName,
-				fileContents);
+
+		try {
+			Node node = pluginServices.getProjectService().getNode(userId, new ProjectId(projectId),
+					new NodeId(nodeId));
+
+			if (node == null) {
+				logger.warn("updateFileContents: File does not exist project {}.", nodeId, projectId);
+				return MintyToolResponse.FailureResponse("File does not exist at given nodeId");
+			}
+
+			NodeInfo nodeInfo = node.info();
+
+			Node updated = new Node(nodeInfo, fileContents);
+
+			ProjectId pid = new ProjectId(projectId);
+
+			pluginServices.getProjectService().createOrUpdateNode(userId, pid, updated);
+			logger.info("updateFileContents updated " + nodeId);
+
+			return MintyToolResponse.SuccessResponse(nodeInfo);
+
+		} catch (Exception e) {
+			logger.warn("Failed to update file {} in project {}.", nodeId, projectId);
+			return MintyToolResponse.FailureResponse("Failed to update file contents. " + e.getMessage());
+		}
+	}
+
+	@Tool(name = "create_folder", description = "Create a new folder")
+	MintyToolResponse<NodeInfo> createFolder(@ToolParam() String projectId, @ToolParam() String folder,
+			@ToolParam(required = false, description = "The parent of the new node. If null, it will be created at the root level. "
+					+ "This parameter must be as supplied by the tool. You must create the parent first if you do not have a UUID already.") String parentId) {
+
+		try {
+			NodeId parentNodeId = new NodeId(parentId);
+
+			NodeInfo nodeInfo = new NodeInfo();
+			nodeInfo.setName(folder);
+			nodeInfo.setParentId(parentNodeId);
+			nodeInfo.setType(NodeType.Folder);
+
+			Node updated = new Node(nodeInfo, null);
+
+			ProjectId pid = new ProjectId(projectId);
+			// This will throw if the parent doesn't exist.
+			pluginServices.getProjectService().getNode(userId, pid, parentNodeId);
+
+			pluginServices.getProjectService().createOrUpdateNode(userId, pid, updated);
+			logger.info("createFolder created " + folder);
+
+			return MintyToolResponse.SuccessResponse(nodeInfo);
+
+		} catch (Exception e) {
+			logger.warn("Failed to create folder {} in project {}.", folder, projectId);
+			return MintyToolResponse.FailureResponse("Failed to create folder: " + e.getMessage());
+		}
+	}
+
+	@Tool(name = "update_folder", description = "Update an existing folder")
+	MintyToolResponse<NodeInfo> updateFolder(@ToolParam() String projectId, @ToolParam() String nodeId,
+			@ToolParam() String folderName,
+			@ToolParam(required = false, description = "The parent of the node. If null, it will be created at the root level.") String parentId) {
+
+		try {
+
+			Node entry = pluginServices.getProjectService().getNode(userId, new ProjectId(projectId),
+					new NodeId(nodeId));
+
+			if (entry == null) {
+				logger.warn("Folder {} in project {} doesn't exist.", folderName, projectId);
+				return MintyToolResponse.FailureResponse("Folder specified by nodeId does not exist.");
+			}
+
+			NodeInfo nodeInfo = new NodeInfo();
+			nodeInfo.setName(folderName);
+			nodeInfo.setParentId(new NodeId(parentId));
+			nodeInfo.setType(NodeType.Folder);
+
+			Node updated = new Node(nodeInfo, null);
+
+			ProjectId pid = new ProjectId(projectId);
+			// This will throw if the parent doesn't exist.
+			pluginServices.getProjectService().getNode(userId, pid, new NodeId(parentId));
+
+			pluginServices.getProjectService().createOrUpdateNode(userId, pid, updated);
+			logger.info("updateFolder updated " + folderName);
+
+			return MintyToolResponse.SuccessResponse(nodeInfo);
+
+		} catch (Exception e) {
+			logger.warn("Failed to update folder {} in project {}.", folderName, projectId);
+			return MintyToolResponse.FailureResponse("Failed to update folder.");
+		}
 	}
 
 	@Override
@@ -193,34 +256,4 @@ public class ProjectTools implements MintyTool, ServiceConsumer {
 		this.userId = userId;
 	}
 
-	private List<ProjectEntryInfo> listFilesOfType(UserId userId, ProjectId projectId, ProjectEntryType type)
-			throws IOException {
-		List<ProjectEntryInfo> entries = pluginServices.getProjectService().listProjectEntries(userId, projectId);
-		return entries.stream().filter(entry -> entry.getType().equals(type)).toList();
-	}
-
-	private MintyToolResponse<String> createOrUpdateFileOfType(UserId userId, ProjectId projectId,
-			ProjectEntryType type, String fileName, String fileContents) {
-		ProjectEntry entry = pluginServices.getProjectService().getProjectEntryByName(userId, projectId, fileName);
-		ProjectEntryInfo entryInfo;
-
-		if (entry != null) {
-			entryInfo = entry.info();
-		} else {
-			entryInfo = new ProjectEntryInfo();
-			entryInfo.setName(fileName);
-			entryInfo.setParent(null);
-			entryInfo.setType(type);
-		}
-
-		ProjectEntry updated = new ProjectEntry(entryInfo, fileContents);
-		try {
-			pluginServices.getProjectService().createOrUpdateProjectEntry(userId, projectId, updated);
-			logger.info("createOrUpdateFileOfType updated " + fileName);
-		} catch (Exception e) {
-			logger.warn("Failed to update file {}  project {}.", fileName, projectId);
-			return MintyToolResponse.FailureResponse("Failed to update file.");
-		}
-		return MintyToolResponse.SuccessResponse("Successfully updated file.");
-	}
 }

@@ -1,4 +1,4 @@
-<button class="btn btn-primary" (click)="newProject()">New Project</button>
+<button class="btn btn-primary" (click)="newProjectVisible = true">New Project</button>
 
 <ul class="list-group">
 	<li class="list-group-item list-group-item-action position-relative text-bg-light bg-opacity-75"
@@ -7,6 +7,7 @@
 			<span class="text-truncate clickable-text" (click)="navigateToProject(project.id)">
 				{{project.name}}
 			</span>
+			<span class="badge text-bg-secondary mx-2">{{project.id}}</span>
 			<span class="flex-grow-1"></span>
 			<button type="button" class="btn btn-sm p-0" style="font-size: 14px; color: red"
 				[disabled]="deleteInProgress" (click)="deleteProject(project)">
@@ -19,3 +20,26 @@
 <minty-confirmation-dialog [title]="'Delete Project'" [message]="'This will permanently delete the project. Are you sure?'"
 	[visible]="confirmDeleteProjectVisible" (confirm)="confirmDeleteProject()"
 	(cancel)="confirmDeleteProjectVisible = false"></minty-confirmation-dialog>
+
+<div class="modal show d-block" tabindex="-1" *ngIf="newProjectVisible">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">New Project</h5>
+				<button type="button" class="btn-close" (click)="cancelNewProject()" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<form role="form row">
+					<div class="col-12">
+						<label for="nameInput" class="form-label">Name</label>
+						<input type="text" class="form-control" id="nameInput" name="nameInput" [(ngModel)]="newProjectName" required>
+					</div>
+				</form>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" (click)="cancelNewProject()">Cancel</button>
+				<button type="button" class="btn btn-primary" (click)="createNewProject()">Confirm</button>
+			</div>
+		</div>
+	</div>
+</div>

@@ -2,12 +2,12 @@ package tom.api.model.project;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum ProjectEntryType {
-	Folder("folder"), RequirementsDoc("reqts"), DesignDoc("design"), Story("story"), File("file"), Unknown("unknown");
+public enum NodeType {
+	Folder("Folder"), File("File");
 
 	private final String value;
 
-	ProjectEntryType(String value) {
+	NodeType(String value) {
 		this.value = value;
 	}
 

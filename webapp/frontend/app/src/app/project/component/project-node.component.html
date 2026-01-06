@@ -4,20 +4,20 @@
 	</span>
 	<span class="badge text-bg-secondary mx-2">{{node.type}}</span>
 	<span class="flex-grow-1"></span>
-	<button class="btn btn-sm" style="font-size: 14px;" (click)="editProjectEntryInfo()">
+	<button class="btn btn-sm" style="font-size: 14px;" (click)="editNodeInfo()">
 		<i class="bi bi-pencil-square"></i>
 	</button>
-	<button type="button" class="btn btn-sm p-0" style="font-size: 14px; color: red" (click)="deleteProjectEntry()">
+	<button type="button" class="btn btn-sm p-0" style="font-size: 14px; color: red" (click)="deleteNode()">
 		<i class="bi bi-trash3"></i>
 	</button>
 </div>
 
-<div class="modal show d-block" tabindex="-1" *ngIf="editProjectEntryInfoVisible">
+<div class="modal show d-block" tabindex="-1" *ngIf="editNodeInfoVisible">
 	<div class="modal-dialog">
 		<div class="modal-content">
 			<div class="modal-header">
 				<h5 class="modal-title">Edit Project Entry</h5>
-				<button type="button" class="btn-close" (click)="onCancelEditProjectEntryInfo()" aria-label="Close"></button>
+				<button type="button" class="btn-close" (click)="onCancelEditNodeInfo()" aria-label="Close"></button>
 			</div>
 			<div class="modal-body">
 				<form role="form row">
@@ -28,18 +28,15 @@
 					<div class="col-12">
 						<label for="typeSelect" class="form-label">File Type</label>
 						<select class="form-select" id="typeSelect" [(ngModel)]="editType" name="typeSelect" required>
-							<option value="folder">folder</option>
-							<option value="reqts">reqts</option>
-							<option value="design">design</option>
-							<option value="story">story</option>
-							<option value="file">file</option>
+							<option value="Folder">Folder</option>
+							<option value="File">File</option>
 						</select>
 					</div>
 				</form>
 			</div>
 			<div class="modal-footer">
-				<button type="button" class="btn btn-secondary" (click)="onCancelEditProjectEntryInfo()">Cancel</button>
-				<button type="button" class="btn btn-primary" (click)="onConfirmProjectEntryInfo()">Confirm</button>
+				<button type="button" class="btn btn-secondary" (click)="onCancelEditNodeInfo()">Cancel</button>
+				<button type="button" class="btn btn-primary" (click)="onConfirmNodeInfo()">Confirm</button>
 			</div>
 		</div>
 	</div>

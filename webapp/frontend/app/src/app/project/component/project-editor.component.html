@@ -6,7 +6,7 @@
 			<ul class="list-group">
 				<li class="list-group-item list-group-item-action position-relative text-bg-light bg-opacity-75" style="height: 2.5rem" *ngFor="let node of entries">
 					<minty-project-node [node]="node" [selected]="selectedEntryInfo"
-						(select)="onSelect(node)" (update)="onUpdateEntryInfo($event)"></minty-project-node>
+						(select)="onSelect(node)" (update)="onUpdateEntryInfo($event)" (delete)="onDeleteEntryInfo($event)"></minty-project-node>
 				</li>
 				<li class="list-group-item list-group-item-action position-relative text-bg-light bg-opacity-75" style="height: 2.5rem">
 					<button class="btn" (click)="addFile()" title="add file">
@@ -43,3 +43,8 @@
 		</ng-template>
 	</div>
 </div>
+
+<minty-confirmation-dialog [title]="'Delete File'"
+	[message]="'Are you sure you want to delete this file/folder?'" [visible]="confirmDeleteNodeVisible"
+	(confirm)="confirmDeleteNode()" (cancel)="confirmDeleteNodeVisible = false">
+</minty-confirmation-dialog>
