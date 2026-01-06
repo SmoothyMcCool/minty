@@ -4,8 +4,8 @@ import { Project } from "../model/project/project";
 import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
 import { AlertService } from "../alert.service";
 import { ApiResult } from "../model/api-result";
-import { ProjectEntryInfo } from "../model/project/project-entry-info";
-import { ProjectEntry } from "../model/project/project-entry";
+import { NodeInfo } from "../model/project/node-info";
+import { Node } from "../model/project/node";
 
 @Injectable({
 	providedIn: 'root'
@@ -17,22 +17,22 @@ export class ProjectService {
 	private static readonly DeleteProject = 'api/project/delete';
 	private static readonly GetProject = 'api/project';
 	private static readonly ListProjects = 'api/project/list';
-	private static readonly ListProjectEntries = 'api/project/entries';
-	private static readonly GetProjectEntry = 'api/project/entry';
-	private static readonly DeleteProjectEntry = 'api/project/entry';
-	private static readonly AddProjectEntry = 'api/project/entry';
+	private static readonly ListNodes = 'api/project/node/list';
+	private static readonly GetNode = 'api/project/node';
+	private static readonly DeleteNode = 'api/project/node';
+	private static readonly AddNode = 'api/project/node';
 
 	public constructor(private http: HttpClient, private alertService: AlertService) {
 	}
 
-	createProject(): Observable<Project> {
+	createProject(name: string): Observable<Project> {
 		const headers: HttpHeaders = new HttpHeaders({
 			'Content-Type': 'application/json'
 		});
 
 		const project: Project = {
 			id: '',
-			name: crypto.randomUUID()
+			name: name
 		};
 		
 		return this.http.post<ApiResult>(ProjectService.CreateProject, project, { headers: headers })
@@ -79,18 +79,18 @@ export class ProjectService {
 			);
 	}
 
-	listProjectEntries(projectId: string): Observable<ProjectEntryInfo[]> {
+	listProjectEntries(projectId: string): Observable<NodeInfo[]> {
 		let params: HttpParams = new HttpParams();
 		params = params.append('projectId', projectId);
 
-		return this.http.get<ApiResult>(ProjectService.ListProjectEntries, { params: params })
+		return this.http.get<ApiResult>(ProjectService.ListNodes, { params: params })
 			.pipe(
 				catchError(error => {
 					this.alertService.postFailure(JSON.stringify(error));
 					return EMPTY;
 				}),
 				map((result: ApiResult) => {
-					return result.data as ProjectEntryInfo[];
+					return result.data as NodeInfo[];
 				})
 			);
 	}
@@ -108,29 +108,29 @@ export class ProjectService {
 			);
 	}
 
-	getProjectEntry(projectId: string, entry: ProjectEntryInfo): Observable<ProjectEntry> {
+	getNode(projectId: string, entry: NodeInfo): Observable<Node> {
 		let params: HttpParams = new HttpParams();
 		params = params.append('projectId', projectId);
-		params = params.append('entry',  entry.id);
+		params = params.append('nodeId',  entry.nodeId);
 
-		return this.http.get<ApiResult>(ProjectService.GetProjectEntry, { params: params })
+		return this.http.get<ApiResult>(ProjectService.GetNode, { params: params })
 			.pipe(
 				catchError(error => {
 					this.alertService.postFailure(JSON.stringify(error));
 					return EMPTY;
 				}),
 				map((result: ApiResult) => {
-					return result.data as ProjectEntry;
+					return result.data as Node;
 				})
 			);
 	}
 
-	addOrUpdateProjectEntry(projectId: string, entry: ProjectEntry): Observable<boolean> {
+	addOrUpdateNode(projectId: string, entry: Node): Observable<boolean> {
 		const form = new FormData();
 		form.append('projectId', projectId);
-		form.append('entry', new Blob([JSON.stringify(entry)], { type: "application/json" }));
+		form.append('node', new Blob([JSON.stringify(entry)], { type: "application/json" }));
 
-		return this.http.post<ApiResult>(ProjectService.AddProjectEntry, form)
+		return this.http.post<ApiResult>(ProjectService.AddNode, form)
 			.pipe(
 				catchError(error => {
 					this.alertService.postFailure(JSON.stringify(error));
@@ -142,12 +142,12 @@ export class ProjectService {
 			);
 	}
 
-	deleteProjectEntry(projectId: string, entry: ProjectEntryInfo): Observable<boolean> {
+	deleteNode(projectId: string, entry: NodeInfo): Observable<boolean> {
 		let params: HttpParams = new HttpParams();
 		params = params.append('projectId', projectId);
-		params = params.append('entry',  entry.id);
+		params = params.append('node',  entry.nodeId);
 
-		return this.http.delete<ApiResult>(ProjectService.DeleteProjectEntry, { params: params })
+		return this.http.delete<ApiResult>(ProjectService.DeleteNode, { params: params })
 			.pipe(
 				catchError(error => {
 					this.alertService.postFailure(JSON.stringify(error));

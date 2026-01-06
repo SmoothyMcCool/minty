@@ -6,10 +6,10 @@ import java.util.UUID;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public record ProjectEntryId(UUID value) implements Serializable {
+public record NodeId(UUID value) implements Serializable {
 
 	@JsonCreator
-	public ProjectEntryId(String strValue) {
+	public NodeId(String strValue) {
 		this(strValue == null || strValue.isBlank() ? null : UUID.fromString(strValue));
 	}
 

@@ -3,14 +3,15 @@ import { Component, forwardRef } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { Project } from 'src/app/model/project/project';
 import { ProjectService } from '../project.service';
-import { ProjectEntryInfo } from 'src/app/model/project/project-entry-info';
-import { ProjectEntry } from 'src/app/model/project/project-entry';
+import { NodeInfo } from 'src/app/model/project/node-info';
+import { Node } from 'src/app/model/project/node';
 import { ProjectNodeComponent } from './project-node.component';
-import { ProjectEntryViewerComponent } from './project-entry-viewer.component';
+import { NodeViewerComponent } from './project-entry-viewer.component';
+import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
 
 @Component({
 	selector: 'minty-project-editor',
-	imports: [CommonModule, FormsModule, ProjectNodeComponent, ProjectEntryViewerComponent],
+	imports: [CommonModule, FormsModule, ProjectNodeComponent, NodeViewerComponent, ConfirmationDialogComponent],
 	templateUrl: 'project-editor.component.html',
 	providers: [
 		{
@@ -26,12 +27,15 @@ export class ProjectEditorComponent implements ControlValueAccessor {
 	onTouched: any = () => { };
 
 	project: Project;
-	entries: ProjectEntryInfo[];
+	entries: NodeInfo[];
 
-	selectedEntryInfo: ProjectEntryInfo;
-	selectedEntry: ProjectEntry;
+	selectedEntryInfo: NodeInfo;
+	selectedEntry: Node;
 	editFile: boolean = false;
 	currentFileContents: string;
+
+	confirmDeleteNodeVisible = false;
+	entryInfoToDelete: NodeInfo;
 
 	constructor(private projectService: ProjectService) {
 	}
@@ -42,16 +46,16 @@ export class ProjectEditorComponent implements ControlValueAccessor {
 		this.selectedEntry = null;
 		this.editFile = false;
 		if (this.project) {
-			this.projectService.listProjectEntries(this.project.id).subscribe((entries: ProjectEntryInfo[]) => {
+			this.projectService.listProjectEntries(this.project.id).subscribe((entries: NodeInfo[]) => {
 				this.entries = entries;
 			});
 		}
 	}
 
-	onSelect(node: ProjectEntryInfo) {
-		if (node.type !== 'folder') {
+	onSelect(node: NodeInfo) {
+		if (node.type !== 'Folder') {
 			this.selectedEntryInfo = node;
-			this.projectService.getProjectEntry(this.project.id, this.selectedEntryInfo).subscribe(entry => {
+			this.projectService.getNode(this.project.id, this.selectedEntryInfo).subscribe(entry => {
 				this.selectedEntry = entry;
 			});
 		} else {
@@ -59,13 +63,24 @@ export class ProjectEditorComponent implements ControlValueAccessor {
 		}
 	}
 
-	onUpdateEntryInfo(node: ProjectEntryInfo) {
-		this.projectService.getProjectEntry(this.project.id, node).subscribe(entry => {
+	onUpdateEntryInfo(node: NodeInfo) {
+		this.projectService.getNode(this.project.id, node).subscribe(entry => {
 			entry.info = node;
-			this.projectService.addOrUpdateProjectEntry(this.project.id, entry).subscribe(() => {
+			this.projectService.addOrUpdateNode(this.project.id, entry).subscribe(() => {
 				this.refresh();
 			});
 		})
+	}
+
+	onDeleteEntryInfo(node: NodeInfo) {
+		this.entryInfoToDelete = node;
+		this.confirmDeleteNodeVisible = true;
+	}
+	confirmDeleteNode() {
+		this.confirmDeleteNodeVisible = false;
+		this.projectService.deleteNode(this.project.id, this.entryInfoToDelete).subscribe(() => {
+			this.refresh();
+		});
 	}
 
 	writeValue(obj: any): void {
@@ -97,23 +112,23 @@ export class ProjectEditorComponent implements ControlValueAccessor {
 
 	saveChangesToCurrentFile() {
 		this.selectedEntry.data = this.currentFileContents;
-		this.projectService.addOrUpdateProjectEntry(this.project.id, this.selectedEntry).subscribe(() => {
+		this.projectService.addOrUpdateNode(this.project.id, this.selectedEntry).subscribe(() => {
 			this.refresh();
 		});
 	}
 
 	addFile() {
-		const entryInfo: ProjectEntryInfo = {
-			id: null,
-			type: 'file',
+		const entryInfo: NodeInfo = {
+			nodeId: null,
+			type: 'File',
 			name: crypto.randomUUID(),
-			parent: null
+			parentId: null
 		}
-		const entry: ProjectEntry = {
+		const entry: Node = {
 			info: entryInfo,
 			data: ''
 		}
-		this.projectService.addOrUpdateProjectEntry(this.project.id, entry).subscribe(() => {
+		this.projectService.addOrUpdateNode(this.project.id, entry).subscribe(() => {
 			this.refresh();
 		});
 	}

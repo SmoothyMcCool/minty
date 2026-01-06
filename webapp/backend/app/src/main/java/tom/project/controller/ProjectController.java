@@ -18,11 +18,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 
 import tom.ApiError;
-import tom.api.ProjectEntryId;
+import tom.api.NodeId;
 import tom.api.ProjectId;
+import tom.api.model.project.Node;
+import tom.api.model.project.NodeInfo;
 import tom.api.model.project.Project;
-import tom.api.model.project.ProjectEntry;
-import tom.api.model.project.ProjectEntryInfo;
 import tom.api.services.ProjectService;
 import tom.controller.ResponseWrapper;
 import tom.model.security.UserDetailsUser;
@@ -106,14 +106,14 @@ public class ProjectController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@GetMapping({ "/entries" })
-	public ResponseEntity<ResponseWrapper<List<ProjectEntryInfo>>> listProjectContents(
+	@GetMapping({ "/node/list" })
+	public ResponseEntity<ResponseWrapper<List<NodeInfo>>> listProjectContents(
 			@AuthenticationPrincipal UserDetailsUser user, @RequestParam("projectId") ProjectId projectId) {
 
-		ResponseWrapper<List<ProjectEntryInfo>> response;
+		ResponseWrapper<List<NodeInfo>> response;
 
 		try {
-			List<ProjectEntryInfo> projectFiles = projectService.listProjectEntries(user.getId(), projectId);
+			List<NodeInfo> projectFiles = projectService.listNodes(user.getId(), projectId);
 			response = ResponseWrapper.SuccessResponse(projectFiles);
 		} catch (Exception e) {
 			logger.warn("Failed to list project contents.", e);
@@ -123,32 +123,31 @@ public class ProjectController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@GetMapping({ "/entry" })
-	public ResponseEntity<ResponseWrapper<ProjectEntry>> getProjectEntry(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("projectId") ProjectId projectId, @RequestParam("entry") ProjectEntryId entryId) {
+	@GetMapping({ "/node" })
+	public ResponseEntity<ResponseWrapper<Node>> getNode(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("projectId") ProjectId projectId, @RequestParam("nodeId") NodeId nodeId) {
 
-		ResponseWrapper<ProjectEntry> response;
+		ResponseWrapper<Node> response;
 
 		try {
-			ProjectEntry projectEntry = projectService.getProjectEntry(user.getId(), projectId, entryId);
-			response = ResponseWrapper.SuccessResponse(projectEntry);
+			Node node = projectService.getNode(user.getId(), projectId, nodeId);
+			response = ResponseWrapper.SuccessResponse(node);
 		} catch (Exception e) {
-			logger.warn("Failed to retrieve project entry.", e);
+			logger.warn("Failed to retrieve node.", e);
 			response = ResponseWrapper.ApiFailureResponse(500, List.of(ApiError.FAILED_TO_ENUMERATE_PROJECT));
 		}
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@PostMapping(value = "/entry", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<ResponseWrapper<Boolean>> createOrUpdateProjectEntry(
-			@AuthenticationPrincipal UserDetailsUser user, @RequestParam("projectId") ProjectId projectId,
-			@RequestPart("entry") ProjectEntry entry) {
+	@PostMapping(value = "/node", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<ResponseWrapper<Boolean>> createOrUpdateNode(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("projectId") ProjectId projectId, @RequestPart("node") Node node) {
 
 		ResponseWrapper<Boolean> response;
 
 		try {
-			projectService.createOrUpdateProjectEntry(user.getId(), projectId, entry);
+			projectService.createOrUpdateNode(user.getId(), projectId, node);
 			response = ResponseWrapper.SuccessResponse(true);
 		} catch (Exception e) {
 			logger.warn("Failed to create project entry.", e);
@@ -158,14 +157,14 @@ public class ProjectController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@DeleteMapping(value = "/entry")
-	public ResponseEntity<ResponseWrapper<Boolean>> deleteProjectEntry(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("projectId") ProjectId projectId, @RequestParam("entry") ProjectEntryId entryId) {
+	@DeleteMapping(value = "/node")
+	public ResponseEntity<ResponseWrapper<Boolean>> deleteNode(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("projectId") ProjectId projectId, @RequestParam("node") NodeId nodeId) {
 
 		ResponseWrapper<Boolean> response;
 
 		try {
-			projectService.deleteProjectEntry(user.getId(), projectId, entryId);
+			projectService.deleteNode(user.getId(), projectId, nodeId);
 			response = ResponseWrapper.SuccessResponse(true);
 		} catch (Exception e) {
 			logger.warn("Failed to create project entry.", e);

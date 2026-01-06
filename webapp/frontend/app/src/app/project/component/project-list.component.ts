@@ -18,6 +18,9 @@ export class ProjectListComponent implements OnInit {
 	confirmDeleteProjectVisible = false;
 	projectPendingDeletion: Project;
 
+	newProjectVisible = false;
+	newProjectName = '';
+
 	constructor(private router: Router,
 		private projectService: ProjectService) {
 	}
@@ -28,12 +31,17 @@ export class ProjectListComponent implements OnInit {
 		});
 	}
 
-	newProject() {
-		this.projectService.createProject().subscribe(() => {
+	createNewProject() {
+		this.newProjectVisible = false;
+		this.projectService.createProject(this.newProjectName).subscribe(() => {
 			this.ngOnInit();
 		})
 	}
 
+	cancelNewProject() {
+		this.newProjectVisible = false;
+		this.newProjectName = '';
+	}
 	navigateToProject(id: string) {
 		this.router.navigate(['/projects', id]);
 	}

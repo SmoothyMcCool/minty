@@ -1,36 +1,38 @@
 package tom.project.service;
 
-import java.io.IOException;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
 import tom.NotFoundException;
 import tom.NotOwnedException;
-import tom.api.ProjectEntryId;
+import tom.api.NodeId;
 import tom.api.ProjectId;
 import tom.api.UserId;
+import tom.api.model.project.Node;
+import tom.api.model.project.NodeInfo;
+import tom.api.model.project.NodeType;
 import tom.api.model.project.Project;
-import tom.api.model.project.ProjectEntry;
-import tom.api.model.project.ProjectEntryInfo;
 import tom.api.services.ProjectService;
 import tom.config.MintyConfiguration;
-import tom.project.repository.ProjectEntryInfoProjection;
-import tom.project.repository.ProjectEntryRepository;
+import tom.project.repository.NodeInfoProjection;
+import tom.project.repository.NodeRepository;
 import tom.project.repository.ProjectRepository;
 
 @Service
 public class ProjectServiceImpl implements ProjectService {
 
 	private final ProjectRepository projectRepository;
-	private final ProjectEntryRepository projectEntryRepository;
+	private final NodeRepository nodeRepository;
 
-	public ProjectServiceImpl(ProjectRepository projectRepository, ProjectEntryRepository projectEntryRepository,
+	public ProjectServiceImpl(ProjectRepository projectRepository, NodeRepository nodeRepository,
 			MintyConfiguration properties) {
 		this.projectRepository = projectRepository;
-		this.projectEntryRepository = projectEntryRepository;
+		this.nodeRepository = nodeRepository;
 	}
 
 	@Override
@@ -40,6 +42,15 @@ public class ProjectServiceImpl implements ProjectService {
 		project.setName(name);
 		project.setOwnerId(userId);
 		project = projectRepository.save(project);
+
+		// Start the project with an empty root folder.
+		NodeInfo nodeInfo = new NodeInfo();
+		nodeInfo.setName("/");
+		nodeInfo.setType(NodeType.Folder);
+		nodeInfo.setParentId(null);
+		Node entry = new Node(nodeInfo, null);
+		createOrUpdateNode(userId, new ProjectId(project.getId()), entry);
+
 		return project.toModel();
 	}
 
@@ -67,89 +78,82 @@ public class ProjectServiceImpl implements ProjectService {
 	}
 
 	@Override
-	public List<ProjectEntryInfo> listProjectEntries(UserId userId, ProjectId projectId) throws IOException {
+	public List<NodeInfo> listNodes(UserId userId, ProjectId projectId) {
 		validateProjectAccess(userId, projectId);
 
-		List<ProjectEntryInfoProjection> entries = projectEntryRepository
-				.findAllProjectedByProjectId(projectId.value());
-		return entries.stream()
-				.map(entry -> new ProjectEntryInfo(new ProjectEntryId(entry.getId()), entry.getType(), entry.getName()))
-				.toList();
+		List<NodeInfoProjection> entries = nodeRepository.findAllProjectedByProjectId(projectId.value());
+		return entries.stream().map(entry -> new NodeInfo(new NodeId(entry.getId()), entry.getType(), entry.getName(),
+				new NodeId(entry.getParentId()), entry.getCreated(), entry.getUpdated())).toList();
 	}
 
 	@Override
-	public ProjectEntry getProjectEntry(UserId userId, ProjectId projectId, ProjectEntryId entryId) {
-		tom.project.repository.ProjectEntry entry = getProjectEntryInternal(userId, projectId, entryId);
-		return new ProjectEntry(new ProjectEntryInfo(entryId, entry.getType(), entry.getName()), entry.getData());
-	}
-
-	private tom.project.repository.ProjectEntry getProjectEntryInternal(UserId userId, ProjectId projectId,
-			ProjectEntryId entryId) {
-		validateProjectAccess(userId, projectId);
-
-		Optional<tom.project.repository.ProjectEntry> maybeEntry = projectEntryRepository.findById(entryId.value());
-
-		if (maybeEntry.isEmpty()) {
-			throw new NotFoundException("File " + entryId.value() + " does not exist");
-		}
-
-		tom.project.repository.ProjectEntry entry = maybeEntry.get();
-
-		if (!entry.getProjectId().equals(projectId.value())) {
-			throw new NotOwnedException("Requested ProjectEntry not part of this project.");
-		}
-
-		return entry;
+	public Node getNode(UserId userId, ProjectId projectId, NodeId nodeId) {
+		tom.project.repository.Node entry = getNodeInternal(userId, projectId, nodeId);
+		return new Node(new NodeInfo(nodeId, entry.getType(), entry.getName(), new NodeId(entry.getParentId()),
+				entry.getCreated(), entry.getUpdated()), entry.getData());
 	}
 
 	@Override
 	@Transactional
-	public void createOrUpdateProjectEntry(UserId userId, ProjectId projectId, ProjectEntry projectEntry) {
+	public void createOrUpdateNode(UserId userId, ProjectId projectId, Node node) {
 		validateProjectAccess(userId, projectId);
 
-		if (entryExists(projectEntry.info())) {
+		tom.project.repository.Node newNode;
+		if (entryExists(node.info())) {
 			// This will throw if we are not allowed to access the entry. We already know it
 			// exists.
-			tom.project.repository.ProjectEntry entry = getProjectEntryInternal(userId, projectId,
-					projectEntry.info().getId());
-			entry.setName(projectEntry.info().getName());
-			if (projectEntry.info().getParent() != null) {
-				entry.setParentId(projectEntry.info().getParent().value());
-			} else {
-				entry.setParentId(null);
-			}
-			entry.setType(projectEntry.info().getType());
-			entry.setData(projectEntry.data());
-			projectEntryRepository.save(entry);
-
+			newNode = getNodeInternal(userId, projectId, node.info().getNodeId());
 		} else {
-			tom.project.repository.ProjectEntry entry = new tom.project.repository.ProjectEntry();
-			entry.setName(projectEntry.info().getName());
-			if (projectEntry.info().getParent() != null) {
-				entry.setParentId(projectEntry.info().getParent().value());
-			} else {
-				entry.setParentId(null);
-			}
-			entry.setProjectId(projectId.value());
-			entry.setType(projectEntry.info().getType());
-			entry.setData(projectEntry.data());
-			projectEntryRepository.save(entry);
-
+			newNode = new tom.project.repository.Node();
 		}
+
+		if (node.info().getParentId() != null) {
+			// This will throw if the parent specified does not exist or isn't part of the
+			// project.
+			getNodeInternal(userId, projectId, node.info().getParentId());
+		}
+
+		newNode.setName(node.info().getName().trim());
+		if (newNode.getName().isEmpty()) {
+			throw new IllegalArgumentException("Name cannot be empty");
+		}
+
+		newNode.setProjectId(projectId.value());
+		newNode.setType(node.info().getType());
+		if (node.info().getParentId() != null) {
+			newNode.setParentId(node.info().getParentId().value());
+		}
+		newNode.setData(node.data());
+		nodeRepository.save(newNode);
+
 	}
 
 	@Override
 	@Transactional
-	public void deleteProjectEntry(UserId userId, ProjectId projectId, ProjectEntryId entryId) {
+	public void deleteNode(UserId userId, ProjectId projectId, NodeId nodeId) {
 		validateProjectAccess(userId, projectId);
 
-		ProjectEntry entry = getProjectEntry(userId, projectId, entryId);
+		tom.project.repository.Node node = nodeRepository.findById(nodeId.value())
+				.orElseThrow(() -> new NoSuchElementException("Node not found"));
 
-		if (entry == null) {
-			return;
+		List<tom.project.repository.Node> children = nodeRepository.findAllByParentId(node.getParentId());
+		for (tom.project.repository.Node child : children) {
+			deleteNode(userId, projectId, new NodeId(child.getId()));
 		}
 
-		projectEntryRepository.deleteById(entry.info().getId().value());
+		nodeRepository.deleteById(nodeId.value());
+	}
+
+	@Override
+	@Transactional
+	public void updateNodeInfo(UserId userId, ProjectId projectId, NodeInfo nodeInfo) {
+		validateProjectAccess(userId, projectId);
+
+		UUID parentId = nodeInfo.getParentId() != null ? nodeInfo.getParentId().value() : null;
+		int updated = nodeRepository.updateNodeInfo(nodeInfo.getNodeId().value(), parentId, nodeInfo.getName());
+		if (updated != 1) {
+			throw new RuntimeException("Update failed");
+		}
 	}
 
 	private void validateProjectAccess(UserId userId, ProjectId projectId) {
@@ -164,26 +168,29 @@ public class ProjectServiceImpl implements ProjectService {
 		}
 	}
 
-	private boolean entryExists(ProjectEntryInfo entryInfo) {
-		if (entryInfo.getId() == null) {
+	private boolean entryExists(NodeInfo nodeInfo) {
+		if (nodeInfo.getNodeId() == null) {
 			return false;
 		}
-		return projectEntryRepository.existsById(entryInfo.getId().value());
+		return nodeRepository.existsById(nodeInfo.getNodeId().value());
 	}
 
-	@Override
-	public ProjectEntry getProjectEntryByName(UserId userId, ProjectId projectId, String fileName) {
+	private tom.project.repository.Node getNodeInternal(UserId userId, ProjectId projectId, NodeId nodeId) {
 		validateProjectAccess(userId, projectId);
 
-		List<ProjectEntryInfoProjection> entries = projectEntryRepository.findAllProjectedByName(fileName);
+		Optional<tom.project.repository.Node> maybeEntry = nodeRepository.findById(nodeId.value());
 
-		for (ProjectEntryInfoProjection entry : entries) {
-			if (entry.getProjectId().equals(projectId.value())) {
-				return getProjectEntry(userId, projectId, new ProjectEntryId(entry.getId()));
-			}
+		if (maybeEntry.isEmpty()) {
+			throw new NotFoundException("File " + nodeId.value() + " does not exist");
 		}
 
-		return null;
+		tom.project.repository.Node entry = maybeEntry.get();
+
+		if (!entry.getProjectId().equals(projectId.value())) {
+			throw new NotOwnedException("Requested Node not part of this project.");
+		}
+
+		return entry;
 	}
 
 }

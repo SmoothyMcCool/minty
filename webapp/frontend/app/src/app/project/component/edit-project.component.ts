@@ -5,7 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Project } from 'src/app/model/project/project';
 import { ProjectService } from 'src/app/project/project.service';
 import { ProjectEditorComponent } from './project-editor.component';
-import { ProjectEntryInfo } from 'src/app/model/project/project-entry-info';
+import { NodeInfo } from 'src/app/model/project/node-info';
 
 @Component({
 	selector: 'minty-edit-project',
