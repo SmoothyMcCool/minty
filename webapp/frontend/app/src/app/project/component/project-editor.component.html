@@ -4,9 +4,9 @@
 		<div class="col-3 border-end">
 			<h5 class="mb-3">Files</h5>
 			<ul class="list-group">
-				<li class="list-group-item list-group-item-action position-relative text-bg-light bg-opacity-75" style="height: 2.5rem" *ngFor="let node of entries">
-					<minty-project-node [node]="node" [selected]="selectedEntryInfo"
-						(select)="onSelect(node)" (update)="onUpdateEntryInfo($event)" (delete)="onDeleteEntryInfo($event)"></minty-project-node>
+				<li class="list-group-item list-group-item-action position-relative text-bg-light bg-opacity-75" *ngFor="let node of rootNodes()">
+					<minty-project-node [node]="node" [selected]="selectedNodeInfo" [nodes]="nodes"
+						(select)="onSelected($event)" (update)="onUpdateNodeInfo($event)" (delete)="onDeleteNodeInfo($event)"></minty-project-node>
 				</li>
 				<li class="list-group-item list-group-item-action position-relative text-bg-light bg-opacity-75" style="height: 2.5rem">
 					<button class="btn" (click)="addFile()" title="add file">
@@ -17,7 +17,7 @@
 		</div>
 
 		<!-- Right pane – file viewer -->
-		<div class="col-9" *ngIf="selectedEntry; else noSelection">
+		<div class="col-9" *ngIf="selectedNode; else noSelection">
 			<div class="row">
 				<div class="col-auto">
 					<ng-container *ngIf="!editFile; else editMode">
@@ -35,8 +35,8 @@
 					</ng-template>
 				</div>
 			</div>
-			<h1>{{selectedEntryInfo.name}}</h1>
-			<minty-project-entry-viewer [ngModel]="selectedEntry.data" (ngModelChange)="onFileContentsChanged($event)" [edit]="editFile"></minty-project-entry-viewer>
+			<h1>{{selectedNodeInfo.name}}</h1>
+			<minty-project-entry-viewer [ngModel]="selectedNode.data" (ngModelChange)="onFileContentsChanged($event)" [edit]="editFile"></minty-project-entry-viewer>
 		</div>
 		<ng-template #noSelection>
 			<h5 class="col-9 text-muted">Select a file to view its contents</h5>

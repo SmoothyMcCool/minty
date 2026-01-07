@@ -27,58 +27,61 @@ export class ProjectEditorComponent implements ControlValueAccessor {
 	onTouched: any = () => { };
 
 	project: Project;
-	entries: NodeInfo[];
+	nodes: NodeInfo[];
 
-	selectedEntryInfo: NodeInfo;
-	selectedEntry: Node;
+	selectedNodeInfo: NodeInfo;
+	selectedNode: Node;
 	editFile: boolean = false;
 	currentFileContents: string;
 
 	confirmDeleteNodeVisible = false;
-	entryInfoToDelete: NodeInfo;
+	nodeInfoToDelete: NodeInfo;
 
 	constructor(private projectService: ProjectService) {
 	}
 
 	refresh() {
-		this.entries = [];
-		this.selectedEntryInfo = null;
-		this.selectedEntry = null;
+		this.nodes = [];
+		this.selectedNodeInfo = null;
+		this.selectedNode = null;
 		this.editFile = false;
 		if (this.project) {
-			this.projectService.listProjectEntries(this.project.id).subscribe((entries: NodeInfo[]) => {
-				this.entries = entries;
+			this.projectService.listProjectEntries(this.project.id).subscribe((nodes: NodeInfo[]) => {
+				this.nodes = nodes;
 			});
 		}
 	}
 
-	onSelect(node: NodeInfo) {
+	onSelected(node: NodeInfo) {
 		if (node.type !== 'Folder') {
-			this.selectedEntryInfo = node;
-			this.projectService.getNode(this.project.id, this.selectedEntryInfo).subscribe(entry => {
-				this.selectedEntry = entry;
-			});
+			this.selectedNodeInfo = node;
+			if (this.selectedNodeInfo.nodeId) {
+				this.projectService.getNode(this.project.id, this.selectedNodeInfo).subscribe(node => {
+					this.selectedNode = node;
+				});
+			}
 		} else {
-			this.selectedEntryInfo = null;
+			this.selectedNodeInfo = null;
 		}
 	}
 
-	onUpdateEntryInfo(node: NodeInfo) {
-		this.projectService.getNode(this.project.id, node).subscribe(entry => {
-			entry.info = node;
-			this.projectService.addOrUpdateNode(this.project.id, entry).subscribe(() => {
+	onUpdateNodeInfo(nodeInfo: NodeInfo) {
+		this.projectService.getNode(this.project.id, nodeInfo).subscribe(node => {
+			node.info = nodeInfo;
+			this.projectService.addOrUpdateNode(this.project.id, node).subscribe(() => {
 				this.refresh();
 			});
 		})
 	}
 
-	onDeleteEntryInfo(node: NodeInfo) {
-		this.entryInfoToDelete = node;
+	onDeleteNodeInfo(node: NodeInfo) {
+		this.nodeInfoToDelete = node;
 		this.confirmDeleteNodeVisible = true;
 	}
+
 	confirmDeleteNode() {
 		this.confirmDeleteNodeVisible = false;
-		this.projectService.deleteNode(this.project.id, this.entryInfoToDelete).subscribe(() => {
+		this.projectService.deleteNode(this.project.id, this.nodeInfoToDelete).subscribe(() => {
 			this.refresh();
 		});
 	}
@@ -99,7 +102,7 @@ export class ProjectEditorComponent implements ControlValueAccessor {
 
 	editCurrentFile() {
 		this.editFile = true;
-		this.currentFileContents = this.selectedEntry.data;
+		this.currentFileContents = this.selectedNode.data;
 	}
 
 	cancelEditingCurrentFile() {
@@ -111,8 +114,8 @@ export class ProjectEditorComponent implements ControlValueAccessor {
 	}
 
 	saveChangesToCurrentFile() {
-		this.selectedEntry.data = this.currentFileContents;
-		this.projectService.addOrUpdateNode(this.project.id, this.selectedEntry).subscribe(() => {
+		this.selectedNode.data = this.currentFileContents;
+		this.projectService.addOrUpdateNode(this.project.id, this.selectedNode).subscribe(() => {
 			this.refresh();
 		});
 	}
@@ -122,7 +125,7 @@ export class ProjectEditorComponent implements ControlValueAccessor {
 			nodeId: null,
 			type: 'File',
 			name: crypto.randomUUID(),
-			parentId: null
+			parentId: this.nodes.find(node => node.name === '/').nodeId
 		}
 		const entry: Node = {
 			info: entryInfo,
@@ -133,4 +136,12 @@ export class ProjectEditorComponent implements ControlValueAccessor {
 		});
 	}
 
+	childNodesOf(nodeId: String): NodeInfo[] {
+		return this.nodes.filter(node => node.parentId === nodeId);
+	}
+
+	rootNodes(): NodeInfo[] {
+		const root = this.nodes.find(node => node.name === '/');
+		return this.nodes.filter(node => node.parentId === root.nodeId);
+	}
 }
