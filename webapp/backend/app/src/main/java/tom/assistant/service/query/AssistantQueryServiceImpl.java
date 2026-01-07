@@ -233,10 +233,11 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	}
 
 	private void askStreamingInternal(LlmRequest request) {
+		StreamResult sr = new StreamResult();
+
 		try {
 			User user = userService.getUserFromId(request.getUserId()).get();
 
-			StreamResult sr = new StreamResult();
 			results.put(request.getQuery().getConversationId(), sr);
 
 			ChatClientRequestSpec spec = prepareFromQuery(user, request.getQuery());
@@ -291,9 +292,8 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			}).onErrorResume(e -> {
 				if (results.containsKey(request.getQuery().getConversationId())) {
 					logger.warn("Caught exception while attempting to stream response: ", e);
-					StreamResult streamResult = (StreamResult) results.get(request.getQuery().getConversationId());
-					streamResult.addChunk("Failed to generate response.");
-					streamResult.markComplete();
+					sr.addChunk("Failed to generate response.");
+					sr.markComplete();
 				}
 				return Flux.empty();
 			}).subscribe();
@@ -301,7 +301,6 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		} catch (Exception e) {
 			if (results.containsKey(request.getQuery().getConversationId())) {
 				logger.warn("Caught exception while attempting to stream response: ", e);
-				StreamResult sr = (StreamResult) results.get(request.getQuery().getConversationId());
 				sr.addChunk("Failed to generate response.");
 				sr.markComplete();
 				return;

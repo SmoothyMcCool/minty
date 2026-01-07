@@ -1,16 +1,29 @@
-<div class="d-flex align-items-center h-100">
-	<span class="text-truncate clickable-text" (click)="onSelect()">
+<li class="folder-item" [class.selected]="node === selected">
+	<span *ngIf="node.type === 'Folder'" class="folder-toggle" (click)="toggle()">
+		<i class="bi" [ngClass]="{'bi-folder': isExpanded, 'bi-folder2': !isExpanded}"></i>
+	</span>
+
+	<span class="clickable-text" (click)="onSelect(node)">
 		{{node.name}}
 	</span>
-	<span class="badge text-bg-secondary mx-2">{{node.type}}</span>
+
 	<span class="flex-grow-1"></span>
+
 	<button class="btn btn-sm" style="font-size: 14px;" (click)="editNodeInfo()">
 		<i class="bi bi-pencil-square"></i>
 	</button>
 	<button type="button" class="btn btn-sm p-0" style="font-size: 14px; color: red" (click)="deleteNode()">
 		<i class="bi bi-trash3"></i>
 	</button>
-</div>
+</li>
+
+<ul *ngIf="node.type === 'Folder' && isExpanded" class="list-unstyled ps-3">
+	<ng-container *ngFor="let child of childNodesOf(node.nodeId)">
+		<minty-project-node [node]="child" [selected]="selected" [nodes]="nodes" (select)="onSelect($event)"
+			(update)="onUpdate($event)" (delete)="onDelete($event)">
+		</minty-project-node>
+	</ng-container>
+</ul>
 
 <div class="modal show d-block" tabindex="-1" *ngIf="editNodeInfoVisible">
 	<div class="modal-dialog">
@@ -30,6 +43,12 @@
 						<select class="form-select" id="typeSelect" [(ngModel)]="editType" name="typeSelect" required>
 							<option value="Folder">Folder</option>
 							<option value="File">File</option>
+						</select>
+					</div>
+					<div class="col-12">
+						<label for="typeSelect" class="form-label">Parent</label>
+						<select class="form-select" id="typeSelect" [(ngModel)]="editParent" name="parentSelect" required>
+							<option *ngFor="let folder of listFolders()" value="{{folder.nodeId}}">{{folder.name}}</option>
 						</select>
 					</div>
 				</form>

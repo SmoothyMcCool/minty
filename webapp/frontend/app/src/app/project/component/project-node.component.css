@@ -1,0 +1,25 @@
+ul.root-list {
+	margin-left: 0;
+}
+
+.folder-item {
+	display: flex;
+	align-items: center;
+	padding: 0.25rem 0;
+	cursor: pointer;
+	position: relative;
+}
+
+.folder-item.selected {
+	background: #e9ecef;
+}
+
+.folder-toggle {
+	margin-right: 0.5rem;
+	cursor: pointer;
+	user-select: none;
+}
+
+.child-list {
+	margin-left: 0.5rem;
+}

@@ -136,7 +136,7 @@ public class ProjectServiceImpl implements ProjectService {
 		tom.project.repository.Node node = nodeRepository.findById(nodeId.value())
 				.orElseThrow(() -> new NoSuchElementException("Node not found"));
 
-		List<tom.project.repository.Node> children = nodeRepository.findAllByParentId(node.getParentId());
+		List<tom.project.repository.Node> children = nodeRepository.findAllByParentId(node.getId());
 		for (tom.project.repository.Node child : children) {
 			deleteNode(userId, projectId, new NodeId(child.getId()));
 		}
