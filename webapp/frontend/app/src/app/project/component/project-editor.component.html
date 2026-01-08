@@ -36,7 +36,7 @@
 				</div>
 			</div>
 			<h1>{{selectedNodeInfo.name}}</h1>
-			<minty-project-entry-viewer [ngModel]="selectedNode.data" (ngModelChange)="onFileContentsChanged($event)" [edit]="editFile"></minty-project-entry-viewer>
+			<minty-project-node-viewer [ngModel]="selectedNode.data" (ngModelChange)="onFileContentsChanged($event)" [edit]="editFile"></minty-project-node-viewer>
 		</div>
 		<ng-template #noSelection>
 			<h5 class="col-9 text-muted">Select a file to view its contents</h5>
