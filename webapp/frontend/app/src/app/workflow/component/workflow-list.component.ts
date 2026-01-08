@@ -68,10 +68,10 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 			this.user = user;
 
 			this.subscription = this.resultService.workflowResultList$.subscribe((value: WorkflowState[]) => {
-				const map = new Map(value.map(i => [i.id, i]));
+				const map = new Map(value.map(i => [i.name, i]));
 
 				for (const [id, item] of map) {
-					const index = this.results.findIndex(i => i.id === id);
+					const index = this.results.findIndex(i => i.name === id);
 					if (index !== -1) {
 						this.results[index] = item;
 					} else {
@@ -79,7 +79,7 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 					}
 				}
 
-				this.results = this.results.filter(i => map.has(i.id));
+				this.results = this.results.filter(i => map.has(i.name));
 				this.filterChanged(this.filter);
 			});
 

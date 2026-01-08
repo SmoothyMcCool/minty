@@ -30,9 +30,7 @@ public class WorkflowRunner {
 
 	private final Logger stdLogger = LogManager.getLogger(WorkflowRunner.class);
 
-	private static final ExecutorService Executor = Executors.newThreadPerTaskExecutor(runnable -> {
-		return new Thread(runnable);
-	});
+	private static final ExecutorService Executor = Executors.newVirtualThreadPerTaskExecutor();
 
 	private final TaskRegistryService taskRegistryService;
 	private final WorkflowTrackingService workflowTrackingService;

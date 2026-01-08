@@ -6,7 +6,7 @@ import { ProjectService } from '../project.service';
 import { NodeInfo } from 'src/app/model/project/node-info';
 import { Node } from 'src/app/model/project/node';
 import { ProjectNodeComponent } from './project-node.component';
-import { NodeViewerComponent } from './project-entry-viewer.component';
+import { NodeViewerComponent } from './project-node-viewer.component';
 import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
 
 @Component({
