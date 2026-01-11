@@ -20,6 +20,8 @@ public interface NodeRepository extends JpaRepository<Node, UUID> {
 
 	List<Node> findAllByParentId(UUID parentId);
 
+	List<NodeInfoProjection> findAllProjectedByParentId(UUID parentId);
+
 	@Modifying
 	@Transactional
 	@Query("UPDATE Node n SET n.parentId = :parentId, n.name = :name WHERE n.id = :nodeId")

@@ -61,8 +61,8 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 	modelChanged(model: string) {
 		this.assistant.model = model;
 		this.assistant.documentIds = [];
-		this.minContext = this.models.find(m => m.name === model).defaultContext;
-		this.maxContext = this.models.find(m => m.name === model).maximumContext;
+		this.minContext = this.models.find(m => m.name === model)?.defaultContext;
+		this.maxContext = this.models.find(m => m.name === model)?.maximumContext;
 		if (this.assistant.contextSize < this.minContext) {
 			this.assistant.contextSize = this.minContext;
 		} else if (this.assistant.contextSize > this.maxContext) {
@@ -107,7 +107,11 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 	}
 
 	writeValue(obj: any): void {
+		if (obj == null) {
+			return;
+		}
 		this.assistant = obj;
+		this.modelChanged(this.assistant.model);
 		this.tools = [...this.tools];
 	}
 	registerOnChange(fn: any): void {

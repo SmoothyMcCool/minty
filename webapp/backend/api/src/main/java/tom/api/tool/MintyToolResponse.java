@@ -2,32 +2,32 @@ package tom.api.tool;
 
 public class MintyToolResponse<T> {
 
-	private final boolean success;
+	private final ToolStatus status;
 	private final String message;
 	private final T data;
 
 	public static <T> MintyToolResponse<T> SuccessResponse(T data) {
-		return new MintyToolResponse<>(true, null, data);
+		return new MintyToolResponse<>(ToolStatus.Ok, null, data);
 	}
 
 	public static <T> MintyToolResponse<T> FailureResponse(String message) {
-		return new MintyToolResponse<>(false, message, null);
+		return new MintyToolResponse<>(ToolStatus.Error, message, null);
 	}
 
 	private MintyToolResponse() {
-		this.success = true;
+		this.status = ToolStatus.Ok;
 		this.message = "";
 		this.data = null;
 	}
 
-	private MintyToolResponse(boolean success, String message, T data) {
-		this.success = success;
+	private MintyToolResponse(ToolStatus status, String message, T data) {
+		this.status = status;
 		this.message = message;
 		this.data = data;
 	}
 
-	public boolean isSuccess() {
-		return success;
+	public ToolStatus getStatus() {
+		return status;
 	}
 
 	public T getData() {

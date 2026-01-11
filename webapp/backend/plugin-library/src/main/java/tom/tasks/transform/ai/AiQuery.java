@@ -132,7 +132,7 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 						break;
 
 					} catch (QueueFullException | ConversationInUseException e) {
-						logger.warn(
+						logger.debug(
 								"AiQuery: LLM queue is full or conversation in use. Sleeping for 5 seconds before trying again.",
 								e);
 						Thread.sleep(Duration.ofSeconds(5));
@@ -147,7 +147,7 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 						response = llmResult instanceof StringResult ? ((StringResult) llmResult).getValue() : null;
 						break;
 					}
-					logger.warn("AiQuery: LLM response not ready. Sleeping for 5 seconds before trying again.");
+					logger.debug("AiQuery: LLM response not ready. Sleeping for 5 seconds before trying again.");
 					Thread.sleep(Duration.ofSeconds(5));
 				}
 

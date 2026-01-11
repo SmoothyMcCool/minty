@@ -38,7 +38,7 @@ public class ProjectTools implements MintyTool, ServiceConsumer {
 		return MintyToolResponse.SuccessResponse(exists);
 	}
 
-	@Tool(name = "list_files", description = "List all files in the project")
+	@Tool(name = "list_files_at_root", description = "List all files in the project")
 	MintyToolResponse<List<NodeInfo>> listFiles(@ToolParam() String projectId) {
 		try {
 			List<NodeInfo> entries = pluginServices.getProjectService().listNodes(userId, new ProjectId(projectId));
@@ -46,6 +46,23 @@ public class ProjectTools implements MintyTool, ServiceConsumer {
 			return MintyToolResponse.SuccessResponse(entries);
 		} catch (Exception e) {
 			String error = "Failed to list files for project " + projectId + ". " + e.getMessage();
+			logger.warn(error);
+			return MintyToolResponse.FailureResponse(error);
+		}
+	}
+
+	@Tool(name = "list_files_in_folder", description = "List all files in the project")
+	MintyToolResponse<List<NodeInfo>> listFilesInFolder(@ToolParam() String projectId,
+			@ToolParam() String folderNodeId) {
+		try {
+			List<NodeInfo> entries = pluginServices.getProjectService().listNodesUnderNode(userId,
+					new ProjectId(projectId), new NodeId(folderNodeId));
+			logger.info("list_files_in_folder returning: "
+					+ entries.stream().map(entry -> entry.getName()).toList().toString());
+			return MintyToolResponse.SuccessResponse(entries);
+		} catch (Exception e) {
+			String error = "Failed to list files under folder " + folderNodeId + ", for project " + projectId + ". "
+					+ e.getMessage();
 			logger.warn(error);
 			return MintyToolResponse.FailureResponse(error);
 		}

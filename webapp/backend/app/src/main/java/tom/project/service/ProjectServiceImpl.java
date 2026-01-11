@@ -87,6 +87,15 @@ public class ProjectServiceImpl implements ProjectService {
 	}
 
 	@Override
+	public List<NodeInfo> listNodesUnderNode(UserId userId, ProjectId projectId, NodeId nodeId) {
+		validateProjectAccess(userId, projectId);
+
+		List<NodeInfoProjection> entries = nodeRepository.findAllProjectedByParentId(nodeId.value());
+		return entries.stream().map(entry -> new NodeInfo(new NodeId(entry.getId()), entry.getType(), entry.getName(),
+				new NodeId(entry.getParentId()), entry.getCreated(), entry.getUpdated())).toList();
+	}
+
+	@Override
 	public Node getNode(UserId userId, ProjectId projectId, NodeId nodeId) {
 		tom.project.repository.Node entry = getNodeInternal(userId, projectId, nodeId);
 		return new Node(new NodeInfo(nodeId, entry.getType(), entry.getName(), new NodeId(entry.getParentId()),

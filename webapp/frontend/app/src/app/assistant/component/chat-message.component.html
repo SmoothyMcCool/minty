@@ -15,7 +15,7 @@
 			</ng-template>
 		</div>
 		<ng-container *ngIf="useMarkdown; else noMarkdown">
-			<markdown clipboard [mermaid]="useMermaid" [data]="message.message" [clipboardButtonTemplate]="clipboardTemplate"></markdown>
+			<markdown clipboard mermaidClipboard [mermaid]="useMermaid" [data]="message.message" [clipboardButtonTemplate]="clipboardTemplate"></markdown>
 		</ng-container>
 		<ng-template #noMarkdown>
 			<pre>{{message.message}}</pre>

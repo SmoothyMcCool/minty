@@ -17,10 +17,14 @@
 
 <div class="canvas-container mb-2" (mousemove)="onMouseMove($event)" (mouseup)="cancelConnection()">
 
-	<div class="m-2 task-list-column overflow-auto" style="flex: 0 0 250px">
+	<div class="m-2 task-list-column d-flex flex-column" style="flex: 0 0 250px">
 		<ng-container *ngIf="editTask; else noEdit">
-			<h3>Edit Task</h3>
-			<form>
+			<div class="flex-shrink-0">
+				<h3>Edit Task</h3>
+				<button type="button" class="btn btn-primary me-2" (click)="doneEditingStep()">Done</button>
+				<button type="button" class="btn btn-danger float-end" (click)="deleteStep()">Delete Task</button>
+			</div>
+			<form class="flex-grow-1 overflow-auto">
 				<minty-task-editor name="{{editTask.stepName}}-editor"
 						[(ngModel)]="editTask"
 						[taskSpecification]="specFor(editTask)"
@@ -28,8 +32,6 @@
 						[enumLists]="enumLists"
 						[models]="models"
 						(taskNameChanged)="onStepNameChanged($event)"></minty-task-editor>
-				<button type="button" class="btn btn-primary me-2" (click)="doneEditingStep()">Done</button>
-				<button type="button" class="btn btn-danger float-end" (click)="deleteStep()">Delete</button>
 			</form>
 		</ng-container>
 		<ng-template #noEdit>
@@ -76,7 +78,7 @@
 	</div>
 
 	<!-- Canvas -->
-	<div #canvas class="canvas border border-success rounded flex-grow-1">
+	<div #canvas class="canvas border border-success rounded flex-grow-1 flex-fill overflow-auto">
 		<!-- SVG for connections -->
 		<svg class="connections">
 			<!-- Existing connections -->

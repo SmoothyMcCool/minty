@@ -1,13 +1,15 @@
 .canvas-container {
 	display: flex;
-	height: 1000px;
+	height: 75vh;
 }
 
 .canvas {
 	flex: 1;
 	position: relative;
 	background: #e8f0ec;
-	overflow: visible;
+	overflow: auto;
+	min-width: 0;
+	min-height: 0;
 }
 
 .connections {
