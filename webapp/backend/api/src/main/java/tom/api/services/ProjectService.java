@@ -21,6 +21,8 @@ public interface ProjectService {
 
 	List<NodeInfo> listNodes(UserId userId, ProjectId projectId);
 
+	List<NodeInfo> listNodesUnderNode(UserId userId, ProjectId projectId, NodeId nodeId);
+
 	Node getNode(UserId userId, ProjectId projectId, NodeId nodeId);
 
 	void createOrUpdateNode(UserId userId, ProjectId projectId, Node node);
