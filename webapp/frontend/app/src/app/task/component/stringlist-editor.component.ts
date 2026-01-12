@@ -17,20 +17,25 @@ import { CommonModule } from '@angular/common';
 export class StringListEditorComponent implements ControlValueAccessor {
 
 	entries: string[] = [];
-	onChange: any = () => {};
-	onTouched: any = () => {};
+	onChange = (_: any) => { };
+	onTouched: any = () => { };
 
 	constructor() {
 	}
 
 	valueChanged(index: number, value: string) {
-		this.entries[index] = value;
-		this.onChange(JSON.stringify(this.entries));
+		const next = [...this.entries];
+		next[index] = value;
+		this.entries = next;
+
+		this.onTouched();
+		this.onChange(JSON.stringify(next));
 	}
 
 	writeValue(obj: any): void {
 		this.entries = [];
 		if (!obj) {
+			this.entries = [];
 			return;
 		}
 		this.entries = JSON.parse(obj);
@@ -46,13 +51,17 @@ export class StringListEditorComponent implements ControlValueAccessor {
 	}
 
 	addEntry() {
-		this.entries.push('');
-		this.onChange(JSON.stringify(this.entries));
+		const next = [...this.entries, ''];
+		this.entries = next;
+		this.onTouched();
+		this.onChange(JSON.stringify(next));
 	}
 
 	removeEntry(index: number) {
-		this.entries.splice(index, 1);
-		this.onChange(JSON.stringify(this.entries));
+		const next = this.entries.filter((_, i) => i !== index);
+		this.entries = next;
+		this.onTouched();
+		this.onChange(JSON.stringify(next));
 	}
 
 	trackByIndex(index: number, _item: any): number {

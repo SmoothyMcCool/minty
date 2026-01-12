@@ -9,6 +9,6 @@
 		</div>
 
 		<minty-workflow-editor name="workflowEditor" [taskSpecifications]="taskSpecifications"
-			[outputTaskSpecifications]="outputTaskSpecifications" [defaults]="defaults" [(ngModel)]="workflow"></minty-workflow-editor>
+			[outputTaskSpecifications]="outputTaskSpecifications" [defaults]="defaults" [ngModel]="workflow" (ngModelChange)="workflowUpdated($event)"></minty-workflow-editor>
 	</form>
 </div>

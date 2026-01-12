@@ -22,7 +22,7 @@ export class NodeViewerComponent implements ControlValueAccessor {
 
 	text: string;
 
-	onChange: any = () => { };
+	onChange = (_: any) => { };
 	onTouched: () => void = () => { };
 
 	private debounceTimer: ReturnType<typeof setTimeout> | null = null;

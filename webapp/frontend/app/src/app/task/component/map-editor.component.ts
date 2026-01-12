@@ -17,8 +17,8 @@ import { CommonModule } from '@angular/common';
 export class MapEditorComponent implements ControlValueAccessor {
 
 	entries = [{ key: '', value: '' }];
-	onChange: any = () => {};
-	onTouched: any = () => {};
+	onChange = (_: any) => { };
+	onTouched: any = () => { };
 
 	mapAsString: string;
 
@@ -26,14 +26,16 @@ export class MapEditorComponent implements ControlValueAccessor {
 	}
 
 	keyChanged(index: number, key: string) {
-		this.entries[index].key = key;
-		this.mapAsString = this.entriesToString(this.entries);
+		const next = [...this.entries];
+		next[index] = { ...next[index], key };
+		this.entries = next;
 		this.propagateChange();
 	}
 
 	valueChanged(index: number, value: string) {
-		this.entries[index].value = value;
-		this.mapAsString = this.entriesToString(this.entries);
+		const next = [...this.entries];
+		next[index] = { ...next[index], value };
+		this.entries = next;
 		this.propagateChange();
 	}
 
@@ -46,23 +48,20 @@ export class MapEditorComponent implements ControlValueAccessor {
 		return result;
 	}
 
-	private stringToEntries(str): any[] {
-		const result = [];
-		const map = new Map(str.split(',').map(pair => pair.split(':')));
-		map.forEach((value, key) => {
-			result.push({ key: key, value: value });
-		});
-		return result;
-	}
-
-	writeValue(obj: any): void {
-		this.entries = [];
-		if (!obj) {
+	writeValue(value: any): void {
+		if (value === null || value === undefined) {
+			this.entries = [{ key: '', value: '' }];
+			this.mapAsString = '';
 			return;
 		}
 
-		this.entries = this.stringToEntries(obj as string);
-		this.mapAsString = obj;
+		this.mapAsString = value;
+		this.entries = value
+			? value.split(',').map(pair => {
+				const [k, v] = pair.split(':', 2);
+				return { key: k ?? '', value: v ?? '' };
+			})
+			: [{ key: '', value: '' }];
 	}
 	registerOnChange(fn: any): void {
 		this.onChange = fn;
@@ -75,7 +74,7 @@ export class MapEditorComponent implements ControlValueAccessor {
 	}
 
 	addEntry() {
-		this.entries.push({ key: '', value: ''});
+		this.entries.push({ key: '', value: '' });
 		this.propagateChange();
 	}
 
@@ -85,6 +84,13 @@ export class MapEditorComponent implements ControlValueAccessor {
 	}
 
 	private propagateChange() {
-		this.onChange(this.mapAsString);
+		const result = this.entries
+			.filter(e => e.key)
+			.map(e => `${e.key}:${e.value ?? ''}`)
+			.join(',');
+
+		this.mapAsString = result;
+		this.onTouched();
+		this.onChange(result);
 	}
 }

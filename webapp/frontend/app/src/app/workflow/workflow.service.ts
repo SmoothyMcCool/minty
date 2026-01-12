@@ -5,7 +5,7 @@ import { catchError, EMPTY, map, Observable } from 'rxjs';
 import { ApiResult } from '../model/api-result';
 import { ResultTemplate } from '../model/workflow/result-template';
 import { EnumList } from '../model/workflow/enum-list';
-import { OutputTaskSpecification, TaskRequest, TaskSpecification } from '../model/workflow/task-specification';
+import { OutputTaskSpecification, TaskConfiguration, TaskRequest, TaskSpecification } from '../model/workflow/task-specification';
 import { Workflow } from '../model/workflow/workflow';
 
 @Injectable({
@@ -130,7 +130,7 @@ export class WorkflowService {
 					taskName: item.taskName,
 					stepName: item.stepName,
 					id: item.id,
-					configuration: Object.fromEntries(item.configuration),
+					configuration: { ...item.configuration },
 					layout: {
 						x: item.layout.x,
 						y: item.layout.y,
@@ -146,7 +146,7 @@ export class WorkflowService {
 				taskName: workflow.outputStep.taskName,
 				stepName: workflow.outputStep.stepName,
 				id: workflow.outputStep.id,
-				configuration: Object.fromEntries(workflow.outputStep.configuration),
+				configuration: { ...workflow.outputStep.configuration },
 				layout: {
 					x: workflow.outputStep.layout.x,
 					y: workflow.outputStep.layout.y,
@@ -179,7 +179,7 @@ export class WorkflowService {
 					taskName: item.taskName,
 					stepName: item.stepName,
 					id: item.id,
-					configuration: Object.fromEntries(item.configuration),
+					configuration: { ...item.configuration },
 					layout: {
 						x: item.layout.x,
 						y: item.layout.y,
@@ -195,7 +195,7 @@ export class WorkflowService {
 				taskName: workflow.outputStep.taskName,
 				stepName: workflow.outputStep.stepName,
 				id: workflow.outputStep.id,
-				configuration: Object.fromEntries(workflow.outputStep.configuration),
+				configuration: { ...workflow.outputStep.configuration },
 				layout: {
 					x: workflow.outputStep.layout.x,
 					y: workflow.outputStep.layout.y,
@@ -233,8 +233,8 @@ export class WorkflowService {
 	execute(workflow: Workflow): Observable<string> {
 		const body = {
 			id: workflow.id,
-			taskConfigurationList: workflow.steps.map(step => Object.fromEntries(step.configuration)),
-			outputConfiguration: workflow.outputStep ? Object.fromEntries(workflow.outputStep.configuration) : null
+			taskConfigurationList: workflow.steps.map(step => step.configuration),
+			outputConfiguration: workflow.outputStep ? workflow.outputStep.configuration : null
 		};
 
 		return this.http.post<ApiResult>(WorkflowService.ExecuteWorkflow, body)
@@ -325,25 +325,25 @@ export class WorkflowService {
 				// This removes any keys that should not be present (which happens sometimes if the task type is
 				// changed during workflow construction or editing, but we need it that way so we don't nuke old
 				// values if task type changes back.)
-				const sanitizedConfig = new Map<string, string>();
-				const keys = step.configuration.keys();
+				let sanitizedConfig: TaskConfiguration = {};
+				const keys = Object.keys(step.configuration);
 				for (const key of keys) {
-					if (spec.configuration.has(key)) {
-						sanitizedConfig.set(key, step.configuration.get(key));
+					if (spec.configuration && spec.configuration.has(key)) {
+						sanitizedConfig[key] = step.configuration[key];
 					}
 				}
 
 				// We also check here for system and user defaults, and nuke them if present. They
 				// get filled in when we want to run the workflow, we never store these values
 				// in the database with the workflow.
-				step.configuration.forEach((_value, key) => {
+				for (const key of Object.keys(step.configuration)) {
 					// System and user defaults are stored in the form "Task Name::Property Name", so
 					// we need to build that up to find our keys.
 					const fullKey = step.taskName + '::' + key;
-					if (defaults && defaults.has(fullKey)) {
-						sanitizedConfig.set(key, '');
+					if (defaults && defaults[fullKey]) {
+						sanitizedConfig[key] = '';
 					}
-				});
+				}
 
 				step.configuration = sanitizedConfig;
 			}
@@ -362,7 +362,7 @@ export class WorkflowService {
 					taskName: element.taskName,
 					stepName: element.stepName,
 					id: element.id,
-					configuration: new Map(Object.entries(element.configuration)),
+					configuration: element.configuration,
 					layout: {
 						x: element.layout.x,
 						y: element.layout.y,
@@ -386,9 +386,7 @@ export class WorkflowService {
 				taskName: workflow.outputStep.taskName,
 				stepName: workflow.outputStep.stepName,
 				id: workflow.outputStep.id,
-				configuration: workflow.outputStep.configuration instanceof Map 
-					? new Map(workflow.outputStep.configuration)
-					: new Map(Object.entries(workflow.outputStep.configuration ?? {})),
+				configuration: workflow.outputStep.configuration,
 				layout: {
 					x: workflow.outputStep.layout.x,
 					y: workflow.outputStep.layout.y,

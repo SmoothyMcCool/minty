@@ -100,7 +100,7 @@
 			(cdkDragMoved)="onDragMoved($event, step)" (cdkDragEnded)="onDragEnded($event, step)"
 			[cdkDragFreeDragPosition]="{ x: step.layout.x, y: step.layout.y }"
 			[id]="step.stepName"
-			(displayTask)="onDisplayTask(step)"
+			(displayTask)="onDisplayTask(step.id)"
 			(startConnection)="onStartConnection(step, $event)"
 			(endConnection)="onEndConnection(step, $event)"
 			(hoverPort)="onHoverPort(step, $event)"></minty-task-widget>
@@ -110,7 +110,7 @@
 				(cdkDragMoved)="onDragMoved($event, workflow.outputStep)" (cdkDragEnded)="onDragEnded($event, workflow.outputStep)"
 				[cdkDragFreeDragPosition]="{ x: workflow.outputStep.layout.x, y: workflow.outputStep.layout.y }"
 				[id]="workflow.outputStep.stepName"
-				(displayTask)="onDisplayTask(workflow.outputStep)"
+				(displayTask)="onDisplayTask(workflow.outputStep.id)"
 				(startConnection)="onStartConnection(workflow.outputStep, $event)"
 				(endConnection)="onEndConnection(workflow.outputStep, $event)"
 				(hoverPort)="onHoverPort(workflow.outputStep, $event)"></minty-task-widget>

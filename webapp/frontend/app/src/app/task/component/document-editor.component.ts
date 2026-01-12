@@ -16,7 +16,7 @@ import { FormsModule, NG_VALUE_ACCESSOR, ControlValueAccessor } from "@angular/f
 })
 export class DocumentEditorComponent implements ControlValueAccessor {
 
-	onChange: any = () => { };
+	onChange = (_: any) => { };
 	onTouched: any = () => { };
 
 	fileSize = 0;

@@ -23,7 +23,7 @@ import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-
 })
 export class ProjectEditorComponent implements ControlValueAccessor {
 
-	onChange: any = () => { };
+	onChange = (_: any) => { };
 	onTouched: any = () => { };
 
 	project: Project;

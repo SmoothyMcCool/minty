@@ -18,7 +18,7 @@ import { EnumList } from 'src/app/model/workflow/enum-list';
 export class EnumListEditorComponent implements ControlValueAccessor {
 
 	selection: string;
-	onChange: any = () => {};
+	onChange = (_: any) => { };
 	onTouched: any = () => {};
 
 	@Input() choices: EnumList;

@@ -25,34 +25,45 @@ export class AssistantConfigurationEditorComponent implements ControlValueAccess
 	@Input() choices: EnumList;
 	@Input() models: Model[];
 
-	assistantSpec: AssistantSpec;
-	idMode: boolean = true;
+	assistantSpec: AssistantSpec | null = null;
+	useCustomAssistant: boolean = true;
 
-	onChange: any = () => { };
+	onChange = (_: any) => { };
 	onTouched: () => void = () => { };
 
 	assistantId: string;
 	assistant: Assistant = createAssistant();
 
 	writeValue(value: AssistantSpec | null): void {
-		this.assistantSpec = value ?? null;
-		if (!this.assistantSpec) {
-			// reset to defaults
-			this.idMode = true;
-			this.assistantId = '';
-			this.assistant = createAssistant();
+		if (!value) {
 			return;
 		}
 
-		if (this.assistantSpec.assistantId) {
-			this.idMode = false;
-			this.assistantId = this.assistantSpec.assistantId;
+		const spec: AssistantSpec = typeof value === 'string' ? JSON.parse(value) : value;
+
+		const sameSpec = this.assistantSpec &&
+			this.assistantSpec.assistantId === spec.assistantId &&
+			JSON.stringify(this.assistantSpec.assistant) === JSON.stringify(spec.assistant);
+
+		if (sameSpec) {
+			return;
+		}
+
+		this.assistantSpec = spec;
+
+		if (spec.assistantId) {
+			this.useCustomAssistant = false;
+			this.assistantId = spec.assistantId;
 			this.assistant = createAssistant();
 		} else {
-			this.idMode = true;
-			this.assistant = this.assistantSpec.assistant ?? createAssistant();
+			this.useCustomAssistant = true;
+			if (!this.assistant || JSON.stringify(this.assistant) !== JSON.stringify(spec.assistant)) {
+				this.assistant = spec.assistant ?? createAssistant();
+			}
 			this.assistantId = '';
 		}
+		this.onChange({ ...this.assistantSpec });
+		this.onTouched();
 	}
 	registerOnChange(fn: any): void {
 		this.onChange = fn;
@@ -64,27 +75,38 @@ export class AssistantConfigurationEditorComponent implements ControlValueAccess
 		// Nah.
 	}
 
-	idModeChanged(customAssistant: boolean) {
-		this.idMode = customAssistant;
+	useCustomAssistantChanged(customAssistant: boolean) {
+		if (this.useCustomAssistant === customAssistant) {
+			return;
+		}
+		this.useCustomAssistant = customAssistant;
 		this.updateValueAndNotify();
 	}
 
 	assistantChanged(assistant: Assistant) {
+		if (JSON.stringify(this.assistant) === JSON.stringify(assistant)) {
+			return;
+		}
 		this.assistant = assistant;
 		this.updateValueAndNotify();
 	}
 
 	idChanged(assistantId: string) {
+		if (this.assistantId === assistantId) {
+			return;
+		}
 		this.assistantId = assistantId;
 		this.updateValueAndNotify();
 	}
 
 	private updateValueAndNotify(): void {
-		this.assistantSpec = this.idMode
+		const newSpec = this.useCustomAssistant
 			? { assistantId: null, assistant: this.assistant }
 			: { assistantId: this.assistantId, assistant: null };
 
-		// Notify the parent only *after* the value has been updated.
-		this.onChange(this.assistantSpec);
+		this.assistantSpec = newSpec;
+		this.onTouched();
+		this.onChange({ ...this.assistantSpec });
 	}
+
 }

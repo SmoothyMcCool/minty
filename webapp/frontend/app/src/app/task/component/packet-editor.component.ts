@@ -19,7 +19,7 @@ import { Packet } from 'src/app/model/workflow/packet';
 export class PacketEditorComponent implements ControlValueAccessor {
 	packets: Packet[] = [];
 
-	onChange: any = () => {};
+	onChange = (_: any) => { };
 	onTouched: any = () => {};
 
 	textMode = false;
@@ -124,7 +124,6 @@ export class PacketEditorComponent implements ControlValueAccessor {
 		} else {
 			this.packets = [obj];
 		}
-		console.log(JSON.stringify(this.packets, undefined, 2));
 	}
 	registerOnChange(fn: any): void {
 		this.onChange = fn;

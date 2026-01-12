@@ -24,7 +24,7 @@
 					</ng-template>
 					<div class="form-group mb-2">
 						<input type="checkbox" class="form-check-input me-2" id="booleanInput-{{item.key}}"
-							name="booleanInput-{{item.key}}" [checked]="getConfig(item.key)" [ngModel]="getConfig(item.key)"
+							name="booleanInput-{{item.key}}" [ngModel]="getConfig(item.key)"
 							(ngModelChange)="valueChanged(item.key, $event)" [disabled]="defaults?.includes(item.key)">
 					</div>
 				</div>
@@ -74,7 +74,7 @@
 			<ng-container *ngSwitchCase="'Document'">
 				<div class="mb-3">
 					<label for="documentInput-{{item.key}}" class="fs-4">{{item.key}}</label>
-					<minty-document-editor name="documentInput-{{item.key}}" [ngModel]="" (ngModelChange)="valueChanged(item.key, $event)"></minty-document-editor>
+					<minty-document-editor name="documentInput-{{item.key}}" [ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)"></minty-document-editor>
 				</div>
 			</ng-container>
 			<ng-container *ngSwitchCase="'Assistant'">

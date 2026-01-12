@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, ElementRef, EventEmitter, forwardRef, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { Popover } from 'bootstrap';
-import { TaskRequest, TaskSpecification } from 'src/app/model/workflow/task-specification';
+import { TaskConfiguration, TaskRequest, TaskSpecification } from 'src/app/model/workflow/task-specification';
 import { TaskConfigurationEditorComponent } from './task-configuration-editor.component';
 import { EnumList } from 'src/app/model/workflow/enum-list';
 import { Model } from 'src/app/model/model';
@@ -43,7 +43,7 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor, OnDest
 
 	popoverInstance !: Popover;
 
-	onChange: any = () => { };
+	onChange = (_: any) => { };
 	onTouched: any = () => {};
 
 	constructor() {
@@ -52,8 +52,12 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor, OnDest
 	ngOnInit() {
 	}
 
+	get configForEditor() {
+		return this.task?.configuration ?? {};
+	}
+
 	createPopover() {
-		if (!this.taskSpecification || !this.task) {
+		if (!this.taskSpecification || !this.task || !this.popoverButton) {
 			return;
 		}
 		const inputs = this.taskSpecification.expects ? this.escapeHtml(this.taskSpecification.expects) : 'No inputs';
@@ -95,9 +99,18 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor, OnDest
 	}
 
 	writeValue(obj: any): void {
-		this.task = obj;
-		// Need a refresh for task to be valid.
-		setTimeout(() => this.createPopover(), 0);
+		if (!obj) {
+			return;
+		}
+		if (this.task !== obj) {
+			this.task = {
+				...obj,
+				configuration: obj.configuration,
+				layout: { ...obj.layout }
+			};
+			// Need a refresh for task to be valid.
+			setTimeout(() => this.createPopover(), 0);
+		}
 	}
 	registerOnChange(fn: any): void {
 		this.onChange = fn;
@@ -109,8 +122,26 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor, OnDest
 		// Ignored.
 	}
 
-	onStepNameChanged($event: string) {
-		this.taskNameChanged.emit({ oldName: this.task.stepName, newName: $event });
-		this.task.stepName = $event;
+	onStepNameChanged(name: string) {
+		if (this.task.stepName === name) {
+			return;
+		}
+
+		const updatedTask = { ...this.task, stepName: name };
+		this.task = updatedTask;
+		this.taskNameChanged.emit({ oldName: this.task.stepName, newName: name });
+		this.onChange(this.task);
+	}
+
+	onConfigurationChanged(config: TaskConfiguration) {
+		const same = Object.keys(config).every(k => this.task.configuration[k] === config[k]);
+
+		if (!same) {
+			this.task = {
+				...this.task,
+				configuration: { ...config }
+			}
+			this.onChange(this.task);
+		}
 	}
 }
