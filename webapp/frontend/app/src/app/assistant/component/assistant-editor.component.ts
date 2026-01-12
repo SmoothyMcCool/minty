@@ -52,24 +52,62 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 
 	assistantTools: MintyTool[] = [];
 
-	onChange: any = () => { };
+	onChange = (_: any) => { };
 	onTouched: any = () => { };
 
 	constructor() {
 	}
 
 	modelChanged(model: string) {
-		this.assistant.model = model;
-		this.assistant.documentIds = [];
+		this.assistant = { ...this.assistant, model, documentIds: [], contextSize: this.assistant.contextSize };
+
 		this.minContext = this.models.find(m => m.name === model)?.defaultContext;
 		this.maxContext = this.models.find(m => m.name === model)?.maximumContext;
+
 		if (this.assistant.contextSize < this.minContext) {
 			this.assistant.contextSize = this.minContext;
 		} else if (this.assistant.contextSize > this.maxContext) {
 			this.assistant.contextSize = this.maxContext;
 		}
-	}
 
+		this.onTouched();
+		this.onChange({ ...this.assistant });
+	}
+	nameChanged(name: string) {
+		this.assistant.name = name;
+		this.onTouched();
+		this.onChange(this.assistant);
+	}
+	sharedChanged(shared: boolean) {
+		this.assistant.shared = shared;
+		this.onTouched();
+		this.onChange(this.assistant);
+	}
+	hasMemoryChanged(hasMemory: boolean) {
+		this.assistant.hasMemory = hasMemory;
+		this.onTouched();
+		this.onChange(this.assistant);
+	}
+	contextSizeChanged(contextSize: number) {
+		this.assistant.contextSize = contextSize;
+		this.onTouched();
+		this.onChange(this.assistant);
+	}
+	temperatureChanged(temperature: number) {
+		this.assistant.temperature = temperature;
+		this.onTouched();
+		this.onChange(this.assistant);
+	}
+	topKChanged(topK: number) {
+		this.assistant.topK = topK;
+		this.onTouched();
+		this.onChange(this.assistant);
+	}
+	promptChanged(prompt: string) {
+		this.assistant.prompt = prompt;
+		this.onTouched();
+		this.onChange(this.assistant);
+	}
 	addDoc(doc: MintyDoc) {
 		if (this.assistant.documentIds.find(el => el === doc.documentId)) {
 			return;

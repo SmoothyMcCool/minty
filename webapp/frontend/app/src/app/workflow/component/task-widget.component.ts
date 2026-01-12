@@ -42,8 +42,8 @@ export class TaskWidgetComponent implements OnInit {
 	}
 
 	recalc() {
-		const numTopPorts = this.task.configuration.has('Number of Inputs') ? Number(this.task.configuration.get('Number of Inputs')) : this.task.layout.numInputs;
-		const numBottomPorts = this.task.configuration.has('Number of Outputs') ? Number(this.task.configuration.get('Number of Outputs')) : this.task.layout.numOutputs;
+		const numTopPorts = Number(this.task.configuration['Number of Inputs'] ?? this.task.layout.numInputs);
+		const numBottomPorts = Number(this.task.configuration['Number of Outputs'] ?? this.task.layout.numOutputs);
 
 		this.topPorts = this.calculatePorts(numTopPorts, this.rect.y);
 		this.bottomPorts = this.calculatePorts(numBottomPorts, this.rect.y + this.rect.height);

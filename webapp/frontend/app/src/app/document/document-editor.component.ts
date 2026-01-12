@@ -26,7 +26,7 @@ export class DocumentEditorComponent implements ControlValueAccessor {
 		file: undefined
 	};
 
-	onChange: any = () => {};
+	onChange = (_: any) => { };
 	onTouched: any = () => {};
 
 	constructor() {

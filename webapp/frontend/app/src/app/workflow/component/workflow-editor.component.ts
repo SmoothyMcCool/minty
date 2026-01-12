@@ -49,7 +49,7 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 	hoveredPort: { task: TaskRequest; portIndex: number; isInput: boolean } | null = null;
 	tempConnection: any = null;
 
-	onChange: any = () => { };
+	onChange = (_: any) => { };
 	onTouched: any = () => { };
 
 	workflow: Workflow;
@@ -75,21 +75,23 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 	addStep(taskSpecification: TaskSpecification) {
 
 		const updated = new Map<string, string>(taskSpecification.configuration);
-		taskSpecification.configuration.forEach((_value, key) => {
-			// System and user defaults are stored in the form "Task Name::Property Name", so
-			// we need to build that up to find our keys.
-			const fullKey = taskSpecification.taskName + '::' + key;
-			if (this.defaults?.has(fullKey)) {
-				updated.set(key, this.defaults.get(fullKey));
+
+		if (taskSpecification.configuration) {
+			for (const key of Object.keys(taskSpecification.configuration)) {
+				// System and user defaults are stored in the form "Task Name::Property Name", so
+				// we need to build that up to find our keys.
+				const fullKey = taskSpecification.taskName + '::' + key;
+				if (this.defaults?.has(fullKey)) {
+					updated.set(key, this.defaults.get(fullKey));
+				}
 			}
-		});
-		taskSpecification.configuration = updated;
+		}
 
 		const task: TaskRequest = {
 			taskName: taskSpecification.taskName,
 			stepName: taskSpecification.taskName,
 			id: crypto.randomUUID(),
-			configuration: taskSpecification.configuration,
+			configuration: updated,
 			layout: {
 				x: 0,
 				y: 0,
@@ -99,18 +101,21 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 		};
 
 		this.workflow.steps.push(task);
+		this.updateWorkflow();
 	}
 
 	addOutputStep(taskSpecification: OutputTaskSpecification) {
 		const updated = new Map<string, string>(taskSpecification.configuration);
-		taskSpecification.configuration.forEach((_value, key) => {
-			// System and user defaults are stored in the form "Task Name::Property Name", so
-			// we need to build that up to find our keys.
-			const fullKey = taskSpecification.taskName + '::' + key;
-			if (this.defaults?.has(fullKey)) {
-				updated.set(key, this.defaults.get(fullKey));
+		if (taskSpecification.configuration) {
+			for (const key of Object.keys(taskSpecification.configuration)) {
+				// System and user defaults are stored in the form "Task Name::Property Name", so
+				// we need to build that up to find our keys.
+				const fullKey = taskSpecification.taskName + '::' + key;
+				if (this.defaults?.has(fullKey)) {
+					updated.set(key, this.defaults.get(fullKey));
+				}
 			}
-		});
+		}
 		taskSpecification.configuration = updated;
 
 		const task: TaskRequest = {
@@ -127,6 +132,7 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 		};
 
 		this.workflow.outputStep = task;
+		this.updateWorkflow();
 	}
 
 	onStartConnection(task: TaskRequest, data: { portIndex: number; isInput: boolean; event: MouseEvent }) {
@@ -168,7 +174,6 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 				toY: y
 			};
 		}
-
 	}
 
 	onEndConnection(toTask: TaskRequest, data: { portIndex: number; isInput: boolean; event: MouseEvent }) {
@@ -194,6 +199,8 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 
 			this.tempConnection = null;
 		}
+
+		this.updateWorkflow();
 	}
 
 	onHoverPort(task: TaskRequest, data: { portIndex: number; isInput: boolean; entering: boolean }) {
@@ -208,6 +215,7 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 		const { x, y } = event.distance;
 		task.layout.tempX = task.layout.x + x;
 		task.layout.tempY = task.layout.y + y;
+		this.updateWorkflow();
 	}
 
 	onDragEnded(event: any, task: TaskRequest) {
@@ -216,6 +224,7 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 		task.layout.y = pos.y;
 		task.layout.tempX = task.layout.x;
 		task.layout.tempY = task.layout.y;
+		this.updateWorkflow();
 	}
 
 	onMouseMove(event: MouseEvent) {
@@ -247,30 +256,68 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 		}
 	}
 
-	onDisplayTask(task: TaskRequest) {
-		this.editTask = task;
+	onDisplayTask(taskId: string) {
+		let step: TaskRequest;
+
+		if (taskId === this.workflow.outputStep?.id) {
+			step = this.cloneTask(this.workflow.outputStep);
+		} else {
+			step = this.cloneTask(this.workflow.steps.find(task => task.id === taskId));
+		}
+
+		if (!step) {
+			return;
+		}
+
+		this.editTask = {
+			...step,
+			configuration: { ...step.configuration },
+			layout: { ...step.layout }
+		};
 	}
 
 	doneEditingStep() {
-		// Trigger change detections for the changed step.
-		this.workflow.steps = this.workflow.steps.map(step =>
-			step.id === this.editTask.id ? { ...step, ...this.editTask } : step
-		);
+		if (!this.editTask) {
+			return;
+		}
+
+		const updatedTask: TaskRequest = {
+			...this.editTask,
+			configuration: { ...this.editTask.configuration }
+		};
+
+		if (this.workflow.outputStep?.id === updatedTask.id) {
+			this.workflow.outputStep = updatedTask;
+		} else {
+			this.workflow.steps = this.workflow.steps.map(step =>
+				step.id === updatedTask.id ? updatedTask : step
+			);
+		}
 
 		// If the number of inputs or outputs changed, we need to remove any invalid connections now.
 		this.workflow.connections = this.workflow.connections.filter(connection => {
 			if (connection.readerId !== this.editTask.id && connection.writerId !== this.editTask.id) {
 				return true;
 			}
+			const numInputPorts = this.editTask.configuration['Number of Inputs'] !== undefined
+				? Number(this.editTask.configuration['Number of Inputs'])
+				: this.editTask.layout.numInputs;
+
+			const numOutputPorts = this.editTask.configuration['Number of Outputs'] !== undefined
+				? Number(this.editTask.configuration['Number of Outputs'])
+				: this.editTask.layout.numOutputs;
+
 			if (connection.readerId === this.editTask.id) {
-				const numInputPorts = this.editTask.configuration.has('Number of Inputs') ? Number(this.editTask.configuration.get('Number of Inputs')) : this.editTask.layout.numInputs;
 				return connection.readerPort < numInputPorts;
 			}
-			const numOutputPorts = this.editTask.configuration.has('Number of Outputs') ? Number(this.editTask.configuration.get('Number of Outputs')) : this.editTask.layout.numOutputs;
-			return connection.writerPort < numOutputPorts;
+			if (connection.writerId === this.editTask.id) {
+				return connection.writerPort < numOutputPorts;
+			}
+			return true;
 		});
 
 		this.editTask = null;
+		this.updateWorkflow();
 	}
 
 	deleteStep() {
@@ -285,6 +332,7 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 		}
 		this.confirmDeleteStepVisible = false;
 		this.doneEditingStep();
+		this.updateWorkflow();
 	}
 
 	onConnectorClicked(c: Connection) {
@@ -295,7 +343,7 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 		this.tempConnection = null;
 	}
 
-	getTaskWidgetBoundingBox(elementId: string): {x: number, y: number, width: number, height: number } {
+	getTaskWidgetBoundingBox(elementId: string): { x: number, y: number, width: number, height: number } {
 		const widget = this.taskWidgets.find(w => w.task.id === elementId);
 		const step = this.workflow.steps.find(step => step.id === elementId);
 		return { x: step.layout.x, y: step.layout.y, width: widget.rect.width, height: widget.rect.height };
@@ -319,14 +367,7 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 
 	defaultsFor(task: TaskRequest): string[] {
 
-		const result: string[] = [];
-
-		task.configuration.forEach((_value, key) => {
-			if (this.defaults?.has(key)) {
-				result.push(key);
-			}
-		});
-
+		const result: string[] = Object.keys(task.configuration || {}).filter(key => this.defaults?.has(key));
 		return result;
 	}
 
@@ -347,10 +388,11 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 				connection.writerId = data.newId;
 			}
 		});
+		this.updateWorkflow();
 	}
 
 	writeValue(obj: any): void {
-		this.workflow = obj;
+		this.workflow = obj ? { ...obj, steps: [...obj.steps], connections: [...obj.connections] } : { steps: [], connections: [] };
 	}
 	registerOnChange(fn: any): void {
 		this.onChange = fn;
@@ -431,4 +473,16 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 		};
 	}
 
+	private cloneTask(task: TaskRequest): TaskRequest {
+		return {
+			...task,
+			configuration: { ...task.configuration },
+			layout: { ...task.layout }
+		};
+	}
+
+	private updateWorkflow() {
+		this.onTouched();
+		this.onChange(this.workflow);
+	}
 }

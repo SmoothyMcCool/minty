@@ -16,7 +16,8 @@
 				[ngModel]="task.stepName" (ngModelChange)="onStepNameChanged($event)">
 		</div>
 		<minty-task-config-editor
-			[(ngModel)]="task.configuration"
+			[ngModel]="configForEditor"
+			(ngModelChange)="onConfigurationChanged($event)"
 			[taskSpecification]="taskSpecification"
 			[defaults]="defaults"
 			[enumLists]="enumLists"

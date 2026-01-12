@@ -24,7 +24,7 @@ export class SliderComponent implements ControlValueAccessor {
 	@Input() label: string;
 	value: number;
 
-	onChange: any = () => { };
+	onChange = (_: any) => { };
 	onTouched: any = () => { };
 
 	valueChanged(value: number) {

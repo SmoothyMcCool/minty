@@ -19,11 +19,14 @@ export interface TaskSpecification {
 	numOutputs: number;
 }
 
+export interface TaskConfiguration {
+	[key: string]: any;
+}
 export interface TaskRequest {
 	taskName: string;
 	stepName: string;
 	id: string;
-	configuration: Map<string, string>;
+	configuration: TaskConfiguration;
 	layout: TaskLayout
 }
 

@@ -82,4 +82,7 @@ export class NewWorkflowComponent implements OnInit {
 		}
 	}
 
+	workflowUpdated(workflow: Workflow) {
+		this.workflow = workflow;
+	}
 }

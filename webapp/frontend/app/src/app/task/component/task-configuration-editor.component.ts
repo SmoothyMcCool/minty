@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { MapEditorComponent } from './map-editor.component';
 import { StringListEditorComponent } from './stringlist-editor.component';
 import { EnumListEditorComponent } from './enumlist-editor.component';
-import { TaskSpecification } from 'src/app/model/workflow/task-specification';
+import { TaskConfiguration, TaskSpecification } from 'src/app/model/workflow/task-specification';
 import { EnumList } from 'src/app/model/workflow/enum-list';
 import { PacketEditorComponent } from './packet-editor.component';
 import { DocumentEditorComponent } from './document-editor.component';
@@ -30,8 +30,8 @@ export class TaskConfigurationEditorComponent implements ControlValueAccessor {
 	@Input() enumLists: EnumList[];
 	@Input() models: Model[];
 
-	config: Map<string, string> = new Map();
-	onChange: any = () => {};
+	config: TaskConfiguration = {};
+	onChange = (_: any) => { };
 	onTouched: any = () => {};
 
 	resultTemplates: string[] = [];
@@ -39,18 +39,22 @@ export class TaskConfigurationEditorComponent implements ControlValueAccessor {
 	constructor() {
 	}
 
+	valueChanged(key: string, value: string) {
+		if (this.config[key] === value) {
+			return;
+		}
 
-	valueChanged(param: string, value: string) {
-		this.config.set(param, value);
+		this.config = { ...this.config, [key]: value };
 		this.onTouched();
-		this.onChange(this.config);
+		this.onChange(this.config); // propagate to TaskEditor
 	}
 
 	getConfig(key: string) {
-		if (this.config && this.config.get !== undefined) {
-			return this.config.get(key);
+		const val = this.config[key];
+		if (!val) {
+			return null;
 		}
-		return null;
+		return val;
 	}
 
 	getChoicesFor(param: string): EnumList {
@@ -58,7 +62,11 @@ export class TaskConfigurationEditorComponent implements ControlValueAccessor {
 	}
 
 	writeValue(obj: any): void {
-		this.config = obj;
+		if (!obj) {
+			return;
+		}
+
+		this.config = { ...obj };
 	}
 	registerOnChange(fn: any): void {
 		this.onChange = fn;
