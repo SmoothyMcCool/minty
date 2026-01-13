@@ -67,18 +67,20 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 						this.contextSize = this.model.defaultContext;
 					});
 
-					this.conversationService.history(this.conversationId).subscribe((chatHistory: ChatMessage[]) => {
-						this.chatHistory = chatHistory;
+					if (this.assistant.hasMemory) {
+						this.conversationService.history(this.conversationId).subscribe((chatHistory: ChatMessage[]) => {
+							this.chatHistory = chatHistory;
 
-						// If the last message in the chathistory is from the user, a query is (almost certainly) in progress.
-						// Try to resume it.
-						if (this.chatHistory && this.chatHistory.length > 0 && this.chatHistory[0].user) {
-							this.waitingForResponse = true;
-							this.stream(this.conversationId);
-						}
-					});
+							// If the last message in the chathistory is from the user, a query is (almost certainly) in progress.
+							// Try to resume it.
+							if (this.chatHistory && this.chatHistory.length > 0 && this.chatHistory[0].user) {
+								this.waitingForResponse = true;
+								this.stream(this.conversationId);
+							}
+						});
+						this.pollConversation();
+					}
 
-					this.pollConversation();
 				});
 			});
 		});

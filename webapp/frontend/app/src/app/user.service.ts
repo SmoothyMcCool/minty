@@ -5,6 +5,7 @@ import { catchError, EMPTY, finalize, map, Observable, of, startWith, Subject, s
 import { ApiResult } from './model/api-result';
 import { Router } from '@angular/router';
 import { AlertService } from './alert.service';
+import { AttributeMap } from './model/workflow/task-specification';
 
 @Injectable({
 	providedIn: 'root'
@@ -80,7 +81,7 @@ export class UserService {
 			id: user.id,
 			name: user.name,
 			password: user.password,
-			defaults: Object.fromEntries(user.defaults)
+			defaults: { ...user.defaults }
 		};
 		return this.http.post<ApiResult>(UserService.Update, body)
 			.pipe(
@@ -91,20 +92,20 @@ export class UserService {
 			);
 	}
 
-	systemDefaults(): Observable<Map<string, string>> {
+	systemDefaults(): Observable<AttributeMap> {
 		return this.http.get<ApiResult>(UserService.GetSystemDefaults)
 			.pipe(
 				map((result: ApiResult) => {
-					return new Map(Object.entries(result.data));
+					return result.data as AttributeMap;
 				})
 			);
 	}
 
-	userDefaults(): Observable<Map<string, string>> {
+	userDefaults(): Observable<AttributeMap> {
 		return this.http.get<ApiResult>(UserService.GetUserDefaults)
 			.pipe(
 				map((result: ApiResult) => {
-					return new Map(Object.entries(result.data));
+					return result.data as AttributeMap;
 				})
 			);
 	}

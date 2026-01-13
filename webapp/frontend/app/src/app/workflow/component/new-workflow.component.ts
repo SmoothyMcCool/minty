@@ -7,7 +7,7 @@ import { UserService } from 'src/app/user.service';
 import { forkJoin } from 'rxjs';
 import { WorkflowService } from '../workflow.service';
 import { Workflow } from 'src/app/model/workflow/workflow';
-import { OutputTaskSpecification, TaskSpecification } from 'src/app/model/workflow/task-specification';
+import { OutputTaskSpecification, AttributeMap, TaskSpecification } from 'src/app/model/workflow/task-specification';
 import { ResultTemplate } from 'src/app/model/workflow/result-template';
 import { WorkflowEditorComponent } from './workflow-editor.component';
 
@@ -21,7 +21,7 @@ export class NewWorkflowComponent implements OnInit {
 
 	taskSpecifications: TaskSpecification[] = [];
 	outputTaskSpecifications: OutputTaskSpecification[];
-	defaults: Map<string, string>;
+	defaults: AttributeMap;
 
 	resultTemplate: ResultTemplate = {
 		id: '',
@@ -55,7 +55,7 @@ export class NewWorkflowComponent implements OnInit {
 			outputTaskSpecifications: this.workflowService.listOutputTaskSpecifications()
 		}).subscribe(({ systemDefaults, userDefaults, taskSpecifications, outputTaskSpecifications }) => {
 			// User defaults should take priority in conflicts.
-			this.defaults = new Map([ ...systemDefaults, ...userDefaults ]);
+			this.defaults = { ...systemDefaults, ...userDefaults };
 			this.taskSpecifications = taskSpecifications;
 			this.outputTaskSpecifications = outputTaskSpecifications;
 		});

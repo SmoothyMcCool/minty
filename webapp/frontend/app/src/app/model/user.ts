@@ -1,6 +1,8 @@
+import { AttributeMap } from "./workflow/task-specification";
+
 export interface User {
 	id: string;
 	name: string;
 	password: string;
-	defaults: Map<string, string>;
+	defaults: AttributeMap;
 }

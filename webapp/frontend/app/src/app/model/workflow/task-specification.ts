@@ -1,7 +1,11 @@
+export interface AttributeMap {
+	[key: string]: any;
+}
+
 export interface OutputTaskSpecification {
 	taskName: string;
-	configuration: Map<string, string>;
-	configSpec: Map<string, string>;
+	configuration: AttributeMap;
+	configSpec: AttributeMap;
 	systemConfigVariables: string[];
 	userConfigVariables: string[];
 }
@@ -9,8 +13,8 @@ export interface OutputTaskSpecification {
 export interface TaskSpecification {
 	taskName: string;
 	group: string;
-	configuration: Map<string, string>;
-	configSpec: Map<string, string>;
+	configuration: AttributeMap;
+	configSpec: AttributeMap;
 	systemConfigVariables: string[];
 	userConfigVariables: string[];
 	expects: string;
@@ -19,14 +23,11 @@ export interface TaskSpecification {
 	numOutputs: number;
 }
 
-export interface TaskConfiguration {
-	[key: string]: any;
-}
 export interface TaskRequest {
 	taskName: string;
 	stepName: string;
 	id: string;
-	configuration: TaskConfiguration;
+	configuration: AttributeMap;
 	layout: TaskLayout
 }
 

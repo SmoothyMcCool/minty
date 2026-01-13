@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, forwardRef, Input, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { Connection, OutputTaskSpecification, TaskRequest, TaskSpecification } from 'src/app/model/workflow/task-specification';
+import { Connection, OutputTaskSpecification, AttributeMap, TaskRequest, TaskSpecification } from 'src/app/model/workflow/task-specification';
 import { Workflow } from 'src/app/model/workflow/workflow';
 import { TaskWidgetComponent } from './task-widget.component';
 import { CdkDragMove, DragDropModule } from '@angular/cdk/drag-drop';
@@ -41,7 +41,7 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 		return this._taskSpecifications;
 	}
 	@Input() outputTaskSpecifications: TaskSpecification[] = [];
-	@Input() defaults: Map<string, string>;
+	@Input() defaults: AttributeMap;
 
 	// For drawing and managing various click and drag functions
 	@ViewChild('canvas', { static: true }) canvasRef!: ElementRef<HTMLDivElement>;
@@ -74,15 +74,15 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 
 	addStep(taskSpecification: TaskSpecification) {
 
-		const updated = new Map<string, string>(taskSpecification.configuration);
+		const updated = { ...taskSpecification.configuration };
 
 		if (taskSpecification.configuration) {
 			for (const key of Object.keys(taskSpecification.configuration)) {
 				// System and user defaults are stored in the form "Task Name::Property Name", so
 				// we need to build that up to find our keys.
 				const fullKey = taskSpecification.taskName + '::' + key;
-				if (this.defaults?.has(fullKey)) {
-					updated.set(key, this.defaults.get(fullKey));
+				if (this.defaults && fullKey in this.defaults) {
+					updated[key] = this.defaults[fullKey];
 				}
 			}
 		}
@@ -105,14 +105,14 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 	}
 
 	addOutputStep(taskSpecification: OutputTaskSpecification) {
-		const updated = new Map<string, string>(taskSpecification.configuration);
+		const updated = { ...taskSpecification.configuration };
 		if (taskSpecification.configuration) {
 			for (const key of Object.keys(taskSpecification.configuration)) {
 				// System and user defaults are stored in the form "Task Name::Property Name", so
 				// we need to build that up to find our keys.
 				const fullKey = taskSpecification.taskName + '::' + key;
-				if (this.defaults?.has(fullKey)) {
-					updated.set(key, this.defaults.get(fullKey));
+				if (this.defaults &&fullKey in this.defaults) {
+					updated[key] = this.defaults[fullKey];
 				}
 			}
 		}
@@ -367,7 +367,7 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 
 	defaultsFor(task: TaskRequest): string[] {
 
-		const result: string[] = Object.keys(task.configuration || {}).filter(key => this.defaults?.has(key));
+		const result: string[] = Object.keys(task.configuration || {}).filter(key => this.defaults && key in this.defaults);
 		return result;
 	}
 

@@ -5,7 +5,7 @@ import { catchError, EMPTY, map, Observable } from 'rxjs';
 import { ApiResult } from '../model/api-result';
 import { ResultTemplate } from '../model/workflow/result-template';
 import { EnumList } from '../model/workflow/enum-list';
-import { OutputTaskSpecification, TaskConfiguration, TaskRequest, TaskSpecification } from '../model/workflow/task-specification';
+import { OutputTaskSpecification, AttributeMap, TaskRequest, TaskSpecification } from '../model/workflow/task-specification';
 import { Workflow } from '../model/workflow/workflow';
 
 @Injectable({
@@ -42,8 +42,8 @@ export class WorkflowService {
 				map((result: ApiResult) => {
 					const returnValue = result.data as TaskSpecification[];
 					returnValue.forEach(value => {
-						value.configuration = new Map(Object.entries(value.configuration));
-						value.configSpec = new Map(Object.entries(value.configSpec));
+						value.configuration = { ...value.configuration };
+						value.configSpec = { ...value.configSpec };
 					});
 
 					return returnValue;
@@ -61,8 +61,8 @@ export class WorkflowService {
 				map((result: ApiResult) => {
 					const returnValue = result.data as OutputTaskSpecification[];
 					returnValue.forEach(value => {
-						value.configuration = new Map(Object.entries(value.configuration));
-						value.configSpec = new Map(Object.entries(value.configSpec));
+						value.configuration = { ...value.configuration };
+						value.configSpec = { ...value.configSpec };
 					});
 
 					return returnValue;
@@ -318,18 +318,20 @@ export class WorkflowService {
 			);
 	}
 
-	sanitize(workflow: Workflow, taskSpecifications: TaskSpecification[], defaults: Map<string, string>) {
+	sanitize(workflow: Workflow, taskSpecifications: TaskSpecification[], defaults: AttributeMap) {
 		workflow.steps.forEach(step => {
 			const spec = taskSpecifications.find(spec => spec.taskName === step.taskName);
 			if (spec) {
 				// This removes any keys that should not be present (which happens sometimes if the task type is
 				// changed during workflow construction or editing, but we need it that way so we don't nuke old
 				// values if task type changes back.)
-				let sanitizedConfig: TaskConfiguration = {};
+				let sanitizedConfig: AttributeMap = {};
 				const keys = Object.keys(step.configuration);
-				for (const key of keys) {
-					if (spec.configuration && spec.configuration.has(key)) {
-						sanitizedConfig[key] = step.configuration[key];
+				if (spec.configuration) {
+					for (const key of keys) {
+						if (key in spec.configuration) {
+							sanitizedConfig[key] = step.configuration[key];
+						}
 					}
 				}
 
@@ -340,7 +342,7 @@ export class WorkflowService {
 					// System and user defaults are stored in the form "Task Name::Property Name", so
 					// we need to build that up to find our keys.
 					const fullKey = step.taskName + '::' + key;
-					if (defaults && defaults[fullKey]) {
+					if (defaults && fullKey in defaults) {
 						sanitizedConfig[key] = '';
 					}
 				}
