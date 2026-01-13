@@ -2,14 +2,14 @@ import { CommonModule } from '@angular/common';
 import { Component, ElementRef, EventEmitter, forwardRef, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { Popover } from 'bootstrap';
-import { TaskConfiguration, TaskRequest, TaskSpecification } from 'src/app/model/workflow/task-specification';
-import { TaskConfigurationEditorComponent } from './task-configuration-editor.component';
+import { AttributeMap, TaskRequest, TaskSpecification } from 'src/app/model/workflow/task-specification';
+import { AttributeMapEditorComponent } from './task-configuration-editor.component';
 import { EnumList } from 'src/app/model/workflow/enum-list';
 import { Model } from 'src/app/model/model';
 
 @Component({
 	selector: 'minty-task-editor',
-	imports: [CommonModule, FormsModule, TaskConfigurationEditorComponent],
+	imports: [CommonModule, FormsModule, AttributeMapEditorComponent],
 	templateUrl: 'task-editor.component.html',
 	styleUrls: [],
 	providers: [{
@@ -133,7 +133,7 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor, OnDest
 		this.onChange(this.task);
 	}
 
-	onConfigurationChanged(config: TaskConfiguration) {
+	onConfigurationChanged(config: AttributeMap) {
 		const same = Object.keys(config).every(k => this.task.configuration[k] === config[k]);
 
 		if (!same) {

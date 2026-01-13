@@ -49,7 +49,11 @@ public class Packet {
 	}
 
 	public void setText(List<String> text) {
-		this.text = text;
+		if (text != null) {
+			this.text = text;
+		} else {
+			this.text = new ArrayList<>();
+		}
 	}
 
 	public void addText(String text) {
@@ -57,12 +61,15 @@ public class Packet {
 	}
 
 	public List<Map<String, Object>> getData() {
-
 		return data;
 	}
 
 	public void setData(List<Map<String, Object>> data) {
-		this.data = data;
+		if (data != null) {
+			this.data = data;
+		} else {
+			this.data = new ArrayList<>();
+		}
 	}
 
 	public void addData(Map<String, Object> data) {

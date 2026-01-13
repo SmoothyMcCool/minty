@@ -47,7 +47,7 @@ public class PythonServiceImpl implements PythonService {
 
 			ObjectMapper mapper = new ObjectMapper();
 
-			inputFilePath = Files.createTempFile(inputFilePath, "py-out-", ".tom");
+			inputFilePath = Files.createTempFile(inputFilePath, "py-in-", ".tom");
 			Files.writeString(inputFilePath, mapper.writeValueAsString(input));
 
 			outputFilePath = Files.createTempFile(tempFileDir, "py-out-", ".tom");

@@ -5,7 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { UserService } from 'src/app/user.service';
 import { forkJoin } from 'rxjs';
 import { WorkflowService } from '../workflow.service';
-import { TaskSpecification, OutputTaskSpecification } from 'src/app/model/workflow/task-specification';
+import { TaskSpecification, OutputTaskSpecification, AttributeMap } from 'src/app/model/workflow/task-specification';
 import { Workflow } from 'src/app/model/workflow/workflow';
 import { AlertService } from 'src/app/alert.service';
 import { WorkflowEditorComponent } from './workflow-editor.component';
@@ -18,7 +18,7 @@ import { WorkflowEditorComponent } from './workflow-editor.component';
 })
 export class RunWorkflowComponent implements OnInit {
 
-	defaults: Map<string, string>;
+	defaults: AttributeMap;
 	workflow: Workflow;
 	taskSpecifications: TaskSpecification[];
 	outputTaskSpecifications: OutputTaskSpecification[];
@@ -40,7 +40,7 @@ export class RunWorkflowComponent implements OnInit {
 			}).subscribe(({ systemDefaults, userDefaults, taskSpecifications, outputTaskSpecifications }) => {
 
 				// User defaults should take priority in conflicts.
-				this.defaults = new Map([...systemDefaults, ...userDefaults]);
+				this.defaults = { ...systemDefaults, ...userDefaults };
 				this.taskSpecifications = taskSpecifications;
 				this.outputTaskSpecifications = outputTaskSpecifications;
 
@@ -49,8 +49,8 @@ export class RunWorkflowComponent implements OnInit {
 					workflow.steps.forEach(step => {
 						const updated = step.configuration;
 						for (const key of Object.keys(step.configuration)) {
-							if (this.defaults?.has(key)) {
-								updated.set(key, this.defaults.get(key));
+							if (this.defaults && key in this.defaults) {
+								updated[key] = this.defaults[key];
 							}
 						}
 						step.configuration = updated;

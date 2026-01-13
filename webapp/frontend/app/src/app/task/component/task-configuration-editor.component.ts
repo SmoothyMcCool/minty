@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { MapEditorComponent } from './map-editor.component';
 import { StringListEditorComponent } from './stringlist-editor.component';
 import { EnumListEditorComponent } from './enumlist-editor.component';
-import { TaskConfiguration, TaskSpecification } from 'src/app/model/workflow/task-specification';
+import { AttributeMap, TaskSpecification } from 'src/app/model/workflow/task-specification';
 import { EnumList } from 'src/app/model/workflow/enum-list';
 import { PacketEditorComponent } from './packet-editor.component';
 import { DocumentEditorComponent } from './document-editor.component';
@@ -18,19 +18,19 @@ import { Model } from 'src/app/model/model';
 	providers: [
 		{
 			provide: NG_VALUE_ACCESSOR,
-			useExisting: forwardRef(() => TaskConfigurationEditorComponent),
+			useExisting: forwardRef(() => AttributeMapEditorComponent),
 			multi: true
 		}
 	]
 })
-export class TaskConfigurationEditorComponent implements ControlValueAccessor {
+export class AttributeMapEditorComponent implements ControlValueAccessor {
 
 	@Input() defaults: string[] = [];
 	@Input() taskSpecification: TaskSpecification;
 	@Input() enumLists: EnumList[];
 	@Input() models: Model[];
 
-	config: TaskConfiguration = {};
+	config: AttributeMap = {};
 	onChange = (_: any) => { };
 	onTouched: any = () => {};
 

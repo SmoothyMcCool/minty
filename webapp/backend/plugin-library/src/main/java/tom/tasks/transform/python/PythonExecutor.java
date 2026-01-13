@@ -85,6 +85,7 @@ public class PythonExecutor implements MintyTask, ServiceConsumer {
 		this.pluginServices = pluginServices;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void run() {
 		result = new Packet();
@@ -93,11 +94,21 @@ public class PythonExecutor implements MintyTask, ServiceConsumer {
 		try {
 			logger.debug("PythonExecutor: Executing " + configuration.getPython());
 
-			PythonResult pyResult = pluginServices.getPythonService().executeCodeString(configuration.getPython(), input);
+			PythonResult pyResult = pluginServices.getPythonService().executeCodeString(configuration.getPython(),
+					input);
 
 			logger.info("Python complete. Logs:");
 			pyResult.logs().forEach(log -> logger.info(log));
-			result.addData(pyResult.result());
+			try {
+				result.setText((List<String>) pyResult.result().get("text"));
+			} catch (Exception e) {
+				logger.warn("Text element returned from python is invalid. Should be a List<String>");
+			}
+			try {
+				result.setData((List<Map<String, Object>>) pyResult.result().get("data"));
+			} catch (Exception e) {
+				logger.warn("Data element returned from python is invalid. Should be a List<Map<String, Object>>)");
+			}
 
 		} catch (PythonException e) {
 			logger.warn("PythonExecutor: Caught exception while running python:", e);

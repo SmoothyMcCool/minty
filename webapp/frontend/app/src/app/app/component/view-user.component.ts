@@ -26,8 +26,7 @@ export class ViewUserComponent implements OnInit {
 			this.user = user;
 			this.userService.userDefaults().subscribe(userDefaults => {
 				this.user.defaults = userDefaults;
-				this.defaultValues = Array.from(this.user.defaults.entries())
-					.map(([key, value]) => ({ key,value }));
+				this.defaultValues = Object.entries(this.user.defaults).map(([key, value]) => ({ key,value }));
 			});
 		});
 	}
@@ -36,8 +35,9 @@ export class ViewUserComponent implements OnInit {
 		this.messages = [];
 		if (this.formValid()) {
 			// Remove all blank or whitespace-only default values.
-			this.user.defaults = new Map([...this.user.defaults.entries()]
-				.filter(([, value]) => !this.isBlank(value)));
+			this.user.defaults = Object.fromEntries(
+				Object.entries(this.user.defaults).filter(([, value]) => !this.isBlank(value))
+			);
 
 			this.userService.update(this.user)
 				.subscribe({
@@ -66,7 +66,7 @@ export class ViewUserComponent implements OnInit {
 	}
 
 	updateConfig(key: string , value: string) {
-		this.user.defaults.set(key, value);
+		this.user.defaults[key] = value;
 	}
 
 	private isBlank(str: string) {
