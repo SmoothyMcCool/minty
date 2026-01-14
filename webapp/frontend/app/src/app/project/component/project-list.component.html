@@ -8,7 +8,11 @@
 				{{project.name}}
 			</span>
 			<span class="badge text-bg-secondary mx-2">{{project.id}}</span>
+			<span class="badge text-bg-success mx-2" *ngIf="activeProject === project.id">Active</span>
 			<span class="flex-grow-1"></span>
+			<button type="button" class="btn btn-sm btn-primary me-4" *ngIf="activeProject !== project.id" (click)="setActive(project)">
+				Set Active
+			</button>
 			<button type="button" class="btn btn-sm p-0" style="font-size: 14px; color: red"
 				[disabled]="deleteInProgress" (click)="deleteProject(project)">
 				<i class="bi bi-trash3"></i>

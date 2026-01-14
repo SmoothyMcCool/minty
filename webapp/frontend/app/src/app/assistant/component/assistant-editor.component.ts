@@ -1,7 +1,7 @@
 import { Component, forwardRef, Input } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Assistant } from '../../model/assistant';
+import { Assistant, createAssistant } from '../../model/assistant';
 import { RouterModule } from '@angular/router';
 import { FilterPipe } from '../../pipe/filter-pipe';
 import { MintyDoc } from 'src/app/model/minty-doc';
@@ -27,9 +27,10 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 	private _documents: MintyDoc[] = [];
 	@Input()
 	set documents(value: MintyDoc[]) {
-		this._documents = value;
-		this.assistantDocuments = this._documents.filter(doc => this.assistant.documentIds.find(id => id === doc.documentId) != undefined);
-		this._documents = this._documents.filter(doc => this.assistantDocuments.find(asstDoc => asstDoc.documentId === doc.documentId) == undefined);
+		if (value) {
+			this._documents = value;
+		}
+		this.update();
 	}
 	get documents(): MintyDoc[] {
 		return this._documents;
@@ -37,20 +38,23 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 	private _tools: MintyTool[] = [];
 	@Input()
 	set tools(value: MintyTool[]) {
-		this._tools = value;
-		this.assistantTools = this._tools.filter(tool => this.assistant.tools.find(name => name.localeCompare(tool.name) === 0) != undefined);
-		this._tools = this._tools.filter(tool => this.assistantTools.find(asstTool => asstTool.name.localeCompare(tool.name) === 0) == undefined);
+		if (value) {
+			this._tools = value;
+		}
+		this.update();
 	}
 	get tools(): MintyTool[] {
 		return this._tools;
 	}
 
-	assistantDocuments: MintyDoc[] = [];
-	assistant: Assistant;
+	usedDocs: MintyDoc[] = [];
+	unusedDocs: MintyDoc[] = [];
+	assistant: Assistant | null = null;
 	minContext: number;
 	maxContext: number;
 
-	assistantTools: MintyTool[] = [];
+	usedTools: MintyTool[] = [];
+	unusedTools: MintyTool[] = [];
 
 	onChange = (_: any) => { };
 	onTouched: any = () => { };
@@ -58,8 +62,20 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 	constructor() {
 	}
 
+	update() {
+		if (this.assistant) {
+			this.modelChanged(this.assistant.model);
+
+			this.usedDocs = this._documents.filter(doc => this.assistant.documentIds.find(id => id === doc.documentId) != undefined);
+			this.unusedDocs = this._documents.filter(doc => this.usedDocs.find(asstDoc => asstDoc.documentId === doc.documentId) == undefined);
+
+			this.usedTools = this._tools.filter(tool => this.assistant.tools.find(name => name.localeCompare(tool.name) === 0) != undefined);
+			this.unusedTools = this._tools.filter(tool => this.usedTools.find(asstTool => asstTool.name.localeCompare(tool.name) === 0) == undefined);
+		}
+	}
+
 	modelChanged(model: string) {
-		this.assistant = { ...this.assistant, model, documentIds: [], contextSize: this.assistant.contextSize };
+		this.assistant = { ...this.assistant, model, documentIds: this.assistant.documentIds, contextSize: this.assistant.contextSize };
 
 		this.minContext = this.models.find(m => m.name === model)?.defaultContext;
 		this.maxContext = this.models.find(m => m.name === model)?.maximumContext;
@@ -71,59 +87,62 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 		}
 
 		this.onTouched();
-		this.onChange({ ...this.assistant });
+		this.onChange(createAssistant(this.assistant));
 	}
 	nameChanged(name: string) {
 		this.assistant.name = name;
 		this.onTouched();
-		this.onChange(this.assistant);
+		this.onChange(createAssistant(this.assistant));
 	}
 	sharedChanged(shared: boolean) {
 		this.assistant.shared = shared;
 		this.onTouched();
-		this.onChange(this.assistant);
+		this.onChange(createAssistant(this.assistant));
 	}
 	hasMemoryChanged(hasMemory: boolean) {
 		this.assistant.hasMemory = hasMemory;
 		this.onTouched();
-		this.onChange(this.assistant);
+		this.onChange(createAssistant(this.assistant));
 	}
 	contextSizeChanged(contextSize: number) {
 		this.assistant.contextSize = contextSize;
 		this.onTouched();
-		this.onChange(this.assistant);
+		this.onChange(createAssistant(this.assistant));
 	}
 	temperatureChanged(temperature: number) {
 		this.assistant.temperature = temperature;
 		this.onTouched();
-		this.onChange(this.assistant);
+		this.onChange(createAssistant(this.assistant));
 	}
 	topKChanged(topK: number) {
 		this.assistant.topK = topK;
 		this.onTouched();
-		this.onChange(this.assistant);
+		this.onChange(createAssistant(this.assistant));
 	}
 	promptChanged(prompt: string) {
 		this.assistant.prompt = prompt;
 		this.onTouched();
-		this.onChange(this.assistant);
+		this.onChange(createAssistant(this.assistant));
 	}
 	addDoc(doc: MintyDoc) {
 		if (this.assistant.documentIds.find(el => el === doc.documentId)) {
 			return;
 		}
 		this.assistant.documentIds.push(doc.documentId);
-		this.assistantDocuments.push(doc);
-		this._documents = this._documents.filter(d => d.documentId !== doc.documentId);
+		this.usedDocs.push(doc);
 		// New object for better chances at sane change detection.
-		this.assistantDocuments = [...this.assistantDocuments];
+		this.usedDocs = [...this.usedDocs];
+		this.unusedDocs = this._documents.filter(doc => this.usedDocs.find(asstDoc => asstDoc.documentId === doc.documentId) == undefined);
+		this.onTouched();
+		this.onChange(createAssistant(this.assistant));
 	}
 
 	removeDoc(doc: MintyDoc) {
 		this.assistant.documentIds = this.assistant.documentIds.filter(el => el !== doc.documentId);
-		this.assistantDocuments = this.assistantDocuments.filter(doc => this.assistant.documentIds.findIndex(id => id === doc.documentId) !== -1);
-		this._documents.push(doc);
-		this._documents = [...this._documents];
+		this.usedDocs = this.usedDocs.filter(doc => this.assistant.documentIds.findIndex(id => id === doc.documentId) !== -1);
+		this.unusedDocs = this._documents.filter(doc => this.usedDocs.find(asstDoc => asstDoc.documentId === doc.documentId) == undefined);
+		this.onTouched();
+		this.onChange(createAssistant(this.assistant));
 	}
 
 	addTool(tool: MintyTool) {
@@ -131,26 +150,28 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 			return;
 		}
 		this.assistant.tools.push(tool.name);
-		this.assistantTools.push(tool);
-		this._tools = this._tools.filter(t => t.name !== tool.name);
+		this.usedTools.push(tool);
 		// New object for better chances at sane change detection.
-		this.assistantTools = [...this.assistantTools];
+		this.usedTools = [...this.usedTools];
+		this.unusedTools = this._tools.filter(tool => this.usedTools.find(asstTool => asstTool.name.localeCompare(tool.name) === 0) == undefined);
+		this.onTouched();
+		this.onChange(createAssistant(this.assistant));
 	}
 
 	removeTool(tool: MintyTool) {
 		this.assistant.tools = this.assistant.tools.filter(el => el !== tool.name);
-		this.assistantTools = this.assistantTools.filter(tool => this.assistant.tools.findIndex(at => at.localeCompare(tool.name) === 0) !== -1);
-		this._tools.push(tool);
-		this._tools = [...this._tools];
+		this.usedTools = this.usedTools.filter(tool => this.assistant.tools.findIndex(at => at.localeCompare(tool.name) === 0) !== -1);
+		this.unusedTools = this._tools.filter(tool => this.usedTools.find(asstTool => asstTool.name.localeCompare(tool.name) === 0) == undefined);
+		this.onTouched();
+		this.onChange(createAssistant(this.assistant));
 	}
 
 	writeValue(obj: any): void {
 		if (obj == null) {
 			return;
 		}
-		this.assistant = obj;
-		this.modelChanged(this.assistant.model);
-		this.tools = [...this.tools];
+		this.assistant = createAssistant(obj);
+		this.update();
 	}
 	registerOnChange(fn: any): void {
 		this.onChange = fn;

@@ -10,6 +10,8 @@ import { PacketEditorComponent } from './packet-editor.component';
 import { DocumentEditorComponent } from './document-editor.component';
 import { AssistantConfigurationEditorComponent } from './assistant-configuration-editor.component';
 import { Model } from 'src/app/model/model';
+import { MintyDoc } from 'src/app/model/minty-doc';
+import { MintyTool } from 'src/app/model/minty-tool';
 
 @Component({
 	selector: 'minty-task-config-editor',
@@ -29,6 +31,8 @@ export class AttributeMapEditorComponent implements ControlValueAccessor {
 	@Input() taskSpecification: TaskSpecification;
 	@Input() enumLists: EnumList[];
 	@Input() models: Model[];
+	@Input() documents: MintyDoc[];
+	@Input() tools: MintyTool[];
 
 	config: AttributeMap = {};
 	onChange = (_: any) => { };

@@ -1,8 +1,8 @@
 package tom.user.controller;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -64,13 +64,23 @@ public class LoginController {
 
 		// Use this opportunity to scrub any no-longer-valid user defaults from the user
 		// object.
-		Map<String, String> defaults = properties.getUserDefaults();
+		List<String> defaults = new ArrayList<>(properties.getUserDefaults().keySet());
+		// Make sure we also account for known global user settings.
+		defaults.addAll(properties.getConfig().userDefaults());
 
-		boolean anythingRemoved = result.getDefaults().entrySet()
-				.removeIf(entry -> !defaults.containsKey(entry.getKey()));
+		boolean anythingRemoved = result.getDefaults().entrySet().removeIf(entry -> !defaults.contains(entry.getKey()));
+
+		// Let's also use this opportunity to add in any missing properties.
+		boolean anythingAdded = false;
+		for (String dflt : defaults) {
+			if (!result.getDefaults().containsKey(dflt)) {
+				anythingAdded = true;
+				result.getDefaults().put(dflt, "");
+			}
+		}
 
 		try {
-			if (anythingRemoved) {
+			if (anythingRemoved || anythingAdded) {
 				userRepository.save(userService.encrypt(result));
 			}
 		} catch (JsonProcessingException e) {
