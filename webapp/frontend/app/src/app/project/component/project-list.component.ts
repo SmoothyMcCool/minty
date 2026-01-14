@@ -5,6 +5,8 @@ import { Router, RouterModule } from "@angular/router";
 import { ProjectService } from "../project.service";
 import { Project } from "src/app/model/project/project";
 import { ConfirmationDialogComponent } from "src/app/app/component/confirmation-dialog.component";
+import { UserService } from "src/app/user.service";
+import { User } from "src/app/model/user";
 
 @Component({
 	selector: 'minty-project-list',
@@ -13,7 +15,9 @@ import { ConfirmationDialogComponent } from "src/app/app/component/confirmation-
 })
 export class ProjectListComponent implements OnInit {
 
-	projects: Project[];
+	user: User | null = null;
+
+	projects: Project[] = [];
 
 	confirmDeleteProjectVisible = false;
 	projectPendingDeletion: Project;
@@ -21,11 +25,18 @@ export class ProjectListComponent implements OnInit {
 	newProjectVisible = false;
 	newProjectName = '';
 
+	activeProject: string;
+
 	constructor(private router: Router,
+		private userService: UserService,
 		private projectService: ProjectService) {
 	}
 
 	ngOnInit() {
+		this.userService.getUser().subscribe((user: User) => {
+			this.user = user;
+			this.activeProject = user.defaults['defaultProject'];
+		});
 		this.projectService.listProjects().subscribe((projects: Project[]) => {
 			this.projects = projects;
 		});
@@ -58,5 +69,14 @@ export class ProjectListComponent implements OnInit {
 				this.projects = projects;
 			});
 		});
+	}
+
+	setActive(project: Project) {
+		if (this.user) {
+			this.user.defaults['defaultProject'] = project.id;
+			this.userService.update(this.user).subscribe(() => {
+				this.activeProject = project.id;
+			});
+		}
 	}
 }

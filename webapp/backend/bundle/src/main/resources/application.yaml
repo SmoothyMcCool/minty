@@ -92,6 +92,9 @@ threads:
 
 secret: TheColonelsSecretRecipeIsChickenGreaseSalt765346586723457683244567
 
+userDefaults:
+  - defaultProject
+
 # System default values for various Tasks
 systemDefaults:
   "Confluence Base URL": http://confluence.ca

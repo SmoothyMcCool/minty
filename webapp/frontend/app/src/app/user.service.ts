@@ -38,7 +38,7 @@ export class UserService {
 				.pipe(
 					map((result: ApiResult) => {
 						this.user = result.data as User;
-						this.user.defaults = new Map(Object.entries(this.user.defaults));
+						this.user.defaults = { ...this.user.defaults };
 						return this.user;
 					})
 				);
@@ -56,7 +56,7 @@ export class UserService {
 					this.timeoutTimer$.next('start');
 					sessionStorage.setItem('x-auth-token', result.headers.get('x-auth-token'));
 					this.user = result.body.data as User;
-					this.user.defaults = new Map(Object.entries(this.user.defaults));
+					this.user.defaults = { ...this.user.defaults };
 					return this.user;
 				})
 			);

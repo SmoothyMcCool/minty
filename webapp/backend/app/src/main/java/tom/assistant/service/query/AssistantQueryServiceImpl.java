@@ -403,6 +403,10 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			}
 		}
 
+		if (user != null && user.getDefaults() != null) {
+			spec.toolContext(Map.of("defaultProject", user.getDefaults().get("defaultProject")));
+		}
+
 		return spec;
 	}
 

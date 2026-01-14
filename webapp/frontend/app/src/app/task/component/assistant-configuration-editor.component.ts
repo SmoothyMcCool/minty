@@ -7,6 +7,8 @@ import { AssistantSpec } from "src/app/model/workflow/assistant-spec";
 import { EnumList } from "src/app/model/workflow/enum-list";
 import { EnumListEditorComponent } from "./enumlist-editor.component";
 import { Model } from "src/app/model/model";
+import { MintyDoc } from "src/app/model/minty-doc";
+import { MintyTool } from "src/app/model/minty-tool";
 
 @Component({
 	selector: 'minty-assistant-configuration-editor',
@@ -24,6 +26,8 @@ export class AssistantConfigurationEditorComponent implements ControlValueAccess
 
 	@Input() choices: EnumList;
 	@Input() models: Model[];
+	@Input() documents: MintyDoc[];
+	@Input() tools: MintyTool[];
 
 	assistantSpec: AssistantSpec | null = null;
 	useCustomAssistant: boolean = true;

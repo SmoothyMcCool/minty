@@ -12,6 +12,10 @@ import { EnumList } from 'src/app/model/workflow/enum-list';
 import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
 import { AssistantService } from 'src/app/assistant.service';
 import { Model } from 'src/app/model/model';
+import { DocumentService } from 'src/app/document.service';
+import { MintyDoc } from 'src/app/model/minty-doc';
+import { ToolService } from 'src/app/tool.service';
+import { MintyTool } from 'src/app/model/minty-tool';
 
 @Component({
 	selector: 'minty-workflow-editor',
@@ -57,10 +61,12 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 	specGroups: string[] = [];
 	enumLists: EnumList[];
 	models: Model[];
+	documents: MintyDoc[];
+	tools: MintyTool[];
 
 	confirmDeleteStepVisible: boolean = false;
 
-	constructor(private workflowService: WorkflowService, private assistantService: AssistantService) {
+	constructor(private workflowService: WorkflowService, private assistantService: AssistantService, private toolService: ToolService, private documentService: DocumentService) {
 	}
 
 	ngOnInit() {
@@ -69,6 +75,12 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 		});
 		this.assistantService.models().subscribe(models => {
 			this.models = models;
+		});
+		this.documentService.list().subscribe(documents => {
+			this.documents = documents;
+		});
+		this.toolService.list().subscribe(tools => {
+			this.tools = tools;
 		})
 	}
 

@@ -6,6 +6,8 @@ import { AttributeMap, TaskRequest, TaskSpecification } from 'src/app/model/work
 import { AttributeMapEditorComponent } from './task-configuration-editor.component';
 import { EnumList } from 'src/app/model/workflow/enum-list';
 import { Model } from 'src/app/model/model';
+import { MintyDoc } from 'src/app/model/minty-doc';
+import { MintyTool } from 'src/app/model/minty-tool';
 
 @Component({
 	selector: 'minty-task-editor',
@@ -36,6 +38,8 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor, OnDest
 	@Input() defaults: string[];
 	@Input() enumLists: EnumList[];
 	@Input() models: Model[];
+	@Input() documents: MintyDoc[];
+	@Input() tools: MintyTool[];
 
 	@Output() taskNameChanged = new EventEmitter<{ oldName: string, newName: string }>();
 
