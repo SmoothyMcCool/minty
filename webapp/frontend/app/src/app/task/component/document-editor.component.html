@@ -1,6 +1,6 @@
 <div class="form-group mb-2">
 	<input class="form-control" type="file" id="docFile" (change)="fileListChanged($event)">
-	<div *ngIf="file">
+	<div *ngIf="fileName">
 		<em>{{fileName}} ({{fileSize}} bytes)</em>
 	</div>
 </div>

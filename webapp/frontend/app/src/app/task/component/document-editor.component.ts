@@ -22,6 +22,8 @@ export class DocumentEditorComponent implements ControlValueAccessor {
 	fileSize = 0;
 	fileName = '';
 
+	private reader?: FileReader;
+
 	fileListChanged(event: Event) {
 		const fileList = (event.target as HTMLInputElement).files;
 		if (fileList && fileList.length > 0) {
@@ -31,26 +33,29 @@ export class DocumentEditorComponent implements ControlValueAccessor {
 
 			this.readFileAsBase64(file).then(base64 => {
 				this.onChange(base64);
-			})
+			});
+
+			this.onTouched();
 		}
 	}
 
 	private readFileAsBase64(file: File): Promise<string> {
 		return new Promise((resolve, reject) => {
-			const reader = new FileReader();
+			this.reader?.abort();
+			this.reader = new FileReader();
 
-			reader.onerror = () => {
-				reader.abort();
+			this.reader.onerror = () => {
+				this.reader.abort();
 				reject(new Error('Problem parsing file'));
 			};
 
-			reader.onload = () => {
-				const dataUrl = reader.result as string;
+			this.reader.onload = () => {
+				const dataUrl = this.reader.result as string;
 				const base64 = dataUrl.split(',')[1];
 				resolve(base64);
 			};
 
-			reader.readAsDataURL(file);
+			this.reader.readAsDataURL(file);
 		});
 	}
 
@@ -67,4 +72,7 @@ export class DocumentEditorComponent implements ControlValueAccessor {
 		// Nah.
 	}
 
+	ngOnDestroy(): void {
+		this.reader?.abort();
+	}
 }
