@@ -88,10 +88,20 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 		try {
 			ObjectMapper mapper = new ObjectMapper();
 
-			Map<String, Object> resultAsMap = mapper.readValue(response, new TypeReference<Map<String, Object>>() {
-			});
+			List<Map<String, Object>> resultAsMap = null;
+			try {
+				resultAsMap = mapper.readValue(response, new TypeReference<List<Map<String, Object>>>() {
+				});
+			} catch (Exception e) {
+				// If we fail, remove markdown fences if present and try again, since some LLMs
+				// give us markdown fences even if we dont want them.
+				String noMarkdownFences = response.replaceAll("(?s)^\\s*```[a-zA-Z0-9_-]*\\s*", "")
+						.replaceAll("(?s)\\s*```\\s*$", "").trim();
+				resultAsMap = mapper.readValue(noMarkdownFences, new TypeReference<List<Map<String, Object>>>() {
+				});
+			}
 			if (resultAsMap != null) {
-				result.addData(resultAsMap);
+				result.setData(resultAsMap);
 			} else {
 				result.addText(response);
 			}

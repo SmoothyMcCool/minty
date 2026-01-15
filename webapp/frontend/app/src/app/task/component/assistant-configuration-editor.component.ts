@@ -1,5 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { Component, forwardRef, Input } from "@angular/core";
+import { ChangeDetectionStrategy, Component, forwardRef, Input } from "@angular/core";
 import { FormsModule, NG_VALUE_ACCESSOR, ControlValueAccessor } from "@angular/forms";
 import { AssistantEditorComponent } from "src/app/assistant/component/assistant-editor.component";
 import { Assistant, createAssistant } from "src/app/model/assistant";
@@ -35,7 +35,7 @@ export class AssistantConfigurationEditorComponent implements ControlValueAccess
 	onChange = (_: any) => { };
 	onTouched: () => void = () => { };
 
-	assistantId: string;
+	assistantId: string | null = null;
 	assistant: Assistant = createAssistant();
 
 	writeValue(value: AssistantSpec | null): void {
@@ -67,7 +67,6 @@ export class AssistantConfigurationEditorComponent implements ControlValueAccess
 			this.assistantId = '';
 		}
 		this.onChange({ ...this.assistantSpec });
-		this.onTouched();
 	}
 	registerOnChange(fn: any): void {
 		this.onChange = fn;
@@ -87,7 +86,7 @@ export class AssistantConfigurationEditorComponent implements ControlValueAccess
 		this.updateValueAndNotify();
 	}
 
-	assistantChanged(assistant: Assistant) {
+	onAssistantEditorChange(assistant: Assistant) {
 		if (JSON.stringify(this.assistant) === JSON.stringify(assistant)) {
 			return;
 		}
