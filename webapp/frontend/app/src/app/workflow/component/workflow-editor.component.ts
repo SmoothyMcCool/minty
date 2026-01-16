@@ -84,6 +84,18 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 		})
 	}
 
+	onNamedChanged(name: string) {
+		this.workflow.name = name;
+		this.onTouched();
+		this.onChange(this.workflow);
+	}
+
+	onDescriptionChanged(description: string) {
+		this.workflow.description = description;
+		this.onTouched();
+		this.onChange(this.workflow);
+	}
+
 	addStep(taskSpecification: TaskSpecification) {
 
 		const updated = { ...taskSpecification.configuration };

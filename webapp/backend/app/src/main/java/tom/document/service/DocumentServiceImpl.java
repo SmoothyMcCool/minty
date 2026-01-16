@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tika.Tika;
@@ -169,10 +170,15 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 	private List<Document> normalize(List<Document> documents) {
 		return documents.stream().map(doc -> {
 			String text = doc.getText();
-			if (text == null || text.isBlank())
+
+			if (StringUtils.isBlank(text)) {
 				return null;
+			}
+
+			@SuppressWarnings("null")
 			String clean = text.replaceAll("\\s+", " ").replaceAll("data:image/[^;]+;base64,[A-Za-z0-9+/=]+", "[B64]")
 					.replaceAll("\\{[^}]{1000,}\\}", "[JSON_BLOCK]");
+
 			return new Document(clean, doc.getMetadata());
 		}).filter(Objects::nonNull).toList();
 

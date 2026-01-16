@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -81,7 +83,7 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 
 	private Packet parseResponse(String response) {
 
-		if (response == null || response.isBlank()) {
+		if (StringUtils.isBlank(response)) {
 			return result;
 		}
 
@@ -119,8 +121,10 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 		AssistantQuery query = new AssistantQuery();
 		query.setAssistantSpec(config.getAssistant());
 
-		for (String text : input.getText()) {
-			if (text != null && !text.isBlank()) {
+		List<String> queries = input != null ? input.getText() : List.of(config.getQuery());
+
+		for (String text : queries) {
+			if (StringUtils.isNotBlank(text)) {
 				query.setQuery(config.getQuery() + " " + text);
 			} else {
 				query.setQuery(config.getQuery());
@@ -162,7 +166,8 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 				}
 
 				result = parseResponse(response);
-				result.setId(input.getId());
+
+				result.setId(input != null ? input.getId() : "");
 				if (conversationId != null) {
 					result.getData().forEach(item -> item.put(ConversationId, conversationId));
 				}
@@ -202,7 +207,7 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 
 	@Override
 	public boolean readyToRun() {
-		return input != null;
+		return input != null || StringUtils.isNotBlank(config.getQuery());
 	}
 
 	@Override
