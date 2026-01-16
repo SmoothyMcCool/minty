@@ -1,5 +1,7 @@
 package tom.api.services.assistant;
 
+import org.apache.commons.lang3.StringUtils;
+
 public final class StringResult implements LlmResult {
 
 	private String value = "";
@@ -16,7 +18,7 @@ public final class StringResult implements LlmResult {
 	}
 
 	public boolean isComplete() {
-		return !value.isBlank();
+		return StringUtils.isNotBlank(value);
 	}
 
 }

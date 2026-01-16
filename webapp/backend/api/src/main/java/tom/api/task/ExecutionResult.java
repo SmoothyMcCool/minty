@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class ExecutionResult {
 
 	private Instant startTime;
@@ -80,7 +82,7 @@ public class ExecutionResult {
 	}
 
 	public void addError(String stepName, String error) {
-		if (error != null && !error.isBlank()) {
+		if (StringUtils.isNotBlank(error)) {
 			errors.get(stepName).add(error);
 		}
 	}

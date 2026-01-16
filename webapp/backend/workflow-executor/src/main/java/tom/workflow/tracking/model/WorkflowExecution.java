@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.commons.lang3.StringUtils;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -93,7 +95,7 @@ public class WorkflowExecution {
 		getExecutionRecord().addError(stepName, error);
 
 		state.getStepStates().get(stepName).completeTask();
-		if (error != null && !error.isBlank()) {
+		if (StringUtils.isNotBlank(error)) {
 			state.getStepStates().get(stepName).failTask();
 		}
 	}

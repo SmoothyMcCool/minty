@@ -22,10 +22,6 @@ public class TextFormatterConfig implements TaskConfigSpec {
 		if (config.containsKey(Format)) {
 			formatStr = config.get(Format).toString();
 		}
-
-		if (formatStr == null || formatStr.isBlank()) {
-			return;
-		}
 	}
 
 	@Override

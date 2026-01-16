@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
+
 import tom.api.task.TaskConfigSpec;
 import tom.api.task.TaskConfigTypes;
 
@@ -24,7 +26,7 @@ public class DataRenamerConfig implements TaskConfigSpec {
 		if (config.containsKey(InputRenames)) {
 			String renameObj = config.get(InputRenames).toString();
 
-			if (renameObj == null || renameObj.isBlank()) {
+			if (StringUtils.isBlank(renameObj)) {
 				return;
 			}
 

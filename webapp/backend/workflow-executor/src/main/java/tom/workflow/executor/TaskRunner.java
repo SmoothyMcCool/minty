@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.task.AsyncTaskExecutor;
 
 import tom.api.UserId;
@@ -164,7 +165,6 @@ public class TaskRunner {
 					try {
 						logger.info("Task " + request.getStepName() + " about to run");
 						task.run();
-						logger.info("Task " + request.getStepName() + " complete");
 					} catch (Exception e) {
 						logger.warn("TaskRunner: Task failed due to exception: ", e);
 						failed = true;
@@ -172,7 +172,7 @@ public class TaskRunner {
 
 					if (failed || task.failed()) {
 						String error = task.getError();
-						if (error != null && !error.isBlank()) {
+						if (StringUtils.isNotBlank(error)) {
 							errors.add(task.getError());
 						}
 						executionState.failTask();

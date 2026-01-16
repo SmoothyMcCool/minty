@@ -2,6 +2,7 @@ package tom.workflow.executor;
 
 import java.nio.file.Path;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LogEvent;
@@ -35,7 +36,7 @@ public class WorkflowLoggerImpl implements AutoCloseable, TaskLogger {
 	}
 
 	private static String sanitize(String filename) {
-		if (filename == null || filename.isBlank()) {
+		if (StringUtils.isBlank(filename)) {
 			return "blank";
 		}
 		String sanitized = filename.replaceAll("[\\\\/:*?\"<>|]", "_").replaceAll("\\p{Cntrl}", "").trim();
