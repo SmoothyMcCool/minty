@@ -28,39 +28,38 @@
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 
 		<!-- Maven plugin versions -->
-		<maven.compiler.version>3.14.0</maven.compiler.version>
-		<maven.jar.version>3.4.2</maven.jar.version>
-		<maven.shade.version>3.6.0</maven.shade.version>
-		<maven.surefire.version>3.5.3</maven.surefire.version>
-		<maven.war.version>3.4.0</maven.war.version>
-		<maven.resources.version>3.3.1</maven.resources.version>
+		<maven.compiler.version>3.14.1</maven.compiler.version>
+		<maven.jar.version>3.5.0</maven.jar.version>
+		<maven.shade.version>3.6.1</maven.shade.version>
+		<maven.surefire.version>3.5.4</maven.surefire.version>
+		<maven.war.version>3.5.1</maven.war.version>
+		<maven.resources.version>3.4.0</maven.resources.version>
 
 		<!-- Library versions -->
-		<commons.codec.version>1.20.0</commons.codec.version>
-		<commons.lang.version>3.17.0</commons.lang.version>
-		<hibernate.version>7.0.2.Final</hibernate.version>
-		<hikari.cp.version>6.3.0</hikari.cp.version>
-		<httpcore.version>5.3.6</httpcore.version>
-		<httpclient.version>5.4.4</httpclient.version>
-		<log4j.version>2.24.3</log4j.version>
-		<jackson.version>2.19.0</jackson.version>
+		<commons.lang.version>3.20.0</commons.lang.version>
+		<hibernate.version>7.2.1.Final</hibernate.version>
+		<hikari.cp.version>7.0.2</hikari.cp.version>
+		<httpcore.version>5.4</httpcore.version>
+		<httpclient.version>5.6</httpclient.version>
+		<log4j.version>2.25.3</log4j.version>
+		<jackson.version>2.20.1</jackson.version>
 		<jakarta.annotation-api.version>3.0.0</jakarta.annotation-api.version>
 		<jakarta.persistence-api.version>3.2.0</jakarta.persistence-api.version>
 		<jakarta.servlet-api.version>6.1.0</jakarta.servlet-api.version>
 		<jakarta.transaction-api.version>2.0.1</jakarta.transaction-api.version>
-		<mariadb.client.version>3.5.3</mariadb.client.version>
-		<micrometer.version>1.16.0</micrometer.version>
+		<mariadb.client.version>3.5.7</mariadb.client.version>
+		<micrometer.version>1.16.2</micrometer.version>
 		<pug4j.version>2.3.1</pug4j.version>
-		<spring.version>6.2.7</spring.version>
+		<spring.version>6.2.15</spring.version>
 		<spring.data.version>2025.0.6</spring.data.version>
 		<spring.security.version>6.5.7</spring.security.version>
-		<spring.session.version>3.5.3</spring.session.version>
-		<spring.ai.version>1.1.1</spring.ai.version>
+		<spring.session.version>3.5.4</spring.session.version>
+		<spring.ai.version>1.1.2</spring.ai.version>
 		<spring-pug4j.version>3.3.1</spring-pug4j.version>
 		<tika.version>3.2.3</tika.version>
 
-		<junit.jupiter.version>5.12.2</junit.jupiter.version>
-		<mockito.junit.jupiter.version>5.20.0</mockito.junit.jupiter.version>
+		<junit.jupiter.version>5.14.2</junit.jupiter.version>
+		<mockito.junit.jupiter.version>5.21.0</mockito.junit.jupiter.version>
 	</properties>
 
 	<dependencyManagement>
@@ -193,39 +192,11 @@
 
 			<!-- Jackson -->
 			<dependency>
-				<groupId>com.fasterxml.jackson.core</groupId>
-				<artifactId>jackson-annotations</artifactId>
+				<groupId>com.fasterxml.jackson</groupId>
+				<artifactId>jackson-bom</artifactId>
 				<version>${jackson.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.fasterxml.jackson.core</groupId>
-				<artifactId>jackson-core</artifactId>
-				<version>${jackson.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.fasterxml.jackson.core</groupId>
-				<artifactId>jackson-databind</artifactId>
-				<version>${jackson.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.fasterxml.jackson.dataformat</groupId>
-				<artifactId>jackson-dataformat-xml</artifactId>
-				<version>${jackson.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.fasterxml.jackson.dataformat</groupId>
-				<artifactId>jackson-dataformat-yaml</artifactId>
-				<version>${jackson.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.fasterxml.jackson.datatype</groupId>
-				<artifactId>jackson-datatype-jsr310</artifactId>
-				<version>${jackson.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.fasterxml.jackson.module</groupId>
-				<artifactId>jackson-module-jaxb-annotations</artifactId>
-				<version>${jackson.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
 			</dependency>
 
 			<!-- Http Components -->

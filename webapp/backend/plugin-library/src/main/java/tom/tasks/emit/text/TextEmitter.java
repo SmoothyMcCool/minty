@@ -1,12 +1,8 @@
-package tom.tasks.emit.packet;
+package tom.tasks.emit.text;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
@@ -18,21 +14,20 @@ import tom.api.task.annotation.RunnableTask;
 import tom.tasks.TaskGroup;
 
 @RunnableTask
-public class PacketEmitter implements MintyTask {
-
+public class TextEmitter implements MintyTask {
 	private TaskLogger logger;
-	private PacketEmitterConfig config;
+	private TextEmitterConfig config;
 	private List<? extends OutputPort> outputs;
 	private boolean readyToRun;
 	private boolean failed;
 
-	public PacketEmitter() {
+	public TextEmitter() {
 		outputs = new ArrayList<>();
 		readyToRun = true; // Starts as true since this task takes no input.
 		failed = false;
 	}
 
-	public PacketEmitter(PacketEmitterConfig config) {
+	public TextEmitter(TextEmitterConfig config) {
 		this();
 		this.config = config;
 	}
@@ -49,43 +44,29 @@ public class PacketEmitter implements MintyTask {
 
 	@Override
 	public void run() {
-		String rawData = config.getData();
-		ObjectMapper mapper = new ObjectMapper();
-		mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
+		String text = config.getText();
 
-		List<Packet> data = new ArrayList<>();
-		try {
-			List<Packet> packets = mapper.readValue(rawData, new TypeReference<List<Packet>>() {
-			});
+		Packet output = new Packet();
+		output.setId("");
+		output.setData(List.of());
+		output.setText(List.of(text));
 
-			for (Packet packet : packets) {
-				data.add(packet);
-			}
-
-		} catch (Exception e) {
-			failed = true;
-			logger.warn("PacketEmitter: Data is not valid JSON list.");
-			throw new RuntimeException(e);
-		}
-
-		for (Packet p : data) {
-			logger.debug("PacketEmitter: Emitting " + p.toString());
-			outputs.get(0).write(p);
-		}
+		logger.debug("TextEmitter: Emitting " + output.toString());
+		outputs.get(0).write(output);
 	}
 
 	@Override
 	public boolean giveInput(int inputNum, Packet dataPacket) {
 		// This task should never receive input. If we ever do, log the error, but
 		// signal that we have all the input we need.
-		logger.warn("Workflow misconfiguration detect. Packet Emitter should never receive input!");
+		logger.warn("Workflow misconfiguration detect. Text Emitter should never receive input!");
 		return true;
 	}
 
 	@Override
 	public void setOutputConnectors(List<? extends OutputPort> outputs) {
 		if (outputs.size() != 1) {
-			logger.warn("Workflow misconfiguration detect. Packet Emitter should only ever have exactly one output!");
+			logger.warn("Workflow misconfiguration detect. Text Emitter should only ever have exactly one output!");
 		}
 		this.outputs = outputs;
 	}
@@ -101,12 +82,12 @@ public class PacketEmitter implements MintyTask {
 
 			@Override
 			public String expects() {
-				return "This task does not receive any data. It runs once when the workflow starts, emitting Packet as specified.";
+				return "This task does not receive any data. It runs once when the workflow starts, emitting a single Packet containing the given text.";
 			}
 
 			@Override
 			public String produces() {
-				return "An array of the items set in the configuration. Format the data as follows: [ { \"id\": \"string ID\", \"text\": \"Any text\", \"data\": [ {arbitrary JSON data} ] ]";
+				return "A single packet, formatted as follows: { \"id\": \"\", \"text\": \"{user-supplied text}\", \"data\": [] }";
 			}
 
 			@Override
@@ -121,17 +102,17 @@ public class PacketEmitter implements MintyTask {
 
 			@Override
 			public TaskConfigSpec taskConfiguration() {
-				return new PacketEmitterConfig();
+				return new TextEmitterConfig();
 			}
 
 			@Override
 			public TaskConfigSpec taskConfiguration(Map<String, Object> configuration) {
-				return new PacketEmitterConfig(configuration);
+				return new TextEmitterConfig(configuration);
 			}
 
 			@Override
 			public String taskName() {
-				return "Packet Emitter";
+				return "Text Emitter";
 			}
 
 			@Override

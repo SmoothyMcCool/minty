@@ -72,7 +72,7 @@ public class PythonServiceImpl implements PythonService {
 				logs.add("Warning: Script " + pythonFile + " failed with exit code " + exitCode);
 			}
 
-			Map<String, Object> result = fileToMap(outputFilePath);
+			Map<String, Object> result = fileToMap(outputFilePath, logs);
 			return new PythonResult(result, logs);
 
 		} catch (IOException e) {
@@ -119,8 +119,9 @@ public class PythonServiceImpl implements PythonService {
 	}
 
 	@SuppressWarnings("unchecked")
-	private Map<String, Object> fileToMap(Path outputFilePath) throws IOException {
+	private Map<String, Object> fileToMap(Path outputFilePath, List<String> logs) throws IOException {
 		String content = Files.readString(outputFilePath);
+		logs.add("DEBUG - Raw python output: " + content);
 		ObjectMapper mapper = new ObjectMapper();
 
 		return mapper.readValue(content, Map.class);

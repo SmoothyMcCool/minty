@@ -182,6 +182,9 @@ public class TaskRunner {
 									+ " failed with a terminal error. Task is stopping.");
 							throw new TerminalTaskError("Task " + request.getStepName()
 									+ " failed with a terminal error. Task is stopping.");
+						} else {
+							logger.warn("Task " + request.getStepName()
+									+ " failed with a non-terminal error. Workflow will attempt to continue.");
 						}
 					} else {
 						logger.info("Task " + request.getStepName() + " completed");
