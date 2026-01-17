@@ -1,10 +1,10 @@
 package tom.tools.project;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 
@@ -25,14 +25,28 @@ public class ProjectTools implements MintyTool, ServiceConsumer {
 
 	private PluginServices pluginServices;
 	private UserId userId;
+	private ProjectId projectId;
+
+	@Override
+	public void initialize() {
+		projectId = null;
+		Map<String, String> userDefaults = pluginServices.getUserService().getUserDefaults(userId);
+
+		String projectIdStr = userDefaults.getOrDefault("defaultProject", "");
+		if (projectIdStr != "") {
+			projectId = new ProjectId(projectIdStr);
+		}
+	}
 
 	@Tool(name = "validate_project_exists", description = "Checks if the project exists")
-	MintyToolResponse<Boolean> projectExists(ToolContext toolContext) {
+	MintyToolResponse<Boolean> projectExists() {
 		boolean exists = false;
 		try {
-			String projectId = (String) toolContext.getContext().get("defaultProject");
+			if (projectId == null) {
+				return MintyToolResponse.FailureResponse("User must set a default ProjectId set.");
+			}
 
-			pluginServices.getProjectService().getProject(userId, new ProjectId(projectId));
+			pluginServices.getProjectService().getProject(userId, projectId);
 			logger.info("Telling the LLM the project exists.");
 			exists = true;
 		} catch (Exception e) {
@@ -42,12 +56,14 @@ public class ProjectTools implements MintyTool, ServiceConsumer {
 	}
 
 	@Tool(name = "list_files_at_root", description = "List all files in the project")
-	MintyToolResponse<List<NodeInfo>> listFiles(ToolContext toolContext) {
+	MintyToolResponse<List<NodeInfo>> listFiles() {
 
-		String projectId = (String) toolContext.getContext().get("defaultProject");
+		if (projectId == null) {
+			return MintyToolResponse.FailureResponse("User must set a default ProjectId set.");
+		}
 
 		try {
-			List<NodeInfo> entries = pluginServices.getProjectService().listNodes(userId, new ProjectId(projectId));
+			List<NodeInfo> entries = pluginServices.getProjectService().listNodes(userId, projectId);
 			logger.info("list_files returning: " + entries.stream().map(entry -> entry.getName()).toList().toString());
 			return MintyToolResponse.SuccessResponse(entries);
 		} catch (Exception e) {
@@ -58,13 +74,15 @@ public class ProjectTools implements MintyTool, ServiceConsumer {
 	}
 
 	@Tool(name = "list_files_in_folder", description = "List all files in the project")
-	MintyToolResponse<List<NodeInfo>> listFilesInFolder(ToolContext toolContext, @ToolParam() String folderNodeId) {
+	MintyToolResponse<List<NodeInfo>> listFilesInFolder(@ToolParam() String folderNodeId) {
 
-		String projectId = (String) toolContext.getContext().get("defaultProject");
+		if (projectId == null) {
+			return MintyToolResponse.FailureResponse("User must set a default ProjectId set.");
+		}
 
 		try {
-			List<NodeInfo> entries = pluginServices.getProjectService().listNodesUnderNode(userId,
-					new ProjectId(projectId), new NodeId(folderNodeId));
+			List<NodeInfo> entries = pluginServices.getProjectService().listNodesUnderNode(userId, projectId,
+					new NodeId(folderNodeId));
 			logger.info("list_files_in_folder returning: "
 					+ entries.stream().map(entry -> entry.getName()).toList().toString());
 			return MintyToolResponse.SuccessResponse(entries);
@@ -77,11 +95,13 @@ public class ProjectTools implements MintyTool, ServiceConsumer {
 	}
 
 	@Tool(name = "get_file_contents", description = "Get the contents of a specific file")
-	MintyToolResponse<String> getFileContents(ToolContext toolContext, @ToolParam() String nodeId) {
-		String response;
-		String projectId = (String) toolContext.getContext().get("defaultProject");
+	MintyToolResponse<String> getFileContents(@ToolParam() String nodeId) {
+		if (projectId == null) {
+			return MintyToolResponse.FailureResponse("User must set a default ProjectId set.");
+		}
 
-		Node node = pluginServices.getProjectService().getNode(userId, new ProjectId(projectId), new NodeId(nodeId));
+		String response;
+		Node node = pluginServices.getProjectService().getNode(userId, projectId, new NodeId(nodeId));
 
 		if (node == null) {
 			response = "Could not retrieve file.";
@@ -95,13 +115,14 @@ public class ProjectTools implements MintyTool, ServiceConsumer {
 	}
 
 	@Tool(name = "create_file", description = "Create a new file")
-	MintyToolResponse<NodeInfo> createFile(ToolContext toolContext,
-			@ToolParam(description = "The name of the file.") String name,
+	MintyToolResponse<NodeInfo> createFile(@ToolParam(description = "The name of the file.") String name,
 			@ToolParam(required = false, description = "The parent of the new node. If null, it will be created at the root level. "
 					+ "This parameter must be as supplied by the tool. You must create the parent first if you do not have a UUID already.") String parentId,
 			@ToolParam() String fileContents) {
 
-		String projectId = (String) toolContext.getContext().get("defaultProject");
+		if (projectId == null) {
+			return MintyToolResponse.FailureResponse("User must set a default ProjectId set.");
+		}
 
 		try {
 			NodeInfo nodeInfo = new NodeInfo();
@@ -111,11 +132,10 @@ public class ProjectTools implements MintyTool, ServiceConsumer {
 
 			Node node = new Node(nodeInfo, fileContents);
 
-			ProjectId pid = new ProjectId(projectId);
 			// This will throw if the parent doesn't exist.
-			pluginServices.getProjectService().getNode(userId, pid, new NodeId(parentId));
+			pluginServices.getProjectService().getNode(userId, projectId, new NodeId(parentId));
 
-			pluginServices.getProjectService().createOrUpdateNode(userId, pid, node);
+			pluginServices.getProjectService().createOrUpdateNode(userId, projectId, node);
 			logger.info("createFile created " + name);
 
 			return MintyToolResponse.SuccessResponse(nodeInfo);
@@ -128,17 +148,17 @@ public class ProjectTools implements MintyTool, ServiceConsumer {
 	}
 
 	@Tool(name = "update_file_information", description = "Update the metadata or location of an existing file")
-	MintyToolResponse<NodeInfo> updateFileInfo(ToolContext toolContext, @ToolParam() String nodeId,
-			@ToolParam(required = false) String fileName,
+	MintyToolResponse<NodeInfo> updateFileInfo(@ToolParam() String nodeId, @ToolParam(required = false) String fileName,
 			@ToolParam(required = false, description = "The parent of the new node. If null, it will be created at the root level. "
 					+ "This parameter must be as supplied by the tool. You must create the parent first if you do not have a UUID already from the project.") String parentId) {
 
-		String projectId = (String) toolContext.getContext().get("defaultProject");
+		if (projectId == null) {
+			return MintyToolResponse.FailureResponse("User must set a default ProjectId set.");
+		}
 
 		try {
 
-			Node node = pluginServices.getProjectService().getNode(userId, new ProjectId(projectId),
-					new NodeId(nodeId));
+			Node node = pluginServices.getProjectService().getNode(userId, projectId, new NodeId(nodeId));
 
 			if (node == null) {
 				logger.warn("updateFileInfo: File does not exist project {}.", nodeId, projectId);
@@ -154,11 +174,10 @@ public class ProjectTools implements MintyTool, ServiceConsumer {
 				nodeInfo.setParentId(new NodeId(parentId));
 			}
 
-			ProjectId pid = new ProjectId(projectId);
 			// This will throw if the parent doesn't exist.
-			pluginServices.getProjectService().getNode(userId, pid, new NodeId(parentId));
+			pluginServices.getProjectService().getNode(userId, projectId, new NodeId(parentId));
 
-			pluginServices.getProjectService().updateNodeInfo(userId, pid, nodeInfo);
+			pluginServices.getProjectService().updateNodeInfo(userId, projectId, nodeInfo);
 			logger.info("updateFileInfo updated " + fileName);
 
 			return MintyToolResponse.SuccessResponse(nodeInfo);
@@ -171,15 +190,15 @@ public class ProjectTools implements MintyTool, ServiceConsumer {
 	}
 
 	@Tool(name = "update_file_contents", description = "Update the contents of an existing file")
-	MintyToolResponse<NodeInfo> updateFileContents(ToolContext toolContext, @ToolParam() String nodeId,
-			@ToolParam() String fileContents) {
+	MintyToolResponse<NodeInfo> updateFileContents(@ToolParam() String nodeId, @ToolParam() String fileContents) {
 
-		String projectId = (String) toolContext.getContext().get("defaultProject");
+		if (projectId == null) {
+			return MintyToolResponse.FailureResponse("User must set a default ProjectId set.");
+		}
 
 		try {
 
-			Node node = pluginServices.getProjectService().getNode(userId, new ProjectId(projectId),
-					new NodeId(nodeId));
+			Node node = pluginServices.getProjectService().getNode(userId, projectId, new NodeId(nodeId));
 
 			if (node == null) {
 				logger.warn("updateFileContents: File does not exist project {}.", nodeId, projectId);
@@ -187,12 +206,8 @@ public class ProjectTools implements MintyTool, ServiceConsumer {
 			}
 
 			NodeInfo nodeInfo = node.info();
-
 			Node updated = new Node(nodeInfo, fileContents);
-
-			ProjectId pid = new ProjectId(projectId);
-
-			pluginServices.getProjectService().createOrUpdateNode(userId, pid, updated);
+			pluginServices.getProjectService().createOrUpdateNode(userId, projectId, updated);
 			logger.info("updateFileContents updated " + nodeId);
 
 			return MintyToolResponse.SuccessResponse(nodeInfo);
@@ -204,11 +219,13 @@ public class ProjectTools implements MintyTool, ServiceConsumer {
 	}
 
 	@Tool(name = "create_folder", description = "Create a new folder")
-	MintyToolResponse<NodeInfo> createFolder(ToolContext toolContext, @ToolParam() String folder,
+	MintyToolResponse<NodeInfo> createFolder(@ToolParam() String folder,
 			@ToolParam(required = false, description = "The parent of the new node. If null, it will be created at the root level. "
 					+ "This parameter must be as supplied by the tool. You must create the parent first if you do not have a UUID already.") String parentId) {
 
-		String projectId = (String) toolContext.getContext().get("defaultProject");
+		if (projectId == null) {
+			return MintyToolResponse.FailureResponse("User must set a default ProjectId set.");
+		}
 
 		try {
 
@@ -221,11 +238,10 @@ public class ProjectTools implements MintyTool, ServiceConsumer {
 
 			Node updated = new Node(nodeInfo, null);
 
-			ProjectId pid = new ProjectId(projectId);
 			// This will throw if the parent doesn't exist.
-			pluginServices.getProjectService().getNode(userId, pid, parentNodeId);
+			pluginServices.getProjectService().getNode(userId, projectId, parentNodeId);
 
-			pluginServices.getProjectService().createOrUpdateNode(userId, pid, updated);
+			pluginServices.getProjectService().createOrUpdateNode(userId, projectId, updated);
 			logger.info("createFolder created " + folder);
 
 			return MintyToolResponse.SuccessResponse(nodeInfo);
@@ -237,16 +253,16 @@ public class ProjectTools implements MintyTool, ServiceConsumer {
 	}
 
 	@Tool(name = "update_folder", description = "Update an existing folder")
-	MintyToolResponse<NodeInfo> updateFolder(ToolContext toolContext, @ToolParam() String nodeId,
-			@ToolParam() String folderName,
+	MintyToolResponse<NodeInfo> updateFolder(@ToolParam() String nodeId, @ToolParam() String folderName,
 			@ToolParam(required = false, description = "The parent of the node. If null, it will be created at the root level.") String parentId) {
 
-		String projectId = (String) toolContext.getContext().get("defaultProject");
+		if (projectId == null) {
+			return MintyToolResponse.FailureResponse("User must set a default ProjectId set.");
+		}
 
 		try {
 
-			Node entry = pluginServices.getProjectService().getNode(userId, new ProjectId(projectId),
-					new NodeId(nodeId));
+			Node entry = pluginServices.getProjectService().getNode(userId, projectId, new NodeId(nodeId));
 
 			if (entry == null) {
 				logger.warn("Folder {} in project {} doesn't exist.", folderName, projectId);
@@ -260,11 +276,10 @@ public class ProjectTools implements MintyTool, ServiceConsumer {
 
 			Node updated = new Node(nodeInfo, null);
 
-			ProjectId pid = new ProjectId(projectId);
 			// This will throw if the parent doesn't exist.
-			pluginServices.getProjectService().getNode(userId, pid, new NodeId(parentId));
+			pluginServices.getProjectService().getNode(userId, projectId, new NodeId(parentId));
 
-			pluginServices.getProjectService().createOrUpdateNode(userId, pid, updated);
+			pluginServices.getProjectService().createOrUpdateNode(userId, projectId, updated);
 			logger.info("updateFolder updated " + folderName);
 
 			return MintyToolResponse.SuccessResponse(nodeInfo);

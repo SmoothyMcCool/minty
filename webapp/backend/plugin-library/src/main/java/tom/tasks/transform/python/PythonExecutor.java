@@ -3,6 +3,8 @@ package tom.tasks.transform.python;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import tom.api.model.services.ServiceConsumer;
@@ -92,6 +94,13 @@ public class PythonExecutor implements MintyTask, ServiceConsumer {
 		result.setId(input.getId());
 
 		try {
+			if (StringUtils.isBlank(configuration.getPython())) {
+				logger.warn("No python code provided to task!");
+				error = "No python code provided to task.";
+				failed = true;
+				return;
+			}
+
 			logger.debug("PythonExecutor: Executing " + configuration.getPython());
 
 			PythonResult pyResult = pluginServices.getPythonService().executeCodeString(configuration.getPython(),
@@ -131,10 +140,6 @@ public class PythonExecutor implements MintyTask, ServiceConsumer {
 			throw new RuntimeException(
 					"Workflow misconfiguration detect. PythonExecutor should only ever have exactly one input!");
 		}
-		if (dataPacket.getData().size() != 1) {
-			failed = true;
-			throw new RuntimeException("Packet must contain exactly one data element.");
-		}
 
 		input = dataPacket;
 		return true;
@@ -163,8 +168,7 @@ public class PythonExecutor implements MintyTask, ServiceConsumer {
 
 			@Override
 			public String produces() {
-				return "The output of the python. If the input contained a ConversationId, that "
-						+ "is propagated out, for further processing fun.";
+				return "The output from python. The output must conform to the Packet JSON structure.";
 			}
 
 			@Override

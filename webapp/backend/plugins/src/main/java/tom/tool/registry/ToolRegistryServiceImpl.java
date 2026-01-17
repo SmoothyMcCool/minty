@@ -54,6 +54,7 @@ public class ToolRegistryServiceImpl implements ToolRegistryService {
 				((ConfigurationConsumer) o).setProperties(configuration.getSystemDefaults(),
 						configuration.getUserDefaults());
 			}
+			o.initialize();
 			return o;
 
 		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException

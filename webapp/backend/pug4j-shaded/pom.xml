@@ -24,7 +24,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
-				<version>3.5.0</version>
+				<version>${maven.shade.version}</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
@@ -56,6 +56,14 @@
 									<shadedPattern>shaded.org.graalvm</shadedPattern>
 								</relocation>
 							</relocations>
+							<filters>
+								<filter>
+									<artifact>*:*</artifact>
+									<excludes>
+										<exclude>org/springframework/**</exclude>
+									</excludes>
+								</filter>
+							</filters>
 						</configuration>
 					</execution>
 				</executions>
