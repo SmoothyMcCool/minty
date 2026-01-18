@@ -1,4 +1,4 @@
-package tom.tasks.flowcontrol.grouping;
+package tom.tasks.flowcontrol.branching;
 
 import java.util.List;
 import java.util.Map;
@@ -11,24 +11,24 @@ import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
 import tom.tasks.TaskGroup;
-import tom.tasks.noop.NullTaskConfig;
 
 @RunnableTask
-public class Normalize implements MintyTask {
+public class Join implements MintyTask {
 
 	private List<? extends OutputPort> outputs;
 
 	private TaskLogger logger;
 	private Packet input;
-	private boolean failed;
+	private JoinConfig config;
 
-	public Normalize() {
+	public Join() {
 		input = null;
-		failed = false;
+		config = null;
 	}
 
-	public Normalize(TaskConfigSpec config) {
+	public Join(JoinConfig config) {
 		this();
+		this.config = config;
 	}
 
 	@Override
@@ -44,27 +44,13 @@ public class Normalize implements MintyTask {
 	@Override
 	public void run() {
 		for (OutputPort output : outputs) {
-			int dataLength = input.getData().size();
-			int textLength = input.getText().size();
-			int maxLength = dataLength > textLength ? dataLength : textLength;
-
-			for (int i = 0; i < maxLength; i++) {
-				Packet out = new Packet();
-				out.setId(input.getId());
-				if (i < dataLength) {
-					out.addData(input.getData().get(i));
-				}
-				if (i < textLength) {
-					out.addText(input.getText().get(i));
-				}
-				output.write(out);
-			}
+			output.write(input);
 		}
 	}
 
 	@Override
 	public boolean giveInput(int inputNum, Packet dataPacket) {
-		logger.info("Normalize: input " + inputNum + " got " + dataPacket);
+		logger.debug("Join: received packet of Id " + dataPacket.getId() + ", on port " + inputNum);
 		input = dataPacket;
 		return true;
 	}
@@ -85,17 +71,17 @@ public class Normalize implements MintyTask {
 
 			@Override
 			public String description() {
-				return "Turn packets that contain arrays of text or data into multiple packets that contain a single piece of text or data.";
+				return "Merge multiple data streams into one.";
 			}
 
 			@Override
 			public String expects() {
-				return "Any data packet.";
+				return "Sends all received input on all connected outputs.";
 			}
 
 			@Override
 			public String produces() {
-				return "If the packet data contains a list of objects, it is sent out as a sequence of packets, each containing one element of the list.";
+				return "Each input is sent unmodified to each connected output.";
 			}
 
 			@Override
@@ -105,22 +91,22 @@ public class Normalize implements MintyTask {
 
 			@Override
 			public int numInputs() {
-				return 1;
+				return config != null ? config.getNumInputs() : 2;
 			}
 
 			@Override
 			public TaskConfigSpec taskConfiguration() {
-				return new NullTaskConfig();
+				return new JoinConfig(Map.of(JoinConfig.NumInputs, "2"));
 			}
 
 			@Override
 			public TaskConfigSpec taskConfiguration(Map<String, Object> configuration) {
-				return new NullTaskConfig(configuration);
+				return new JoinConfig(configuration);
 			}
 
 			@Override
 			public String taskName() {
-				return "Normalizer";
+				return "Join";
 			}
 
 			@Override
@@ -137,7 +123,7 @@ public class Normalize implements MintyTask {
 
 	@Override
 	public boolean failed() {
-		return failed;
+		return false;
 	}
 
 	@Override

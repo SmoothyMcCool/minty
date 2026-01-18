@@ -118,6 +118,11 @@ public class Identifier implements MintyTask {
 		return new TaskSpec() {
 
 			@Override
+			public String description() {
+				return "Assign packet ID based onk the contents of a data field.";
+			}
+
+			@Override
 			public String expects() {
 				return "Any packet that contains data.";
 			}

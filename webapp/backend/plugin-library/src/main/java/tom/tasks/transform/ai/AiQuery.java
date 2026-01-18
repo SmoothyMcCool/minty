@@ -215,6 +215,11 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 		return new TaskSpec() {
 
 			@Override
+			public String description() {
+				return "Perform a query to the LLM, either based on the input received, or the configuration of the task.";
+			}
+
+			@Override
 			public String expects() {
 				return "This task appends the contents of \"text\" to the provided prompt. It will use the conversation defined by "
 						+ "the input \"data.Conversation ID\", provided by the workflow runner, that is used to continue an AI conversation. "

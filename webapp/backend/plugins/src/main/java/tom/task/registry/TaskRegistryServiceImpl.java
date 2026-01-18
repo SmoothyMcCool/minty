@@ -346,6 +346,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 					MintyTask task = (MintyTask) clazz.getDeclaredConstructor().newInstance();
 
 					td.setGroup(task.getSpecification().group());
+					td.setDescription(task.getSpecification().description());
 					td.setExpects(task.getSpecification().expects());
 					td.setProduces(task.getSpecification().produces());
 					td.setNumInputs(task.getSpecification().numInputs());

@@ -162,6 +162,11 @@ public class ConfluenceQuery implements MintyTask {
 		return new TaskSpec() {
 
 			@Override
+			public String description() {
+				return "Retreive the contents of a page on Confluence. Uses Confluence Page IDs.";
+			}
+
+			@Override
 			public String expects() {
 				return "If the \"Data\" contains a \"Pages\" key consisting of a list of pageIds, those Page IDs "
 						+ "will be used instead of those provided in the config.\n\nData must contain exactly one element.";

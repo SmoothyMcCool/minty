@@ -103,6 +103,11 @@ public class HtmlFormatter implements MintyTask, ServiceConsumer {
 		return new TaskSpec() {
 
 			@Override
+			public String description() {
+				return "Generate an HTML snippet based on a Pug template and an input packet.";
+			}
+
+			@Override
 			public String expects() {
 				return "This task produces HTML output based on the configuration provided. "
 						+ "This task will pass the entirety of the data to the templating engine. It will not iterate over the array in data.";

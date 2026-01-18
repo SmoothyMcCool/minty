@@ -103,6 +103,11 @@ public class DataRenamer implements MintyTask {
 		return new TaskSpec() {
 
 			@Override
+			public String description() {
+				return "Rename Data Fields.";
+			}
+
+			@Override
 			public String expects() {
 				return "This task accepts any input. It inspects all input keys and remaps them per the given configuration. "
 						+ "For example, if the configuration is\n{ \"A\": \"Aa\", \"B\": \"Bb\" }\nand the input "

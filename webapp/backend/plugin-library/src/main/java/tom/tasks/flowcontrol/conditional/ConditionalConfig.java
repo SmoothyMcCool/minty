@@ -7,17 +7,17 @@ import java.util.Map;
 import tom.api.task.TaskConfigSpec;
 import tom.api.task.TaskConfigTypes;
 
-public class LoopConfig implements TaskConfigSpec {
+public class ConditionalConfig implements TaskConfigSpec {
 
 	public static final String BranchExpression = "Branch Expression";
 
 	private String expression;
 
-	public LoopConfig() {
+	public ConditionalConfig() {
 		expression = "";
 	}
 
-	public LoopConfig(Map<String, Object> config) {
+	public ConditionalConfig(Map<String, Object> config) {
 		this();
 		if (config.containsKey(BranchExpression)) {
 			expression = config.get(BranchExpression).toString();

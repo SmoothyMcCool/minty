@@ -43,6 +43,11 @@ public class NullTask implements MintyTask {
 		return new TaskSpec() {
 
 			@Override
+			public String description() {
+				return "No-Op";
+			}
+
+			@Override
 			public String expects() {
 				return "This task expects no input. It doesn't matter what you provide.";
 			}
