@@ -119,6 +119,11 @@ public class SimpleTransformer implements MintyTask {
 		return new TaskSpec() {
 
 			@Override
+			public String description() {
+				return "Transform contents of Packet data.";
+			}
+
+			@Override
 			public String expects() {
 				return "This task accepts any input. It will perform a simply transformation based on the given SpEL expression.";
 			}

@@ -8,10 +8,13 @@ import java.util.Map;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 public class Packet {
 
-	private static ObjectMapper mapper = new ObjectMapper();
+	private static ObjectMapper mapper = JsonMapper.builder().enable(SerializationFeature.INDENT_OUTPUT)
+			.addModule(new JavaTimeModule()).build();
 
 	private String id;
 	private List<String> text;
@@ -92,9 +95,13 @@ public class Packet {
 	public String toString() {
 		String dataStr;
 		try {
-			dataStr = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT).writeValueAsString(data);
+			if (data == null) {
+				dataStr = "<<null>>";
+			} else {
+				dataStr = mapper.writeValueAsString(data);
+			}
 		} catch (JsonProcessingException e) {
-			dataStr = "<<Failed to stringify data>>";
+			dataStr = data.toString();
 		}
 		return "Packet [id=" + id + ", text=" + text + ", data=" + dataStr + "]";
 	}

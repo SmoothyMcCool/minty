@@ -5,8 +5,8 @@ import java.util.Map;
 
 import jakarta.persistence.Convert;
 import tom.api.task.TaskConfigTypes;
-import tom.task.model.converters.StringListToStringConverter;
 import tom.task.model.converters.ObjectMapToStringConverter;
+import tom.task.model.converters.StringListToStringConverter;
 import tom.task.model.converters.TaskConfigTypeMapToStringConverter;
 
 public class TaskSpecDescription {
@@ -21,6 +21,7 @@ public class TaskSpecDescription {
 	private List<String> systemConfigVariables;
 	@Convert(converter = StringListToStringConverter.class)
 	private List<String> userConfigVariables;
+	private String description;
 	private String expects;
 	private String produces;
 	private int numInputs;
@@ -32,6 +33,7 @@ public class TaskSpecDescription {
 		configSpec = Map.of();
 		systemConfigVariables = List.of();
 		userConfigVariables = List.of();
+		description = "";
 		expects = "";
 		produces = "";
 		numInputs = 0;
@@ -118,4 +120,11 @@ public class TaskSpecDescription {
 		this.group = group;
 	}
 
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public String getDescription() {
+		return description;
+	}
 }

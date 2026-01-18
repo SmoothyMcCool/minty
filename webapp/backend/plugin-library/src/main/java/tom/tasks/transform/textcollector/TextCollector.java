@@ -112,6 +112,11 @@ public class TextCollector implements MintyTask {
 		return new TaskSpec() {
 
 			@Override
+			public String description() {
+				return "Combine Text from multiple packets";
+			}
+
+			@Override
 			public String expects() {
 				return "This task collects the Text elements of Packets it receives and joins them together. "
 						+ "It will either group all records received into a single output, or can be configured "

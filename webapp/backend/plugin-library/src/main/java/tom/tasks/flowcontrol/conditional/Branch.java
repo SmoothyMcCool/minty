@@ -16,7 +16,7 @@ import tom.api.task.annotation.RunnableTask;
 import tom.tasks.TaskGroup;
 
 @RunnableTask
-public class Loop implements MintyTask {
+public class Branch implements MintyTask {
 
 	private List<? extends OutputPort> outputs;
 
@@ -24,16 +24,16 @@ public class Loop implements MintyTask {
 	private ConditionalConfig config;
 	private TaskLogger logger;
 	private boolean terminalFailure;
-	private boolean loopComplete;
+	private boolean conditionMet;
 
-	public Loop() {
+	public Branch() {
 		input = null;
 		config = null;
 		terminalFailure = false;
-		loopComplete = false;
+		conditionMet = false;
 	}
 
-	public Loop(ConditionalConfig config) {
+	public Branch(ConditionalConfig config) {
 		this();
 		this.config = config;
 	}
@@ -67,13 +67,13 @@ public class Loop implements MintyTask {
 			if (!(raw instanceof Boolean)) {
 				throw new IllegalArgumentException("Expression did not return a boolean value: " + raw);
 			}
-			loopComplete = !((Boolean) raw);
-			int outputPort = loopComplete ? 1 : 0;
+			conditionMet = ((Boolean) raw);
+			int outputPort = conditionMet ? 0 : 1;
 			outputs.get(outputPort).write(result);
 
 		} catch (Exception e) {
-			String error = "Loop caught exception while trying to apply SpEL expression: " + expression + ", to input: "
-					+ input.toString();
+			String error = "Branch caught exception while trying to apply SpEL expression: " + expression
+					+ ", to input: " + input.toString();
 			logger.error(error);
 			terminalFailure = true;
 			throw new RuntimeException(error, e);
@@ -102,7 +102,7 @@ public class Loop implements MintyTask {
 
 			@Override
 			public String description() {
-				return "Evaluate a condition. If the condition is not met, packet is emitted on output 0. If it is met, it is emitted on output 1, and the loop terminates. If you want to evaluate a conditoin without looping, use Branch instead.";
+				return "Evaluate a condition. If true, emit packet on output 0. If false, output 1. Don't use this task if you want looping, use Loop.";
 			}
 
 			@Override
@@ -112,7 +112,7 @@ public class Loop implements MintyTask {
 
 			@Override
 			public String produces() {
-				return "Each input is sent unmodified to output 0 if the condition evaluates to true, or 1 if the condition is false. Once a packet is sent on output 1, the task terminates.";
+				return "Each input is sent unmodified to output 0 if the condition evaluates to true, or 1 if the condition is false.";
 			}
 
 			@Override
@@ -137,7 +137,7 @@ public class Loop implements MintyTask {
 
 			@Override
 			public String taskName() {
-				return "Loop";
+				return "Branch";
 			}
 
 			@Override
@@ -167,8 +167,4 @@ public class Loop implements MintyTask {
 		return terminalFailure;
 	}
 
-	@Override
-	public boolean stepComplete() {
-		return loopComplete;
-	}
 }

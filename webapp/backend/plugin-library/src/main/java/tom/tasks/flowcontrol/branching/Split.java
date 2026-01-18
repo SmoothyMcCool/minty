@@ -13,20 +13,19 @@ import tom.api.task.annotation.RunnableTask;
 import tom.tasks.TaskGroup;
 
 @RunnableTask
-public class Joiner implements MintyTask {
+public class Split implements MintyTask {
 
 	private List<? extends OutputPort> outputs;
 
-	private TaskLogger logger;
 	private Packet input;
-	private JoinerConfig config;
+	private SplitConfig config;
 
-	public Joiner() {
+	public Split() {
 		input = null;
 		config = null;
 	}
 
-	public Joiner(JoinerConfig config) {
+	public Split(SplitConfig config) {
 		this();
 		this.config = config;
 	}
@@ -50,7 +49,6 @@ public class Joiner implements MintyTask {
 
 	@Override
 	public boolean giveInput(int inputNum, Packet dataPacket) {
-		logger.debug("Joiner: received packet of Id " + dataPacket.getId() + ", on port " + inputNum);
 		input = dataPacket;
 		return true;
 	}
@@ -70,6 +68,11 @@ public class Joiner implements MintyTask {
 		return new TaskSpec() {
 
 			@Override
+			public String description() {
+				return "Duplicate Packets to multiple outputs.";
+			}
+
+			@Override
 			public String expects() {
 				return "Sends all received input on all connected outputs.";
 			}
@@ -81,27 +84,27 @@ public class Joiner implements MintyTask {
 
 			@Override
 			public int numOutputs() {
-				return 1;
+				return config != null ? config.getNumOutputs() : 2;
 			}
 
 			@Override
 			public int numInputs() {
-				return config != null ? config.getNumInputs() : 2;
+				return 1;
 			}
 
 			@Override
 			public TaskConfigSpec taskConfiguration() {
-				return new JoinerConfig(Map.of(JoinerConfig.NumInputs, "2"));
+				return new SplitConfig(Map.of(SplitConfig.NumOutputs, "2"));
 			}
 
 			@Override
 			public TaskConfigSpec taskConfiguration(Map<String, Object> configuration) {
-				return new JoinerConfig(configuration);
+				return new SplitConfig(configuration);
 			}
 
 			@Override
 			public String taskName() {
-				return "Joiner";
+				return "Split";
 			}
 
 			@Override
@@ -123,7 +126,6 @@ public class Joiner implements MintyTask {
 
 	@Override
 	public void setLogger(TaskLogger workflowLogger) {
-		this.logger = workflowLogger;
 	}
 
 }

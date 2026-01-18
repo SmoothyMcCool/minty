@@ -138,6 +138,11 @@ public class TextFormatter implements MintyTask {
 		return new TaskSpec() {
 
 			@Override
+			public String description() {
+				return "Format Packet Data into Text.";
+			}
+
+			@Override
 			public String expects() {
 				return "This task produces text output based on the configuration provided. "
 						+ "It scans for text in the form {path.to.json[1].element} and make appropriate "

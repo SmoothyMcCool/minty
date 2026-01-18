@@ -7,31 +7,31 @@ import java.util.Map;
 import tom.api.task.TaskConfigSpec;
 import tom.api.task.TaskConfigTypes;
 
-public class SplitterConfig implements TaskConfigSpec {
+public class JoinConfig implements TaskConfigSpec {
 
-	public static final String NumOutputs = "Number of Outputs";
+	public static final String NumInputs = "Number of Inputs";
 
-	private int numOutputs;
+	private int numInputs;
 
-	public SplitterConfig() {
-		numOutputs = 2;
+	public JoinConfig() {
+		numInputs = 1;
 	}
 
-	public SplitterConfig(Map<String, Object> config) {
+	public JoinConfig(Map<String, Object> config) {
 		this();
 		try {
-			if (config.containsKey(NumOutputs)) {
-				numOutputs = Integer.parseInt(config.get(NumOutputs).toString());
+			if (config.containsKey(NumInputs)) {
+				numInputs = Integer.parseInt(config.get(NumInputs).toString());
 			}
 		} catch (Exception e) {
-			numOutputs = 2;
+			numInputs = 2;
 		}
 	}
 
 	@Override
 	public Map<String, TaskConfigTypes> getConfig() {
 		Map<String, TaskConfigTypes> config = new HashMap<>();
-		config.put(NumOutputs, TaskConfigTypes.Number);
+		config.put(NumInputs, TaskConfigTypes.Number);
 		return config;
 	}
 
@@ -45,12 +45,16 @@ public class SplitterConfig implements TaskConfigSpec {
 		return List.of();
 	}
 
-	public int getNumOutputs() {
-		return numOutputs;
+	public int getNumInputs() {
+		return numInputs;
+	}
+
+	public void setNumInputs(int numInputs) {
+		this.numInputs = numInputs;
 	}
 
 	@Override
 	public Map<String, Object> getValues() {
-		return Map.of(NumOutputs, Integer.toString(numOutputs));
+		return Map.of(NumInputs, Integer.toString(numInputs));
 	}
 }

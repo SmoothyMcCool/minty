@@ -77,6 +77,11 @@ public class LogPacket implements MintyTask {
 		return new TaskSpec() {
 
 			@Override
+			public String description() {
+				return "Log contents of packets to the Workflow log, for debugging.";
+			}
+
+			@Override
 			public String expects() {
 				return "Any data packet.";
 			}

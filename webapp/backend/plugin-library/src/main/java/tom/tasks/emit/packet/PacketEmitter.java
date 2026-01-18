@@ -100,6 +100,11 @@ public class PacketEmitter implements MintyTask {
 		return new TaskSpec() {
 
 			@Override
+			public String description() {
+				return "Emit packets, mostly to control the start state of a workflow.";
+			}
+
+			@Override
 			public String expects() {
 				return "This task does not receive any data. It runs once when the workflow starts, emitting Packet as specified.";
 			}

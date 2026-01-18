@@ -108,6 +108,11 @@ public class GroupBy implements MintyTask {
 		return new TaskSpec() {
 
 			@Override
+			public String description() {
+				return "Match up Packets based on ID and combine them into one.";
+			}
+
+			@Override
 			public String expects() {
 				return "One packet on input 1, multiple sorted packets on input two. For each packet on input two, where IDs match, they are grouped into a single output packet.";
 			}

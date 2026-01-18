@@ -17,6 +17,7 @@ export interface TaskSpecification {
 	configSpec: AttributeMap;
 	systemConfigVariables: string[];
 	userConfigVariables: string[];
+	description: string;
 	expects: string;
 	produces: string;
 	numInputs: number;

@@ -4,6 +4,9 @@ import java.util.Map;
 
 public interface TaskSpec {
 
+	// A short description of what this task does.
+	String description();
+
 	// A description of what the shape of the input map should look like for this
 	// task to make use of it. A description of each input port should be provided.
 	String expects();
@@ -36,4 +39,5 @@ public interface TaskSpec {
 	// A one-word description of what kind of task this is. For GUI organization.
 	// Suggested groups: Interface, Transformation, Flow Control, Output
 	String group();
+
 }

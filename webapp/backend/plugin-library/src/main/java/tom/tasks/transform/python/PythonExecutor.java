@@ -160,6 +160,11 @@ public class PythonExecutor implements MintyTask, ServiceConsumer {
 		return new TaskSpec() {
 
 			@Override
+			public String description() {
+				return "Execute python Code, taking a Packet as input.";
+			}
+
+			@Override
 			public String expects() {
 				return "This task simply provides whatever input and configuration"
 						+ " is provided as a map to the associated Python file when it is run. "

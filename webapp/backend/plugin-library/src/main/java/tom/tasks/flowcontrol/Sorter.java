@@ -78,6 +78,11 @@ public class Sorter implements MintyTask {
 		return new TaskSpec() {
 
 			@Override
+			public String description() {
+				return "Sort Packets by ID.";
+			}
+
+			@Override
 			public String expects() {
 				return "Any packets. This task only runs once, and it will only run once it has received all input from the previous step.";
 			}

@@ -87,6 +87,11 @@ public class DocumentEmitter implements MintyTask, ServiceConsumer {
 		return new TaskSpec() {
 
 			@Override
+			public String description() {
+				return "Read a document and emit its contents as a packet for further processing.";
+			}
+
+			@Override
 			public String expects() {
 				return "This task does not receive any data. It runs once when the workflow starts, emitting the contents of the specified file.";
 			}

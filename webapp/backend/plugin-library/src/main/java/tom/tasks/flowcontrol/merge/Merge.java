@@ -1,5 +1,6 @@
-package tom.tasks.flowcontrol.branching;
+package tom.tasks.flowcontrol.merge;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -11,23 +12,22 @@ import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
 import tom.tasks.TaskGroup;
+import tom.tasks.noop.NullTaskConfig;
 
 @RunnableTask
-public class Splitter implements MintyTask {
+public class Merge implements MintyTask {
 
 	private List<? extends OutputPort> outputs;
 
-	private Packet input;
-	private SplitterConfig config;
+	private TaskLogger logger;
+	private Packet[] input;
 
-	public Splitter() {
-		input = null;
-		config = null;
+	public Merge() {
+		input = new Packet[2];
 	}
 
-	public Splitter(SplitterConfig config) {
+	public Merge(TaskConfigSpec config) {
 		this();
-		this.config = config;
 	}
 
 	@Override
@@ -42,14 +42,35 @@ public class Splitter implements MintyTask {
 
 	@Override
 	public void run() {
+		Packet result = new Packet();
+		result.setId(input[0].getId() + input[1].getId());
+
+		List<String> text = new ArrayList<>();
+		if (input[0].getText() != null) {
+			text.addAll(input[0].getText());
+		}
+		if (input[1].getText() != null) {
+			text.addAll(input[1].getText());
+		}
+		result.setText(text);
+
+		List<Map<String, Object>> data = new ArrayList<>();
+		if (input[0].getData() != null) {
+			data.addAll(input[0].getData());
+		}
+		if (input[1].getText() != null) {
+			data.addAll(input[1].getData());
+		}
+		result.setData(data);
+
 		for (OutputPort output : outputs) {
-			output.write(input);
+			output.write(result);
 		}
 	}
 
 	@Override
 	public boolean giveInput(int inputNum, Packet dataPacket) {
-		input = dataPacket;
+		input[inputNum] = dataPacket;
 		return true;
 	}
 
@@ -68,38 +89,43 @@ public class Splitter implements MintyTask {
 		return new TaskSpec() {
 
 			@Override
+			public String description() {
+				return "Merge packets. One packet is taken from each input (if not completed), and merges the contents of the text and data arrays.";
+			}
+
+			@Override
 			public String expects() {
-				return "Sends all received input on all connected outputs.";
+				return "One packet on each input.";
 			}
 
 			@Override
 			public String produces() {
-				return "Each input is sent unmodified to each connected output.";
+				return "A packet that contains a unified list of text and data from each input.";
 			}
 
 			@Override
 			public int numOutputs() {
-				return config != null ? config.getNumOutputs() : 2;
-			}
-
-			@Override
-			public int numInputs() {
 				return 1;
 			}
 
 			@Override
+			public int numInputs() {
+				return 2;
+			}
+
+			@Override
 			public TaskConfigSpec taskConfiguration() {
-				return new SplitterConfig(Map.of(SplitterConfig.NumOutputs, "2"));
+				return new NullTaskConfig();
 			}
 
 			@Override
 			public TaskConfigSpec taskConfiguration(Map<String, Object> configuration) {
-				return new SplitterConfig(configuration);
+				return new NullTaskConfig(configuration);
 			}
 
 			@Override
 			public String taskName() {
-				return "Splitter";
+				return "Merge";
 			}
 
 			@Override
@@ -121,6 +147,7 @@ public class Splitter implements MintyTask {
 
 	@Override
 	public void setLogger(TaskLogger workflowLogger) {
+		this.logger = workflowLogger;
 	}
 
 }

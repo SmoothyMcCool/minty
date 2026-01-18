@@ -28,8 +28,8 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor, OnDest
 	private _taskSpecification: TaskSpecification ;
 	@Input()
 	set taskSpecification(value: TaskSpecification){
-		this._taskSpecification = value;
 		this.destroyPopover();
+		this._taskSpecification = value;
 		this.createPopover();
 	}
 	get taskSpecification(): TaskSpecification {
@@ -64,9 +64,13 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor, OnDest
 		if (!this.taskSpecification || !this.task || !this.popoverButton) {
 			return;
 		}
+		const description = this.taskSpecification.description;
 		const inputs = this.taskSpecification.expects ? this.escapeHtml(this.taskSpecification.expects) : 'No inputs';
 		const outputs = this.taskSpecification.produces ? this.escapeHtml(this.taskSpecification.produces) : 'No outputs';
 		const html = `
+${description}
+<br>
+<br>
 <strong>Inputs:</strong> ${inputs}
 <br>
 <br>
