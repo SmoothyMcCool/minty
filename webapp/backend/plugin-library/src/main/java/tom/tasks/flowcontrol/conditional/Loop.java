@@ -58,7 +58,7 @@ public class Loop implements MintyTask {
 		try {
 
 			// Evaluate with SpEL
-			Packet result = new Packet(input);
+			Packet result = input;
 			SpelExpressionParser parser = new SpelExpressionParser();
 			StandardEvaluationContext context = new StandardEvaluationContext(result);
 			context.setBeanResolver(null);

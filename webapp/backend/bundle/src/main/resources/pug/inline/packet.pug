@@ -1,0 +1,24 @@
+//- Packet Pug template with Bootstrap styling (pug4j)
+
+if text.size() > 0 || data.size() > 0
+  .card.mb-4
+    .card-header.bg-primary.text-white #{id}
+    .card-body
+      //- Text Section
+      h5.text-muted Text
+      if text.size() > 1
+        ul.list-group.mb-3
+          each t in text
+            li.list-group-item #{t}
+      else if text.size() == 1
+        p.card-text #{text.get(0)}
+
+      //- Data Section
+      h5.text-muted Data
+      if data.size() > 1
+        ul.list-group
+          each d in data
+            li.list-group-item
+              pre.mb-0 #{helpers.jsonToString(d)}
+      else if data.size() == 1
+        pre.card-text #{helpers.jsonToString(data.get(0))}

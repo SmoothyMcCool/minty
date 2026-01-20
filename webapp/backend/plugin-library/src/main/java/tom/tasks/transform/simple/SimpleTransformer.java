@@ -66,7 +66,7 @@ public class SimpleTransformer implements MintyTask {
 
 		try {
 			// Evaluate with SpEL
-			result = new Packet(input);
+			result = input;
 			SpelExpressionParser parser = new SpelExpressionParser();
 			StandardEvaluationContext context = new StandardEvaluationContext(result);
 			context.setBeanResolver(null);

@@ -19,9 +19,7 @@ import tom.task.model.TaskRequest;
 import tom.task.registry.TaskRegistryService;
 import tom.workflow.controller.WorkflowRequest;
 import tom.workflow.executor.WorkflowRunner;
-import tom.workflow.model.ResultTemplate;
 import tom.workflow.model.Workflow;
-import tom.workflow.repository.ResultTemplateRepository;
 import tom.workflow.repository.WorkflowRepository;
 import tom.workflow.tracking.controller.model.WorkflowState;
 import tom.workflow.tracking.service.WorkflowTrackingService;
@@ -32,17 +30,15 @@ public class WorkflowServiceImpl implements WorkflowService {
 	private final Logger logger = LogManager.getLogger(WorkflowServiceImpl.class);
 
 	private final WorkflowRepository workflowRepository;
-	private final ResultTemplateRepository resultTemplateRepository;
 	private final TaskRegistryService taskRegistryService;
 	private final WorkflowTrackingService workflowTrackingService;
 	private final AsyncTaskExecutor taskExecutor;
 	private final Path workflowLoggingFolder;
 
-	public WorkflowServiceImpl(WorkflowRepository workflowRepository, ResultTemplateRepository resultTemplateRepository,
-			TaskRegistryService taskRegistryService, WorkflowTrackingService workflowTrackingService,
+	public WorkflowServiceImpl(WorkflowRepository workflowRepository, TaskRegistryService taskRegistryService,
+			WorkflowTrackingService workflowTrackingService,
 			@Qualifier("taskExecutor") ThreadPoolTaskExecutor taskExecutor, MintyConfiguration properties) {
 		this.workflowRepository = workflowRepository;
-		this.resultTemplateRepository = resultTemplateRepository;
 		this.taskRegistryService = taskRegistryService;
 		this.workflowTrackingService = workflowTrackingService;
 		this.taskExecutor = taskExecutor;
@@ -166,22 +162,6 @@ public class WorkflowServiceImpl implements WorkflowService {
 			}
 		}
 		return found;
-	}
-
-	@Override
-	public String addorUpdateResultTemplate(ResultTemplate resultTemplate) {
-		ResultTemplate result = resultTemplateRepository.save(resultTemplate);
-		return result.getName();
-	}
-
-	@Override
-	public ResultTemplate getResultTemplate(String templateName) {
-		return resultTemplateRepository.findByName(templateName);
-	}
-
-	@Override
-	public List<String> listResultTemplates() {
-		return resultTemplateRepository.findAllTemplateNames();
 	}
 
 }

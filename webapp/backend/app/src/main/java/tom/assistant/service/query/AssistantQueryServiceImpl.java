@@ -41,6 +41,7 @@ import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PreDestroy;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.SignalType;
 import tom.api.ConversationId;
 import tom.api.UserId;
 import tom.api.model.assistant.Assistant;
@@ -280,22 +281,28 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 
 				usage.set(chatResponse.getMetadata().getUsage());
 
-			}).doOnTerminate(() -> {
-				sr.addUsage(new LlmMetric(usage.get().getPromptTokens(), usage.get().getCompletionTokens()));
-				if (!docsUsed.isEmpty()) {
-					sr.addSources(new ArrayList<>(docsUsed));
-				}
-				sr.markComplete();
-				results.remove(request.getQuery().getConversationId());
 			}).doOnError(e -> {
 				logger.warn("Streaming failed for conversation {}", request.getQuery().getConversationId(), e);
 			}).onErrorResume(e -> {
-				if (results.containsKey(request.getQuery().getConversationId())) {
-					logger.warn("Caught exception while attempting to stream response: ", e);
-					sr.addChunk("Failed to generate response.");
-					sr.markComplete();
-				}
 				return Flux.empty();
+			}).doFinally(signalType -> {
+				try {
+					if (usage.get() != null) {
+						sr.addUsage(new LlmMetric(usage.get().getPromptTokens(), usage.get().getCompletionTokens()));
+					}
+
+					if (!docsUsed.isEmpty()) {
+						sr.addSources(new ArrayList<>(docsUsed));
+					}
+
+					if (signalType == SignalType.ON_ERROR) {
+						sr.addChunk("Failed to generate response.");
+					}
+
+					sr.markComplete();
+				} finally {
+					results.remove(request.getQuery().getConversationId());
+				}
 			}).subscribe();
 
 		} catch (Exception e) {
