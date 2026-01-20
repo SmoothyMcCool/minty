@@ -272,7 +272,11 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 	}
 
 	@Override
-	public TaskSpec getSpecForTask(TaskRequest request) {
+	public TaskSpec getSpecForTask(TaskRequest request) throws InvalidTaskException {
+		if (!runnableTasks.containsKey(request.getTaskName())) {
+			throw new InvalidTaskException("Task " + request.getTaskName() + " does not exist.");
+		}
+
 		Class<?> taskClass = runnableTasks.get(request.getTaskName()).left;
 
 		try {

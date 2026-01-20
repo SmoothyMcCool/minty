@@ -16,19 +16,19 @@ import tom.api.task.annotation.RunnableTask;
 import tom.tasks.TaskGroup;
 
 @RunnableTask
-public class HtmlFormatter implements MintyTask, ServiceConsumer {
+public class CustomHtmlFormatter implements MintyTask, ServiceConsumer {
 
 	private List<? extends OutputPort> outputs;
 
 	private TaskLogger logger;
-	private HtmlFormatterConfig config;
+	private CustomHtmlFormatterConfig config;
 	private Packet input;
 	private PluginServices pluginServices;
 	private boolean failed;
 	private String error;
 	private Packet result;
 
-	public HtmlFormatter() {
+	public CustomHtmlFormatter() {
 		input = null;
 		outputs = null;
 		failed = false;
@@ -36,7 +36,7 @@ public class HtmlFormatter implements MintyTask, ServiceConsumer {
 		result = null;
 	}
 
-	public HtmlFormatter(HtmlFormatterConfig config) {
+	public CustomHtmlFormatter(CustomHtmlFormatterConfig config) {
 		this();
 		this.config = config;
 	}
@@ -58,12 +58,14 @@ public class HtmlFormatter implements MintyTask, ServiceConsumer {
 
 	@Override
 	public void run() {
-		String resultStr;
 		try {
-			resultStr = pluginServices.getRenderService().renderPug(config.getTemplate(), input);
+
+			String resultStr = pluginServices.getRenderService().renderPug(config.getTemplate(), input);
+
 			result = new Packet();
 			result.addText(resultStr);
 			result.setId(input.getId());
+
 			outputs.get(0).write(result);
 		} catch (IOException e) {
 			logger.warn("HtmlFormatter: Failed to generate pug template", e);
@@ -130,12 +132,12 @@ public class HtmlFormatter implements MintyTask, ServiceConsumer {
 
 			@Override
 			public TaskConfigSpec taskConfiguration() {
-				return new HtmlFormatterConfig();
+				return new CustomHtmlFormatterConfig();
 			}
 
 			@Override
 			public TaskConfigSpec taskConfiguration(Map<String, Object> configuration) {
-				return new HtmlFormatterConfig(configuration);
+				return new CustomHtmlFormatterConfig(configuration);
 			}
 
 			@Override
@@ -168,4 +170,5 @@ public class HtmlFormatter implements MintyTask, ServiceConsumer {
 	public String html() {
 		return "";
 	}
+
 }

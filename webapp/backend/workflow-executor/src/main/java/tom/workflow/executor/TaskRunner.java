@@ -120,7 +120,8 @@ public class TaskRunner {
 									task.inputTerminated(i);
 									inputDone = true;
 								} else {
-
+									// Tasks only ever get new copies of packets.
+									packet = new Packet(packet);
 									if (task.wantsInput(i, packet)) {
 										logger.info("Task " + request.getStepName() + " taking packet on port " + i);
 										inputDone = task.giveInput(i, packet);
@@ -131,11 +132,11 @@ public class TaskRunner {
 										inputDone = true;
 									}
 								}
-							} else {
+							} // else {
 								// If packet is null, that means the wait just timed out. We just have to break
 								// every so often so we can catch situations where allTasksSpawned becomes true
 								// from already running tasks, while we wait.
-							}
+								// }
 
 						} catch (Exception e) {
 							logger.error("TaskRunner for " + request.getStepName() + " failed to read from input " + i

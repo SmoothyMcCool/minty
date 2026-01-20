@@ -207,7 +207,7 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 
 	@Override
 	public boolean readyToRun() {
-		return input != null || StringUtils.isNotBlank(config.getQuery());
+		return input != null;
 	}
 
 	@Override

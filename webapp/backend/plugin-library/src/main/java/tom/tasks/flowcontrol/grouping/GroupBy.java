@@ -67,6 +67,10 @@ public class GroupBy implements MintyTask {
 			throw new RuntimeException("Input received without having received a key packet. Is your input sorted?");
 		}
 		readyToRun = true;
+		if (inputNum == 1) {
+			logger.info("GroupBy: Rejecting packet with id " + dataPacket.getId());
+		}
+
 		return false;
 	}
 

@@ -7,17 +7,17 @@ import java.util.Map;
 import tom.api.task.TaskConfigSpec;
 import tom.api.task.TaskConfigTypes;
 
-public class HtmlFormatterConfig implements TaskConfigSpec {
+public class CustomHtmlFormatterConfig implements TaskConfigSpec {
 
 	public static final String PugTemplate = "Pug Template";
 
 	private String template;
 
-	public HtmlFormatterConfig() {
+	public CustomHtmlFormatterConfig() {
 		template = "";
 	}
 
-	public HtmlFormatterConfig(Map<String, Object> config) {
+	public CustomHtmlFormatterConfig(Map<String, Object> config) {
 		this();
 		if (config.containsKey(PugTemplate)) {
 			template = config.get(PugTemplate).toString();

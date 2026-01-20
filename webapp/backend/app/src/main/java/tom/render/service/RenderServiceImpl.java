@@ -5,11 +5,15 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Stream;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,20 +26,20 @@ import tom.api.services.RenderService;
 import tom.api.task.ExecutionResult;
 import tom.api.task.Packet;
 import tom.config.MintyConfiguration;
-import tom.workflow.service.WorkflowService;
 
 @Service
 public class RenderServiceImpl implements RenderService {
 
-	private final PugConfiguration pugConfiguration;
-	private final WorkflowService workflowService;
-	private final Path tempFolder;
+	private static final Logger logger = LogManager.getLogger(RenderServiceImpl.class);
 
-	public RenderServiceImpl(PugConfiguration pugConfiguration, WorkflowService workflowService,
-			MintyConfiguration properties) {
+	private final PugConfiguration pugConfiguration;
+	private final Path tempFolder;
+	private final Path pugFolder;
+
+	public RenderServiceImpl(PugConfiguration pugConfiguration, MintyConfiguration properties) {
 		this.pugConfiguration = pugConfiguration;
-		this.workflowService = workflowService;
 		this.tempFolder = properties.getConfig().fileStores().temp();
+		this.pugFolder = properties.getConfig().fileStores().pug();
 	}
 
 	@Override
@@ -53,9 +57,9 @@ public class RenderServiceImpl implements RenderService {
 			throw new IllegalArgumentException("Data is null");
 		}
 		Map<String, Object> pugInput = new HashMap<>();
-		pugInput.put("Id", data.getId());
-		pugInput.put("Text", data.getText());
-		pugInput.put("Data", data.getData());
+		pugInput.put("id", data.getId());
+		pugInput.put("text", data.getText());
+		pugInput.put("data", data.getData());
 
 		PugModel model = new PugModel(pugInput);
 		return internalRenderPug(template, model);
@@ -77,7 +81,7 @@ public class RenderServiceImpl implements RenderService {
 
 			PugTemplate pugTemplate = pugConfiguration.getTemplate(tempFilePath.toString());
 
-			model.put("Helpers", new HelperFunctions());
+			model.put("helpers", new HelperFunctions());
 
 			pugTemplate.process(model, writer);
 			return writer.toString();
@@ -105,8 +109,42 @@ public class RenderServiceImpl implements RenderService {
 	}
 
 	@Override
-	public List<String> listPugTemplates() {
-		return workflowService.listResultTemplates();
+	public String getPugTemplate(String template) throws IOException {
+		Path templatePath = pugFolder.resolve(template);
+		return Files.readString(templatePath, StandardCharsets.UTF_8);
 	}
 
+	@Override
+	public List<String> listInlinePugTemplates() throws IOException {
+		Path inlineFolder = pugFolder.resolve("inline");
+		if (!Files.isDirectory(inlineFolder)) {
+			logger.warn("listInlinePugTemplates: pugFolder is not properly defined in configuration.");
+			return List.of();
+		}
+
+		List<String> results = new ArrayList<>();
+
+		try (Stream<Path> stream = Files.list(inlineFolder)) {
+			stream.filter(Files::isRegularFile).forEach(path -> results.add(path.getFileName().toString()));
+		}
+
+		return results;
+	}
+
+	@Override
+	public List<String> listOutputPugTemplates() throws IOException {
+		Path outputFolder = pugFolder.resolve("output");
+		if (!Files.isDirectory(outputFolder)) {
+			logger.warn("listOutputPugTemplates: pugFolder is not properly defined in configuration.");
+			return List.of();
+		}
+
+		List<String> results = new ArrayList<>();
+
+		try (Stream<Path> stream = Files.list(outputFolder)) {
+			stream.filter(Files::isRegularFile).forEach(path -> results.add(path.getFileName().toString()));
+		}
+
+		return results;
+	}
 }

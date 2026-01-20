@@ -108,7 +108,7 @@
 				<executions>
 					<execution>
 						<id>copy-application-properties</id>
-						<phase>install</phase>
+						<phase>package</phase>
 						<goals>
 							<goal>copy-resources</goal>
 						</goals>
@@ -116,10 +116,28 @@
 							<outputDirectory>${tomcat.base}/conf/Minty</outputDirectory>
 							<resources>
 								<resource>
-									<directory>/src/main/resources</directory>
+									<directory>${basedir}/src/main/resources</directory>
 									<includes>
 										<include>application.yaml</include>
 										<include>assistants.yaml</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+					<execution>
+						<id>copy-pug-templates</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${output.directory}/working/pug</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${basedir}/src/main/resources/pug</directory>
+									<includes>
+										<include>**/*.pug</include>
 									</includes>
 								</resource>
 							</resources>

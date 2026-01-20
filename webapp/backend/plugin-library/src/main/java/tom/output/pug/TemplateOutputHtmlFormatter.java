@@ -14,19 +14,17 @@ import tom.api.task.TaskConfigSpec;
 import tom.api.task.annotation.Output;
 
 @Output
-public class RenderPugTemplate implements OutputTask, ServiceConsumer {
+public class TemplateOutputHtmlFormatter implements OutputTask, ServiceConsumer {
 
+	private TemplateOutputHtmlFormatterConfig config;
 	private PluginServices pluginServices;
-	private RenderPugTemplateConfig configuration;
 
-	public RenderPugTemplate() {
-		this.pluginServices = null;
-		this.configuration = null;
+	public TemplateOutputHtmlFormatter() {
 	}
 
-	public RenderPugTemplate(RenderPugTemplateConfig configuration) {
+	public TemplateOutputHtmlFormatter(TemplateOutputHtmlFormatterConfig config) {
 		this();
-		this.configuration = configuration;
+		this.config = config;
 	}
 
 	@Override
@@ -36,7 +34,7 @@ public class RenderPugTemplate implements OutputTask, ServiceConsumer {
 
 	@Override
 	public String execute(ExecutionResult data) throws IOException {
-		return pluginServices.getRenderService().renderPug(configuration.getTemplate(), data);
+		return pluginServices.getRenderService().renderPug(config.getTemplate(), data);
 	}
 
 	@Override
@@ -50,19 +48,20 @@ public class RenderPugTemplate implements OutputTask, ServiceConsumer {
 
 			@Override
 			public TaskConfigSpec taskConfiguration() {
-				return new RenderPugTemplateConfig();
+				return new TemplateOutputHtmlFormatterConfig();
 			}
 
 			@Override
 			public TaskConfigSpec taskConfiguration(Map<String, Object> configuration) {
-				return new RenderPugTemplateConfig(configuration);
+				return new TemplateOutputHtmlFormatterConfig(configuration);
 			}
 
 			@Override
 			public String taskName() {
-				return "Render Pug";
+				return "Render Pug from Template";
 			}
 
 		};
 	}
+
 }

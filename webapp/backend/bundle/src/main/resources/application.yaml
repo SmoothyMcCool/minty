@@ -12,6 +12,7 @@ fileStores:
   temp: ${output.directory}/working/temp
   plugins: ${output.directory}/working/plugins
   workflowLogs: ${output.directory}/working/logs
+  pug: ${output.directory}/working/pug
 
 # Database configuration
 db:
