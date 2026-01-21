@@ -1,7 +1,6 @@
 package tom.workflow.tracking.model;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import jakarta.persistence.Convert;
@@ -12,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import tom.api.task.ExecutionResult;
+import tom.api.task.Packet;
 import tom.workflow.converters.ExecutionResultConverter;
 
 @Entity
@@ -71,7 +71,7 @@ public class ExecutionRecord {
 	}
 
 	@Transient
-	public void addResult(String stepName, Map<String, Object> results) {
+	public void addResult(String stepName, Packet results) {
 		result.addResult(stepName, results);
 	}
 

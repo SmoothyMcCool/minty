@@ -1,7 +1,6 @@
 package tom.workflow.tracking.model;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
@@ -18,6 +17,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Transient;
 import tom.api.UserId;
 import tom.api.task.ExecutionResult;
+import tom.api.task.Packet;
 import tom.workflow.converters.ExecutionStateConverter;
 
 @Entity
@@ -90,7 +90,7 @@ public class WorkflowExecution {
 		this.executionRecord = executionRecord;
 	}
 
-	public void completeTask(String stepName, Map<String, Object> results, String error) {
+	public void completeTask(String stepName, Packet results, String error) {
 		getExecutionRecord().addResult(stepName, results);
 		getExecutionRecord().addError(stepName, error);
 

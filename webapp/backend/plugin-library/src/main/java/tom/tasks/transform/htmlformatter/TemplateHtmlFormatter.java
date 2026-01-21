@@ -59,7 +59,8 @@ public class TemplateHtmlFormatter implements MintyTask, ServiceConsumer {
 	@Override
 	public void run() {
 		try {
-			String resultStr = pluginServices.getRenderService().renderPug(config.getTemplate(), input);
+			String template = pluginServices.getRenderService().getInlinePugTemplate(config.getTemplate());
+			String resultStr = pluginServices.getRenderService().renderPug(template, input);
 
 			result = new Packet();
 			result.addText(resultStr);

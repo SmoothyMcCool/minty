@@ -1,15 +1,20 @@
 package tom.output.pug;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.hc.core5.http.ContentType;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import tom.api.model.services.ServiceConsumer;
 import tom.api.services.PluginServices;
 import tom.api.task.ExecutionResult;
 import tom.api.task.OutputTask;
 import tom.api.task.OutputTaskSpec;
+import tom.api.task.Packet;
 import tom.api.task.TaskConfigSpec;
 import tom.api.task.annotation.Output;
 
@@ -34,7 +39,18 @@ public class TemplateOutputHtmlFormatter implements OutputTask, ServiceConsumer 
 
 	@Override
 	public String execute(ExecutionResult data) throws IOException {
-		return pluginServices.getRenderService().renderPug(config.getTemplate(), data);
+		// Amalgamate all task names that are tagged as part of the output into a single
+		// "Task Results" item for the template to use.
+		List<Packet> taskResults = new ArrayList<>();
+		for (String taskName : config.getResultTasks()) {
+			if (data.getResults().containsKey(taskName)) {
+				taskResults.addAll(data.getResults().get(taskName));
+			}
+		}
+		data.setResults(Map.of("Task Results", taskResults));
+
+		String template = pluginServices.getRenderService().getOutputPugTemplate(config.getTemplate());
+		return pluginServices.getRenderService().renderPug(template, data);
 	}
 
 	@Override
@@ -53,7 +69,11 @@ public class TemplateOutputHtmlFormatter implements OutputTask, ServiceConsumer 
 
 			@Override
 			public TaskConfigSpec taskConfiguration(Map<String, Object> configuration) {
-				return new TemplateOutputHtmlFormatterConfig(configuration);
+				try {
+					return new TemplateOutputHtmlFormatterConfig(configuration);
+				} catch (JsonProcessingException e) {
+					throw new RuntimeException("Failed to read configuration.", e);
+				}
 			}
 
 			@Override

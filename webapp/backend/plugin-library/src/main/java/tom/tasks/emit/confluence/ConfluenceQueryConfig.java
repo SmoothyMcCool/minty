@@ -68,7 +68,7 @@ public class ConfluenceQueryConfig implements TaskConfigSpec {
 	@Override
 	public List<String> getSystemConfigVariables() {
 		// return List.of(BaseURL, UseBearerAuth);
-		return List.of(UseBearerAuth);
+		return List.of(BaseURL, UseBearerAuth);
 	}
 
 	@Override
