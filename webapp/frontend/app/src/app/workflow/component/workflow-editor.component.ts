@@ -171,7 +171,7 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 		if (conIndex != -1) {
 			const connection = this.workflow.connections.at(conIndex);
 			const originatingStep = this.taskWidgets.find(w => (data.isInput ? connection.writerId : connection.readerId) === w.task.id);
-			const ogPos: { x: number, y: number } = originatingStep.getPortCenter(data.portIndex, !data.isInput);
+			const ogPos: { x: number, y: number } = originatingStep.getPortCenter(data.isInput ? connection.writerPort : connection.readerPort, !data.isInput);
 			this.workflow.connections.splice(conIndex, 1);
 
 			// It's opposite-land. For this to work we have to build the tempConnection as though this were a new connection
@@ -179,7 +179,7 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 			this.tempConnection = {
 				isInput: !data.isInput,
 				portId: originatingStep.task.id,
-				portIndex: !data.isInput ? connection.writerPort : connection.readerPort,
+				portIndex: data.isInput ? connection.writerPort : connection.readerPort,
 				toX: !data.isInput ? ogPos.x : x,
 				toY: !data.isInput ? ogPos.y : y,
 				fromX: !data.isInput ? x : ogPos.x,

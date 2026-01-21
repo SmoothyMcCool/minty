@@ -2,7 +2,6 @@ package tom.workflow.executor;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -72,8 +71,8 @@ public class TaskRunner {
 		return executionState;
 	}
 
-	public List<Map<String, Object>> getResults() {
-		return results.stream().map(packet -> packet.toMap()).toList();
+	public List<Packet> getResults() {
+		return results;
 	}
 
 	public List<String> getErrors() {

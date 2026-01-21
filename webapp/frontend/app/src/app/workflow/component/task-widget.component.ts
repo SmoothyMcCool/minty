@@ -57,20 +57,26 @@ export class TaskWidgetComponent implements OnInit {
 
 		const topY = y - squareSize / 2;
 
-		const squareArray: { x: number; y: number; size: number }[] = [];
+		const ports: { x: number; y: number; size: number }[] = [];
 
-		for (let i = 1; i <= n; i++) {
-			const cx = r.x + gap * i;
+		for (let i = 0; i < n; i++) {
+			const cx = r.x + gap * (i + 1);
 			const x = cx - squareSize / 2;
-			squareArray.push({ x, y: topY, size: squareSize });
+			ports.push({ x, y: topY, size: squareSize });
 		}
 
-		return squareArray;
+		return ports;
 	}
 
 	getPortCenter(portIndex: number, isInput: boolean): { x: number; y: number } {
 		const ports = isInput ? this.topPorts : this.bottomPorts;
-		if (!ports[portIndex]) return { x: 0, y: 0 };
+		if (!ports[portIndex]) {
+			console.warn(
+				`TaskWidgetComponent.getPortCenter(): portIndex ${portIndex} out of range for task ${this.task.stepName}. ` +
+				`Available ports: ${ports.length}`
+			);
+			return { x: 0, y: 0 };
+		}
 		// Account for task layout position
 		const layoutX = this.task.layout.tempX ?? this.task.layout.x;
 		const layoutY = this.task.layout.tempY ?? this.task.layout.y;

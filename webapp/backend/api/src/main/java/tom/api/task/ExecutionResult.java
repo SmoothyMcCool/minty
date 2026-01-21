@@ -13,7 +13,7 @@ public class ExecutionResult {
 	private Instant startTime;
 	private Instant endTime;
 	private String logFile;
-	private Map<String, List<Map<String, Object>>> results;
+	private Map<String, List<Packet>> results;
 	private Map<String, List<String>> errors;
 
 	public ExecutionResult() {
@@ -57,11 +57,11 @@ public class ExecutionResult {
 		this.logFile = logFile;
 	}
 
-	public Map<String, List<Map<String, Object>>> getResults() {
+	public Map<String, List<Packet>> getResults() {
 		return results;
 	}
 
-	public void setResults(Map<String, List<Map<String, Object>>> results) {
+	public void setResults(Map<String, List<Packet>> results) {
 		this.results = results;
 	}
 
@@ -77,7 +77,7 @@ public class ExecutionResult {
 		return Map.of("startTime", startTime, "endTime", endTime, "results", results, "errors", errors);
 	}
 
-	public void addResult(String stepName, Map<String, Object> result) {
+	public void addResult(String stepName, Packet result) {
 		results.get(stepName).add(result);
 	}
 

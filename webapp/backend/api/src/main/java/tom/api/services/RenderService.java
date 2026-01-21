@@ -14,7 +14,9 @@ public interface RenderService {
 
 	String renderJson(ExecutionResult data) throws IOException;
 
-	String getPugTemplate(String template) throws IOException;
+	String getInlinePugTemplate(String template) throws IOException;
+
+	String getOutputPugTemplate(String template) throws IOException;
 
 	List<String> listInlinePugTemplates() throws IOException;
 

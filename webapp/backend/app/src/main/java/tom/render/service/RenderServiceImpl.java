@@ -109,8 +109,14 @@ public class RenderServiceImpl implements RenderService {
 	}
 
 	@Override
-	public String getPugTemplate(String template) throws IOException {
-		Path templatePath = pugFolder.resolve(template);
+	public String getInlinePugTemplate(String template) throws IOException {
+		Path templatePath = pugFolder.resolve("inline").resolve(template);
+		return Files.readString(templatePath, StandardCharsets.UTF_8);
+	}
+
+	@Override
+	public String getOutputPugTemplate(String template) throws IOException {
+		Path templatePath = pugFolder.resolve("output").resolve(template);
 		return Files.readString(templatePath, StandardCharsets.UTF_8);
 	}
 
