@@ -26,6 +26,7 @@ export class PacketEditorComponent implements ControlValueAccessor {
 	valid = true;
 
 	emitChange() {
+		this.onTouched();
 		this.onChange(JSON.stringify(this.packets));
 	}
 
@@ -35,12 +36,14 @@ export class PacketEditorComponent implements ControlValueAccessor {
 			text: [],
 			data: [],
 		});
+		this.emitChange();
 	}
 
 	removePacket(index: number) {
 		if (index != -1) {
 			this.packets.splice(index, 1);
 		}
+		this.emitChange();
 	}
 
 	addText(packet: Packet) {

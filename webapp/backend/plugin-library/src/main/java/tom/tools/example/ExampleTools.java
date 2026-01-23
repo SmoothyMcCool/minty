@@ -10,7 +10,6 @@ import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 
 import tom.api.tool.MintyTool;
@@ -20,13 +19,15 @@ public class ExampleTools implements MintyTool {
 
 	private static final Logger logger = LogManager.getLogger(ExampleTools.class);
 
-	@Tool(name = "get_current_local_time", description = "Get the current local time")
+	// @Tool(name = "get_current_local_time", description = "Get the current local
+	// time")
 	MintyToolResponse<String> getCurrentLocalTime() {
 		String result = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);
 		return MintyToolResponse.SuccessResponse(result);
 	}
 
-	@Tool(name = "get_weather", description = "Get the current weather for a city by specifying its latitude and longitude")
+	// @Tool(name = "get_weather", description = "Get the current weather for a city
+	// by specifying its latitude and longitude")
 	MintyToolResponse<String> getCurrentWeather(@ToolParam() double latitude, @ToolParam() double longitude) {
 
 		String forecast = getForecast(latitude, longitude);
