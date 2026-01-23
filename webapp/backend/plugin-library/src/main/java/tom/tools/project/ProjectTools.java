@@ -33,7 +33,7 @@ public class ProjectTools implements MintyTool, ServiceConsumer {
 		Map<String, String> userDefaults = pluginServices.getUserService().getUserDefaults(userId);
 
 		String projectIdStr = userDefaults.getOrDefault("defaultProject", "");
-		if (projectIdStr != "") {
+		if (!projectIdStr.isBlank()) {
 			projectId = new ProjectId(projectIdStr);
 		}
 	}

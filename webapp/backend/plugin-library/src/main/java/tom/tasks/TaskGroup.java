@@ -2,7 +2,7 @@ package tom.tasks;
 
 public enum TaskGroup {
 
-	TRANSFORM("Transform"), FLOW_CONTROL("Flow Control"), EMIT("Emit");
+	TRANSFORM("Transform"), FLOW_CONTROL("Flow Control"), EMIT("Emit"), EXTERNAL("External System");
 
 	private final String code;
 

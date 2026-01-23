@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import tom.api.task.TaskConfigSpec;
 import tom.api.task.TaskConfigTypes;
-import tom.tasks.emit.confluence.StringListFormatException;
+import tom.tasks.transform.confluence.StringListFormatException;
 
 public class TemplateOutputHtmlFormatterConfig implements TaskConfigSpec {
 
