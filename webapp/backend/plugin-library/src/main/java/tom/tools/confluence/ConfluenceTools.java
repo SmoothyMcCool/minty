@@ -1,5 +1,6 @@
 package tom.tools.confluence;
 
+import java.util.List;
 import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
@@ -14,10 +15,7 @@ import tom.api.services.PluginServices;
 import tom.api.tool.MintyTool;
 import tom.tasks.transform.confluence.ConfluenceClient;
 import tom.tasks.transform.confluence.ConfluenceQueryConfig;
-import tom.tasks.transform.confluence.model.ChildrenRequest;
 import tom.tasks.transform.confluence.model.ChildrenResponse;
-import tom.tasks.transform.confluence.model.LabelSearchRequest;
-import tom.tasks.transform.confluence.model.PageRequest;
 import tom.tasks.transform.confluence.model.PageResponse;
 import tom.tasks.transform.confluence.model.SearchRequest;
 import tom.tasks.transform.confluence.model.SearchResponse;
@@ -35,6 +33,11 @@ public class ConfluenceTools implements MintyTool, ServiceConsumer, Configuratio
 
 	@Override
 	public void initialize() {
+		if (pluginServices.getUserService().getUserDefaults(userId).containsKey(ConfluenceQueryConfig.AccessToken)) {
+			accessToken = pluginServices.getUserService().getUserDefaults(userId)
+					.get(ConfluenceQueryConfig.AccessToken);
+		}
+
 		String username = pluginServices.getUserService().getUsernameFromId(userId);
 		this.confluenceClient = new ConfluenceClient(confluenceUrl, username, accessToken, useBearerAuth);
 	}
@@ -70,35 +73,32 @@ public class ConfluenceTools implements MintyTool, ServiceConsumer, Configuratio
 			throw new PropertyNotFoundException(ConfluenceQueryConfig.UseBearerAuth);
 		}
 		useBearerAuth = Boolean.parseBoolean(systemProperties.get(ConfluenceQueryConfig.UseBearerAuth));
-
-		if (!userProperties.containsKey(ConfluenceQueryConfig.AccessToken)) {
-			throw new PropertyNotFoundException(ConfluenceQueryConfig.AccessToken);
-		}
-		accessToken = userProperties.get(ConfluenceQueryConfig.AccessToken);
 	}
 
 	@Tool(name = "confluence_search_pages", description = "Search Confluence pages by keyword when you do not know the page id. Returns page ids, titles, and snippets.")
-	public SearchResponse searchPages(@ToolParam SearchRequest request) {
-		logger.debug("confluence_search_pages: {}", request);
-		return confluenceClient.search(request);
+	public SearchResponse searchPages(@ToolParam String query, @ToolParam List<String> spaces, @ToolParam int limit) {
+		logger.info("confluence_search_pages: {} {} {}", query, spaces, limit);
+		return confluenceClient.search(new SearchRequest(query, spaces, limit));
 	}
 
 	@Tool(name = "confluence_get_page", description = "Fetch a Confluence page by id, including full text content and metadata.")
-	public PageResponse getPage(@ToolParam PageRequest request) {
-		logger.debug("confluence_get_page: {}", request);
-		return confluenceClient.getPage(request.getPageId());
+	public PageResponse getPage(@ToolParam(description = "The ID of the page to fetch") String pageId) {
+		logger.info("confluence_get_page: {}", pageId);
+		return confluenceClient.getPage(pageId);
 	}
 
 	@Tool(name = "confluence_get_children", description = "List child pages of a Confluence page.")
-	public ChildrenResponse getChildren(@ToolParam ChildrenRequest request) {
-		logger.debug("confluence_get_children: {}", request);
-		return confluenceClient.getChildren(request.getPageId(), request.getLimit());
+	public ChildrenResponse getChildren(@ToolParam(description = "The ID of the parent page.") String pageId,
+			@ToolParam(description = "The maximum number of child pages to return. Defaults to 10 if not positive.") int limit) {
+		logger.info("confluence_get_children: {} {}", pageId, limit);
+		return confluenceClient.getChildren(pageId, limit);
 	}
 
 	@Tool(name = "confluence_search_by_label", description = "Search Confluence pages by label.")
-	public SearchResponse searchByLabel(@ToolParam LabelSearchRequest request) {
-		logger.debug("confluence_search_by_label: {}", request);
-		return confluenceClient.searchByLabel(request.getLabel(), request.getLimit());
+	public SearchResponse searchByLabel(@ToolParam(description = "The label to search for") String label,
+			@ToolParam(description = "Maximum number of results to return") int limit) {
+		logger.info("confluence_search_by_label: {} {}", label, limit);
+		return confluenceClient.searchByLabel(label, limit);
 	}
 
 }
