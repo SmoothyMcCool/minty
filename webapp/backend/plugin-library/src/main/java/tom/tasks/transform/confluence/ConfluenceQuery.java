@@ -12,8 +12,9 @@ import tom.api.task.TaskConfigSpec;
 import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
+import tom.confluence.ConfluenceClient;
+import tom.confluence.model.PageResponse;
 import tom.tasks.TaskGroup;
-import tom.tasks.transform.confluence.model.PageResponse;
 
 @RunnableTask
 public class ConfluenceQuery implements MintyTask {
@@ -39,7 +40,7 @@ public class ConfluenceQuery implements MintyTask {
 		this();
 		config = data;
 		confluenceClient = new ConfluenceClient(config.getBaseUrl(), config.getUsername(), config.getApiKey(),
-				config.getUseBearerAuth());
+				config.getUseBearerAuth(), config.getMaxPageCharacters());
 	}
 
 	@Override

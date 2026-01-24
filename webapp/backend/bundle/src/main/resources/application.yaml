@@ -16,7 +16,7 @@ fileStores:
 
 # Database configuration
 db:
-  #applicationDbUrl=jdbc:mariadb://localhost:3306/Minty
+  #url=jdbc:mariadb://localhost:3306/Minty
   url: jdbc:mariadb://192.168.2.54:3306/Minty
   port: 3306
   name: Minty
@@ -91,12 +91,19 @@ threads:
   streamMax: 200
   streamCapacity: 1000 # Max number of requests to enqueue.
 
+# Shhhhh!
 secret: TheColonelsSecretRecipeIsChickenGreaseSalt765346586723457683244567
 
+pluginConfiguration:
+  - name: ConfluenceTools
+    configuration:
+      maxPageChars: 50000
+
+# List of default properties that each use should have that isn't tied to a task spec.
 userDefaults:
   - defaultProject
 
 # System default values for various Tasks
 systemDefaults:
-  "Confluence Base URL": http://confluence.ca
-  "Confluence Use Bearer Authorization": true
+  "Confluence Base URL": https://alltheprs.atlassian.net/wiki
+  "Confluence Use Bearer Authorization": false

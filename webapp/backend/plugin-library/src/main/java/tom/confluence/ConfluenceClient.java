@@ -1,4 +1,4 @@
-package tom.tasks.transform.confluence;
+package tom.confluence;
 
 import java.util.ArrayList;
 import java.util.Base64;
@@ -16,26 +16,27 @@ import org.apache.logging.log4j.Logger;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import tom.tasks.transform.confluence.model.ChildPage;
-import tom.tasks.transform.confluence.model.ChildrenResponse;
-import tom.tasks.transform.confluence.model.PageResponse;
-import tom.tasks.transform.confluence.model.SearchRequest;
-import tom.tasks.transform.confluence.model.SearchResponse;
-import tom.tasks.transform.confluence.model.SearchResult;
+import tom.confluence.model.ChildPage;
+import tom.confluence.model.ChildrenResponse;
+import tom.confluence.model.PageResponse;
+import tom.confluence.model.SearchRequest;
+import tom.confluence.model.SearchResponse;
+import tom.confluence.model.SearchResult;
 
 public class ConfluenceClient {
 
 	private static final Logger logger = LogManager.getLogger(ConfluenceClient.class);
 
-	private static final int MaxPageChars = 20_000;
-
 	private final ObjectMapper mapper;
 	private final String baseUrl;
+	private final int maxPageChars;
 	private final String authHeader;
 
-	public ConfluenceClient(String baseUrl, String username, String accessToken, boolean useBearerAuth) {
+	public ConfluenceClient(String baseUrl, String username, String accessToken, boolean useBearerAuth,
+			int maxPageCharacters) {
 		this.mapper = new ObjectMapper();
 		this.baseUrl = baseUrl.replaceAll("/+$", "");
+		this.maxPageChars = maxPageCharacters;
 
 		if (useBearerAuth) {
 			this.authHeader = "Bearer " + accessToken;
@@ -49,7 +50,7 @@ public class ConfluenceClient {
 
 	public PageResponse getPage(String pageId) {
 
-		String url = baseUrl + "/rest/api/content/" + pageId + "?expand=body.storage,space,metadata.labels";
+		String url = baseUrl + "/rest/api/content/" + pageId + "?expand=body.storage,space,metadata.labels,version";
 
 		try (CloseableHttpClient client = HttpClients.createDefault()) {
 
@@ -62,6 +63,7 @@ public class ConfluenceClient {
 			String html = root.path("body").path("storage").path("value").asText();
 			String webui = root.path("_links").path("webui").asText(null);
 			String pageUrl = (webui != null) ? baseUrl + webui : null;
+			String lastModified = root.path("version").path("when").asText(null);
 
 			List<String> labels = new ArrayList<>();
 			JsonNode labelResults = root.path("metadata").path("labels").path("results");
@@ -71,7 +73,7 @@ public class ConfluenceClient {
 				}
 			}
 
-			return new PageResponse(id, title, space, labels, clean(html), pageUrl);
+			return new PageResponse(id, title, space, labels, clean(html), pageUrl, lastModified);
 
 		} catch (Exception e) {
 			throw new RuntimeException("Failed to fetch page " + pageId, e);
@@ -173,9 +175,9 @@ public class ConfluenceClient {
 		String cleaned = html.replaceAll("(?s)<ac:[^>]+>.*?</ac:[^>]+>", "").replaceAll("(?s)<ri:[^>]+>.*?</ri:[^>]+>",
 				"");
 
-		if (cleaned.length() > MaxPageChars) {
-			logger.info("Page too long. Truncating to " + MaxPageChars + " characters.");
-			cleaned = cleaned.substring(0, MaxPageChars);
+		if (cleaned.length() > maxPageChars) {
+			logger.info("Page too long. Truncating to " + maxPageChars + " characters.");
+			cleaned = cleaned.substring(0, maxPageChars);
 		}
 
 		return cleaned;

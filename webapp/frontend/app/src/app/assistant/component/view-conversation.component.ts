@@ -61,10 +61,10 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 				this.assistantService.getAssistantForConversation(this.conversationId).subscribe((assistant: Assistant) => {
 
 					this.assistant = assistant;
+					this.contextSize = this.assistant.contextSize;
 
 					this.assistantService.models().subscribe(models => {
 						this.model = models.find(model => model.name.localeCompare(this.assistant.model) === 0);
-						this.contextSize = this.model.defaultContext;
 					});
 
 					if (this.assistant.hasMemory) {

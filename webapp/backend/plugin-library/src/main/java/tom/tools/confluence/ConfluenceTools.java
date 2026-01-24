@@ -13,14 +13,16 @@ import tom.api.model.services.ConfigurationConsumer;
 import tom.api.model.services.ServiceConsumer;
 import tom.api.services.PluginServices;
 import tom.api.tool.MintyTool;
-import tom.tasks.transform.confluence.ConfluenceClient;
+import tom.confluence.ConfluenceClient;
+import tom.confluence.model.ChildrenResponse;
+import tom.confluence.model.PageResponse;
+import tom.confluence.model.SearchRequest;
+import tom.confluence.model.SearchResponse;
 import tom.tasks.transform.confluence.ConfluenceQueryConfig;
-import tom.tasks.transform.confluence.model.ChildrenResponse;
-import tom.tasks.transform.confluence.model.PageResponse;
-import tom.tasks.transform.confluence.model.SearchRequest;
-import tom.tasks.transform.confluence.model.SearchResponse;
 
 public class ConfluenceTools implements MintyTool, ServiceConsumer, ConfigurationConsumer {
+
+	public static final String MaxPageChracters = "maxPageChars";
 
 	private static final Logger logger = LogManager.getLogger(ConfluenceTools.class);
 
@@ -29,6 +31,7 @@ public class ConfluenceTools implements MintyTool, ServiceConsumer, Configuratio
 	private boolean useBearerAuth;
 	private UserId userId;
 	private String confluenceUrl;
+	private int maxPageCharacters;
 	private ConfluenceClient confluenceClient;
 
 	@Override
@@ -38,8 +41,12 @@ public class ConfluenceTools implements MintyTool, ServiceConsumer, Configuratio
 					.get(ConfluenceQueryConfig.AccessToken);
 		}
 
-		String username = pluginServices.getUserService().getUsernameFromId(userId);
-		this.confluenceClient = new ConfluenceClient(confluenceUrl, username, accessToken, useBearerAuth);
+		String username = pluginServices.getUserService().getUserDefaults(userId).get(ConfluenceQueryConfig.Username);
+		if (username == null) {
+			username = "";
+		}
+		this.confluenceClient = new ConfluenceClient(confluenceUrl, username, accessToken, useBearerAuth,
+				maxPageCharacters);
 	}
 
 	@Override
@@ -63,7 +70,7 @@ public class ConfluenceTools implements MintyTool, ServiceConsumer, Configuratio
 	}
 
 	@Override
-	public void setProperties(Map<String, String> systemProperties, Map<String, String> userProperties) {
+	public void setProperties(Map<String, String> systemProperties) {
 		if (!systemProperties.containsKey(ConfluenceQueryConfig.BaseURL)) {
 			throw new PropertyNotFoundException(ConfluenceQueryConfig.BaseURL);
 		}
@@ -73,6 +80,13 @@ public class ConfluenceTools implements MintyTool, ServiceConsumer, Configuratio
 			throw new PropertyNotFoundException(ConfluenceQueryConfig.UseBearerAuth);
 		}
 		useBearerAuth = Boolean.parseBoolean(systemProperties.get(ConfluenceQueryConfig.UseBearerAuth));
+	}
+
+	@Override
+	public void setPluginConfiguration(Map<String, Object> pluginConfiguration) {
+		if (pluginConfiguration.containsKey(MaxPageChracters)) {
+			maxPageCharacters = Integer.parseInt(pluginConfiguration.get(MaxPageChracters).toString());
+		}
 	}
 
 	@Tool(name = "confluence_search_pages", description = "Search Confluence pages by keyword when you do not know the page id. Returns page ids, titles, and snippets.")

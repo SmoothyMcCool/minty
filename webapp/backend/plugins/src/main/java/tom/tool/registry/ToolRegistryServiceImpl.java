@@ -17,6 +17,7 @@ import tom.api.services.PluginServices;
 import tom.api.tool.MintyTool;
 import tom.config.MintyConfiguration;
 import tom.config.MintyConfigurationImpl;
+import tom.config.model.PluginConfig;
 import tom.tool.model.MintyToolDescription;
 
 @Service
@@ -46,13 +47,19 @@ public class ToolRegistryServiceImpl implements ToolRegistryService {
 
 			Class<?> clazz = tools.get(toolName);
 			MintyTool o = (MintyTool) clazz.getDeclaredConstructor().newInstance();
+
+			PluginConfig pluginConfig = configuration.getConfig().pluginConfiguration().stream()
+					.filter(config -> config.name().equals(o.getClass().getSimpleName())).findFirst().orElse(null);
+			if (pluginConfig != null) {
+				o.setPluginConfiguration(pluginConfig.configuration());
+			}
+
 			if (o instanceof ServiceConsumer) {
 				((ServiceConsumer) o).setPluginServices(pluginServices);
 				((ServiceConsumer) o).setUserId(userId);
 			}
 			if (o instanceof ConfigurationConsumer) {
-				((ConfigurationConsumer) o).setProperties(configuration.getSystemDefaults(),
-						configuration.getUserDefaults());
+				((ConfigurationConsumer) o).setProperties(configuration.getSystemDefaults());
 			}
 			o.initialize();
 			return o;

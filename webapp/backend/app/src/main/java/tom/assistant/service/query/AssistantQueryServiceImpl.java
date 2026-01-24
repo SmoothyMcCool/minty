@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -21,6 +22,7 @@ import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.AssistantMessage.ToolCall;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.metadata.Usage;
@@ -41,7 +43,6 @@ import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PreDestroy;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.SignalType;
 import tom.api.ConversationId;
 import tom.api.UserId;
 import tom.api.model.assistant.Assistant;
@@ -254,6 +255,8 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			List<ToolCall> toolCalls = new ArrayList<>();
 			Set<String> docsUsed = new HashSet<>();
 
+			AtomicBoolean failed = new AtomicBoolean(false);
+
 			responses.doOnNext(chatClientResponse -> {
 
 				ChatResponse chatResponse = chatClientResponse.chatResponse();
@@ -261,7 +264,11 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 					return;
 				}
 
-				String chunk = chatResponse.getResult().getOutput().getText();
+				AssistantMessage chunk = chatResponse.getResult().getOutput();
+				if (chunk != null && chunk.getText() != null) {
+					sr.addChunk(chunk.getText());
+				}
+
 				if (chatResponse.hasToolCalls()) {
 					toolCalls.addAll(chatResponse.getResult().getOutput().getToolCalls());
 				}
@@ -275,18 +282,17 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 					});
 				}
 
-				if (chunk != null) {
-					sr.addChunk(chunk);
-				}
-
 				usage.set(chatResponse.getMetadata().getUsage());
 
-			}).doOnError(e -> {
-				logger.warn("Streaming failed for conversation {}", request.getQuery().getConversationId(), e);
 			}).onErrorResume(e -> {
+				failed.set(true);
 				return Flux.empty();
 			}).doFinally(signalType -> {
 				try {
+					if (failed.get()) {
+						sr.addChunk("Failed to generate response.");
+					}
+
 					if (usage.get() != null) {
 						sr.addUsage(new LlmMetric(usage.get().getPromptTokens(), usage.get().getCompletionTokens()));
 					}
@@ -295,12 +301,8 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 						sr.addSources(new ArrayList<>(docsUsed));
 					}
 
-					if (signalType == SignalType.ON_ERROR) {
-						sr.addChunk("Failed to generate response.");
-					}
-
-					sr.markComplete();
 				} finally {
+					sr.markComplete();
 					results.remove(request.getQuery().getConversationId());
 				}
 			}).subscribe();
