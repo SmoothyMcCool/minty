@@ -4,6 +4,6 @@ import java.util.Map;
 
 public interface ConfigurationConsumer {
 
-	void setProperties(Map<String, String> systemProperties, Map<String, String> userProperties);
+	void setProperties(Map<String, String> systemProperties);
 
 }

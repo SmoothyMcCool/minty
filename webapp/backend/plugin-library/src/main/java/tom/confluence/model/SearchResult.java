@@ -1,4 +1,4 @@
-package tom.tasks.transform.confluence.model;
+package tom.confluence.model;
 
 public class SearchResult {
 

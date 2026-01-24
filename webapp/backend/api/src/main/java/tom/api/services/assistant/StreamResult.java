@@ -4,13 +4,15 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 public final class StreamResult implements LlmResult {
 
 	private final BlockingQueue<String> chunks = new LinkedBlockingQueue<>();
-	private LlmMetric metric = null;
-	private List<String> sources = null;
-	private volatile boolean complete = false;
+	private AtomicReference<LlmMetric> metric = new AtomicReference<>();
+	private AtomicReference<List<String>> sources = new AtomicReference<>();
+	private final AtomicBoolean complete = new AtomicBoolean(false);
 
 	public StreamResult() {
 	}
@@ -33,27 +35,27 @@ public final class StreamResult implements LlmResult {
 		}
 	}
 
-	public void markComplete() {
-		complete = true;
+	public boolean markComplete() {
+		return complete.compareAndSet(false, true);
 	}
 
 	public boolean isComplete() {
-		return complete && chunks.isEmpty();
+		return complete.get() && chunks.isEmpty();
 	}
 
 	public void addUsage(LlmMetric llmMetric) {
-		metric = llmMetric;
+		metric.set(llmMetric);
 	}
 
 	public LlmMetric getUsage() {
-		return metric;
+		return metric.get();
 	}
 
 	public List<String> getSources() {
-		return sources;
+		return sources.get();
 	}
 
 	public void addSources(List<String> docsUsed) {
-		sources = docsUsed;
+		sources.set(List.copyOf(docsUsed));
 	}
 }

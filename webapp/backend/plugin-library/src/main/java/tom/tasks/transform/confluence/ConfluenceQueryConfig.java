@@ -20,12 +20,14 @@ public class ConfluenceQueryConfig implements TaskConfigSpec {
 	public static final String AccessToken = "Confluence Access Token";
 	public static final String BaseURL = "Confluence Base URL";
 	public static final String UseBearerAuth = "Confluence Use Bearer Authorization";
+	public static final String MaxPageCharacters = "Maximum Characters to Read from Page";
 
 	private List<String> pages;
 	private String username;
 	private String apiKey;
 	private String baseUrl;
 	private Boolean useBearerAuth;
+	private int maxPageChars;
 
 	public ConfluenceQueryConfig() {
 		pages = List.of();
@@ -33,6 +35,7 @@ public class ConfluenceQueryConfig implements TaskConfigSpec {
 		apiKey = "";
 		baseUrl = "";
 		useBearerAuth = false;
+		maxPageChars = 20000;
 	}
 
 	public ConfluenceQueryConfig(Map<String, Object> config) throws JsonMappingException, JsonProcessingException {
@@ -52,6 +55,9 @@ public class ConfluenceQueryConfig implements TaskConfigSpec {
 		if (config.containsKey(UseBearerAuth)) {
 			useBearerAuth = Boolean.getBoolean(config.get(UseBearerAuth).toString());
 		}
+		if (config.containsKey(MaxPageCharacters)) {
+			maxPageChars = Integer.getInteger(config.get(MaxPageCharacters).toString());
+		}
 	}
 
 	@Override
@@ -62,6 +68,7 @@ public class ConfluenceQueryConfig implements TaskConfigSpec {
 		cfg.put(Username, TaskConfigTypes.String);
 		cfg.put(AccessToken, TaskConfigTypes.String);
 		cfg.put(UseBearerAuth, TaskConfigTypes.Boolean);
+		cfg.put(MaxPageCharacters, TaskConfigTypes.Number);
 		return cfg;
 	}
 
@@ -93,6 +100,10 @@ public class ConfluenceQueryConfig implements TaskConfigSpec {
 
 	public Boolean getUseBearerAuth() {
 		return useBearerAuth;
+	}
+
+	public int getMaxPageCharacters() {
+		return maxPageChars;
 	}
 
 	public void updateFrom(Map<String, Object> obj) throws JsonMappingException, JsonProcessingException {

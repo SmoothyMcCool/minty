@@ -1,4 +1,4 @@
-package tom.tasks.transform.confluence.model;
+package tom.confluence.model;
 
 import java.util.List;
 
@@ -10,19 +10,22 @@ public class PageResponse {
 	private List<String> labels;
 	private String bodyText;
 	private String url;
+	private String lastModified;
 
 	// No-arg constructor
 	public PageResponse() {
 	}
 
 	// All-args constructor
-	public PageResponse(String id, String title, String space, List<String> labels, String bodyText, String url) {
+	public PageResponse(String id, String title, String space, List<String> labels, String bodyText, String url,
+			String lastModified) {
 		this.id = id;
 		this.title = title;
 		this.space = space;
 		this.labels = labels;
 		this.bodyText = bodyText;
 		this.url = url;
+		this.lastModified = lastModified;
 	}
 
 	// Getters and setters
@@ -73,4 +76,13 @@ public class PageResponse {
 	public void setUrl(String url) {
 		this.url = url;
 	}
+
+	public String getLastModified() {
+		return lastModified;
+	}
+
+	public void setLastModified(String lastModified) {
+		this.lastModified = lastModified;
+	}
+
 }

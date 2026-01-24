@@ -1,4 +1,4 @@
-package tom.tasks.transform.confluence.model;
+package tom.confluence.model;
 
 import org.springframework.ai.tool.annotation.ToolParam;
 
