@@ -1,6 +1,7 @@
 # Output configuration
+# Use MINTY_DATA_DIR env var for Docker, defaults to d:/projects/Minty for local dev
 output:
-  directory: d:/projects/Minty
+  directory: ${MINTY_DATA_DIR:d:/projects/Minty}
 
 # Session settings
 session:
@@ -15,19 +16,21 @@ fileStores:
   pug: ${output.directory}/working/pug
 
 # Database configuration
+# Use MINTY_DB_* env vars for Docker, defaults for local dev
 db:
   #url=jdbc:mariadb://localhost:3306/Minty
-  url: jdbc:mariadb://192.168.2.54:3306/Minty
+  url: ${MINTY_DB_URL:jdbc:mariadb://192.168.2.54:3306/Minty}
   port: 3306
   name: Minty
-  user: MintyUser
-  password: hothamcakes
+  user: ${MINTY_DB_USER:MintyUser}
+  password: ${MINTY_DB_PASSWORD:hothamcakes}
   maxPacketSize: 1073741824
   useCompression: true
 
 # LLM Parameters
+# Use MINTY_OLLAMA_URI env var for Docker, defaults to localhost for local dev
 ollama:
-  uri: http://localhost:11434
+  uri: ${MINTY_OLLAMA_URI:http://localhost:11434}
   defaultModel: gpt-oss:20b
   chatModels:
     - name: gemma3:4b

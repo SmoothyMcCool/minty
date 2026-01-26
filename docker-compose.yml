@@ -1,0 +1,115 @@
+services:
+  # ===========================================
+  # Minty Application (Tomcat + Spring)
+  # ===========================================
+  minty:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: minty-app
+    ports:
+      - "8080:8080"
+    environment:
+      # Database configuration
+      - MINTY_DB_URL=jdbc:mariadb://mariadb:3306/Minty
+      - MINTY_DB_USER=MintyUser
+      - MINTY_DB_PASSWORD=hothamcakes
+      # Ollama configuration
+      - MINTY_OLLAMA_URI=http://ollama:11434
+      # Data directory (matches volume mount)
+      - MINTY_DATA_DIR=/app/data
+    volumes:
+      # Persistent data storage
+      - minty-data:/app/data
+      # Optional: Mount custom config to override defaults
+      # - ./config/application.yaml:/usr/local/tomcat/conf/Minty/application.yaml:ro
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    networks:
+      - minty-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/Minty/api/login"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  # ===========================================
+  # MariaDB Database (11.8+ for vector store)
+  # ===========================================
+  mariadb:
+    image: mariadb:11.8
+    container_name: minty-mariadb
+    environment:
+      - MYSQL_ROOT_PASSWORD=minty_root_password_change_me
+      - MYSQL_DATABASE=Minty
+      - MYSQL_USER=MintyUser
+      - MYSQL_PASSWORD=hothamcakes
+    volumes:
+      # Persistent database storage
+      - mariadb-data:/var/lib/mysql
+      # Database initialization scripts (runs on first start only)
+      - ./docker/init-db:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "3306:3306"
+    networks:
+      - minty-network
+    restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --max_allowed_packet=1073741824
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ===========================================
+  # Ollama LLM Server
+  # ===========================================
+  ollama:
+    image: ollama/ollama:latest
+    container_name: minty-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      # Persistent model storage
+      - ollama-models:/root/.ollama
+    networks:
+      - minty-network
+    restart: unless-stopped
+    # Uncomment for GPU support (NVIDIA)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+# ===========================================
+# Networks
+# ===========================================
+networks:
+  minty-network:
+    driver: bridge
+
+# ===========================================
+# Volumes
+# ===========================================
+volumes:
+  # Application data (documents, plugins, logs, templates)
+  minty-data:
+    driver: local
+  # Database storage
+  mariadb-data:
+    driver: local
+  # Ollama models
+  ollama-models:
+    driver: local
