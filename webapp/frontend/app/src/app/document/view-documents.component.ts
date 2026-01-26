@@ -44,7 +44,7 @@ export class ViewDocumentsComponent implements OnInit, OnDestroy {
 	};
 
 	private subscription: Subscription;
-	private filter: string;
+	filter: string;
 
 	constructor(private documentService: DocumentService,
 		private userService: UserService,

@@ -1,5 +1,6 @@
 export interface Model {
 	name: string,
 	defaultContext: number,
-	maximumContext: number
+	maximumContext: number,
+	imageSupport: boolean
 };
