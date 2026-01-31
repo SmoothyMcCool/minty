@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,6 +29,8 @@ import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.content.Media;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.model.tool.DefaultToolCallingManager;
+import org.springframework.ai.model.tool.ToolCallingManager;
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.ollama.api.OllamaApi;
 import org.springframework.ai.ollama.api.OllamaChatOptions;
@@ -59,6 +61,8 @@ import tom.api.services.assistant.StringResult;
 import tom.config.MintyConfiguration;
 import tom.config.model.ChatModelConfig;
 import tom.ollama.service.OllamaService;
+import tom.tool.auditing.AuditingToolCallingManager;
+import tom.tool.auditing.ToolExecutionContext;
 import tom.tool.registry.ToolRegistryService;
 import tom.user.model.User;
 import tom.user.service.UserServiceInternal;
@@ -77,6 +81,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	private final ThreadPoolTaskExecutor llmExecutor;
 	private final Map<ConversationId, LlmResult> results;
 	private final List<ChatModelConfig> modelConfigs;
+	private final ToolCallingManager defaultToolCallingManager;
 
 	public AssistantQueryServiceImpl(AssistantManagementService assistantManagementService, OllamaService ollamaService,
 			OllamaApi ollamaApi, UserServiceInternal userService, ToolRegistryService toolRegistryService,
@@ -89,11 +94,13 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		this.llmExecutor = llmExecutor;
 		this.results = new ConcurrentHashMap<>();
 		this.modelConfigs = properties.getConfig().ollama().chatModels();
+		defaultToolCallingManager = DefaultToolCallingManager.builder().build();
 	}
 
 	@PreDestroy
 	public void shutdown() {
-		llmExecutor.initiateShutdown();
+		llmExecutor.setWaitForTasksToCompleteOnShutdown(true);
+		llmExecutor.shutdown();
 	}
 
 	@Override
@@ -126,7 +133,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		try {
 			String result = "";
 
-			User user = userService.getUserFromId(request.getUserId()).get();
+			User user = userService.getUserFromId(request.getUserId()).orElseThrow();
 
 			ChatClientRequestSpec spec = prepareFromQuery(user, request.getQuery());
 
@@ -188,28 +195,25 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 
 		LlmResult result = null;
 
-		synchronized (results) {
-			result = results.get(requestId);
+		result = results.get(requestId);
 
-			// We can't actually put null into the concurrent hashmap so we fake it.
-			if (result == LlmResult.IN_PROGRESS) {
-				return result;
-			}
-
-			if (result instanceof StringResult) {
-				results.remove(requestId);
-			} else {
-				StreamResult sr = (StreamResult) result;
-				if (sr == null) {
-					logger.warn("StreamResult is null!");
-					return null;
-				}
-				if (sr.isComplete()) {
-					results.remove(requestId);
-				}
-			}
+		// We can't actually put null into the concurrent hashmap so we fake it.
+		if (result == LlmResult.IN_PROGRESS) {
+			return result;
 		}
 
+		if (result instanceof StringResult) {
+			results.remove(requestId);
+		} else {
+			StreamResult sr = (StreamResult) result;
+			if (sr == null) {
+				logger.warn("StreamResult is null!");
+				return null;
+			}
+			if (sr.isComplete()) {
+				results.remove(requestId);
+			}
+		}
 		return result;
 	}
 
@@ -218,9 +222,10 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		BlockingQueue<Runnable> queue = llmExecutor.getThreadPoolExecutor().getQueue();
 		int index = 1;
 		for (Runnable r : queue) {
-			LlmRequest req = (LlmRequest) r;
-			if (req.getQuery().getConversationId().equals(streamId)) {
-				return index;
+			if (r instanceof LlmRequest req) {
+				if (req.getQuery().getConversationId().equals(streamId)) {
+					return index;
+				}
 			}
 			index++;
 		}
@@ -236,8 +241,18 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 
 	private void askStreamingInternal(LlmRequest request) {
 		StreamResult sr = new StreamResult();
+		String contextKey = request.getQuery().getConversationId().getValue().toString();
 
 		try {
+
+			Map<String, String> params = Map.of(ToolExecutionContext.ASSISTANT_ID,
+					request.getQuery().getAssistantSpec().getAssistantId().getValue().toString(),
+					ToolExecutionContext.REQUEST_ID,
+					request.getQuery().getConversationId() == null ? null
+							: request.getQuery().getConversationId().getValue().toString(),
+					ToolExecutionContext.USER_ID, request.getUserId().getValue().toString());
+			ToolExecutionContext.set(contextKey, params);
+
 			User user = userService.getUserFromId(request.getUserId()).get();
 
 			results.put(request.getQuery().getConversationId(), sr);
@@ -277,7 +292,6 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 						.get(QuestionAnswerAdvisor.RETRIEVED_DOCUMENTS);
 				if (docs != null && !docs.isEmpty()) {
 					docs.forEach(doc -> {
-						logger.info("found source " + doc.getMetadata().get("source"));
 						docsUsed.add((String) doc.getMetadata().get("source"));
 					});
 				}
@@ -304,6 +318,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 				} finally {
 					sr.markComplete();
 					results.remove(request.getQuery().getConversationId());
+					ToolExecutionContext.getAndClear(contextKey);
 				}
 			}).subscribe();
 
@@ -319,6 +334,12 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	}
 
 	private ChatClientRequestSpec prepareFromQuery(User user, AssistantQuery query) {
+
+		Objects.requireNonNull(user, "user must not be null");
+		Objects.requireNonNull(query, "query must not be null");
+		Objects.requireNonNull(query.getConversationId(), "query.conversationId must not be null");
+		Objects.requireNonNull(query.getAssistantSpec(), "query.assistantSpec must not be null");
+
 		AssistantSpec assistantSpec = query.getAssistantSpec();
 		Assistant assistant = assistantSpec.useId()
 				? assistantManagementService.findAssistant(user.getId(), assistantSpec.getAssistantId())
@@ -330,23 +351,52 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			return null;
 		}
 
-		Media image = null;
+		List<Media> images = new ArrayList<>();
 		if (query.getContentType() != null) {
-			image = new Media(MediaType.parseMediaType(query.getContentType()), query.getImageData());
+			images.add(new Media(MediaType.parseMediaType(query.getContentType()), query.getImageData()));
 		}
 
-		int contextSize = query.getContextSize() == 0 ? assistant.contextSize() : query.getContextSize();
-		return prepare(user, query.getQuery(), contextSize, query.getConversationId(), assistant, image);
+		ChatClient chatClient = buildChatClient(assistant, computeContextSize(assistant, query), query);
+
+		UserMessage message = UserMessage.builder().text(query.getQuery()).media(images).build();
+
+		ChatClientRequestSpec spec = chatClient.prompt();
+		if (!assistant.prompt().isBlank()) {
+			spec = spec.system(assistant.prompt());
+		}
+
+		if (assistant.hasMemory()) {
+			spec = spec
+					.advisors(a -> a.param(ChatMemory.CONVERSATION_ID, query.getConversationId().value().toString()));
+		}
+
+		spec = spec.messages(List.of(message));
+
+		if (!assistant.tools().isEmpty()) {
+			List<Object> tools = assistant.tools().stream()
+					.map(toolName -> toolRegistryService.getTool(toolName, user.getId())).filter(Objects::nonNull)
+					.toList();
+			spec.tools(tools.toArray());
+		}
+
+		return spec;
 	}
 
-	private ChatClientRequestSpec prepare(User user, String query, int contextSize, ConversationId conversationId,
-			Assistant assistant, Media image) {
+	private ChatClient buildChatClient(Assistant assistant, int contextSize, AssistantQuery query) {
+		OllamaChatOptions chatOptions = OllamaChatOptions.builder().model(assistant.model())
+				.temperature(assistant.temperature()).topK(assistant.topK()).numCtx(contextSize).build();
 
-		String model = assistant.model();
+		OllamaChatModel chatModel = OllamaChatModel.builder().ollamaApi(ollamaApi)
+				.toolCallingManager(new AuditingToolCallingManager(query.getConversationId().getValue().toString(),
+						defaultToolCallingManager))
+				.defaultOptions(chatOptions).build();
 
-		OllamaChatModel chatModel = OllamaChatModel.builder().ollamaApi(ollamaApi).defaultOptions(OllamaChatOptions
-				.builder().model(model).temperature(assistant.temperature()).topK(assistant.topK()).build()).build();
+		List<Advisor> advisors = buildAdvistorList(assistant, query.getConversationId(), query.getQuery());
 
+		return ChatClient.builder(chatModel).defaultAdvisors(advisors).defaultOptions(chatOptions).build();
+	}
+
+	private List<Advisor> buildAdvistorList(Assistant assistant, ConversationId conversationId, String query) {
 		List<Advisor> advisors = new ArrayList<>();
 
 		if (assistant.hasMemory() && conversationId != null) {
@@ -354,15 +404,15 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			advisors.add(MessageChatMemoryAdvisor.builder(chatMemory).build());
 		}
 
-		if (assistant.documentIds().size() > 0) {
+		if (!assistant.documentIds().isEmpty()) {
 			VectorStore vectorStore = ollamaService.getVectorStore();
 
-			String documentList = assistant.documentIds().stream().map(s -> "\"" + s.getValue().toString() + "\"")
+			String documentIds = assistant.documentIds().stream().map(s -> "\"" + s.getValue().toString() + "\"")
 					.collect(Collectors.joining(", ", "[ ", " ]"));
 
 			Builder searchRequestBuilder = SearchRequest.builder().query(query);
-			if (documentList.length() > 0) {
-				searchRequestBuilder = searchRequestBuilder.filterExpression(" documentId IN " + documentList);
+			if (!documentIds.isEmpty()) {
+				searchRequestBuilder = searchRequestBuilder.filterExpression("documentId IN " + documentIds);
 			}
 			SearchRequest searchRequest = searchRequestBuilder.topK(assistant.topK()).build();
 
@@ -370,49 +420,15 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			advisors.add(ragAdvisor);
 		}
 
-		Optional<ChatModelConfig> config = modelConfigs.stream().filter(item -> item.name().equals(assistant.model()))
-				.findFirst();
-		if (config.isPresent()) {
-			if (contextSize < config.get().defaultContext()) {
-				contextSize = config.get().defaultContext();
-			} else if (contextSize > config.get().maximumContext()) {
-				contextSize = config.get().maximumContext();
-			}
-		}
-
-		OllamaChatOptions o = OllamaChatOptions.builder().numCtx(contextSize).build();
-		ChatClient chatClient = ChatClient.builder(chatModel).defaultAdvisors(advisors).defaultOptions(o).build();
-
-		ChatClientRequestSpec spec;
-
-		org.springframework.ai.chat.messages.UserMessage.Builder message = UserMessage.builder().text(query);
-		if (image != null) {
-			message.media(List.of(image));
-		}
-
-		spec = chatClient.prompt();
-		if (!assistant.prompt().isBlank()) {
-			spec = spec.system(assistant.prompt());
-		}
-
-		if (assistant.hasMemory() && conversationId != null) {
-
-			if (conversationId != null) {
-				final ConversationId finalConversationId = conversationId;
-				spec = spec.advisors(a -> a.param(ChatMemory.CONVERSATION_ID, finalConversationId.value().toString()));
-			}
-		}
-
-		spec = spec.messages(List.of(message.build()));
-
-		for (String toolName : assistant.tools()) {
-			Object tc = toolRegistryService.getTool(toolName, user.getId());
-			if (tc != null) {
-				spec.tools(tc);
-			}
-		}
-
-		return spec;
+		return advisors;
 	}
 
+	private int computeContextSize(Assistant assistant, AssistantQuery query) {
+		int baseSize = query.getContextSize() == 0 ? assistant.contextSize() : query.getContextSize();
+
+		return modelConfigs.stream().filter(item -> item.name().equals(assistant.model())).findFirst()
+				.map(config -> Math.min(Math.max(baseSize, config.defaultContext()), config.maximumContext()))
+				.orElse(baseSize);
+
+	}
 }

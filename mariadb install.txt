@@ -36,7 +36,7 @@ sudo mariadb -u root -p -h localhost
 >>>Default password is just blank
 
 
-Edit config file:
+Edit config file. Here are some common locations:
 C:\ProgramData\MySQL\MySQL Server X.X\my.ini
 /etc/mysql/my.cnf, /etc/my.cnf, /usr/local/etc/my.cnf
 
@@ -44,11 +44,21 @@ C:\ProgramData\MySQL\MySQL Server X.X\my.ini
 max_allowed_packet = 1073741824  # 1GB
 
 
->>> Make the database;
+Open the server to accept connections from any IP
+	sudo nano /etc/mysql/mariadb.conf.d/50-server.cnf
+change
+	bind-address = 127.0.0.1
+to
+	bind-address = 0.0.0.0
+to allow access from any IP
+Save and quit, then:
+	sudo systemctl restart mariadb
+
+
+Run the following commands in your favourite DB Admin tool. Note the user creation commands at the bottom. Change the passwords as you see fit. You will have to update application.yaml to match.
+
 CREATE DATABASE Minty;
 
-
->>> Create the tables for Minty Assistants
 USE Minty;
 CREATE TABLE IF NOT EXISTS Assistant (
 	id UUID NOT NULL,
@@ -168,12 +178,6 @@ CREATE TABLE IF NOT EXISTS Project (
 	name TEXT,
 	PRIMARY KEY (id)
 );
-CREATE TABLE IF NOT EXISTS Project (
-	id UUID NOT NULL,
-	ownerId UUID,
-	name TEXT,
-	PRIMARY KEY (id)
-);
 CREATE TABLE IF NOT EXISTS ProjectNode (
 	id UUID NOT NULL,
 	projectId UUID,
@@ -194,7 +198,6 @@ CREATE TABLE IF NOT EXISTS vector_store (
 	meta JSON
 );
 
--- Create tables for Spring Session
 CREATE TABLE SPRING_SESSION (
 	PRIMARY_ID CHAR(36) NOT NULL,
 	SESSION_ID CHAR(36) NOT NULL,
@@ -218,23 +221,8 @@ CREATE TABLE SPRING_SESSION_ATTRIBUTES (
 	CONSTRAINT SPRING_SESSION_ATTRIBUTES_FK FOREIGN KEY (SESSION_PRIMARY_ID) REFERENCES SPRING_SESSION(PRIMARY_ID) ON DELETE CASCADE
 ) ENGINE=InnoDB ROW_FORMAT=DYNAMIC;
 
--- create user with super open privileges to do anything from anywhere
 CREATE USER IF NOT EXISTS 'vectorUser'@'%' IDENTIFIED BY 'Password123';
 GRANT ALL PRIVILEGES ON *.* TO 'vectorUser'@'%' WITH GRANT OPTION;
 CREATE USER IF NOT EXISTS 'MintyUser'@'%' IDENTIFIED BY 'hothamcakes';
 GRANT ALL PRIVILEGES ON *.* TO 'MintyUser'@'%' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
-
-
-
-
-
->>> Open the server to accept connections from any IP
-sudo nano /etc/mysql/mariadb.conf.d/50-server.cnf
->>>change
->>>		bind-address = 127.0.0.1
->>>to
->>>		bind-address = 0.0.0.0
->>>to allow access from any IP
-
-sudo systemctl restart mariadb
