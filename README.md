@@ -1,297 +1,205 @@
 # minty
 Modular Intelligence for Next-gen Tasking by You
 
-## Builds
+# Installing, Configuring and Running
 
-### Prerequisites
+> **Note:** The instructions below assume a specific local setup.
+> Adjust the paths, IP addresses and other values to match your own environment.
 
-#### For Building
+---
 
-The build environment requires (or at least my build environment uses):
-- Angular 19 and prerequisites: https://v19.angular.dev/installation
-- Maven 3.9
-- Java 21 JDK
+## Assumptions
 
-#### For Running
+| Item | Description |
+|------|-------------|
+| **MariaDB** | Runs in its own VM (or locally). |
+| **Ollama** | Latest version installed. |
+| **Apache Maven** | 3.9, `mvn` in `PATH`. |
+| **Java** | 21 + (Java 24 upgrade will be coming soon). |
+| **DBeaver** | DB administration tool. |
+| **Tomcat** | Use version 11. Installed in `d:\projects\Tomcat`. |
+| **Minty code** | Located in `d:\projects\Minty`. |
+| **IDE** | Spring Tool Suite (STS) for Java; VS Code for TypeScript. |
+| **Mvn4w** | Provides Node.js/NPM environment. |
 
-Make sure you have the following software installed in order to run Minty:
-- MariaDB 11.8 or newer is required in order to be able to host the document vector store.
-- Tomcat 11.
-- An Ollama instance to connect to.
+> If you **don’t** run Tomcat and NPM locally, you’ll need to enable HTTPS in Tomcat and adjust your Angular setup accordingly.
+> Without HTTPS, browser calls to the Web Crypto API will fail, breaking Minty functionality.
+> See: <https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API>
 
-### Build
+---
 
-#### For Development
+## Tomcat
 
-The build assumes that Tomcat is installed in D:\projects\Tomcat. It will automatically place the built war file in the webapps folder here.
-Customize your Tomcat location at D:\projects\Minty-GitHub\webapp\backend\bundle\pom.xml: outputDirectory element
+1. **Download & unzip** Apache Tomcat into `d:\projects\Tomcat`.
+2. If you want debugging from Eclipse/STS, edit the startup script:
 
-It's also assumed that Tomcat is running on port 8080.
+```bat
+:: Tomcat/bin/startup.bat(Windows) or Tomcat/bin/startup.sh (Linux)
+...
+:doneSetArgs
 
-Frontend (Angular CLI)
+JPDA_OPTS="-agentlib:jdwp=transport=dt_socket,address=8000,server=y,suspend=n"
+
+call "%EXECUTABLE%" jpda start %CMD_LINE_ARGS%
+
+:end
 ```
-webapp\frontend\app\ng serve --proxy-config proxy.conf.json
+
+---
+
+## Source Code
+
+Clone or download the Minty source to `d:\projects\Minty`.
+
+---
+
+## Database
+
+I run MariaDB in a Ubuntu VM, but a local installation works fine.
+
+1. Install MariaDB following the instructions in `mariadb install.txt`.
+2. If you run MariaDB locally, you won’t need to tweak the database settings for non‑local access.
+
+---
+
+## Minty Development Setup
+
+Create a working folder, e.g.:
+
+```
+d:\projects\Minty\working
 ```
 
-Backend (Tomcat Webapp):
-Install parent into your local .m2:
-```webapp\backend\parent\mvn install```
-Install task jar into your local .m2:
-```webapp\backend\task\mvn install```
-Build the App:
-```webapp\backend\solution\mvn install```
+### Importing Projects into STS
 
-Now build any task jars you've written, and copy them to the directory specified by the "taskLibrary" property (see Configuration below).
+1. **Right‑click** the *Package Explorer* → **Import…** → **Existing Maven Projects** → **Next**.
+2. Browse to `{minty code location}/webapp/backend/solution`.
+3. Select the folder, check *Select All*, then **Finish**.
+4. Repeat for `{minty code location}/webapp/backend/parent`.
 
-#### For Deployment
+### Configuring the `bundle` Project
 
-Build frontend for production:
-Change webapp\frontend\app\src\index.html:
+Edit `src/main/resources/application.yaml`:
+
+| Property | Purpose | Example |
+|----------|---------|---------|
+| `output.directory` | Path to the working folder | `d:/projects/Minty` |
+| `db.url` | MariaDB JDBC URL (update IP) | `jdbc:mariadb://localhost:3306/Minty` |
+| `db.password` | DB password | `yourPassword` |
+| `ollama.uri` | Ollama endpoint | `http://localhost:11434` |
+| `ollama.chatmodels` | List of chat models | See application.yaml |
+| `ollama.defaultModel` | Default chat model | `gpt-oss:20b` |
+| `ollama.conversationNamingModel` | Model for conversation titles | `gemma3:4b` |
+| `ollama.embedding.model` | Embedding model | `nomic-embed-text` |
+| `secret` | Decryption key for DB | `superSecretKey` |
+
+> If you change `secret`, you must reinstall the database or data will become unreadable.
+
+### Configuring the `parent` Project
+
+Edit `pom.xml`:
+
+| Property | Purpose | Example |
+|----------|---------|---------|
+| `<output.directory>` | Must match `application.yaml` | `d:/projects/Minty` |
+| `<tomcat.base>` | Path to your Tomcat installation | `d:/projects/Tomcat` |
+
+> The Minty WAR will be assembled and automatically deployed to Tomcat.
+
+---
+
+## Frontend Build
+
+Open a terminal (e.g., Git Bash) and navigate:
+
+```bash
+cd {Minty code location}/webapp/frontend
 ```
-Change base href from
-<base href="/">
-to
+
+### Production Build
+
+```bash
+ng build
+```
+
+* The built assets are placed into the backend’s **bundle**.
+* If you’re deploying this way, build the frontend **before** the backend so that the WAR automatically contains the frontend.
+
+> **Important:** Edit `webapp/frontend/deploy/index.html`:
+
+```html
 <base href="/Minty/">
 ```
 
-Run the solution POM. This will automatically bundle in the Angular build.
-```
-```webapp\backend\solution\mvn install```
-```
+> (Change from `<base href="/">`.)
 
-## Configuration
+### Local Debug / Test
 
-All config is stored in **vwebapp\backend\bundle\src\main\resources\application.properties**. Fill your boots
-
-## Defining Your Own Workflows
-
-Make a new project that includes the parent and task JARs. Here is a sample POM:
-```
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-
-	<groupId>tvm.tasks</groupId>
-	<artifactId>tasklib</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	</properties>
-
-	<dependencies>
-
-		<!-- Mr. Ai-->
-		<dependency>
-			<groupId>tom.minty</groupId>
-			<artifactId>parent</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-			<type>pom</type>
-		</dependency>
-		<dependency>
-			<groupId>tom.minty</groupId>
-			<artifactId>task</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
-	</dependencies>
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.14.0</version>
-				<configuration>
-					<release>21</release>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-				<version>3.4.2</version>
-				<configuration>
-					<outputDirectory>D:/projects/Minty/taskLib</outputDirectory>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-resources-plugin</artifactId>
-				<version>3.3.1</version>
-				<executions>
-					<execution>
-						<id>copy-pug-templates</id>
-						<phase>install</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>D:/projects/Minty/taskLib</outputDirectory>
-							<resources>
-								<resource>
-									<directory>/src/main/resources/templates</directory>
-									<includes>
-										<include>*.pug</include>
-									</includes>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
-
-</project>
+```bash
+ng serve --proxy-config proxy.conf.json
 ```
 
-### Classes
+* Runs a local dev server that proxies API calls to the backend.
+* The server auto‑reloads on code changes.
+* You may need to adjust `proxy.conf.json` (e.g., switch from `http` to `https`).
 
-#### Public Workflows
-Workflows are run by implementing the ```tom.task.AiTask``` interface.
-If you want your workflow publicly available in the GUI, annotate your class with
-```@PublicWorkflow(name = "{{NameOfYourWorkflow}}", configClass = "classThatDefinesUserSelectableParameters")```
-If you would like to make use of the built-in services, implement the tom.task.ServiceConsumer interface.
+---
 
-Public workflows must implement:
-- default constructor
-- constructor that takes an instance of the specified configuration class.
+## Backend Build
 
-Put the work your task will do in the doWork() method. It will be scheduled to run in a thread pool. If you need to run child tasks, return a list of AiTask objects to be run.
-The order in which tasks run is not guaranteed.
+**Prerequisites (If building in STS):**
 
-#### Configuration
+- Maven runtime set to the one installed earlier.
+- Java 21 (or newer) as the JDK.
 
-Configuration classes hold all the user-selectable parameters for a task. Parameters can be:
-- number
-- string
-- Ai Assistant.
+**Commands**
 
-Configuration classes must implement logic in their constructors to read a ```Map<String, String>```.
-They must also implement a getConfig method that create a meta-object describing the required user configuraiton.
-Here is an example of a Config class that asks the user for two strings (a query ID, a prompt) and a pre-defined assistant to use:
-```
-package tom.tasks.TestTask;
+```bash
+# In {minty code location}/webapp/backend/parent
+mvn install
 
-import java.util.HashMap;
-import java.util.Map;
+# In {minty code location}/webapp/backend/api
+mvn install
 
-import tom.task.AiTaskConfig;
-import tom.task.AiTaskConfigTypes;
+# In {minty code location}/webapp/backend/solution
+mvn clean package
 
-public class TestTaskConfig implements AiTaskConfig {
-
-	private int assistant;
-	private String queryId;
-	private String prompt;
-
-	public AthenaTaskConfig() {
-		assistant = 0;
-		rqeryId = "";
-		prompt = "";
-	}
-
-	public AthenaTaskConfig(Map<String, String> config) {
-		assistant = Integer.parseInt(config.get("assistant"));
-		qeryId = config.get("Query ID");
-		prompt = config.get("prompt");
-	}
-
-	@Override
-	public Map<String, AiTaskConfigTypes> getConfig() {
-		Map<String, AiTaskConfigTypes> cfg = new HashMap<>();
-		cfg.put("assistant", AiTaskConfigTypes.AssistantIdentifier);
-		cfg.put("Query ID", AiTaskConfigTypes.String);
-		cfg.put("prompt", AiTaskConfigTypes.String);
-		return cfg;
-	}
-
-	public int getAssistant() {
-		return assistant;
-	}
-
-	public String getQueryId() {
-		return queryId;
-	}
-
-	public String getPrompt() {
-		return prompt;
-	}
-}
-
+# For any additional plugin projects
+mvn clean package
 ```
 
-#### Task Output
+> You only need to run `mvn install` for `parent` and `api` once, unless those projects change.
 
-Tasks define a pug HTML template file to format their output. Tasks must implement a getResult method that returns a Map<StringKey, StringValue> of data to be used to render the pug tempalte.
-If your task has children, be sure to return the results from children as well.
+---
 
-Here is an example of a Task:
+## Running the Backend
+
+```bash
+# From the Tomcat root
+{tomcat root}/bin/startup.bat
 ```
-package tom.tasks.athena;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+Tomcat will deploy the Minty WAR and redeploy automatically on rebuild.
 
-import tom.task.AiTask;
-import tom.task.ServiceConsumer;
-import tom.task.annotations.PublicWorkflow;
-import tom.task.model.AssistantQuery;
-import tom.task.services.TaskServices;
+---
 
-@PublicWorkflow(name = "TestTask", configClass = "tom.tasks.TestTask.TestTaskConfig")
-public class AthenaTask implements AiTask, ServiceConsumer {
+## Running the Frontend
 
-	private TaskServices taskServices;
-	private UUID uuid;
-	private String result;
-	private TestTaskConfig config;
-	private int userId;
+No additional steps are required beyond the build instructions above.
+If you used `ng serve`, the frontend will be available automatically.
 
-	public AthenaTask(TestTaskConfig data) {
-		config = data;
-	}
+---
 
-	@Override
-	public void setTaskServices(TaskServices taskServices) {
-		this.taskServices = taskServices;
-		uuid = UUID.randomUUID();
-	}
+## Accessing Minty
+For the Debug build, in your browser:
+`http://localhost:4200`
+This will access Minty via the Angular Web Server.
 
-	@Override
-	public String taskName() {
-		return "EvaluatePlan-" + uuid;
-	}
+If you did the production build:
+`http://<Tomcat Server IP>>:8080/Minty` for HTTP (bad idea this will be broken)
+or
+`https://<Tomcat Server IP>>:8443/Minty` for HTTPS
+If you run in this way, you must configure certificates in Tomcat. See https://tomcat.apache.org/tomcat-11.0-doc/ssl-howto.html#SSL_and_Tomcat
 
-	@Override
-	public Map<String, Object> getResult() {
-		Map<String, Object> result = new HashMap<>();
-		result.put("result", this.result);
-		return result;
-	}
+Recommendation: If running locally, just use the Angular Web Server approach.
 
-	@Override
-	public String getResultTemplateFilename() {
-		return "default.pug";
-	}
-
-	@Override
-	public List<AiTask> doWork() {
-		AssistantQuery query = new AssistantQuery();
-		query.setAssistantId(config.getAssistant());
-		query.setQuery(config.getPrompt());
-
-		result = taskServices.getAssistantService().ask(userId, query);
-		return null;
-	}
-
-	@Override
-	public void setUserId(int userId) {
-		this.userId = userId;
-	}
-
-}
-
-```

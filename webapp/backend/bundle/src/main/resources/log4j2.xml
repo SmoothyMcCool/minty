@@ -11,6 +11,11 @@
 			<PatternLayout
 				pattern="%d{yyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
 		</File>
+		<File name="ToolAudit" fileName="../logs/ToolAudit.log" immediateFlush="true"
+			append="true">
+			<PatternLayout
+				pattern="%d{yyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
+		</File>
 	</Appenders>
 	<Loggers>
 		<Root level="info">
@@ -28,5 +33,12 @@
 		<Logger name="org.springframework.ai" level="debug" /-->
 		<Logger name="tom" level="info" />
 		<Logger name="org.springframework.security" level="info" />
+
+		<Logger name="tom.tool.auditing.AuditingToolCallingManager"
+			level="info" additivity="false">
+			<AppenderRef ref="ToolAudit"/>
+			<AppenderRef ref="Console" />
+		</Logger>
+
 	</Loggers>
 </Configuration>

@@ -1,5 +1,7 @@
 package tom.tools.confluence;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -13,6 +15,7 @@ import tom.api.model.services.ConfigurationConsumer;
 import tom.api.model.services.ServiceConsumer;
 import tom.api.services.PluginServices;
 import tom.api.tool.MintyTool;
+import tom.api.tool.MintyToolResponse;
 import tom.confluence.ConfluenceClient;
 import tom.confluence.model.ChildrenResponse;
 import tom.confluence.model.PageResponse;
@@ -113,6 +116,12 @@ public class ConfluenceTools implements MintyTool, ServiceConsumer, Configuratio
 			@ToolParam(description = "Maximum number of results to return") int limit) {
 		logger.info("confluence_search_by_label: {} {}", label, limit);
 		return confluenceClient.searchByLabel(label, limit);
+	}
+
+	@Tool(name = "get_current_local_time", description = "Get the current local time")
+	MintyToolResponse<String> getCurrentLocalTime() {
+		String result = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);
+		return MintyToolResponse.SuccessResponse(result);
 	}
 
 }

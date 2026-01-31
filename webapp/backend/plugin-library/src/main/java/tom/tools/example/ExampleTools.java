@@ -2,8 +2,6 @@ package tom.tools.example;
 
 import java.io.IOException;
 import java.net.URI;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
@@ -18,13 +16,6 @@ import tom.api.tool.MintyToolResponse;
 public class ExampleTools implements MintyTool {
 
 	private static final Logger logger = LogManager.getLogger(ExampleTools.class);
-
-	// @Tool(name = "get_current_local_time", description = "Get the current local
-	// time")
-	MintyToolResponse<String> getCurrentLocalTime() {
-		String result = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);
-		return MintyToolResponse.SuccessResponse(result);
-	}
 
 	// @Tool(name = "get_weather", description = "Get the current weather for a city
 	// by specifying its latitude and longitude")
