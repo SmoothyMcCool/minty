@@ -49,7 +49,7 @@ public class ConfluenceTools implements MintyTool, ServiceConsumer, Configuratio
 			username = "";
 		}
 		this.confluenceClient = new ConfluenceClient(confluenceUrl, username, accessToken, useBearerAuth,
-				maxPageCharacters);
+				maxPageCharacters, pluginServices.getCacheService().getCache("confluenceCache"));
 	}
 
 	@Override

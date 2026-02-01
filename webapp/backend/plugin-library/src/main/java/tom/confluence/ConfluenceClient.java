@@ -12,10 +12,12 @@ import org.apache.hc.core5.http.io.HttpClientResponseHandler;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.cache.Cache.ValueRetrievalException;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import tom.api.services.cache.Cache;
 import tom.confluence.model.ChildPage;
 import tom.confluence.model.ChildrenResponse;
 import tom.confluence.model.PageResponse;
@@ -31,12 +33,14 @@ public class ConfluenceClient {
 	private final String baseUrl;
 	private final int maxPageChars;
 	private final String authHeader;
+	private final Cache cache;
 
 	public ConfluenceClient(String baseUrl, String username, String accessToken, boolean useBearerAuth,
-			int maxPageCharacters) {
+			int maxPageCharacters, Cache cache) {
 		this.mapper = new ObjectMapper();
 		this.baseUrl = baseUrl.replaceAll("/+$", "");
 		this.maxPageChars = maxPageCharacters;
+		this.cache = cache;
 
 		if (useBearerAuth) {
 			this.authHeader = "Bearer " + accessToken;
@@ -49,34 +53,14 @@ public class ConfluenceClient {
 	}
 
 	public PageResponse getPage(String pageId) {
+		if (cache == null) {
+			return fetchPage(pageId);
+		}
 
-		String url = baseUrl + "/rest/api/content/" + pageId + "?expand=body.storage,space,metadata.labels,version";
-
-		try (CloseableHttpClient client = HttpClients.createDefault()) {
-
-			String body = client.execute(newGet(url), okHandler(pageId));
-			JsonNode root = mapper.readTree(body);
-
-			String id = root.path("id").asText();
-			String title = root.path("title").asText();
-			String space = root.path("space").path("key").asText("UNKNOWN");
-			String html = root.path("body").path("storage").path("value").asText();
-			String webui = root.path("_links").path("webui").asText(null);
-			String pageUrl = (webui != null) ? baseUrl + webui : null;
-			String lastModified = root.path("version").path("when").asText(null);
-
-			List<String> labels = new ArrayList<>();
-			JsonNode labelResults = root.path("metadata").path("labels").path("results");
-			if (labelResults.isArray()) {
-				for (JsonNode label : labelResults) {
-					labels.add(label.path("name").asText());
-				}
-			}
-
-			return new PageResponse(id, title, space, labels, clean(html), pageUrl, lastModified);
-
-		} catch (Exception e) {
-			throw new RuntimeException("Failed to fetch page " + pageId, e);
+		try {
+			return cache.get(pageId, () -> fetchPage(pageId));
+		} catch (ValueRetrievalException e) {
+			throw new RuntimeException("Failed to fetch page " + pageId, e.getCause());
 		}
 	}
 
@@ -165,6 +149,39 @@ public class ConfluenceClient {
 		return new SearchResponse(results);
 	}
 
+	private PageResponse fetchPage(String pageId) {
+		logger.info("ConfluenceClient fetching page  " + pageId);
+
+		String url = baseUrl + "/rest/api/content/" + pageId + "?expand=body.storage,space,metadata.labels,version";
+
+		try (CloseableHttpClient client = HttpClients.createDefault()) {
+
+			String body = client.execute(newGet(url), okHandler(pageId));
+			JsonNode root = mapper.readTree(body);
+
+			String id = root.path("id").asText();
+			String title = root.path("title").asText();
+			String space = root.path("space").path("key").asText("UNKNOWN");
+			String html = root.path("body").path("storage").path("value").asText();
+			String webui = root.path("_links").path("webui").asText(null);
+			String pageUrl = (webui != null) ? baseUrl + webui : null;
+			String lastModified = root.path("version").path("when").asText(null);
+
+			List<String> labels = new ArrayList<>();
+			JsonNode labelResults = root.path("metadata").path("labels").path("results");
+			if (labelResults.isArray()) {
+				for (JsonNode label : labelResults) {
+					labels.add(label.path("name").asText());
+				}
+			}
+
+			return new PageResponse(id, title, space, labels, clean(html), pageUrl, lastModified);
+
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to fetch page " + pageId, e);
+		}
+	}
+
 	private String clean(String html) {
 
 		if (html == null) {
@@ -202,4 +219,5 @@ public class ConfluenceClient {
 	private static String encode(String value) {
 		return java.net.URLEncoder.encode(value, java.nio.charset.StandardCharsets.UTF_8);
 	}
+
 }

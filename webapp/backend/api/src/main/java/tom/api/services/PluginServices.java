@@ -2,6 +2,7 @@ package tom.api.services;
 
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
+import tom.api.services.cache.CacheService;
 import tom.api.services.python.PythonService;
 
 public interface PluginServices {
@@ -23,4 +24,6 @@ public interface PluginServices {
 	DocumentService getDocumentService();
 
 	ProjectService getProjectService();
+
+	CacheService getCacheService();
 }

@@ -12,6 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.ai.ollama.api.OllamaApi;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
@@ -49,6 +50,7 @@ import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import de.neuland.pug4j.PugConfiguration;
 import de.neuland.pug4j.filter.MarkdownFilter;
 import de.neuland.pug4j.template.FileTemplateLoader;
+import tom.cache.service.SingleFlightCacheManager;
 
 @Configuration
 @EnableWebMvc
@@ -71,8 +73,13 @@ public class ApplicationConfig implements WebMvcConfigurer {
 	}
 
 	@Bean
-	HttpSessionIdResolver httpSessionIdResolver() {
+	public HttpSessionIdResolver httpSessionIdResolver() {
 		return HeaderHttpSessionIdResolver.xAuthToken();
+	}
+
+	@Bean
+	public CacheManager cacheManager() {
+		return new SingleFlightCacheManager();
 	}
 
 	@Bean("streamingExecutor")
