@@ -5,6 +5,8 @@ import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import tom.api.model.services.ServiceConsumer;
+import tom.api.services.PluginServices;
 import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;
@@ -17,7 +19,7 @@ import tom.confluence.model.PageResponse;
 import tom.tasks.TaskGroup;
 
 @RunnableTask
-public class ConfluenceQuery implements MintyTask {
+public class ConfluenceQuery implements MintyTask, ServiceConsumer {
 
 	private TaskLogger logger;
 	private ConfluenceQueryConfig config;
@@ -26,6 +28,7 @@ public class ConfluenceQuery implements MintyTask {
 	private List<? extends OutputPort> outputs;
 	private boolean failed;
 	private ConfluenceClient confluenceClient;
+	private PluginServices pluginServices;
 
 	public ConfluenceQuery() {
 		config = null;
@@ -34,13 +37,12 @@ public class ConfluenceQuery implements MintyTask {
 		outputs = null;
 		failed = false;
 		confluenceClient = null;
+		pluginServices = null;
 	}
 
 	public ConfluenceQuery(ConfluenceQueryConfig data) {
 		this();
 		config = data;
-		confluenceClient = new ConfluenceClient(config.getBaseUrl(), config.getUsername(), config.getApiKey(),
-				config.getUseBearerAuth(), config.getMaxPageCharacters());
 	}
 
 	@Override
@@ -65,6 +67,10 @@ public class ConfluenceQuery implements MintyTask {
 
 	@Override
 	public void run() {
+
+		confluenceClient = new ConfluenceClient(config.getBaseUrl(), config.getUsername(), config.getApiKey(),
+				config.getUseBearerAuth(), config.getMaxPageCharacters(),
+				pluginServices.getCacheService().getCache("confluenceCache"));
 
 		for (String pageId : config.getPages()) {
 			PageResponse response = confluenceClient.getPage(pageId);
@@ -172,6 +178,11 @@ public class ConfluenceQuery implements MintyTask {
 	@Override
 	public void setLogger(TaskLogger workflowLogger) {
 		this.logger = workflowLogger;
+	}
+
+	@Override
+	public void setPluginServices(PluginServices pluginServices) {
+		this.pluginServices = pluginServices;
 	}
 
 }

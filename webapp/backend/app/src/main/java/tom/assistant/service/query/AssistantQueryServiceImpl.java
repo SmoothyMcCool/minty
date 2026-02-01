@@ -339,6 +339,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		Objects.requireNonNull(query, "query must not be null");
 		Objects.requireNonNull(query.getConversationId(), "query.conversationId must not be null");
 		Objects.requireNonNull(query.getAssistantSpec(), "query.assistantSpec must not be null");
+		Objects.requireNonNull(query.getQuery(), "query.query must not be null");
 
 		AssistantSpec assistantSpec = query.getAssistantSpec();
 		Assistant assistant = assistantSpec.useId()
@@ -391,15 +392,15 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 						defaultToolCallingManager))
 				.defaultOptions(chatOptions).build();
 
-		List<Advisor> advisors = buildAdvistorList(assistant, query.getConversationId(), query.getQuery());
+		List<Advisor> advisors = buildAdvisorList(assistant, query.getConversationId(), query.getQuery());
 
 		return ChatClient.builder(chatModel).defaultAdvisors(advisors).defaultOptions(chatOptions).build();
 	}
 
-	private List<Advisor> buildAdvistorList(Assistant assistant, ConversationId conversationId, String query) {
+	private List<Advisor> buildAdvisorList(Assistant assistant, ConversationId conversationId, String query) {
 		List<Advisor> advisors = new ArrayList<>();
 
-		if (assistant.hasMemory() && conversationId != null) {
+		if (assistant.hasMemory()) {
 			ChatMemory chatMemory = ollamaService.getChatMemory();
 			advisors.add(MessageChatMemoryAdvisor.builder(chatMemory).build());
 		}

@@ -12,6 +12,7 @@ import tom.api.services.RenderService;
 import tom.api.services.UserService;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
+import tom.api.services.cache.CacheService;
 import tom.api.services.python.PythonService;
 import tom.conversation.service.ConversationServiceInternal;
 
@@ -27,11 +28,13 @@ public class PluginServicesImpl implements PluginServices {
 	private final UserService userService;
 	private final DocumentService documentService;
 	private final ProjectService projectService;
+	private final CacheService cacheService;
 
 	public PluginServicesImpl(@Lazy AssistantManagementService assistantManagementService,
 			@Lazy AssistantQueryService assistantQueryService, @Lazy ConversationServiceInternal conversationService,
 			@Lazy HttpService httpService, @Lazy PythonService pythonService, @Lazy RenderService renderService,
-			@Lazy UserService userService, @Lazy DocumentService documentService, @Lazy ProjectService projectService) {
+			@Lazy UserService userService, @Lazy DocumentService documentService, @Lazy ProjectService projectService,
+			@Lazy CacheService cacheService) {
 		this.assistantManagementService = assistantManagementService;
 		this.assistantQueryService = assistantQueryService;
 		this.conversationService = conversationService;
@@ -41,6 +44,7 @@ public class PluginServicesImpl implements PluginServices {
 		this.userService = userService;
 		this.documentService = documentService;
 		this.projectService = projectService;
+		this.cacheService = cacheService;
 	}
 
 	@Override
@@ -88,4 +92,8 @@ public class PluginServicesImpl implements PluginServices {
 		return projectService;
 	}
 
+	@Override
+	public CacheService getCacheService() {
+		return cacheService;
+	}
 }

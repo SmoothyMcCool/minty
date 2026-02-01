@@ -57,7 +57,7 @@ ollama:
       imageSupport: false
   conversationNamingModel: gemma3:4b
   diagrammingModel: gpt-oss:20b
-  chatMemoryDepth: 20
+  chatMemoryDepth: 100
   # The number of documents to retrieve when doing RAG.
   defaultTopK: 5
   apiTimeout: PT20M
