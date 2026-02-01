@@ -1,0 +1,182 @@
+-- Minty Database Schema Initialization
+-- This script runs automatically when the MariaDB container starts for the first time
+
+USE Minty;
+
+-- Create the tables for Minty Assistants
+CREATE TABLE IF NOT EXISTS Assistant (
+	id UUID NOT NULL,
+	name VARCHAR(50),
+	state VARCHAR(20),
+	prompt TEXT,
+	model TEXT,
+	contextSize INTEGER,
+	temperature DOUBLE,
+	topK INTEGER,
+	tools JSON,
+	ownerId UUID,
+	shared BOOLEAN,
+	hasMemory BOOLEAN,
+	PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS Conversation (
+	title TEXT,
+	conversationId UUID NOT NULL,
+	ownerId UUID,
+	associatedAssistantId UUID,
+	associatedWorkflow TEXT,
+	lastUsed TIMESTAMP,
+	PRIMARY KEY (conversationId)
+);
+
+CREATE TABLE IF NOT EXISTS Document (
+    documentId UUID NOT NULL,
+	title TEXT,
+	state INTEGER,
+	ownerId UUID,
+	PRIMARY KEY (documentId)
+);
+
+CREATE TABLE IF NOT EXISTS DocumentAssistantLinks (
+	assistantId UUID NOT NULL,
+	documentId UUID NOT NULL,
+	PRIMARY KEY (assistantId, documentId),
+	FOREIGN KEY (assistantId) REFERENCES Assistant(id),
+	FOREIGN KEY (documentId) REFERENCES Document(documentId)
+);
+
+CREATE TABLE IF NOT EXISTS Workflow (
+	id UUID NOT NULL,
+	ownerId UUID,
+	name VARCHAR(255),
+	description TEXT,
+	shared BOOLEAN,
+	steps JSON NOT NULL,
+	connections JSON NOT NULL,
+	outputStep JSON,
+	PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS ResultTemplate (
+	id UUID NOT NULL,
+	ownerId UUID,
+	name TEXT,
+	content LONGTEXT
+);
+
+CREATE TABLE IF NOT EXISTS WorkflowRecord (
+	id UUID NOT NULL,
+	result JSON,
+	output LONGTEXT,
+	outputFormat TEXT,
+	PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS WorkflowExecution (
+	id UUID NOT NULL,
+	ownerId UUID,
+	name TEXT,
+	state JSON,
+	recordId UUID,
+	PRIMARY KEY (id),
+	CONSTRAINT fk_workflow_execution_workflow_record
+		FOREIGN KEY (recordId)
+		REFERENCES WorkflowRecord(id)
+		ON DELETE CASCADE
+		ON UPDATE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS User (
+	id UUID NOT NULL,
+	account VARCHAR(50),
+	password VARCHAR(100),
+	crypt TEXT,
+	salt TEXT,
+	PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS UserMeta (
+	id INTEGER NOT NULL AUTO_INCREMENT,
+	userId UUID,
+	totalAssistantsCreated INTEGER,
+	totalConversations INTEGER,
+	totalWorkflowsCreated INTEGER,
+	totalWorkflowRuns INTEGER,
+	totalLogins INTEGER,
+	lastLogin TIMESTAMP,
+	PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS Tag (
+	id UUID NOT NULL,
+	tag VARCHAR(255),
+	PRIMARY KEY (id, tag)
+);
+
+CREATE TABLE IF NOT EXISTS TagToDoc (
+	tagId UUID NOT NULL,
+	documentId UUID NOT NULL,
+	PRIMARY KEY (tagId, documentId),
+	FOREIGN KEY (tagId) REFERENCES Tag(id),
+	FOREIGN KEY (documentId) REFERENCES Document(documentId)
+);
+
+CREATE TABLE IF NOT EXISTS SPRING_AI_CHAT_MEMORY (
+	conversation_id TEXT,
+	content TEXT,
+	type TEXT,
+	timestamp TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS Project (
+	id UUID NOT NULL,
+	ownerId UUID,
+	name TEXT,
+	PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS ProjectNode (
+	id UUID NOT NULL,
+	projectId UUID,
+	type TEXT,
+	name TEXT,
+	parentId UUID,
+	data LONGTEXT,
+	created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	PRIMARY KEY (id),
+	FOREIGN KEY (parentId) REFERENCES ProjectNode(id) ON DELETE CASCADE,
+	FOREIGN KEY (projectId) REFERENCES Project(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS vector_store (
+	doc_id VARCHAR(255) PRIMARY KEY,
+	text TEXT,
+	embedding VECTOR(768),
+	meta JSON
+);
+
+-- Create tables for Spring Session
+CREATE TABLE IF NOT EXISTS SPRING_SESSION (
+	PRIMARY_ID CHAR(36) NOT NULL,
+	SESSION_ID CHAR(36) NOT NULL,
+	CREATION_TIME BIGINT NOT NULL,
+	LAST_ACCESS_TIME BIGINT NOT NULL,
+	MAX_INACTIVE_INTERVAL INT NOT NULL,
+	EXPIRY_TIME BIGINT NOT NULL,
+	PRINCIPAL_NAME VARCHAR(100),
+	CONSTRAINT SPRING_SESSION_PK PRIMARY KEY (PRIMARY_ID)
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC;
+
+CREATE UNIQUE INDEX IF NOT EXISTS SPRING_SESSION_IX1 ON SPRING_SESSION (SESSION_ID);
+CREATE INDEX IF NOT EXISTS SPRING_SESSION_IX2 ON SPRING_SESSION (EXPIRY_TIME);
+CREATE INDEX IF NOT EXISTS SPRING_SESSION_IX3 ON SPRING_SESSION (PRINCIPAL_NAME);
+
+CREATE TABLE IF NOT EXISTS SPRING_SESSION_ATTRIBUTES (
+	SESSION_PRIMARY_ID CHAR(36) NOT NULL,
+	ATTRIBUTE_NAME VARCHAR(200) NOT NULL,
+	ATTRIBUTE_BYTES BLOB NOT NULL,
+	CONSTRAINT SPRING_SESSION_ATTRIBUTES_PK PRIMARY KEY (SESSION_PRIMARY_ID, ATTRIBUTE_NAME),
+	CONSTRAINT SPRING_SESSION_ATTRIBUTES_FK FOREIGN KEY (SESSION_PRIMARY_ID) REFERENCES SPRING_SESSION(PRIMARY_ID) ON DELETE CASCADE
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC;

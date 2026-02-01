@@ -1,0 +1,51 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+*.iml
+.vscode
+*.swp
+*.swo
+*~
+
+# Build outputs
+webapp/frontend/app/node_modules
+webapp/frontend/app/dist
+webapp/frontend/deploy
+webapp/backend/**/target
+
+# Logs
+*.log
+logs/
+
+# Local Maven repository
+.m2/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker files (no need to copy these into the build context)
+docker-compose*.yml
+Dockerfile*
+
+# Documentation
+*.md
+!README.md
+
+# Test files
+**/*.spec.ts
+**/test/
+**/tests/
+
+# Config files that might contain secrets
+*.env
+.env*
+
+# Tomcat local directory
+tomcat/
+
+# Example and template files
+webapp/backend/example-tasks/
