@@ -17,17 +17,17 @@ public class IdentifyConfig implements TaskConfigSpec {
 		idElement = "";
 	}
 
-	public IdentifyConfig(Map<String, String> config) {
+	public IdentifyConfig(Map<String, Object> config) {
 		this();
 		if (config.containsKey(IdElement)) {
-			idElement = config.get(IdElement);
+			idElement = config.get(IdElement).toString();
 		}
 	}
 
 	@Override
 	public Map<String, TaskConfigTypes> getConfig() {
 		Map<String, TaskConfigTypes> config = new HashMap<>();
-		config.put(IdElement, TaskConfigTypes.Number);
+		config.put(IdElement, TaskConfigTypes.String);
 		return config;
 	}
 

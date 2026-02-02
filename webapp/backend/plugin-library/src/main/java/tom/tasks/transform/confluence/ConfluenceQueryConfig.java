@@ -28,6 +28,7 @@ public class ConfluenceQueryConfig implements TaskConfigSpec {
 	private String baseUrl;
 	private Boolean useBearerAuth;
 	private int maxPageChars;
+	private ConfluencePageConcatenationStrategy concatenationStrategy;
 
 	public ConfluenceQueryConfig() {
 		pages = List.of();
@@ -36,6 +37,7 @@ public class ConfluenceQueryConfig implements TaskConfigSpec {
 		baseUrl = "";
 		useBearerAuth = false;
 		maxPageChars = 20000;
+		concatenationStrategy = ConfluencePageConcatenationStrategy.Concatenated;
 	}
 
 	public ConfluenceQueryConfig(Map<String, Object> config) throws JsonMappingException, JsonProcessingException {
@@ -53,10 +55,14 @@ public class ConfluenceQueryConfig implements TaskConfigSpec {
 			baseUrl = config.get(BaseURL).toString();
 		}
 		if (config.containsKey(UseBearerAuth)) {
-			useBearerAuth = Boolean.getBoolean(config.get(UseBearerAuth).toString());
+			useBearerAuth = Boolean.parseBoolean(config.get(UseBearerAuth).toString());
 		}
 		if (config.containsKey(MaxPageCharacters)) {
-			maxPageChars = Integer.getInteger(config.get(MaxPageCharacters).toString());
+			maxPageChars = Integer.parseInt(config.get(MaxPageCharacters).toString());
+		}
+		if (config.containsKey(ConfluenceConcatenationEnumSpecCreator.EnumName)) {
+			concatenationStrategy = ConfluencePageConcatenationStrategy
+					.valueOf(config.get(ConfluenceConcatenationEnumSpecCreator.EnumName).toString());
 		}
 	}
 
@@ -69,6 +75,7 @@ public class ConfluenceQueryConfig implements TaskConfigSpec {
 		cfg.put(AccessToken, TaskConfigTypes.String);
 		cfg.put(UseBearerAuth, TaskConfigTypes.Boolean);
 		cfg.put(MaxPageCharacters, TaskConfigTypes.Number);
+		cfg.put(ConfluenceConcatenationEnumSpecCreator.EnumName, TaskConfigTypes.EnumList);
 		return cfg;
 	}
 
@@ -106,6 +113,10 @@ public class ConfluenceQueryConfig implements TaskConfigSpec {
 		return maxPageChars;
 	}
 
+	public ConfluencePageConcatenationStrategy getConcatenationStrategy() {
+		return concatenationStrategy;
+	}
+
 	public void updateFrom(Map<String, Object> obj) throws JsonMappingException, JsonProcessingException {
 		if (obj.containsKey(PageIds)) {
 			pages.addAll(TaskUtils.safeConvert(obj.get(PageIds), new TypeReference<List<String>>() {
@@ -128,10 +139,12 @@ public class ConfluenceQueryConfig implements TaskConfigSpec {
 	public Map<String, Object> getValues() {
 		try {
 			return Map.of(PageIds, new ObjectMapper().writeValueAsString(pages), Username, username, AccessToken,
-					apiKey, BaseURL, baseUrl, UseBearerAuth, Boolean.toString(useBearerAuth));
+					apiKey, BaseURL, baseUrl, UseBearerAuth, Boolean.toString(useBearerAuth),
+					ConfluenceConcatenationEnumSpecCreator.EnumName, concatenationStrategy);
 		} catch (JsonProcessingException e) {
 			return Map.of(PageIds, "[]", Username, username, AccessToken, apiKey, BaseURL, baseUrl, UseBearerAuth,
-					Boolean.toString(useBearerAuth));
+					Boolean.toString(useBearerAuth), ConfluenceConcatenationEnumSpecCreator.EnumName,
+					concatenationStrategy);
 		}
 	}
 }

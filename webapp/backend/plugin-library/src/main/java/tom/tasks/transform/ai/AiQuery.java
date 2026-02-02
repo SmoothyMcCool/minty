@@ -247,7 +247,7 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 
 			@Override
 			public TaskConfigSpec taskConfiguration() {
-				return new AiQueryConfig(Map.of(AiQueryConfig.Assistant,
+				return new AiQueryConfig(Map.of(AssistantListEnumSpecCreator.EnumName,
 						AssistantManagementService.DefaultAssistantId.getValue().toString()));
 			}
 

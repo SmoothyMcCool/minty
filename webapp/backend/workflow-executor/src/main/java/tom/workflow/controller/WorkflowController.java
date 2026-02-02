@@ -96,9 +96,16 @@ public class WorkflowController {
 		}
 
 		String workflowName = workflowService.executeWorkflow(user.getId(), request);
-		metadataService.workflowExecuted(user.getId());
 
-		ResponseWrapper<String> response = ResponseWrapper.SuccessResponse("Started workflow " + workflowName);
+		ResponseWrapper<String> response;
+		if (workflowName == null) {
+			response = ResponseWrapper.ApiFailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+					List.of(ApiError.FAILED_TO_START_WORKFLOW));
+		} else {
+			metadataService.workflowExecuted(user.getId());
+			response = ResponseWrapper.SuccessResponse("Started workflow " + workflowName);
+		}
+
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 

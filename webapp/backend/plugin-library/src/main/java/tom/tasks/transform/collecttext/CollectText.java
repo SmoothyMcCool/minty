@@ -11,6 +11,7 @@ import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
 import tom.tasks.Grouping;
+import tom.tasks.GroupingEnumSpecCreator;
 import tom.tasks.TaskGroup;
 
 @RunnableTask
@@ -140,7 +141,7 @@ public class CollectText implements MintyTask {
 
 			@Override
 			public TaskConfigSpec taskConfiguration() {
-				return new CollectTextConfig(Map.of(CollectTextConfig.GroupingLabel, Grouping.All.toString()));
+				return new CollectTextConfig(Map.of(GroupingEnumSpecCreator.EnumName, Grouping.All.toString()));
 			}
 
 			@Override
