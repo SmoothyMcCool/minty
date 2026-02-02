@@ -1,7 +1,10 @@
 package tom.tasks.transform.confluence;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -21,7 +24,6 @@ import tom.tasks.TaskGroup;
 @RunnableTask
 public class ConfluenceQuery implements MintyTask, ServiceConsumer {
 
-	private TaskLogger logger;
 	private ConfluenceQueryConfig config;
 	private Packet input;
 	private String error;
@@ -72,15 +74,55 @@ public class ConfluenceQuery implements MintyTask, ServiceConsumer {
 				config.getUseBearerAuth(), config.getMaxPageCharacters(),
 				pluginServices.getCacheService().getCache("confluenceCache"));
 
+		List<PageResponse> responses = new ArrayList<>();
 		for (String pageId : config.getPages()) {
-			PageResponse response = confluenceClient.getPage(pageId);
+			responses.add(confluenceClient.getPage(pageId));
+		}
 
-			Packet output = new Packet();
-			output.addText(response.getBodyText());
-			output.addDataList(input.getData());
-			output.setId(input.getId());
+		ConfluencePageConcatenationStrategy concatStrategy = config.getConcatenationStrategy();
+		Packet output = new Packet();
+		switch (concatStrategy) {
+
+		case Array:
+			if (input != null) {
+				output.addDataList(input.getData());
+				output.setId(input.getId());
+			} else {
+				output.setId(UUID.randomUUID().toString());
+			}
+			responses.forEach(response -> {
+				output.addText(response.getBodyText());
+			});
 			outputs.get(0).write(output);
+			break;
 
+		case Concatenated:
+			if (input != null) {
+				output.addDataList(input.getData());
+				output.setId(input.getId());
+			} else {
+				output.setId(UUID.randomUUID().toString());
+			}
+			String result = responses.stream().map(PageResponse::getBodyText).collect(Collectors.joining("\n\n\n"));
+			output.addText(result);
+			outputs.get(0).write(output);
+			break;
+
+		case MultiPacket:
+			responses.forEach(response -> {
+				output.setText(List.of(response.getBodyText()));
+				if (input != null) {
+					output.setData(input.getData());
+					output.setId(input.getId());
+				} else {
+					output.setId(UUID.randomUUID().toString());
+				}
+				outputs.get(0).write(output);
+			});
+			break;
+
+		default:
+			break;
 		}
 
 	}
@@ -177,7 +219,11 @@ public class ConfluenceQuery implements MintyTask, ServiceConsumer {
 
 	@Override
 	public void setLogger(TaskLogger workflowLogger) {
-		this.logger = workflowLogger;
+	}
+
+	@Override
+	public void setPluginServices(PluginServices pluginServices) {
+		this.pluginServices = pluginServices;
 	}
 
 	@Override

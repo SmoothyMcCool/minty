@@ -7,10 +7,10 @@ import java.util.Map;
 import tom.api.task.TaskConfigSpec;
 import tom.api.task.TaskConfigTypes;
 import tom.tasks.Grouping;
+import tom.tasks.GroupingEnumSpecCreator;
 
 public class CollectTextConfig implements TaskConfigSpec {
 
-	public static final String GroupingLabel = "Grouping";
 	public static final String Separator = "Separator";
 
 	private Grouping grouping;
@@ -23,8 +23,8 @@ public class CollectTextConfig implements TaskConfigSpec {
 
 	public CollectTextConfig(Map<String, Object> config) {
 		this();
-		if (config.containsKey(GroupingLabel)) {
-			grouping = Grouping.valueOf(config.get(GroupingLabel).toString());
+		if (config.containsKey(GroupingEnumSpecCreator.EnumName)) {
+			grouping = Grouping.valueOf(config.get(GroupingEnumSpecCreator.EnumName).toString());
 		}
 		if (config.containsKey(Separator)) {
 			separator = config.get(Separator).toString();
@@ -34,7 +34,7 @@ public class CollectTextConfig implements TaskConfigSpec {
 	@Override
 	public Map<String, TaskConfigTypes> getConfig() {
 		Map<String, TaskConfigTypes> config = new HashMap<>();
-		config.put(GroupingLabel, TaskConfigTypes.EnumList);
+		config.put(GroupingEnumSpecCreator.EnumName, TaskConfigTypes.EnumList);
 		config.put(Separator, TaskConfigTypes.TextArea);
 		return config;
 	}
@@ -59,6 +59,6 @@ public class CollectTextConfig implements TaskConfigSpec {
 
 	@Override
 	public Map<String, Object> getValues() {
-		return Map.of(GroupingLabel, grouping.toString(), Separator, separator);
+		return Map.of(GroupingEnumSpecCreator.EnumName, grouping.toString(), Separator, separator);
 	}
 }

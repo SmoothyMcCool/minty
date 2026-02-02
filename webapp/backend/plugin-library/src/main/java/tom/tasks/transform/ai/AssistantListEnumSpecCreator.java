@@ -12,11 +12,12 @@ import tom.api.task.enumspec.NameValuePair;
 
 public class AssistantListEnumSpecCreator implements EnumSpecCreator {
 
+	public static final String EnumName = "Assistant";
 	private PluginServices pluginServices;
 	private final String enumName;
 
 	public AssistantListEnumSpecCreator() {
-		enumName = "Assistant";
+		enumName = EnumName;
 	}
 
 	@Override

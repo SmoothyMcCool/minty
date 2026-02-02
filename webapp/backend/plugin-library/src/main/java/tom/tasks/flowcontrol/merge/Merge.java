@@ -12,22 +12,27 @@ import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
 import tom.tasks.TaskGroup;
-import tom.tasks.noop.NullTaskConfig;
 
 @RunnableTask
 public class Merge implements MintyTask {
 
+	private static final Packet NullPacket = new Packet();
+
 	private List<? extends OutputPort> outputs;
 
-	private TaskLogger logger;
-	private Packet[] input;
+	private List<Packet> inputs;
 
 	public Merge() {
-		input = new Packet[2];
+		inputs = null;
 	}
 
-	public Merge(TaskConfigSpec config) {
+	public Merge(MergeConfig config) {
 		this();
+		int numInputs = config.getNumInputs();
+		inputs = new ArrayList<>();
+		for (int i = 0; i < numInputs; i++) {
+			inputs.add(null);
+		}
 	}
 
 	@Override
@@ -43,23 +48,19 @@ public class Merge implements MintyTask {
 	@Override
 	public void run() {
 		Packet result = new Packet();
-		result.setId(input[0].getId() + input[1].getId());
+		// Take the ID of the first non-null packet
+		String id = inputs.stream().filter(input -> input != NullPacket).findFirst().orElse(NullPacket).getId();
+		result.setId(id);
 
 		List<String> text = new ArrayList<>();
-		if (input[0].getText() != null) {
-			text.addAll(input[0].getText());
-		}
-		if (input[1].getText() != null) {
-			text.addAll(input[1].getText());
+		for (Packet input : inputs) {
+			text.addAll(input.getText());
 		}
 		result.setText(text);
 
 		List<Map<String, Object>> data = new ArrayList<>();
-		if (input[0].getData() != null) {
-			data.addAll(input[0].getData());
-		}
-		if (input[1].getText() != null) {
-			data.addAll(input[1].getData());
+		for (Packet input : inputs) {
+			data.addAll(input.getData());
 		}
 		result.setData(data);
 
@@ -70,7 +71,7 @@ public class Merge implements MintyTask {
 
 	@Override
 	public boolean giveInput(int inputNum, Packet dataPacket) {
-		input[inputNum] = dataPacket;
+		inputs.set(inputNum, dataPacket);
 		return true;
 	}
 
@@ -81,7 +82,7 @@ public class Merge implements MintyTask {
 
 	@Override
 	public boolean readyToRun() {
-		return input != null;
+		return inputs.stream().anyMatch(input -> input == null);
 	}
 
 	@Override
@@ -115,12 +116,12 @@ public class Merge implements MintyTask {
 
 			@Override
 			public TaskConfigSpec taskConfiguration() {
-				return new NullTaskConfig();
+				return new MergeConfig();
 			}
 
 			@Override
 			public TaskConfigSpec taskConfiguration(Map<String, Object> configuration) {
-				return new NullTaskConfig(configuration);
+				return new MergeConfig(configuration);
 			}
 
 			@Override
@@ -137,7 +138,7 @@ public class Merge implements MintyTask {
 
 	@Override
 	public void inputTerminated(int i) {
-		// Nothing to do.
+		inputs.set(i, NullPacket);
 	}
 
 	@Override
@@ -147,7 +148,6 @@ public class Merge implements MintyTask {
 
 	@Override
 	public void setLogger(TaskLogger workflowLogger) {
-		this.logger = workflowLogger;
 	}
 
 }

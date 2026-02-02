@@ -9,10 +9,11 @@ import tom.api.task.enumspec.NameValuePair;
 
 public class GroupingEnumSpecCreator implements EnumSpecCreator {
 
+	public static final String EnumName = "Grouping";
 	private final String enumName;
 
 	public GroupingEnumSpecCreator() {
-		enumName = "Grouping";
+		enumName = EnumName;
 	}
 
 	@Override
