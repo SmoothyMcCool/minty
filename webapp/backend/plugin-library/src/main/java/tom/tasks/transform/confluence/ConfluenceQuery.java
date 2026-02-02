@@ -226,4 +226,9 @@ public class ConfluenceQuery implements MintyTask, ServiceConsumer {
 		this.pluginServices = pluginServices;
 	}
 
+	@Override
+	public void setPluginServices(PluginServices pluginServices) {
+		this.pluginServices = pluginServices;
+	}
+
 }
