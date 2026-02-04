@@ -8,10 +8,10 @@
 			<div class="spinner-grow spinner-grow-sm text-secondary me-1" style="animation-delay: 500ms;"></div>
 			<span *ngIf="queueDepth === 1; else depthOne">Waiting... You're next!</span>
 			<ng-template #depthOne>
-				<span *ngIf="queueDepth === 2; else depthLargerThanOne">Waiting... There is one task ahead of you.</span>
+				<span *ngIf="queueDepth === 2; else depthLargerThanOne">Waiting... There is one request ahead of you.</span>
 			</ng-template>
 			<ng-template #depthLargerThanOne>
-				<span *ngIf="queueDepth !== undefined">Waiting... There are {{queueDepth - 1}} tasks ahead of you.</span>
+				<span *ngIf="queueDepth !== undefined">Waiting... There are multiple requests ahead of you.</span>
 			</ng-template>
 		</div>
 		<ng-container *ngIf="useMarkdown; else noMarkdown">

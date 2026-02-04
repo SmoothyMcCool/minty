@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CancellationException;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -156,7 +157,7 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 				String response = null;
 				while (true) {
 					StringResult llmResult = (StringResult) pluginServices.getAssistantQueryService()
-							.getResultFor(requestId);
+							.getResultAndRemoveIfComplete(requestId);
 					if (llmResult != null && llmResult.isComplete()) {
 						response = llmResult instanceof StringResult ? ((StringResult) llmResult).getValue() : null;
 						break;
@@ -174,7 +175,8 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 
 			} catch (InterruptedException e) {
 				Thread.currentThread().interrupt();
-				throw new RuntimeException("AiQuery Task got interrupted while waiting for its turn with the LLM.");
+				throw new CancellationException(
+						"AiQuery Task got interrupted while waiting for its turn with the LLM.");
 			}
 		}
 

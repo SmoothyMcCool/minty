@@ -139,12 +139,12 @@ public class ConfluenceQueryConfig implements TaskConfigSpec {
 	public Map<String, Object> getValues() {
 		try {
 			return Map.of(PageIds, new ObjectMapper().writeValueAsString(pages), Username, username, AccessToken,
-					apiKey, BaseURL, baseUrl, UseBearerAuth, Boolean.toString(useBearerAuth),
-					ConfluenceConcatenationEnumSpecCreator.EnumName, concatenationStrategy);
+					apiKey, BaseURL, baseUrl, UseBearerAuth, Boolean.toString(useBearerAuth), MaxPageCharacters,
+					maxPageChars, ConfluenceConcatenationEnumSpecCreator.EnumName, concatenationStrategy);
 		} catch (JsonProcessingException e) {
 			return Map.of(PageIds, "[]", Username, username, AccessToken, apiKey, BaseURL, baseUrl, UseBearerAuth,
-					Boolean.toString(useBearerAuth), ConfluenceConcatenationEnumSpecCreator.EnumName,
-					concatenationStrategy);
+					Boolean.toString(useBearerAuth), MaxPageCharacters, maxPageChars,
+					ConfluenceConcatenationEnumSpecCreator.EnumName, concatenationStrategy);
 		}
 	}
 }

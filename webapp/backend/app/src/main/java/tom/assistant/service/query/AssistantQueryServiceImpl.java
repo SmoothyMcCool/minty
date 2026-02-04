@@ -40,7 +40,6 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskRejectedException;
 import org.springframework.http.MediaType;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PreDestroy;
@@ -55,12 +54,16 @@ import tom.api.services.assistant.AssistantQueryService;
 import tom.api.services.assistant.ConversationInUseException;
 import tom.api.services.assistant.LlmMetric;
 import tom.api.services.assistant.LlmResult;
+import tom.api.services.assistant.LlmResultState;
 import tom.api.services.assistant.QueueFullException;
 import tom.api.services.assistant.StreamResult;
 import tom.api.services.assistant.StringResult;
 import tom.config.MintyConfiguration;
 import tom.config.model.ChatModelConfig;
 import tom.ollama.service.OllamaService;
+import tom.prioritythreadpool.PriorityTask;
+import tom.prioritythreadpool.PriorityThreadPoolTaskExecutor;
+import tom.prioritythreadpool.TaskPriority;
 import tom.tool.auditing.AuditingToolCallingManager;
 import tom.tool.auditing.ToolExecutionContext;
 import tom.tool.registry.ToolRegistryService;
@@ -78,14 +81,14 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	private final UserServiceInternal userService;
 	private final AssistantManagementService assistantManagementService;
 	private final ToolRegistryService toolRegistryService;
-	private final ThreadPoolTaskExecutor llmExecutor;
+	private final PriorityThreadPoolTaskExecutor llmExecutor;
 	private final Map<ConversationId, LlmResult> results;
 	private final List<ChatModelConfig> modelConfigs;
 	private final ToolCallingManager defaultToolCallingManager;
 
 	public AssistantQueryServiceImpl(AssistantManagementService assistantManagementService, OllamaService ollamaService,
 			OllamaApi ollamaApi, UserServiceInternal userService, ToolRegistryService toolRegistryService,
-			MintyConfiguration properties, @Qualifier("llmExecutor") ThreadPoolTaskExecutor llmExecutor) {
+			MintyConfiguration properties, @Qualifier("llmExecutor") PriorityThreadPoolTaskExecutor llmExecutor) {
 		this.ollamaService = ollamaService;
 		this.ollamaApi = ollamaApi;
 		this.userService = userService;
@@ -99,7 +102,6 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 
 	@PreDestroy
 	public void shutdown() {
-		llmExecutor.setWaitForTasksToCompleteOnShutdown(true);
 		llmExecutor.shutdown();
 	}
 
@@ -113,13 +115,13 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			}
 
 			LlmRequest request = new LlmRequest(userId, query, Instant.now());
-			results.put(query.getConversationId(), LlmResult.IN_PROGRESS);
+			StringResult sr = new StringResult();
+			sr.setState(LlmResultState.QUEUED);
+			results.put(query.getConversationId(), sr);
 
-			Runnable task = () -> askInternal(request);
-			request.setTask(task);
-			llmExecutor.submit(task);
+			llmExecutor.execute(() -> askInternal(request), TaskPriority.Low);
 
-			return request.getQuery().getConversationId();
+			return query.getConversationId();
 
 		} catch (TaskRejectedException tre) {
 			// LLM is busy. Maybe next time.
@@ -130,6 +132,9 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	}
 
 	private void askInternal(LlmRequest request) {
+		StringResult sr = (StringResult) getResult(request.getQuery().getConversationId());
+		sr.setState(LlmResultState.IN_PROGRESS);
+
 		try {
 			String result = "";
 
@@ -152,17 +157,16 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 				}
 			}
 
-			StringResult sr = new StringResult();
 			sr.setValue(result);
-			results.put(request.getQuery().getConversationId(), sr);
+
 		} catch (Exception e) {
 			logger.warn("Caught exception while waiting for LLM response: ", e);
 			if (results.containsKey(request.getQuery().getConversationId())) {
-				StringResult sr = new StringResult();
 				sr.setValue("Failed to generate response." + StackTraceUtilities.StackTrace(e));
-				results.put(request.getQuery().getConversationId(), sr);
-				return;
 			}
+		} finally {
+			sr.setState(LlmResultState.COMPLETE);
+			results.put(request.getQuery().getConversationId(), sr);
 		}
 	}
 
@@ -171,11 +175,11 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 
 		try {
 			LlmRequest request = new LlmRequest(userId, query, Instant.now());
-			Runnable task = () -> askStreamingInternal(request);
-			request.setTask(task);
 
-			results.put(request.getQuery().getConversationId(), LlmResult.THINKING_STREAM_NOT_READY);
-			llmExecutor.execute(request);
+			StreamResult sr = new StreamResult();
+			sr.setState(LlmResultState.QUEUED);
+			results.put(request.getQuery().getConversationId(), sr);
+			llmExecutor.execute(() -> askStreamingInternal(request), TaskPriority.High);
 			logger.info("Enqueued task for conversation " + query.getConversationId());
 
 			return request.getQuery().getConversationId();
@@ -188,28 +192,20 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	}
 
 	@Override
-	public LlmResult getResultFor(ConversationId requestId) {
-		if (!results.containsKey(requestId)) {
+	public LlmResult getResultAndRemoveIfComplete(ConversationId requestId) {
+
+		LlmResult result = results.get(requestId);
+
+		if (result == null) {
 			return null;
 		}
 
-		LlmResult result = null;
-
-		result = results.get(requestId);
-
-		// We can't actually put null into the concurrent hashmap so we fake it.
-		if (result == LlmResult.IN_PROGRESS) {
-			return result;
-		}
-
-		if (result instanceof StringResult) {
-			results.remove(requestId);
+		if (result instanceof StringResult sr) {
+			if (sr.isComplete()) {
+				results.remove(requestId);
+			}
 		} else {
 			StreamResult sr = (StreamResult) result;
-			if (sr == null) {
-				logger.warn("StreamResult is null!");
-				return null;
-			}
 			if (sr.isComplete()) {
 				results.remove(requestId);
 			}
@@ -217,14 +213,20 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		return result;
 	}
 
+	private LlmResult getResult(ConversationId requestId) {
+		return results.get(requestId);
+	}
+
 	@Override
 	public int getQueuePositionFor(ConversationId streamId) {
 		BlockingQueue<Runnable> queue = llmExecutor.getThreadPoolExecutor().getQueue();
 		int index = 1;
 		for (Runnable r : queue) {
-			if (r instanceof LlmRequest req) {
-				if (req.getQuery().getConversationId().equals(streamId)) {
-					return index;
+			if (r instanceof PriorityTask pt) {
+				if (pt.getDelegate() instanceof LlmRequest req) {
+					if (req.getQuery().getConversationId().equals(streamId)) {
+						return index;
+					}
 				}
 			}
 			index++;
@@ -240,7 +242,9 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	}
 
 	private void askStreamingInternal(LlmRequest request) {
-		StreamResult sr = new StreamResult();
+		StreamResult sr = (StreamResult) getResult(request.getQuery().getConversationId());
+		sr.setState(LlmResultState.IN_PROGRESS);
+
 		String contextKey = request.getQuery().getConversationId().getValue().toString();
 
 		try {

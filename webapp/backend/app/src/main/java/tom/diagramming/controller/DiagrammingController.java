@@ -18,7 +18,7 @@ import tom.api.model.conversation.Conversation;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
 import tom.api.services.assistant.ConversationInUseException;
-import tom.api.services.assistant.LlmResult;
+import tom.api.services.assistant.LlmResultState;
 import tom.api.services.assistant.QueueFullException;
 import tom.api.services.assistant.StringResult;
 import tom.controller.ResponseWrapper;
@@ -71,7 +71,7 @@ public class DiagrammingController {
 	public ResponseEntity<ResponseWrapper<String>> getResponse(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestParam("requestId") ConversationId requestId) {
 
-		StringResult llmResult = (StringResult) assistantQueryService.getResultFor(requestId);
+		StringResult llmResult = (StringResult) assistantQueryService.getResultAndRemoveIfComplete(requestId);
 
 		if (llmResult == null) {
 			int queuePosition = assistantQueryService.getQueuePositionFor(requestId);
@@ -85,7 +85,7 @@ public class DiagrammingController {
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
-		if (llmResult == LlmResult.IN_PROGRESS) {
+		if (llmResult.getState() == LlmResultState.IN_PROGRESS) {
 			ResponseWrapper<String> response = ResponseWrapper.SuccessResponse("~~LLM~Executing~~");
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}

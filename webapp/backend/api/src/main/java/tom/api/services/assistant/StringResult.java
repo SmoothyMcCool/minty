@@ -1,10 +1,9 @@
 package tom.api.services.assistant;
 
-import org.apache.commons.lang3.StringUtils;
-
 public final class StringResult implements LlmResult {
 
 	private String value = "";
+	private LlmResultState resultState = LlmResultState.QUEUED;
 
 	public StringResult() {
 	}
@@ -18,7 +17,14 @@ public final class StringResult implements LlmResult {
 	}
 
 	public boolean isComplete() {
-		return StringUtils.isNotBlank(value);
+		return resultState == LlmResultState.COMPLETE;
 	}
 
+	public void setState(LlmResultState resultState) {
+		this.resultState = resultState;
+	}
+
+	public LlmResultState getState() {
+		return resultState;
+	}
 }

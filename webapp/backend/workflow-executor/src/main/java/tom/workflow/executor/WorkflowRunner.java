@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -188,6 +189,7 @@ public class WorkflowRunner {
 
 					} catch (InterruptedException e) {
 						Thread.currentThread().interrupt();
+						throw new CancellationException("Runner " + runner.getName() + " was interrupted");
 					} catch (Exception e) {
 						throw new WorkflowRunnerException("Runner " + runner.getName() + " failed.", e);
 					}

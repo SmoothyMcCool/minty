@@ -51,6 +51,7 @@ import de.neuland.pug4j.PugConfiguration;
 import de.neuland.pug4j.filter.MarkdownFilter;
 import de.neuland.pug4j.template.FileTemplateLoader;
 import tom.cache.service.SingleFlightCacheManager;
+import tom.prioritythreadpool.PriorityThreadPoolTaskExecutor;
 
 @Configuration
 @EnableWebMvc
@@ -114,12 +115,18 @@ public class ApplicationConfig implements WebMvcConfigurer {
 
 	@Bean
 	@Qualifier("llmExecutor")
-	ThreadPoolTaskExecutor llmExecutor() {
-		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-		taskExecutor.setCorePoolSize(properties.getConfig().threads().llmDefault());
-		taskExecutor.setMaxPoolSize(properties.getConfig().threads().llmMax());
-		taskExecutor.setQueueCapacity(properties.getConfig().ollama().maxRequests());
-		return taskExecutor;
+	PriorityThreadPoolTaskExecutor llmExecutor() {
+		int corePoolSize = properties.getConfig().threads().llmDefault();
+		int maxPoolSize = properties.getConfig().threads().llmMax();
+
+		PriorityThreadPoolTaskExecutor exec = new PriorityThreadPoolTaskExecutor();
+		exec.setCorePoolSize(corePoolSize);
+		exec.setMaxPoolSize(maxPoolSize);
+		exec.setQueueCapacity(Integer.MAX_VALUE);
+		exec.setAllowCoreThreadTimeOut(false);
+		exec.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+		exec.initialize();
+		return exec;
 	}
 
 	@Bean

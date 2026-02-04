@@ -104,7 +104,8 @@ public class ConversationNamingService {
 
 					while (true) {
 						logger.info("getting result for  " + requestId);
-						StringResult llmResult = (StringResult) assistantQueryService.getResultFor(requestId);
+						StringResult llmResult = (StringResult) assistantQueryService
+								.getResultAndRemoveIfComplete(requestId);
 						if (llmResult != null && llmResult.isComplete()) {
 							summary = llmResult instanceof StringResult ? ((StringResult) llmResult).getValue() : "";
 							break;

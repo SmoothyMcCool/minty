@@ -10,7 +10,7 @@ public interface AssistantQueryService {
 
 	ConversationId askStreaming(UserId userId, AssistantQuery query) throws QueueFullException;
 
-	LlmResult getResultFor(ConversationId requestId);
+	LlmResult getResultAndRemoveIfComplete(ConversationId requestId);
 
 	int getQueuePositionFor(ConversationId streamId);
 
