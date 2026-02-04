@@ -11,7 +11,7 @@ public final class ToolExecutionContext {
 	public static final String USER_ID = "userId";
 	public static final String ASSISTANT_ID = "assistantId";
 
-	// Thread‑safe, lock‑free map
+	// Thread-safe, lock-free map
 	private static final Map<String, Map<String, String>> ContextMap = new ConcurrentHashMap<>();
 
 	// Private constructor to prevent instantiation

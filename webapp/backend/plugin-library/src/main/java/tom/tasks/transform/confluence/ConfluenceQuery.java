@@ -157,7 +157,7 @@ public class ConfluenceQuery implements MintyTask, ServiceConsumer {
 
 	@Override
 	public boolean readyToRun() {
-		return true;
+		return input != null || !config.getPages().isEmpty();
 	}
 
 	@Override

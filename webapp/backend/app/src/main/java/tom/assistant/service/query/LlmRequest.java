@@ -5,12 +5,11 @@ import java.time.Instant;
 import tom.api.UserId;
 import tom.api.model.assistant.AssistantQuery;
 
-public class LlmRequest implements Runnable {
+public class LlmRequest {
 
 	private final UserId userId;
 	private final AssistantQuery query;
 	private final Instant queueTime;
-	private Runnable task;
 
 	public LlmRequest(UserId userId, AssistantQuery query, Instant queueTime) {
 		this.userId = userId;
@@ -28,15 +27,6 @@ public class LlmRequest implements Runnable {
 
 	public Instant getQueueTime() {
 		return queueTime;
-	}
-
-	@Override
-	public void run() {
-		task.run();
-	}
-
-	public void setTask(Runnable task) {
-		this.task = task;
 	}
 
 }

@@ -13,8 +13,10 @@ public final class StreamResult implements LlmResult {
 	private AtomicReference<LlmMetric> metric = new AtomicReference<>();
 	private AtomicReference<List<String>> sources = new AtomicReference<>();
 	private final AtomicBoolean complete = new AtomicBoolean(false);
+	private AtomicReference<LlmResultState> resultState = new AtomicReference<>();
 
 	public StreamResult() {
+		resultState.set(LlmResultState.QUEUED);
 	}
 
 	public void addChunk(String chunk) {
@@ -36,6 +38,7 @@ public final class StreamResult implements LlmResult {
 	}
 
 	public boolean markComplete() {
+		resultState.set(LlmResultState.COMPLETE);
 		return complete.compareAndSet(false, true);
 	}
 
@@ -57,5 +60,13 @@ public final class StreamResult implements LlmResult {
 
 	public void addSources(List<String> docsUsed) {
 		sources.set(List.copyOf(docsUsed));
+	}
+
+	public void setState(LlmResultState resultState) {
+		this.resultState.set(resultState);
+	}
+
+	public LlmResultState getState() {
+		return resultState.get();
 	}
 }
