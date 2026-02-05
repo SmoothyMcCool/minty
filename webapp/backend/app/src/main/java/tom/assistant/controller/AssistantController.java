@@ -235,7 +235,6 @@ public class AssistantController {
 				}
 
 				int queuePosition = assistantQueryService.getQueuePositionFor(streamId);
-				logger.info("queueposition is " + queuePosition);
 				if (queuePosition == -1) {
 					// Clean up after ourselves. Remove the completed conversation.
 					assistantQueryService.getResultAndRemoveIfComplete(streamId);

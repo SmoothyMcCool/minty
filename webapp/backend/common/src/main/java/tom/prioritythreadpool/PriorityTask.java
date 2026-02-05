@@ -2,6 +2,8 @@ package tom.prioritythreadpool;
 
 import java.util.Objects;
 
+import tom.api.ConversationId;
+
 /**
  * A Runnable that knows its priority. Lower numbers = higher priority. The
  * executor will order tasks by this value.
@@ -9,11 +11,13 @@ import java.util.Objects;
 public final class PriorityTask implements Runnable, Comparable<PriorityTask> {
 
 	private final Runnable delegate;
+	private final ConversationId conversationId;
 	private final TaskPriority priority;
 
-	public PriorityTask(Runnable delegate, TaskPriority priority) {
+	public PriorityTask(Runnable delegate, ConversationId conversationId, TaskPriority priority) {
 		this.delegate = Objects.requireNonNull(delegate);
 		this.priority = Objects.requireNonNull(priority);
+		this.conversationId = Objects.requireNonNull(conversationId);
 	}
 
 	@Override
@@ -37,4 +41,9 @@ public final class PriorityTask implements Runnable, Comparable<PriorityTask> {
 	public Runnable getDelegate() {
 		return delegate;
 	}
+
+	public ConversationId getConversationId() {
+		return conversationId;
+	}
+
 }
