@@ -11,7 +11,7 @@
 				<span *ngIf="queueDepth === 2; else depthLargerThanOne">Waiting... There is one request ahead of you.</span>
 			</ng-template>
 			<ng-template #depthLargerThanOne>
-				<span *ngIf="queueDepth !== undefined">Waiting... There are multiple requests ahead of you.</span>
+				<span *ngIf="queueDepth !== undefined">Waiting... There are {{queueDepth - 1}} requests ahead of you.</span>
 			</ng-template>
 		</div>
 		<ng-container *ngIf="useMarkdown; else noMarkdown">

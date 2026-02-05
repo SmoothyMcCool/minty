@@ -6,6 +6,8 @@ import java.util.concurrent.PriorityBlockingQueue;
 import org.springframework.lang.NonNull;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import tom.api.ConversationId;
+
 public class PriorityThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 
 	private static final long serialVersionUID = 1507593744822780926L;
@@ -16,7 +18,7 @@ public class PriorityThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 		return new PriorityBlockingQueue<>();
 	}
 
-	public void execute(Runnable task, TaskPriority priority) {
-		super.execute(new PriorityTask(task, priority));
+	public void execute(Runnable task, ConversationId conversationId, TaskPriority priority) {
+		super.execute(new PriorityTask(task, conversationId, priority));
 	}
 }

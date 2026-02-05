@@ -44,6 +44,7 @@ import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PreDestroy;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 import tom.api.ConversationId;
 import tom.api.UserId;
 import tom.api.model.assistant.Assistant;
@@ -119,7 +120,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			sr.setState(LlmResultState.QUEUED);
 			results.put(query.getConversationId(), sr);
 
-			llmExecutor.execute(() -> askInternal(request), TaskPriority.Low);
+			llmExecutor.execute(() -> askInternal(request), query.getConversationId(), TaskPriority.Low);
 
 			return query.getConversationId();
 
@@ -179,8 +180,8 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			StreamResult sr = new StreamResult();
 			sr.setState(LlmResultState.QUEUED);
 			results.put(request.getQuery().getConversationId(), sr);
-			llmExecutor.execute(() -> askStreamingInternal(request), TaskPriority.High);
-			logger.info("Enqueued task for conversation " + query.getConversationId());
+			llmExecutor.execute(() -> askStreamingInternal(request), request.getQuery().getConversationId(),
+					TaskPriority.High);
 
 			return request.getQuery().getConversationId();
 
@@ -223,10 +224,8 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		int index = 1;
 		for (Runnable r : queue) {
 			if (r instanceof PriorityTask pt) {
-				if (pt.getDelegate() instanceof LlmRequest req) {
-					if (req.getQuery().getConversationId().equals(streamId)) {
-						return index;
-					}
+				if (pt.getConversationId().equals(streamId)) {
+					return index;
 				}
 			}
 			index++;
@@ -276,7 +275,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 
 			AtomicBoolean failed = new AtomicBoolean(false);
 
-			responses.doOnNext(chatClientResponse -> {
+			responses.publishOn(Schedulers.immediate()).doOnNext(chatClientResponse -> {
 
 				ChatResponse chatResponse = chatClientResponse.chatResponse();
 				if (chatResponse == null) {
@@ -324,7 +323,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 					results.remove(request.getQuery().getConversationId());
 					ToolExecutionContext.getAndClear(contextKey);
 				}
-			}).subscribe();
+			}).blockLast();
 
 		} catch (Exception e) {
 			if (results.containsKey(request.getQuery().getConversationId())) {
@@ -334,7 +333,6 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 				return;
 			}
 		}
-
 	}
 
 	private ChatClientRequestSpec prepareFromQuery(User user, AssistantQuery query) {
