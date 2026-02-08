@@ -8,6 +8,14 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 import javax.sql.DataSource;
 
+import org.apache.hc.client5.http.config.ConnectionConfig;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.core5.http.io.SocketConfig;
+import org.apache.hc.core5.util.Timeout;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.ai.ollama.api.OllamaApi;
@@ -15,8 +23,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.task.SimpleAsyncTaskExecutor;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -101,6 +108,7 @@ public class ApplicationConfig implements WebMvcConfigurer {
 		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
 		taskExecutor.setCorePoolSize(properties.getConfig().threads().taskDefault());
 		taskExecutor.setMaxPoolSize(properties.getConfig().threads().taskMax());
+		taskExecutor.initialize();
 		return taskExecutor;
 	}
 
@@ -110,6 +118,7 @@ public class ApplicationConfig implements WebMvcConfigurer {
 		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
 		taskExecutor.setCorePoolSize(properties.getConfig().threads().documentDefault());
 		taskExecutor.setMaxPoolSize(properties.getConfig().threads().documentMax());
+		taskExecutor.initialize();
 		return taskExecutor;
 	}
 
@@ -127,13 +136,6 @@ public class ApplicationConfig implements WebMvcConfigurer {
 		exec.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
 		exec.initialize();
 		return exec;
-	}
-
-	@Bean
-	@Qualifier("simpleExecutor")
-	SimpleAsyncTaskExecutor simpleExecutor() {
-		SimpleAsyncTaskExecutor simpleExecutor = new SimpleAsyncTaskExecutor();
-		return simpleExecutor;
 	}
 
 	// For use by @Scheduled
@@ -176,18 +178,32 @@ public class ApplicationConfig implements WebMvcConfigurer {
 	OllamaApi ollamaApi() {
 		URI ollamaUri = properties.getConfig().ollama().uri();
 		logger.info("ollama URI is " + ollamaUri);
-		SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-
 		Duration ollamaTimeout = properties.getConfig().ollama().apiTimeout();
-		factory.setReadTimeout(ollamaTimeout);
+		Duration ollamaConnectTimeout = properties.getConfig().ollama().apiConnectTimeout();
 
-		RestClient.Builder restClientBuilder = RestClient.builder().requestFactory(factory);
+		ConnectionConfig connectionConfig = ConnectionConfig.custom()
+				.setConnectTimeout(Timeout.of(ollamaConnectTimeout)).build();
+
+		SocketConfig socketConfig = SocketConfig.custom().setSoTimeout(Timeout.of(ollamaTimeout)).build();
+
+		PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
+				.setDefaultConnectionConfig(connectionConfig).setDefaultSocketConfig(socketConfig).setMaxConnTotal(50)
+				.setMaxConnPerRoute(50).build();
+
+		RequestConfig requestConfig = RequestConfig.custom().setResponseTimeout(Timeout.of(ollamaTimeout)).build();
+
+		CloseableHttpClient httpClient = HttpClients.custom().setConnectionManager(connectionManager)
+				.setDefaultRequestConfig(requestConfig).disableAutomaticRetries().build();
+
+		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(httpClient);
+
+		RestClient.Builder restClientBuilder = RestClient.builder().requestFactory(requestFactory);
 
 		return OllamaApi.builder().baseUrl(ollamaUri.toString()).restClientBuilder(restClientBuilder).build();
 	}
 
 	@Override
-	public void configureMessageConverters(@NonNull List<HttpMessageConverter<?>> converters) {
+	public void extendMessageConverters(@NonNull List<HttpMessageConverter<?>> converters) {
 		Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder();
 		builder.indentOutput(true);// .dateFormat(new SimpleDateFormat("EEE MMM dd hh:mm:ss yyyy"));
 		// .serializationInclusion(Include.NON_EMPTY);
