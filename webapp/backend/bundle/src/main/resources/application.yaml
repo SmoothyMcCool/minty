@@ -60,10 +60,10 @@ ollama:
   chatMemoryDepth: 100
   # The number of documents to retrieve when doing RAG.
   defaultTopK: 5
+  apiConnectTimeout: PT60S
   apiTimeout: PT20M
   # The maximum amount of time, in minutes, for an async response to complete. This is used for stream responses from the AI.
   asyncResponseTimeout: PT20M
-  maxRequests: 20
   # Embedding Parameters
   embedding:
     model: nomic-embed-text
