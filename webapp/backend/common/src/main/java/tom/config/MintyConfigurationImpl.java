@@ -32,7 +32,7 @@ public class MintyConfigurationImpl implements MintyConfiguration {
 	private final MintyConfig config;
 	private final Map<String, String> systemConfigs;
 	private final Map<String, String> userConfigs;
-	private final PropertyPlaceholderHelper placeholderHelper = new PropertyPlaceholderHelper("${", "}");
+	private final PropertyPlaceholderHelper placeholderHelper = new PropertyPlaceholderHelper("${", "}", ":", true);
 
 	public MintyConfigurationImpl() throws StreamReadException, DatabindException, IOException {
 		systemConfigs = new HashMap<>();
@@ -59,7 +59,13 @@ public class MintyConfigurationImpl implements MintyConfiguration {
 
 		for (String name : rawProps.stringPropertyNames()) {
 			String raw = rawProps.getProperty(name);
-			String resolved = placeholderHelper.replacePlaceholders(raw, rawProps::getProperty);
+			String resolved = placeholderHelper.replacePlaceholders(raw, key -> {
+				// First check environment variables
+				String envValue = System.getenv(key);
+				if (envValue != null) return envValue;
+				// Then fall back to YAML properties
+				return rawProps.getProperty(key);
+			});
 			resolvedProps.setProperty(name, resolved);
 		}
 
