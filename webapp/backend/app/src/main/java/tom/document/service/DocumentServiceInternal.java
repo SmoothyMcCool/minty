@@ -18,7 +18,7 @@ public interface DocumentServiceInternal extends DocumentService {
 
 	void markDocumentFailed(MintyDoc doc);
 
-	List<MintyDoc> listDocuments();
+	List<MintyDoc> listDocuments(UserId userId);
 
 	boolean documentExists(MintyDoc document);
 

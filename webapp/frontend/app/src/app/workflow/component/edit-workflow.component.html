@@ -1,11 +1,15 @@
 <div class="p-2 text-dark">
-	<h2>Edit Workflow</h2>
-
-	<form class="d-flex justify-content-end mb-2">
-		<button type="button" id="submitButton" class="btn btn-primary me-2" (click)="updateWorkflow()">UPDATE</button>
-		<button type="button" id="cancelButton" class="btn btn-danger" (click)="cancel()">CANCEL</button>
-	</form>
+	<div class="row">
+		<h2 class="col">Edit Workflow</h2>
+		<form class="col-auto d-flex justify-content-end mb-2">
+			<button type="button" id="submitButton" class="btn btn-primary me-2" (click)="updateWorkflow()"><i class="bi bi-check-lg"></i></button>
+			<button type="button" id="cancelButton" class="btn btn-danger" (click)="cancel()"><i class="bi bi-arrow-counterclockwise"></i></button>
+		</form>
+	</div>
 
 	<minty-workflow-editor name="workflowEditor" [taskSpecifications]="taskSpecifications"
 		[outputTaskSpecifications]="outputTaskSpecifications" [defaults]="defaults" [ngModel]="workflow" (ngModelChange)="workflowUpdated($event)"></minty-workflow-editor>
 </div>
+<minty-confirmation-dialog [title]="'Abandon Changes'" [message]="'Do you really want to abandon all your changes?'"
+	[visible]="confirmCancelVisible" (confirm)="confirmCancel()"
+	(cancel)="confirmCancelVisible = false"></minty-confirmation-dialog>

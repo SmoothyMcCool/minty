@@ -9,10 +9,11 @@ import { WorkflowService } from '../workflow.service';
 import { OutputTaskSpecification, AttributeMap, TaskSpecification } from 'src/app/model/workflow/task-specification';
 import { AlertService } from 'src/app/alert.service';
 import { WorkflowEditorComponent } from './workflow-editor.component';
+import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
 
 @Component({
 	selector: 'minty-edit-workflow',
-	imports: [CommonModule, FormsModule, WorkflowEditorComponent],
+	imports: [CommonModule, FormsModule, WorkflowEditorComponent, ConfirmationDialogComponent],
 	templateUrl: 'edit-workflow.component.html',
 	styleUrls: []
 })
@@ -22,6 +23,8 @@ export class EditWorkflowComponent implements OnInit {
 	workflow: Workflow;
 	taskSpecifications: TaskSpecification[];
 	outputTaskSpecifications: OutputTaskSpecification[];
+
+	confirmCancelVisible = false;
 
 	constructor(private route: ActivatedRoute,
 		private router: Router,
@@ -74,6 +77,10 @@ export class EditWorkflowComponent implements OnInit {
 	}
 
 	cancel() {
+		this.confirmCancelVisible = true;
+	}
+
+	confirmCancel() {
 		this.router.navigateByUrl('workflow');
 	}
 

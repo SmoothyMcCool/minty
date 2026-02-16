@@ -1,9 +1,9 @@
 <h5 >You're Updating Your Assistant? I'm so Proud of you!</h5>
 <form role="form" class="container-fluid" (submit)="updateAssistant()">
 	<div class="mb-2 d-flex justify-content-end">
-		<button type="submit" id="submitButton" [disabled]="formInvalid()" class="btn btn-primary me-2">Confirm</button>
+		<button type="submit" id="submitButton" [disabled]="formInvalid()" class="btn btn-primary me-2"><i class="bi bi-check-lg"></i></button>
 		<button type="button" id="cancelButton" class="btn btn-danger"
-			(click)="navigateTo('assistants')">DENY</button>
+			(click)="navigateTo('assistants')"><i class="bi bi-arrow-counterclockwise"></i></button>
 	</div>
 
 	<minty-assistant-editor name="assistantEditor" [models]="models" [documents]="documents" [tools]="tools" [(ngModel)]="assistant"></minty-assistant-editor>

@@ -10,10 +10,11 @@ import { Workflow } from 'src/app/model/workflow/workflow';
 import { OutputTaskSpecification, AttributeMap, TaskSpecification } from 'src/app/model/workflow/task-specification';
 import { ResultTemplate } from 'src/app/model/workflow/result-template';
 import { WorkflowEditorComponent } from './workflow-editor.component';
+import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
 
 @Component({
 	selector: 'minty-new-workflow',
-	imports: [CommonModule, FormsModule, WorkflowEditorComponent],
+	imports: [CommonModule, FormsModule, WorkflowEditorComponent, ConfirmationDialogComponent],
 	templateUrl: 'new-workflow.component.html',
 	styleUrls: ['workflow.component.css']
 })
@@ -22,6 +23,7 @@ export class NewWorkflowComponent implements OnInit {
 	taskSpecifications: TaskSpecification[] = [];
 	outputTaskSpecifications: OutputTaskSpecification[];
 	defaults: AttributeMap;
+	confirmCancelVisible = false;
 
 	resultTemplate: ResultTemplate = {
 		id: '',
@@ -72,6 +74,10 @@ export class NewWorkflowComponent implements OnInit {
 	}
 
 	cancel() {
+		this.confirmCancelVisible = true;
+	}
+
+	confirmCancel() {
 		this.router.navigateByUrl('workflow');
 	}
 
