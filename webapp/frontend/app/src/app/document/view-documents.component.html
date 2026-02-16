@@ -2,28 +2,31 @@
 	<div class="container">
 		<h1>Documents</h1>
 
-		<ng-container *ngIf="!addingDocument; else addNewDoc">
-			<button class="btn btn-primary mb-3" (click)="addNewDocument()">Add Document</button>
-		</ng-container>
 		<ng-template #addNewDoc>
-			<form role="form" (submit)="submitNewDocument()" class="well m-2 p-2">
+			<form role="form" (submit)="submitNewDocument()" class="row well mb-2">
 				<minty-document-editor
 					name="document-editor"
 					[(ngModel)]="docProperties"></minty-document-editor>
 
-				<div>
-					<button type="submit" class="btn btn-primary">Submit</button>
+				<div class="mb-2">
+					<button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i></button>
 					<button type="button" id="submitButton" class="btn btn-danger float-end"
-						(click)="cancelNewDocument()">Cancel</button>
+						(click)="cancelNewDocument()"><i class="bi bi-arrow-counterclockwise"></i></button>
 				</div>
 			</form>
 		</ng-template>
 
 		<form>
-			<div class="form-group well mb-2 p-2">
-				<label class="" for="docFilter">Filter</label>
-				<input type="text" class="form-control" id="docFilter" name="docFilter"
-					[ngModel]="filter" (ngModelChange)="filterChanged($event)">
+			<div class="row mb-2">
+				<ng-container *ngIf="!addingDocument; else addNewDoc">
+					<div class="col-auto my-auto">
+						<button class="btn btn-primary" (click)="addNewDocument()"><i class="bi bi-file-earmark-plus"></i></button>
+					</div>
+				</ng-container>
+				<div class="form-floating col">
+					<input type="text" id="docFilter" class="form-control" name="docFilter" [ngModel]="filter" (ngModelChange)="filterChanged($event)">
+					<label for="docFilter">Filter</label>
+				</div>
 			</div>
 		</form>
 		<div class="d-flex flex-column bd-highlight">

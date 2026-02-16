@@ -88,7 +88,7 @@ public class DocumentController {
 	@GetMapping({ "/list" })
 	public ResponseEntity<ResponseWrapper<List<MintyDoc>>> listDocuments(
 			@AuthenticationPrincipal UserDetailsUser user) {
-		List<MintyDoc> documents = documentService.listDocuments();
+		List<MintyDoc> documents = documentService.listDocuments(user.getId());
 
 		ResponseWrapper<List<MintyDoc>> response = ResponseWrapper.SuccessResponse(documents);
 		return new ResponseEntity<>(response, HttpStatus.OK);

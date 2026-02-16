@@ -267,8 +267,8 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 	}
 
 	@Override
-	public List<MintyDoc> listDocuments() {
-		List<MintyDoc> docs = documentRepository.findAll();
+	public List<MintyDoc> listDocuments(UserId userId) {
+		List<MintyDoc> docs = documentRepository.findAllByOwnerId(userId);
 		docs.forEach(doc -> {
 			doc.setAssociatedAssistants(assistantDocumentLinkService.getAssistantIdsForDocument(doc.getDocumentId()));
 		});

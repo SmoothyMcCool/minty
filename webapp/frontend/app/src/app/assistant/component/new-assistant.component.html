@@ -2,9 +2,9 @@
 <form role="form" class="container-fluid well p-3" (submit)="createAssistant()">
 
 	<div class="d-flex justify-content-end">
-		<button type="submit" id="submitButton" [disabled]="formInvalid()" class="btn btn-primary me-2">Ok</button>
+		<button type="submit" id="submitButton" [disabled]="formInvalid()" class="btn btn-primary me-2"><i class="bi bi-check-lg"></i></button>
 		<button type="button" id="cancelButton" class="btn btn-danger"
-			(click)="navigateTo('assistants')">Nope</button>
+			(click)="navigateTo('assistants')"><i class="bi bi-arrow-counterclockwise"></i></button>
 	</div>
 
 	<minty-assistant-editor name="assistantEditor" [models]="models" [documents]="documents" [tools]="tools" [(ngModel)]="assistant"></minty-assistant-editor>
