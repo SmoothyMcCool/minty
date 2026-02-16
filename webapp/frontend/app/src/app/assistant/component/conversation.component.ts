@@ -17,6 +17,8 @@ export class ConversationComponent {
 	@Input() messages: ChatMessage[];
 	@Input() responsePending: boolean;
 	@Input() queueDepth: number;
+	@Input() oldestMessagesFirst: boolean;
+	@Input() showChatOptions: boolean;
 
 	trackByMessage(index: number, message: ChatMessage) {
 		return index;

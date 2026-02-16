@@ -28,7 +28,7 @@ import tom.api.services.assistant.AssistantManagementService;
 import tom.assistant.service.management.AssistantManagementServiceInternal;
 import tom.conversation.model.ConversationEntity;
 import tom.conversation.repository.ConversationRepository;
-import tom.ollama.service.OllamaService;
+import tom.llm.service.LlmService;
 
 @Service
 public class ConversationServiceImpl implements ConversationServiceInternal {
@@ -36,14 +36,14 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 	private static final Logger logger = LogManager.getLogger(ConversationServiceImpl.class);
 
 	private final AssistantManagementServiceInternal assistantManagementService;
-	private final OllamaService ollamaService;
+	private final LlmService llmService;
 	private final ConversationRepository conversationRepository;
 	private final HashMap<ConversationId, Conversation> fakeConversationMap;
 
 	public ConversationServiceImpl(ConversationRepository conversationRepository,
-			AssistantManagementServiceInternal assistantManagementService, OllamaService ollamaService) {
+			AssistantManagementServiceInternal assistantManagementService, LlmService llmService) {
 		this.assistantManagementService = assistantManagementService;
-		this.ollamaService = ollamaService;
+		this.llmService = llmService;
 		this.conversationRepository = conversationRepository;
 		fakeConversationMap = new HashMap<>();
 	}
@@ -70,7 +70,7 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 	public void deleteConversationsForAssistant(UserId userId, AssistantId assistantId) {
 		List<ConversationEntity> conversations = conversationRepository.findAllByOwnerIdAndAssociatedAssistantId(userId,
 				assistantId);
-		ChatMemoryRepository chatMemoryRepository = ollamaService.getChatMemoryRepository();
+		ChatMemoryRepository chatMemoryRepository = llmService.getChatMemoryRepository();
 
 		conversations.forEach(conversation -> {
 			chatMemoryRepository.deleteByConversationId(conversation.getConversationId().toString());
@@ -108,7 +108,7 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 		}
 
 		List<ChatMessage> result = new ArrayList<>();
-		ChatMemory chatMemory = ollamaService.getChatMemory();
+		ChatMemory chatMemory = llmService.getChatMemory();
 
 		List<Message> messages = chatMemory.get(conversationId.value().toString());
 		result = messages.stream()
@@ -139,7 +139,7 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 			return false;
 		}
 
-		ChatMemory chatMemory = ollamaService.getChatMemory();
+		ChatMemory chatMemory = llmService.getChatMemory();
 
 		chatMemory.clear(conversationId.value().toString());
 		conversationRepository.deleteById(conversationId.value());
@@ -156,7 +156,7 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 			return false;
 		}
 
-		ChatMemory chatMemory = ollamaService.getChatMemory();
+		ChatMemory chatMemory = llmService.getChatMemory();
 
 		chatMemory.clear(conversationId.value().toString());
 

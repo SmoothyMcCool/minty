@@ -3,7 +3,6 @@ package tom.config.security;
 import java.util.List;
 
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
@@ -22,7 +21,6 @@ import tom.user.service.UserServiceInternal;
 
 @Configuration
 @EnableWebSecurity
-@ComponentScan("tom")
 public class SecurityConfig {
 
 	@Bean
@@ -45,30 +43,29 @@ public class SecurityConfig {
 
 	@Bean
 	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-		http
-			.csrf((csrf) -> csrf.disable())
-			// .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
-			.sessionManagement(configurer -> configurer.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
+		http.csrf((csrf) -> csrf.disable())
+				// .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+				.sessionManagement(configurer -> configurer.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
 
-			.authorizeHttpRequests(authorizeRequests -> authorizeRequests
+				.authorizeHttpRequests(authorizeRequests -> authorizeRequests
 
-				.requestMatchers(r -> {
-					String path = r.getServletPath();
-					List<String> extensions = List.of(".js", ".css", ".html", ".map", "ttf", ".woff", ".woff2", ".jpg",
-							".png");
-					for (String extension : extensions) {
-						if (path.endsWith(extension)) {
-							return true;
-						}
-					}
-					return false;
-				}).permitAll()
+						.requestMatchers(r -> {
+							String path = r.getServletPath();
+							List<String> extensions = List.of(".js", ".css", ".html", ".map", "ttf", ".woff", ".woff2",
+									".jpg", ".png");
+							for (String extension : extensions) {
+								if (path.endsWith(extension)) {
+									return true;
+								}
+							}
+							return false;
+						}).permitAll()
 
-				.requestMatchers("/api/user/new", "/api/login").permitAll()
+						.requestMatchers("/api/user/new", "/api/login").permitAll()
 
-				.requestMatchers("/api/**")	.authenticated()
+						.requestMatchers("/api/**").authenticated()
 
-				.anyRequest().permitAll())
+						.anyRequest().permitAll())
 				// .authorizeHttpRequests(authorizeRequests -> authorizeRequests
 				// .requestMatchers("/api/user/new",
 				// "/api/login").permitAll().anyRequest().authenticated())
@@ -77,10 +74,7 @@ public class SecurityConfig {
 				.httpBasic(httpBasic -> {
 				})
 
-				.logout(logout ->
-					logout.logoutUrl("/api/logout")
-						.logoutSuccessUrl("/login")
-				);
+				.logout(logout -> logout.logoutUrl("/api/logout").logoutSuccessUrl("/login"));
 
 		return http.build();
 

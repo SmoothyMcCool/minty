@@ -21,8 +21,11 @@
 
 	<modules>
 		<module>../api</module>
+		<module>../api-ollama</module>
+		<module>../api-vllm</module>
 		<module>../app</module>
 		<module>../common</module>
+		<module>../llm</module>
 		<module>../plugins</module>
 		<module>../pug4j-shaded</module>
 		<module>../plugin-library</module>

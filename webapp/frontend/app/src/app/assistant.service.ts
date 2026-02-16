@@ -168,6 +168,13 @@ export class AssistantService {
 				body: JSON.stringify(streamId)
 
 			}).then(response => {
+				if (response.status === 204 || !response.body) {
+					// Server explicitly returned no content
+					console.log('Server returned nothing (204)');
+					observer.complete();
+					return;
+				}
+
 				const reader = response.body!.getReader();
 				const streamState = {
 					buffer: '',

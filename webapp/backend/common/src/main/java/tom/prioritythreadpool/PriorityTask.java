@@ -1,5 +1,6 @@
 package tom.prioritythreadpool;
 
+import java.time.Instant;
 import java.util.Objects;
 
 import tom.api.ConversationId;
@@ -13,11 +14,13 @@ public final class PriorityTask implements Runnable, Comparable<PriorityTask> {
 	private final Runnable delegate;
 	private final ConversationId conversationId;
 	private final TaskPriority priority;
+	private final Instant submitTime;
 
 	public PriorityTask(Runnable delegate, ConversationId conversationId, TaskPriority priority) {
 		this.delegate = Objects.requireNonNull(delegate);
 		this.priority = Objects.requireNonNull(priority);
 		this.conversationId = Objects.requireNonNull(conversationId);
+		submitTime = Instant.now();
 	}
 
 	@Override
@@ -26,11 +29,16 @@ public final class PriorityTask implements Runnable, Comparable<PriorityTask> {
 	}
 
 	/**
-	 * Order by the enum's ordinal (High < Medium < Low).
+	 * Order by the enum's ordinal (High < Medium < Low). On ties, older submissions
+	 * are higher priority.
 	 */
 	@Override
 	public int compareTo(PriorityTask other) {
-		return this.priority.compareTo(other.priority);
+		int priorityComparison = Integer.compare(this.priorityWeight(), other.priorityWeight());
+		if (priorityComparison == 0) {
+			return this.submitTime.compareTo(other.submitTime);
+		}
+		return priorityComparison;
 	}
 
 	@Override
@@ -46,4 +54,11 @@ public final class PriorityTask implements Runnable, Comparable<PriorityTask> {
 		return conversationId;
 	}
 
+	private int priorityWeight() {
+		return switch (priority) {
+		case High -> 0;
+		case Medium -> 1;
+		case Low -> 2;
+		};
+	}
 }

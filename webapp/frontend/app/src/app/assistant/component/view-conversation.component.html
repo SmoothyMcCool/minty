@@ -3,52 +3,9 @@
 		<h1>{{assistant.name}}<ng-container *ngIf="conversation && conversation.title"> -
 				{{conversation.title}}</ng-container></h1>
 
-		<div class="row mb-2">
-			<div class="col-2">
-				<h2>Prompt</h2>
-				<div *ngIf="!assistant.hasMemory">
-					<i class="bi bi-exclamation-triangle">
-						This assistant has no conversation history!
-						It will only respond to the last message you send,
-						and your conversation will not be saved.
-					</i>
-				</div>
-			</div>
-			<div class="col-10">
-				<div class="overflow-auto well p-3" style="white-space: pre-wrap; height: 100px;">
-					{{assistant.prompt}}
-				</div>
-			</div>
-		</div>
-
-		<div class="row mb-2 form-floating">
-			<div class="col form-floating">
-				<textarea style="height: 100px;" class="form-control" id="aiQuery" name="aiQuery"
-					[(ngModel)]="userText"></textarea>
-				<label class="ms-3" for="aiQuery">Put your input here</label>
-			</div>
-		</div>
-
-		<div class="row mb-2">
-			<div class="col-auto">
-				<button class="btn btn-primary mb-2" (click)="submit(userText)"
-					[disabled]="!userText || waitingForResponse">
-					Okey Dokey
-				</button>
-			</div>
-			<div class="col">
-				<minty-image-input [imageSupport]="model && model.imageSupport" [reset]="shouldReset" (image)="onImageChanged($event)"></minty-image-input>
-
-			</div>
-			<div class="col-auto">
-				<button class="btn btn-danger" (click)="restartConversation()">
-					Start over
-				</button>
-			</div>
-		</div>
-
-		<div class="form-group mb-2" *ngIf="model">
-			<minty-slider [min]="model.defaultContext" [max]="model.maximumContext" [label]="'Context Size (Smaller is sometimes faster)'" [(ngModel)]="contextSize"></minty-slider>
+		<div class="overflow-auto" *ngIf="user && !newestMessagesFirst">
+			<minty-conversation [messages]="chatHistory" [responsePending]="waitingForResponse"
+				[queueDepth]="queueDepth" [oldestMessagesFirst]="user && !newestMessagesFirst" [showChatOptions]="showChatOptions"></minty-conversation>
 		</div>
 
 		<ng-container *ngIf="sources">
@@ -62,7 +19,7 @@
 			</ul>
 		</ng-container>
 
-		<div class="row mb-2" *ngIf="metrics">
+		<div class="row mb-2" *ngIf="metrics && (metrics.promptTokens > 0 || metrics.completionTokens > 0) ">
 			<div class="col-auto">
 				<strong>Request Tokens:</strong>&nbsp;{{metrics.promptTokens}}
 			</div>
@@ -74,10 +31,60 @@
 			</div>
 		</div>
 
-		<div class="overflow-auto">
-			<minty-conversation [messages]="chatHistory" [responsePending]="waitingForResponse"
-				[queueDepth]="queueDepth"></minty-conversation>
+		<div class="row mb-2" *ngIf="(assistant.prompt.length > 0 || !assistant.hasMemory) && showChatOptions">
+			<div class="col">
+				<div class="overflow-auto well p-3" style="white-space: pre-wrap; height: 100px;">
+					<div *ngIf="!assistant.hasMemory">
+						<i class="bi bi-exclamation-triangle">
+							This assistant has no conversation history!
+							It will only respond to the last message you send,
+							and your conversation will not be saved.
+						</i>
+					</div>
+					{{assistant.prompt}}
+				</div>
+			</div>
 		</div>
+
+		<div class="row mb-2 form-floating">
+			<div class="col form-floating">
+				<textarea class="form-control" id="aiQuery" name="aiQuery"
+					[(ngModel)]="userText" style="max-height: 400px;" autoResize></textarea>
+				<label class="ms-3" for="aiQuery">Put your input here</label>
+			</div>
+		</div>
+
+		<div class="row mb-2" [ngClass]="{ 'flex-row-reverse': reverseButtons }">
+			<div class="col-auto">
+				<button class="btn btn-primary mb-2" (click)="submit(userText)"
+					[disabled]="!userText || waitingForResponse">
+					<i class="bi" [class.bi-arrow-down]="newestMessagesFirst" [class.bi-arrow-up]="!newestMessagesFirst"></i>
+				</button>
+			</div>
+			<div class="col">
+				<minty-image-input [imageSupport]="model && model.imageSupport" [reset]="shouldReset" (image)="onImageChanged($event)"></minty-image-input>
+			</div>
+			<div class="col-auto">
+				<button class="btn btn-danger" (click)="restartConversation()">
+					<i class="bi bi-rewind-circle"></i>
+				</button>
+			</div>
+			<div class="col-auto">
+				<button class="btn" (click)="showChatOptions = !showChatOptions">
+					<i class="bi bi-sliders"></i>
+				</button>
+			</div>
+		</div>
+
+		<div class="form-group mb-2" *ngIf="model && showChatOptions">
+			<minty-slider [min]="model.defaultContext" [max]="model.maximumContext" [label]="'Context Size (Smaller is sometimes faster)'" [(ngModel)]="contextSize"></minty-slider>
+		</div>
+
+		<div class="overflow-auto" *ngIf="user && newestMessagesFirst">
+			<minty-conversation [messages]="chatHistory" [responsePending]="waitingForResponse"
+				[queueDepth]="queueDepth" [oldestMessagesFirst]="!newestMessagesFirst" [showChatOptions]="showChatOptions"></minty-conversation>
+		</div>
+
 	</div>
 </div>
 

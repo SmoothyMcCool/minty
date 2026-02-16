@@ -16,6 +16,8 @@ import tom.api.AssistantId;
 import tom.api.ConversationId;
 import tom.api.model.conversation.ChatMessage;
 import tom.api.model.conversation.Conversation;
+import tom.api.services.assistant.AssistantQueryService;
+import tom.api.services.assistant.LlmResult;
 import tom.controller.ResponseWrapper;
 import tom.conversation.service.ConversationServiceInternal;
 import tom.meta.service.MetadataService;
@@ -26,10 +28,13 @@ import tom.model.security.UserDetailsUser;
 public class ConversationController {
 
 	private final ConversationServiceInternal conversationService;
+	private final AssistantQueryService assistantQueryService;
 	private final MetadataService metadataService;
 
-	public ConversationController(ConversationServiceInternal conversationService, MetadataService metadataService) {
+	public ConversationController(ConversationServiceInternal conversationService,
+			AssistantQueryService assistantQueryService, MetadataService metadataService) {
 		this.conversationService = conversationService;
+		this.assistantQueryService = assistantQueryService;
 		this.metadataService = metadataService;
 	}
 
@@ -73,6 +78,11 @@ public class ConversationController {
 			@RequestParam("conversationId") ConversationId conversationId) {
 
 		List<ChatMessage> messages = conversationService.getChatMessages(user.getId(), conversationId);
+		LlmResult result = assistantQueryService.peekLlmResult(conversationId);
+		if (result != null) {
+			ChatMessage inFlightMessage = new ChatMessage(true, result.getQuery());
+			messages.addFirst(inFlightMessage);
+		}
 
 		ResponseWrapper<List<ChatMessage>> response = ResponseWrapper.SuccessResponse(messages);
 		return new ResponseEntity<>(response, HttpStatus.OK);

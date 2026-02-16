@@ -26,7 +26,8 @@ export class SignupComponent {
 			id: '',
 			name: '',
 			password: '',
-			defaults: new Map()
+			defaults: {},
+			settings: {}
 		};
 	}
 

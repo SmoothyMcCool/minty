@@ -1,6 +1,6 @@
 // data-editor.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, Input, Output, EventEmitter, forwardRef, AfterViewInit } from '@angular/core';
+import { Component, forwardRef } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { Packet } from 'src/app/model/workflow/packet';
 

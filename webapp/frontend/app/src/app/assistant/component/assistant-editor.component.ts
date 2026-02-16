@@ -8,10 +8,11 @@ import { MintyDoc } from 'src/app/model/minty-doc';
 import { MintyTool } from 'src/app/model/minty-tool';
 import { Model } from 'src/app/model/model';
 import { SliderComponent } from './slider.component';
+import { AutoResizeDirective } from 'src/app/pipe/auto-resize-directive';
 
 @Component({
 	selector: 'minty-assistant-editor',
-	imports: [CommonModule, FormsModule, RouterModule, FilterPipe, SliderComponent],
+	imports: [CommonModule, FormsModule, RouterModule, FilterPipe, SliderComponent, AutoResizeDirective],
 	templateUrl: 'assistant-editor.component.html',
 	providers: [
 		{

@@ -38,7 +38,7 @@ public class ToolRegistryServiceImpl implements ToolRegistryService {
 	}
 
 	@Override
-	public Object getTool(String toolName, UserId userId) {
+	public MintyTool getTool(String toolName, UserId userId) {
 		if (!tools.containsKey(toolName)) {
 			return null;
 		}

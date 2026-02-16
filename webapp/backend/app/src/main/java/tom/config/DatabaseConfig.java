@@ -27,7 +27,7 @@ public class DatabaseConfig {
 		props = properties;
 	}
 
-	@Bean
+	@Bean(destroyMethod = "close")
 	@SpringSessionDataSource
 	DataSource applicationDataSource() {
 		HikariConfig config = new HikariConfig();
@@ -43,9 +43,9 @@ public class DatabaseConfig {
 	}
 
 	@Bean
-	LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+	LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource applicationDataSource) {
 		LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
-		em.setDataSource(applicationDataSource());
+		em.setDataSource(applicationDataSource);
 		em.setPackagesToScan("tom");
 		// em.set.setHibernateProperties(getHibernateProperties());
 
@@ -61,9 +61,9 @@ public class DatabaseConfig {
 	}
 
 	@Bean
-	PlatformTransactionManager transactionManager() {
+	PlatformTransactionManager transactionManager(LocalContainerEntityManagerFactoryBean entityManagerFactory) {
 		JpaTransactionManager transactionManager = new JpaTransactionManager();
-		transactionManager.setEntityManagerFactory(entityManagerFactory().getObject());
+		transactionManager.setEntityManagerFactory(entityManagerFactory.getObject());
 		return transactionManager;
 	}
 

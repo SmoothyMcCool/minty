@@ -47,7 +47,18 @@ public class UserServiceImpl implements UserServiceInternal {
 		if (user.getDefaults() == null) {
 			user.setDefaults(new HashMap<>());
 		}
+		if (user.getSettings() == null) {
+			user.setSettings(defaultSettings());
+		}
 		return user;
+	}
+
+	private Map<String, String> defaultSettings() {
+		Map<String, String> defaults = new HashMap<>();
+		defaults.put("Message Order", "NewestFirst");
+		defaults.put("Button Alignment", "Left");
+		defaults.put("Theme", "Light Mode");
+		return defaults;
 	}
 
 	@Override

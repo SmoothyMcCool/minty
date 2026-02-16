@@ -40,6 +40,11 @@ export class AppComponent implements OnInit {
 	}
 
 	ngOnInit(): void {
+		const mapThemeLabelToValue = (label?: string): 'light' | 'dark' => {
+			if (!label) return 'light';
+			return label.toLowerCase().includes('dark') ? 'dark' : 'light';
+		};
+
 		this.alertList.set('failure', []);
 		this.alertList.set('info', []);
 		this.alertList.set('success', []);
@@ -52,6 +57,7 @@ export class AppComponent implements OnInit {
 			if (this.userService.loggedIn()) {
 				this.userService.getUser().subscribe(user => {
 					this.user = user;
+					const theme = document.documentElement.setAttribute('data-bs-theme', mapThemeLabelToValue(this.user.settings['Theme'] ?? 'Light Mode'));
 				});
 			}
 		});

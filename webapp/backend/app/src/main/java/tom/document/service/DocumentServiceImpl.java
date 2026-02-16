@@ -20,9 +20,6 @@ import org.springframework.ai.document.Document;
 import org.springframework.ai.model.transformer.KeywordMetadataEnricher;
 import org.springframework.ai.model.transformer.SummaryMetadataEnricher;
 import org.springframework.ai.model.transformer.SummaryMetadataEnricher.SummaryType;
-import org.springframework.ai.ollama.OllamaChatModel;
-import org.springframework.ai.ollama.api.OllamaApi;
-import org.springframework.ai.ollama.api.OllamaChatOptions;
 import org.springframework.ai.reader.tika.TikaDocumentReader;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -42,7 +39,7 @@ import tom.config.MintyConfiguration;
 import tom.document.model.DocumentState;
 import tom.document.model.MintyDoc;
 import tom.document.repository.DocumentRepository;
-import tom.ollama.service.OllamaService;
+import tom.llm.service.LlmService;
 
 @Service
 public class DocumentServiceImpl implements DocumentServiceInternal {
@@ -50,7 +47,7 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 	private static final Logger logger = LogManager.getLogger(DocumentServiceImpl.class);
 
 	private final ThreadPoolTaskExecutor fileProcessingExecutor;
-	private final OllamaService ollamaService;
+	private final LlmService llmService;
 	private final AssistantDocumentLinkService assistantDocumentLinkService;
 	private final DocumentRepository documentRepository;
 	private final JdbcTemplate vectorJdbcTemplate;
@@ -63,26 +60,25 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 	private final Path docFileStore;
 	private final ChatModel chatModel;
 
-	public DocumentServiceImpl(OllamaApi ollamaApi, DocumentRepository documentRepository,
-			@Qualifier("fileProcessingExecutor") ThreadPoolTaskExecutor fileProcessingExecutor,
-			OllamaService ollamaService, AssistantDocumentLinkService assistantDocumentLinkService,
-			MintyConfiguration properties, JdbcTemplate vectorJdbcTemplate) {
+	public DocumentServiceImpl(DocumentRepository documentRepository,
+			@Qualifier("fileProcessingExecutor") ThreadPoolTaskExecutor fileProcessingExecutor, LlmService llmService,
+			AssistantDocumentLinkService assistantDocumentLinkService, MintyConfiguration properties,
+			JdbcTemplate vectorJdbcTemplate) {
 		this.fileProcessingExecutor = fileProcessingExecutor;
-		this.ollamaService = ollamaService;
+		this.llmService = llmService;
 		this.documentRepository = documentRepository;
 		this.assistantDocumentLinkService = assistantDocumentLinkService;
 		this.vectorJdbcTemplate = vectorJdbcTemplate;
 		docFileStore = properties.getConfig().fileStores().docs();
-		keywordsPerDocument = properties.getConfig().ollama().embedding().keywordsPerDocument();
-		documentTargetChunkSize = properties.getConfig().ollama().embedding().documentTargetChunkSize();
-		macroTargetChunkSize = properties.getConfig().ollama().embedding().macroTargetChunkSize();
-		embeddingBatchSize = properties.getConfig().ollama().embedding().batchSize();
+		keywordsPerDocument = properties.getConfig().llm().embedding().keywordsPerDocument();
+		documentTargetChunkSize = properties.getConfig().llm().embedding().documentTargetChunkSize();
+		macroTargetChunkSize = properties.getConfig().llm().embedding().macroTargetChunkSize();
+		embeddingBatchSize = properties.getConfig().llm().embedding().batchSize();
 		// maxEmbeddingTokens =
-		// properties.getConfig().ollama().embedding().maxEmbeddingTokens();
+		// properties.getConfig().llm().embedding().maxEmbeddingTokens();
 
-		String summarizingModel = properties.getConfig().ollama().embedding().summarizingModel();
-		chatModel = OllamaChatModel.builder().ollamaApi(ollamaApi)
-				.defaultOptions(OllamaChatOptions.builder().model(summarizingModel).build()).build();
+		String summarizingModel = properties.getConfig().llm().embedding().summarizingModel();
+		chatModel = llmService.buildSimpleModel(summarizingModel);
 
 	}
 
@@ -203,7 +199,7 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 			return false;
 		}
 
-		VectorStore vectorStore = ollamaService.getVectorStore();
+		VectorStore vectorStore = llmService.getVectorStore();
 		try {
 			vectorStore.add(documents);
 			return true;

@@ -5,4 +5,5 @@ export interface User {
 	name: string;
 	password: string;
 	defaults: AttributeMap;
+	settings: AttributeMap;
 }

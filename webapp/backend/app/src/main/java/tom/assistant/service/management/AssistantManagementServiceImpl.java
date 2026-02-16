@@ -6,7 +6,6 @@ import java.util.Optional;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.ai.ollama.api.OllamaModel;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
@@ -20,7 +19,7 @@ import tom.assistant.repository.AssistantRepository;
 import tom.config.MintyConfiguration;
 import tom.conversation.service.ConversationServiceInternal;
 import tom.document.service.AssistantDocumentLinkService;
-import tom.ollama.service.OllamaService;
+import tom.llm.service.LlmService;
 
 @Service
 public class AssistantManagementServiceImpl implements AssistantManagementServiceInternal {
@@ -30,18 +29,17 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 	private final AssistantRepository assistantRepository;
 	private final AssistantDocumentLinkService assistantDocumentLinkService;
 	private final AssistantRegistryService assistantRegistryService;
+	private final LlmService llmService;
 	private ConversationServiceInternal conversationService;
-	private final OllamaService ollamaService;
 	private final MintyConfiguration properties;
 
 	public AssistantManagementServiceImpl(AssistantRepository assistantRepository,
 			AssistantDocumentLinkService assistantDocumentLinkService,
-			AssistantRegistryService assistantRegistryService, OllamaService ollamaService,
-			MintyConfiguration properties) {
+			AssistantRegistryService assistantRegistryService, LlmService llmService, MintyConfiguration properties) {
 		this.assistantRepository = assistantRepository;
 		this.assistantDocumentLinkService = assistantDocumentLinkService;
 		this.assistantRegistryService = assistantRegistryService;
-		this.ollamaService = ollamaService;
+		this.llmService = llmService;
 		this.properties = properties;
 	}
 
@@ -105,14 +103,11 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 	@Override
 	@Transactional
 	public Assistant findAssistant(UserId userId, AssistantId assistantId) {
-		if (assistantId.equals(AssistantManagementService.DefaultAssistantId)) {
-			return assistantRegistryService.createDefaultAssistant(ollamaService.getDefaultModel().toString());
-		} else if (assistantId.equals(AssistantManagementService.ConversationNamingAssistantId)) {
+		if (assistantId.equals(AssistantManagementService.ConversationNamingAssistantId)) {
 			return assistantRegistryService
-					.createConversationNamingAssistant(properties.getConfig().ollama().conversationNamingModel());
+					.createConversationNamingAssistant(properties.getConfig().llm().conversationNamingModel());
 		} else if (assistantId.equals(AssistantManagementService.DiagrammingAssistantId)) {
-			return assistantRegistryService
-					.createDiagrammingAssistant(properties.getConfig().ollama().diagrammingModel());
+			return assistantRegistryService.createDiagrammingAssistant(properties.getConfig().llm().diagrammingModel());
 		}
 
 		try {
@@ -166,7 +161,7 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 		}
 
 		try {
-			OllamaModel.valueOf(assistant.model()); // Just to make sure the value is valid.
+			llmService.isModelValid(assistant.model()); // Just to make sure the value is valid.
 			return assistant.model();
 		} catch (Exception e) {
 			logger.warn("Invalid model: " + assistant.model());
