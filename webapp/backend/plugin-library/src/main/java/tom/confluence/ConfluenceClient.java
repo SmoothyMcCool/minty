@@ -124,26 +124,29 @@ public class ConfluenceClient {
 		return new ChildrenResponse(children);
 	}
 
-	public SearchResponse searchByLabel(String label, int limit) {
-
-		String safeLabel = label.replace("\"", "\\\"");
-		String cql = "type=page AND label=\"" + safeLabel + "\"";
-
-		String url = baseUrl + "/rest/api/content/search" + "?cql=" + encode(cql) + "&limit=" + limit + "&expand=space";
-
-		String body;
-		JsonNode root;
-		try (CloseableHttpClient client = HttpClients.createDefault()) {
-			body = client.execute(newGet(url), okHandler(label));
-			root = mapper.readTree(body);
-		} catch (Exception e) {
-			throw new RuntimeException("Confluence search failed", e);
-		}
+	public SearchResponse searchByLabels(List<String> labels, int limit) {
 		List<SearchResult> results = new ArrayList<>();
 
-		for (JsonNode r : root.path("results")) {
-			results.add(new SearchResult(r.path("id").asText(), r.path("title").asText(),
-					r.path("space").path("key").asText("UNKNOWN"), ""));
+		for (String label : labels) {
+			String safeLabel = label.replace("\"", "\\\"");
+			String cql = "type=page AND label=\"" + safeLabel + "\"";
+
+			String url = baseUrl + "/rest/api/content/search" + "?cql=" + encode(cql) + "&limit=" + limit
+					+ "&expand=space";
+
+			String body;
+			JsonNode root;
+			try (CloseableHttpClient client = HttpClients.createDefault()) {
+				body = client.execute(newGet(url), okHandler(label));
+				root = mapper.readTree(body);
+			} catch (Exception e) {
+				throw new RuntimeException("Confluence search failed", e);
+			}
+
+			for (JsonNode r : root.path("results")) {
+				results.add(new SearchResult(r.path("id").asText(), r.path("title").asText(),
+						r.path("space").path("key").asText("UNKNOWN"), ""));
+			}
 		}
 
 		return new SearchResponse(results);

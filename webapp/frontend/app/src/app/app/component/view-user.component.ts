@@ -17,6 +17,9 @@ export class ViewUserComponent implements OnInit {
 	updatePassword = false;
 	messages: string[] = [];
 	defaultValues: { key: string, value: string }[] = [];
+	messageOrder = 'Newest at Top';
+	buttonAlignment = 'Left';
+	theme = 'Light Mode';
 
 	constructor(private userService: UserService, private alertService: AlertService) {
 	}
@@ -24,11 +27,29 @@ export class ViewUserComponent implements OnInit {
 	ngOnInit() {
 		this.userService.getUser().subscribe(user => {
 			this.user = user;
+			this.messageOrder = this.user.settings['Message Order'] ?? 'Newest at Top';
+			this.buttonAlignment = this.user.settings['Button Alignment'] ?? 'Left';
+			this.theme = this.user.settings['Theme'] ?? 'Light Mode';
 			this.userService.userDefaults().subscribe(userDefaults => {
 				this.user.defaults = userDefaults;
 				this.defaultValues = Object.entries(this.user.defaults).map(([key, value]) => ({ key,value }));
 			});
 		});
+	}
+
+	sortConversationsBy(sortOrder: string) {
+		this.messageOrder = sortOrder;
+		this.user.settings['Message Order'] = sortOrder;
+	}
+
+	useAlignment(alignment: string) {
+		this.buttonAlignment = alignment;
+		this.user.settings['Button Alignment'] = alignment;
+	}
+
+	useTheme(theme: string) {
+		this.theme = theme;
+		this.user.settings['Theme'] = theme;
 	}
 
 	update(): boolean {

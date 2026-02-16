@@ -22,6 +22,48 @@
 							[(ngModel)]="user.name" required>
 					</div>
 				</div>
+
+				<div class="mb-3 row">
+					<label for="account" class="col-sm-6 col-form-label">Chat Display Order</label>
+					<div class="col-sm-6" required>
+						<div class="form-check">
+							<input class="form-check-input" type="radio" name="orderNewestFirst" id="orderNewestFirst"
+								[(ngModel)]="messageOrder" value="NewestFirst" (change)="sortConversationsBy('NewestFirst')" checked>
+							<label class="form-check-label" for="orderNewestFirst">
+								Newest at Top (Discord-style)
+							</label>
+						</div>
+						<div class="form-check">
+							<input class="form-check-input" type="radio" name="orderOldestFirst" id="orderOldestFirst"
+								[(ngModel)]="messageOrder" value="OldestFirst" (change)="sortConversationsBy('OldestFirst')">
+							<label class="form-check-label" for="orderOldestFirst">
+								Newest at Bottom (Chat-style)
+							</label>
+						</div>
+					</div>
+				</div>
+
+				<div class="mb-3 row">
+					<label for="account" class="col-sm-6 col-form-label">Button Alignment</label>
+					<div class="col-sm-6 btn-group" role="group">
+						<input type="radio" class="btn-check" name="leftAligned" id="leftAligned" autocomplete="off" [checked]="buttonAlignment == 'Left'" (click)="useAlignment('Left')">
+						<label class="btn btn-outline-primary" for="leftAligned">Left</label>
+
+						<input type="radio" class="btn-check" name="rightAligned" id="rightAligned" autocomplete="off" [checked]="buttonAlignment == 'Right'" (click)="useAlignment('Right')">
+						<label class="btn btn-outline-primary" for="rightAligned">Right</label>
+					</div>
+				</div>
+
+				<div class="mb-3 row">
+					<label for="account" class="col-sm-6 col-form-label">Theme</label>
+					<div class="col-sm-6">
+						<select class="form-select bg-opacity-75" name="theme" [ngModel]="theme" (ngModelChange)="useTheme($event)">
+							<option>Light Mode</option>
+							<option>Dark Mode</option>
+						</select>
+					</div>
+				</div>
+
 				<ng-container *ngIf="updatePassword; else noPassword">
 					<div class="mb-3 row">
 						<label for="password" class="col-sm-6 col-form-label">Password</label>

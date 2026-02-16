@@ -1,29 +1,21 @@
 package tom.config;
 
 import java.io.IOException;
-import java.net.URI;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import javax.sql.DataSource;
 
-import org.apache.hc.client5.http.config.ConnectionConfig;
-import org.apache.hc.client5.http.config.RequestConfig;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
-import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
-import org.apache.hc.core5.http.io.SocketConfig;
-import org.apache.hc.core5.util.Timeout;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.ai.ollama.api.OllamaApi;
+import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -38,7 +30,6 @@ import org.springframework.session.jdbc.config.annotation.web.http.EnableJdbcHtt
 import org.springframework.session.web.http.HeaderHttpSessionIdResolver;
 import org.springframework.session.web.http.HttpSessionIdResolver;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartResolver;
 import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer;
@@ -58,13 +49,18 @@ import de.neuland.pug4j.PugConfiguration;
 import de.neuland.pug4j.filter.MarkdownFilter;
 import de.neuland.pug4j.template.FileTemplateLoader;
 import tom.cache.service.SingleFlightCacheManager;
+import tom.config.model.LlmEngine;
+import tom.llm.service.LlmService;
+import tom.ollama.service.OllamaServiceImpl;
 import tom.prioritythreadpool.PriorityThreadPoolTaskExecutor;
+import tom.vllm.service.VllmServiceImpl;
 
 @Configuration
 @EnableWebMvc
 @EnableJdbcHttpSession
 @EnableTransactionManagement
 @EnableScheduling
+@ComponentScan("tom")
 public class ApplicationConfig implements WebMvcConfigurer {
 
 	private static final Logger logger = LogManager.getLogger(ApplicationConfig.class);
@@ -76,8 +72,18 @@ public class ApplicationConfig implements WebMvcConfigurer {
 	}
 
 	@Bean
-	static MintyConfiguration properties() throws StreamReadException, DatabindException, IOException {
+	public static MintyConfiguration properties() throws StreamReadException, DatabindException, IOException {
 		return new MintyConfigurationImpl();
+	}
+
+	@Bean
+	public LlmService llmService(OllamaApi ollamaApi, OpenAiApi openAiApi, JdbcTemplate vectorJdbcTemplate,
+			DataSource dataSource) {
+		LlmEngine engine = properties.getConfig().llm().engine();
+		if (engine == LlmEngine.Ollama) {
+			return new OllamaServiceImpl(ollamaApi, vectorJdbcTemplate, dataSource, properties);
+		}
+		return new VllmServiceImpl(openAiApi, vectorJdbcTemplate, dataSource, properties);
 	}
 
 	@Bean
@@ -90,7 +96,7 @@ public class ApplicationConfig implements WebMvcConfigurer {
 		return new SingleFlightCacheManager();
 	}
 
-	@Bean("streamingExecutor")
+	@Bean(name = "streamingExecutor", destroyMethod = "shutdown")
 	public ThreadPoolTaskExecutor streamingExecutor() {
 		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 		executor.setCorePoolSize(properties.getConfig().threads().streamDefault());
@@ -98,31 +104,34 @@ public class ApplicationConfig implements WebMvcConfigurer {
 		executor.setQueueCapacity(properties.getConfig().threads().streamCapacity());
 		executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
 		executor.setThreadNamePrefix("streaming-");
-		executor.initialize();
+		executor.setWaitForTasksToCompleteOnShutdown(true);
+		executor.setAwaitTerminationSeconds(30);
 		return executor;
 	}
 
-	@Bean
+	@Bean(destroyMethod = "shutdown")
 	@Qualifier("taskExecutor")
 	ThreadPoolTaskExecutor taskExecutor() {
 		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
 		taskExecutor.setCorePoolSize(properties.getConfig().threads().taskDefault());
 		taskExecutor.setMaxPoolSize(properties.getConfig().threads().taskMax());
-		taskExecutor.initialize();
+		taskExecutor.setWaitForTasksToCompleteOnShutdown(true);
+		taskExecutor.setAwaitTerminationSeconds(30);
 		return taskExecutor;
 	}
 
-	@Bean
+	@Bean(destroyMethod = "shutdown")
 	@Qualifier("fileProcessingExecutor")
 	ThreadPoolTaskExecutor fileProcessingExecutor() {
 		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
 		taskExecutor.setCorePoolSize(properties.getConfig().threads().documentDefault());
 		taskExecutor.setMaxPoolSize(properties.getConfig().threads().documentMax());
-		taskExecutor.initialize();
+		taskExecutor.setWaitForTasksToCompleteOnShutdown(true);
+		taskExecutor.setAwaitTerminationSeconds(30);
 		return taskExecutor;
 	}
 
-	@Bean
+	@Bean(destroyMethod = "shutdown")
 	@Qualifier("llmExecutor")
 	PriorityThreadPoolTaskExecutor llmExecutor() {
 		int corePoolSize = properties.getConfig().threads().llmDefault();
@@ -134,17 +143,19 @@ public class ApplicationConfig implements WebMvcConfigurer {
 		exec.setQueueCapacity(Integer.MAX_VALUE);
 		exec.setAllowCoreThreadTimeOut(false);
 		exec.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
-		exec.initialize();
+		exec.setWaitForTasksToCompleteOnShutdown(true);
+		exec.setAwaitTerminationSeconds(30);
 		return exec;
 	}
 
 	// For use by @Scheduled
-	@Bean
+	@Bean(destroyMethod = "shutdown")
 	TaskScheduler taskScheduler() {
 		ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
 		scheduler.setPoolSize(2);
 		scheduler.setThreadNamePrefix("spring-scheduler-");
-		scheduler.initialize();
+		scheduler.setWaitForTasksToCompleteOnShutdown(true);
+		scheduler.setAwaitTerminationSeconds(30);
 		return scheduler;
 	}
 
@@ -172,34 +183,6 @@ public class ApplicationConfig implements WebMvcConfigurer {
 	@Bean
 	JdbcTemplate vectorJdbcTemplate(DataSource dataSource) {
 		return new JdbcTemplate(dataSource);
-	}
-
-	@Bean
-	OllamaApi ollamaApi() {
-		URI ollamaUri = properties.getConfig().ollama().uri();
-		logger.info("ollama URI is " + ollamaUri);
-		Duration ollamaTimeout = properties.getConfig().ollama().apiTimeout();
-		Duration ollamaConnectTimeout = properties.getConfig().ollama().apiConnectTimeout();
-
-		ConnectionConfig connectionConfig = ConnectionConfig.custom()
-				.setConnectTimeout(Timeout.of(ollamaConnectTimeout)).build();
-
-		SocketConfig socketConfig = SocketConfig.custom().setSoTimeout(Timeout.of(ollamaTimeout)).build();
-
-		PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
-				.setDefaultConnectionConfig(connectionConfig).setDefaultSocketConfig(socketConfig).setMaxConnTotal(50)
-				.setMaxConnPerRoute(50).build();
-
-		RequestConfig requestConfig = RequestConfig.custom().setResponseTimeout(Timeout.of(ollamaTimeout)).build();
-
-		CloseableHttpClient httpClient = HttpClients.custom().setConnectionManager(connectionManager)
-				.setDefaultRequestConfig(requestConfig).disableAutomaticRetries().build();
-
-		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(httpClient);
-
-		RestClient.Builder restClientBuilder = RestClient.builder().requestFactory(requestFactory);
-
-		return OllamaApi.builder().baseUrl(ollamaUri.toString()).restClientBuilder(restClientBuilder).build();
 	}
 
 	@Override
@@ -236,7 +219,7 @@ public class ApplicationConfig implements WebMvcConfigurer {
 
 	@Override
 	public void configureAsyncSupport(@NonNull AsyncSupportConfigurer configurer) {
-		Duration asyncResponseTimeout = properties.getConfig().ollama().asyncResponseTimeout();
+		Duration asyncResponseTimeout = properties.getConfig().llm().asyncResponseTimeout();
 		configurer.setDefaultTimeout(asyncResponseTimeout.toMillis());
 	}
 }

@@ -126,7 +126,7 @@
 						</configuration>
 					</execution>
 					<execution>
-						<id>copy-pug-templates</id>
+						<id>install-mariadb-driver</id>
 						<phase>package</phase>
 						<goals>
 							<goal>copy-resources</goal>

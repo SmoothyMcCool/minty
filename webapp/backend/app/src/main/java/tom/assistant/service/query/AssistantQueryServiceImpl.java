@@ -29,11 +29,6 @@ import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.content.Media;
 import org.springframework.ai.document.Document;
-import org.springframework.ai.model.tool.DefaultToolCallingManager;
-import org.springframework.ai.model.tool.ToolCallingManager;
-import org.springframework.ai.ollama.OllamaChatModel;
-import org.springframework.ai.ollama.api.OllamaApi;
-import org.springframework.ai.ollama.api.OllamaChatOptions;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.SearchRequest.Builder;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -59,13 +54,13 @@ import tom.api.services.assistant.LlmResultState;
 import tom.api.services.assistant.QueueFullException;
 import tom.api.services.assistant.StreamResult;
 import tom.api.services.assistant.StringResult;
+import tom.api.tool.MintyTool;
 import tom.config.MintyConfiguration;
 import tom.config.model.ChatModelConfig;
-import tom.ollama.service.OllamaService;
+import tom.llm.service.LlmService;
 import tom.prioritythreadpool.PriorityTask;
 import tom.prioritythreadpool.PriorityThreadPoolTaskExecutor;
 import tom.prioritythreadpool.TaskPriority;
-import tom.tool.auditing.AuditingToolCallingManager;
 import tom.tool.auditing.ToolExecutionContext;
 import tom.tool.registry.ToolRegistryService;
 import tom.user.model.User;
@@ -77,28 +72,24 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 
 	private static final Logger logger = LogManager.getLogger(AssistantQueryServiceImpl.class);
 
-	private final OllamaService ollamaService;
-	private final OllamaApi ollamaApi;
+	private final LlmService llmService;
 	private final UserServiceInternal userService;
 	private final AssistantManagementService assistantManagementService;
 	private final ToolRegistryService toolRegistryService;
 	private final PriorityThreadPoolTaskExecutor llmExecutor;
 	private final Map<ConversationId, LlmResult> results;
 	private final List<ChatModelConfig> modelConfigs;
-	private final ToolCallingManager defaultToolCallingManager;
 
-	public AssistantQueryServiceImpl(AssistantManagementService assistantManagementService, OllamaService ollamaService,
-			OllamaApi ollamaApi, UserServiceInternal userService, ToolRegistryService toolRegistryService,
-			MintyConfiguration properties, @Qualifier("llmExecutor") PriorityThreadPoolTaskExecutor llmExecutor) {
-		this.ollamaService = ollamaService;
-		this.ollamaApi = ollamaApi;
+	public AssistantQueryServiceImpl(AssistantManagementService assistantManagementService, LlmService llmService,
+			UserServiceInternal userService, ToolRegistryService toolRegistryService, MintyConfiguration properties,
+			@Qualifier("llmExecutor") PriorityThreadPoolTaskExecutor llmExecutor) {
+		this.llmService = llmService;
 		this.userService = userService;
 		this.assistantManagementService = assistantManagementService;
 		this.toolRegistryService = toolRegistryService;
 		this.llmExecutor = llmExecutor;
 		this.results = new ConcurrentHashMap<>();
-		this.modelConfigs = properties.getConfig().ollama().chatModels();
-		defaultToolCallingManager = DefaultToolCallingManager.builder().build();
+		this.modelConfigs = properties.getConfig().llm().modelDefinitions();
 	}
 
 	@PreDestroy
@@ -177,7 +168,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		try {
 			LlmRequest request = new LlmRequest(userId, query, Instant.now());
 
-			StreamResult sr = new StreamResult();
+			StreamResult sr = new StreamResult(query.getQuery());
 			sr.setState(LlmResultState.QUEUED);
 			results.put(request.getQuery().getConversationId(), sr);
 			llmExecutor.execute(() -> askStreamingInternal(request), request.getQuery().getConversationId(),
@@ -193,22 +184,31 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	}
 
 	@Override
-	public LlmResult getResultAndRemoveIfComplete(ConversationId requestId) {
+	public LlmResult getResultAndRemoveIfComplete(ConversationId conversationId) {
+		return getResultAndMaybeRemove(conversationId, true);
+	}
 
-		LlmResult result = results.get(requestId);
+	@Override
+	public LlmResult peekLlmResult(ConversationId conversationId) {
+		return getResultAndMaybeRemove(conversationId, false);
+	}
+
+	private LlmResult getResultAndMaybeRemove(ConversationId conversationId, boolean remove) {
+
+		LlmResult result = results.get(conversationId);
 
 		if (result == null) {
 			return null;
 		}
 
 		if (result instanceof StringResult sr) {
-			if (sr.isComplete()) {
-				results.remove(requestId);
+			if (sr.isComplete() && remove) {
+				results.remove(conversationId);
 			}
 		} else {
 			StreamResult sr = (StreamResult) result;
-			if (sr.isComplete()) {
-				results.remove(requestId);
+			if (sr.isComplete() && remove) {
+				results.remove(conversationId);
 			}
 		}
 		return result;
@@ -359,7 +359,10 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			images.add(new Media(MediaType.parseMediaType(query.getContentType()), query.getImageData()));
 		}
 
-		ChatClient chatClient = buildChatClient(assistant, computeContextSize(assistant, query), query);
+		List<MintyTool> tools = assistant.tools().stream()
+				.map(toolName -> toolRegistryService.getTool(toolName, user.getId())).filter(Objects::nonNull).toList();
+
+		ChatClient chatClient = buildChatClient(assistant, computeContextSize(assistant, query, tools), query);
 
 		UserMessage message = UserMessage.builder().text(query.getQuery()).media(images).build();
 
@@ -375,10 +378,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 
 		spec = spec.messages(List.of(message));
 
-		if (!assistant.tools().isEmpty()) {
-			List<Object> tools = assistant.tools().stream()
-					.map(toolName -> toolRegistryService.getTool(toolName, user.getId())).filter(Objects::nonNull)
-					.toList();
+		if (!tools.isEmpty()) {
 			spec.tools(tools.toArray());
 		}
 
@@ -386,29 +386,21 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	}
 
 	private ChatClient buildChatClient(Assistant assistant, int contextSize, AssistantQuery query) {
-		OllamaChatOptions chatOptions = OllamaChatOptions.builder().model(assistant.model())
-				.temperature(assistant.temperature()).topK(assistant.topK()).numCtx(contextSize).build();
-
-		OllamaChatModel chatModel = OllamaChatModel.builder().ollamaApi(ollamaApi)
-				.toolCallingManager(new AuditingToolCallingManager(query.getConversationId().getValue().toString(),
-						defaultToolCallingManager))
-				.defaultOptions(chatOptions).build();
-
 		List<Advisor> advisors = buildAdvisorList(assistant, query.getConversationId(), query.getQuery());
 
-		return ChatClient.builder(chatModel).defaultAdvisors(advisors).defaultOptions(chatOptions).build();
+		return llmService.buildChatClient(assistant, query, contextSize, advisors);
 	}
 
 	private List<Advisor> buildAdvisorList(Assistant assistant, ConversationId conversationId, String query) {
 		List<Advisor> advisors = new ArrayList<>();
 
 		if (assistant.hasMemory()) {
-			ChatMemory chatMemory = ollamaService.getChatMemory();
+			ChatMemory chatMemory = llmService.getChatMemory();
 			advisors.add(MessageChatMemoryAdvisor.builder(chatMemory).build());
 		}
 
 		if (!assistant.documentIds().isEmpty()) {
-			VectorStore vectorStore = ollamaService.getVectorStore();
+			VectorStore vectorStore = llmService.getVectorStore();
 
 			String documentIds = assistant.documentIds().stream().map(s -> "\"" + s.getValue().toString() + "\"")
 					.collect(Collectors.joining(", ", "[ ", " ]"));
@@ -426,7 +418,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		return advisors;
 	}
 
-	private int computeContextSize(Assistant assistant, AssistantQuery query) {
+	private int computeContextSize(Assistant assistant, AssistantQuery query, List<MintyTool> tools) {
 		int baseSize = query.getContextSize() == 0 ? assistant.contextSize() : query.getContextSize();
 
 		return modelConfigs.stream().filter(item -> item.name().equals(assistant.model())).findFirst()

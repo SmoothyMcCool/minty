@@ -14,9 +14,16 @@ public final class StreamResult implements LlmResult {
 	private AtomicReference<List<String>> sources = new AtomicReference<>();
 	private final AtomicBoolean complete = new AtomicBoolean(false);
 	private AtomicReference<LlmResultState> resultState = new AtomicReference<>();
+	private final String query;
 
-	public StreamResult() {
+	public StreamResult(String query) {
 		resultState.set(LlmResultState.QUEUED);
+		this.query = query;
+	}
+
+	@Override
+	public String getQuery() {
+		return query;
 	}
 
 	public void addChunk(String chunk) {

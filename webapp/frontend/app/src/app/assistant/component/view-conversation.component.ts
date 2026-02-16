@@ -17,10 +17,11 @@ import { LlmMetric } from 'src/app/model/conversation/llm-metric';
 import { StreamingResponse } from 'src/app/model/conversation/streaming-response';
 import { Model } from 'src/app/model/model';
 import { SliderComponent } from './slider.component';
+import { AutoResizeDirective } from 'src/app/pipe/auto-resize-directive';
 
 @Component({
 	selector: 'minty-view-conversation',
-	imports: [CommonModule, FormsModule, ConversationComponent, ConfirmationDialogComponent, ImageInputComponent, SliderComponent],
+	imports: [CommonModule, FormsModule, ConversationComponent, ConfirmationDialogComponent, ImageInputComponent, SliderComponent, AutoResizeDirective],
 	templateUrl: 'view-conversation.component.html'
 })
 export class ViewConversationComponent implements OnInit, OnDestroy {
@@ -37,6 +38,9 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 	assistant: Assistant = createAssistant();
 	private conversationId: string = '';
 	conversation: Conversation = null;
+	showChatOptions = false;
+	newestMessagesFirst = true;
+	reverseButtons = false;
 	metrics: LlmMetric;
 	sources: Set<string>;
 	model: Model;
@@ -54,6 +58,9 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 	ngOnInit(): void {
 		this.userService.getUser().subscribe(user => {
 			this.user = user;
+			this.newestMessagesFirst = user.settings['Message Order'] ? user.settings['Message Order'] == 'NewestFirst' : false;
+			this.reverseButtons = user.settings['Button Alignment'] ? user.settings['Button Alignment'] == 'Right' : false;
+
 			this.route.params.subscribe(params => {
 
 				this.conversationId = params['id'];
@@ -154,9 +161,9 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 				response += '\n\n<strong>Oh no!</strong> An error occurred while streaming the response!\n\n';
 			},
 			complete: () => {
-				if (response !== '') {
-					// Only set this to false if we actually received something at some point. Otherwise it just means we completed instantly.
-					this.waitingForResponse = false;
+				this.waitingForResponse = false;
+				if (response == '') {
+					this.chatHistory[0] = { user: false, message: '<em>No response from server. Your request likely failed.</em>' };
 				}
 			}
 		});

@@ -5,6 +5,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,9 +42,9 @@ import tom.api.services.assistant.StreamResult;
 import tom.config.model.ChatModelConfig;
 import tom.controller.ResponseWrapper;
 import tom.conversation.service.ConversationServiceInternal;
+import tom.llm.service.LlmService;
 import tom.meta.service.MetadataService;
 import tom.model.security.UserDetailsUser;
-import tom.ollama.service.OllamaService;
 
 @Controller
 @RequestMapping("/api/assistant")
@@ -53,17 +54,17 @@ public class AssistantController {
 
 	private final MetadataService metadataService;
 	private final AssistantManagementService assistantManagementService;
-	private final OllamaService ollamaService;
+	private final LlmService llmService;
 	private final ConversationServiceInternal conversationService;
 	private final AssistantQueryService assistantQueryService;
 	private final ObjectMapper mapper;
 
 	public AssistantController(AssistantManagementService assistantManagementService,
-			AssistantQueryService assistantQueryService, MetadataService metadataService, OllamaService ollamaService,
+			AssistantQueryService assistantQueryService, MetadataService metadataService, LlmService llmService,
 			ConversationServiceInternal conversationService) {
 		this.assistantManagementService = assistantManagementService;
 		this.metadataService = metadataService;
-		this.ollamaService = ollamaService;
+		this.llmService = llmService;
 		this.conversationService = conversationService;
 		this.assistantQueryService = assistantQueryService;
 		this.mapper = new ObjectMapper();
@@ -101,7 +102,7 @@ public class AssistantController {
 	@GetMapping({ "/models" })
 	public ResponseEntity<ResponseWrapper<List<ChatModelConfig>>> listModels(
 			@AuthenticationPrincipal UserDetailsUser user) {
-		List<ChatModelConfig> models = ollamaService.listModels();
+		List<ChatModelConfig> models = llmService.listModels();
 		ResponseWrapper<List<ChatModelConfig>> response = ResponseWrapper.SuccessResponse(models);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
@@ -216,72 +217,81 @@ public class AssistantController {
 
 	}
 
-	@SuppressWarnings("null")
-	@PostMapping(value = { "/response" }, produces = MediaType.APPLICATION_NDJSON_VALUE)
-	public Callable<StreamingResponseBody> ask(@AuthenticationPrincipal UserDetailsUser user,
+	@PostMapping(value = "/response", produces = MediaType.APPLICATION_NDJSON_VALUE)
+	public Callable<ResponseEntity<StreamingResponseBody>> ask(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestBody ConversationId streamId) {
 
-		return () -> outputStream -> {
+		return () -> {
+			if (assistantQueryService.getQueuePositionFor(streamId) == -1) {
+				return ResponseEntity.noContent().build();
+			}
 
-			StreamResult streamResult = null;
+			AtomicReference<StreamResult> streamResult = new AtomicReference<>();
 
-			while (streamResult == null || streamResult.getState() == LlmResultState.QUEUED) {
-				LlmResult result = assistantQueryService.getResultAndRemoveIfComplete(streamId);
-				if (result instanceof StreamResult sr) {
-					streamResult = sr;
-					if (streamResult.getState() != LlmResultState.QUEUED) {
-						break;
+			StreamingResponseBody body = outputStream -> {
+
+				while (streamResult.get() == null || streamResult.get().getState() == LlmResultState.QUEUED) {
+					// Check for queued / no-result state
+					LlmResult result = assistantQueryService.getResultAndRemoveIfComplete(streamId);
+					if (result instanceof StreamResult sr) {
+						streamResult.set(sr);
+						if (sr.getState() != LlmResultState.QUEUED) {
+							break;
+						}
+					}
+
+					int queuePosition = assistantQueryService.getQueuePositionFor(streamId);
+					if (queuePosition == -1) {
+						return;
+					}
+
+					RequestProcessingState state = queuePosition == 0 ? RequestProcessingState.RUNNING
+							: RequestProcessingState.NOT_READY;
+
+					writeResponse(outputStream,
+							new StreamingResponse(new LlmStatus(state, queuePosition), null, null, null));
+					outputStream.flush();
+
+					try {
+						Thread.sleep(250);
+					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
+						logger.warn("Streaming thread interrupted while streaming chunks", e);
+						return;
 					}
 				}
 
-				int queuePosition = assistantQueryService.getQueuePositionFor(streamId);
-				if (queuePosition == -1) {
-					// Clean up after ourselves. Remove the completed conversation.
-					assistantQueryService.getResultAndRemoveIfComplete(streamId);
-					return;
-				}
-
-				RequestProcessingState state = queuePosition == 0 ? RequestProcessingState.RUNNING
-						: RequestProcessingState.NOT_READY;
-
-				writeResponse(outputStream,
-						new StreamingResponse(new LlmStatus(state, queuePosition), null, null, null));
-				outputStream.flush();
-
+				// Stream actual result
 				try {
-					Thread.sleep(250);
-				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
-					logger.warn("Streaming thread interrupted, closing response", e);
-					// Clean up after ourselves. Remove the completed conversation.
-					assistantQueryService.getResultAndRemoveIfComplete(streamId);
-					return;
-				}
-			}
+					while (true) {
+						String chunk;
+						try {
+							chunk = streamResult.get().takeChunk();
+						} catch (InterruptedException e) {
+							Thread.currentThread().interrupt();
+							logger.warn("Streaming thread interrupted, closing response", e);
+							return;
+						}
 
-			while (true) {
-				String chunk;
-				try {
-					chunk = streamResult.takeChunk();
-				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
-					logger.warn("Streaming thread interrupted, closing response", e);
-					return;
-				}
+						if (chunk == null) {
+							writeResponse(outputStream,
+									new StreamingResponse(new LlmStatus(RequestProcessingState.COMPLETE, 0),
+											streamResult.get().getUsage(), streamResult.get().getSources(), ""));
+							outputStream.flush();
+							assistantQueryService.getResultAndRemoveIfComplete(streamId);
+							break;
+						}
 
-				if (chunk == null) {
-					writeResponse(outputStream, new StreamingResponse(new LlmStatus(RequestProcessingState.COMPLETE, 0),
-							streamResult.getUsage(), streamResult.getSources(), ""));
-					outputStream.flush();
-					// Clean up after ourselves. Remove the completed conversation.
-					assistantQueryService.getResultAndRemoveIfComplete(streamId);
-					break;
+						writeResponse(outputStream, new StreamingResponse(
+								new LlmStatus(RequestProcessingState.RUNNING, 0), null, null, chunk));
+						outputStream.flush();
+					}
+				} catch (Exception e) {
+					logger.error("Error streaming response for " + streamId, e);
 				}
+			};
 
-				writeResponse(outputStream,
-						new StreamingResponse(new LlmStatus(RequestProcessingState.RUNNING, 0), null, null, chunk));
-				outputStream.flush();
-			}
+			return ResponseEntity.ok().contentType(MediaType.APPLICATION_NDJSON).body(body);
 		};
 	}
 

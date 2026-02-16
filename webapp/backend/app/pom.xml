@@ -33,6 +33,21 @@
 		</dependency>
 		<dependency>
 			<groupId>tom.minty</groupId>
+			<artifactId>llm</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>tom.minty</groupId>
+			<artifactId>api-ollama</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>tom.minty</groupId>
+			<artifactId>api-vllm</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>tom.minty</groupId>
 			<artifactId>plugins</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>

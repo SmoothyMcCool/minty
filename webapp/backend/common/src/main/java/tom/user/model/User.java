@@ -13,6 +13,7 @@ public class User {
 	private String name;
 	private String password;
 	private Map<String, String> defaults;
+	private Map<String, String> settings;
 
 	public UserId getId() {
 		return id;
@@ -44,6 +45,14 @@ public class User {
 
 	public void setDefaults(Map<String, String> defaults) {
 		this.defaults = defaults;
+	}
+
+	public Map<String, String> getSettings() {
+		return settings;
+	}
+
+	public void setSettings(Map<String, String> settings) {
+		this.settings = settings;
 	}
 
 }

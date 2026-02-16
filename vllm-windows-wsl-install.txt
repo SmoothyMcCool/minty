@@ -1,0 +1,34 @@
+In WSL:
+
+sudo apt update
+sudo apt install python3-pip
+sudo apt install python3.12-venv
+python3 -m venv ~/vllm-venv
+source ~/vllm-venv/bin/activate
+pip install --upgrade pip
+pip install vllm
+
+add to .bashrc:
+export HF_TOKEN="<YOUR_HF_TOKEN>"
+
+# L40S GPT-OSS:20b
+python -m vllm.entrypoints.openai.api_server \
+  --model openai/gpt-oss-20b \
+  --host 0.0.0.0 \
+  --port 8000 \
+  --gpu-memory-utilization 0.90 \
+  --max-model-len 131072
+
+
+# 4080 Super Llama 3.2 3B Instruct
+export CUDA_VISIBLE_DEVICES=0
+
+python -m vllm.entrypoints.openai.api_server \
+  --model meta-llama/Llama-3.2-3B-Instruct \
+  --host 0.0.0.0 \
+  --port 8081 \
+  --max-model-len 32768 \
+  --gpu-memory-utilization 0.7 \
+  --block-size 128 \
+  --enable-auto-tool-choice \
+  --tool-call-parser llama3_json

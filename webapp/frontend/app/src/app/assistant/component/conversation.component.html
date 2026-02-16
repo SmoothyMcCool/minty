@@ -1,4 +1,4 @@
-<div class="row m-1">
+<div class="row m-1" *ngIf="showChatOptions">
 	<div class="col-auto">
 		<div class="form-check form-switch">
 			<input class="form-check-input" type="checkbox" id="renderDiagramsSwitch" [(ngModel)]="useMermaid">
@@ -12,13 +12,15 @@
 		</div>
 	</div>
 </div>
-<ng-container *ngFor="let message of messages; let messageIndex = index; trackBy: trackByMessage">
-	<minty-chat-message
-		[message]="message"
-		[useMarkdown]="useMarkdown"
-		[useMermaid]="useMermaid"
-		[isFirst]="messageIndex === 0"
-		[responsePending]="responsePending"
-		[queueDepth]="queueDepth"
-	></minty-chat-message>
-</ng-container>
+<div [class.chat-container]="oldestMessagesFirst">
+	<ng-container *ngFor="let message of messages; let messageIndex = index; trackBy: trackByMessage">
+		<minty-chat-message
+			[message]="message"
+			[useMarkdown]="useMarkdown"
+			[useMermaid]="useMermaid"
+			[isFirst]="messageIndex === 0"
+			[responsePending]="responsePending"
+			[queueDepth]="queueDepth"
+		></minty-chat-message>
+	</ng-container>
+</div>

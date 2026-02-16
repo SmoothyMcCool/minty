@@ -48,25 +48,33 @@ public class AuditingToolCallingManager implements ToolCallingManager {
 		});
 
 		// Delegate actual execution
-		ToolExecutionResult result = delegate.executeToolCalls(prompt, chatResponse);
-
-		// Post-execution logging
-		StringBuilder sb = new StringBuilder();
-		result.conversationHistory().forEach(message -> {
-			if (message instanceof ToolResponseMessage toolMessage) {
-				toolMessage.getResponses().forEach(toolResponse -> {
-					Map<String, String> context = ToolExecutionContext.getAndClear(key);
-					sb.append("user id       " + context.getOrDefault(ToolExecutionContext.USER_ID, "null"))
-							.append('\n').append("tool id       " + toolResponse.id()).append('\n')
-							.append("tool name     " + toolResponse.name()).append('\n')
-							.append("tool response " + toolResponse.responseData()).append('\n');
+		ToolExecutionResult result = null;
+		try {
+			result = delegate.executeToolCalls(prompt, chatResponse);
+			// Post-execution logging
+			StringBuilder sb = new StringBuilder();
+			if (result != null) {
+				result.conversationHistory().forEach(message -> {
+					if (message instanceof ToolResponseMessage toolMessage) {
+						toolMessage.getResponses().forEach(toolResponse -> {
+							Map<String, String> context = ToolExecutionContext.getAndClear(key);
+							sb.append("user id       " + context.getOrDefault(ToolExecutionContext.USER_ID, "null"))
+									.append('\n').append("tool id       " + toolResponse.id()).append('\n')
+									.append("tool name     " + toolResponse.name()).append('\n')
+									.append("tool response " + toolResponse.responseData()).append('\n');
+						});
+					}
 				});
 			}
-		});
 
-		if (sb.length() > 0) {
-			logger.info("\n{}", sb.toString());
+			if (sb.length() > 0) {
+				logger.info("\n{}", sb.toString());
+			}
+
+		} catch (Exception e) {
+			logger.error("Exception while calling tool: ", e);
 		}
+
 		return result;
 	}
 }

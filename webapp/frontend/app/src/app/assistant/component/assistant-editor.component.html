@@ -37,7 +37,7 @@
 	</div>
 	<div class="form-group mb-2">
 		<label for="assistantPrompt">Prompt</label>
-		<textarea class="form-control bg-opacity-75" id="assistantPrompt" name="assistantPrompt" style="height: 200px;"
+		<textarea autoResize class="form-control bg-opacity-75" id="assistantPrompt" name="assistantPrompt"
 			[ngModel]="assistant.prompt" (ngModelChange)="promptChanged($event)"></textarea>
 	</div>
 	<div class="form-group mb-2 well p-2" *ngIf="assistant && (tools && tools.length > 0) || (assistantTools && assistantTools.length > 0)">

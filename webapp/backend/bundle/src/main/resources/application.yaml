@@ -26,10 +26,12 @@ db:
   useCompression: true
 
 # LLM Parameters
-ollama:
+llm:
+  engine: Ollama
   uri: http://localhost:11434
-  defaultModel: gpt-oss:20b
-  chatModels:
+  #engine: vllm
+  #uri: http://172.24.128.199:8081
+  modelDefinitions:
     - name: gemma3:4b
       defaultContext: 32768
       maximumContext: 131072
@@ -55,13 +57,25 @@ ollama:
       maximumContext: 131072
       maxConcurrent: 16
       imageSupport: false
+    - name: meta-llama/Llama-3.2-3B-Instruct
+      defaultContext: 2048
+      maximumContext: 32768
+      maxConcurrent: 16
+      imageSupport: false
+  activeModels:
+    - gemma3:4b
+    - gemma3:12b
+    - gpt-oss:20b
+    - gpt-oss:120b
+    - llama3.2:3b
+    - meta-llama/Llama-3.2-3B-Instruct
   conversationNamingModel: gemma3:4b
   diagrammingModel: gpt-oss:20b
   chatMemoryDepth: 100
   # The number of documents to retrieve when doing RAG.
   defaultTopK: 5
   apiConnectTimeout: PT60S
-  apiTimeout: PT20M
+  apiTimeout: PT5M
   # The maximum amount of time, in minutes, for an async response to complete. This is used for stream responses from the AI.
   asyncResponseTimeout: PT20M
   # Embedding Parameters
@@ -81,8 +95,8 @@ threads:
   taskDefault: 5
   taskMax: 20
   # Default and maximum number of threads for LLM queries.
-  llmDefault: 4
-  llmMax: 4
+  llmDefault: 1
+  llmMax: 1
   # Default and maximum number of threads for document processing.
   documentDefault: 1
   documentMax: 2

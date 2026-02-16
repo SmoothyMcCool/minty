@@ -24,7 +24,7 @@ import tom.api.services.assistant.StringResult;
 import tom.config.MintyConfiguration;
 import tom.conversation.model.ConversationEntity;
 import tom.conversation.repository.ConversationRepository;
-import tom.ollama.service.OllamaService;
+import tom.llm.service.LlmService;
 
 @Service
 public class ConversationNamingService {
@@ -36,19 +36,19 @@ public class ConversationNamingService {
 	private final ConversationRepository conversationRepository;
 	private final AssistantQueryService assistantQueryService;
 	private final AssistantRegistryService assistantRegistryService;
-	private final OllamaService ollamaService;
+	private final LlmService llmService;
 	private final ConversationServiceInternal conversationService;
 
 	public ConversationNamingService(ConversationRepository conversationRepository,
 			AssistantQueryService assistantQueryService, AssistantRegistryService assistantRegistryService,
-			ConversationServiceInternal conversationService, OllamaService ollamaService,
+			ConversationServiceInternal conversationService, LlmService llmService,
 			MintyConfiguration properties) {
 		this.conversationRepository = conversationRepository;
 		this.assistantQueryService = assistantQueryService;
 		this.assistantRegistryService = assistantRegistryService;
-		this.ollamaService = ollamaService;
+		this.llmService = llmService;
 		this.conversationService = conversationService;
-		conversationNamingModel = properties.getConfig().ollama().conversationNamingModel();
+		conversationNamingModel = properties.getConfig().llm().conversationNamingModel();
 	}
 
 	@Scheduled(fixedDelay = 5000)
@@ -62,7 +62,7 @@ public class ConversationNamingService {
 				.getAssociatedAssistantId() != AssistantManagementService.DefaultAssistantId).toList();
 
 		conversations.forEach(conversation -> {
-			List<Message> messages = ollamaService.getChatMemory()
+			List<Message> messages = llmService.getChatMemory()
 					.get(conversation.getConversationId().value().toString());
 			if (messages.size() > 1) {
 				logger.info("Starting on conversation ID " + conversation.getConversationId().toString());

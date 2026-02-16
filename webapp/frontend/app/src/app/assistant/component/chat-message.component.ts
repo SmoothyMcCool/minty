@@ -18,7 +18,6 @@ export class ChatMessageComponent {
 		return this._message
 	}
 	set message(message: ChatMessage) {
-		message.message = this.preProcessMessage(message.message);
 		this._message = message;
 	}
 
@@ -38,18 +37,5 @@ export class ChatMessageComponent {
 	isCopied(button: HTMLElement | null): boolean {
 		return !!button && this.copiedButtons.has(button);
 	}
-
-	preProcessMessage(message: string): string {
-	return message.replace(
-		/```mermaid([\s\S]*?)```/g,
-		(_, code) => {
-			const escaped = code.trim().replace(/"/g, '&quot;');
-			return `
-<div class="mermaid" data-mermaid-source="${escaped}">
-${code.trim()}
-</div>`;
-		}
-	);
-}
 
 };

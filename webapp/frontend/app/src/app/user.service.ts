@@ -81,7 +81,8 @@ export class UserService {
 			id: user.id,
 			name: user.name,
 			password: user.password,
-			defaults: { ...user.defaults }
+			defaults: { ...user.defaults },
+			settings: { ...user.settings }
 		};
 		return this.http.post<ApiResult>(UserService.Update, body)
 			.pipe(

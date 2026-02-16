@@ -16,10 +16,11 @@ import { DocumentService } from 'src/app/document.service';
 import { MintyDoc } from 'src/app/model/minty-doc';
 import { ToolService } from 'src/app/tool.service';
 import { MintyTool } from 'src/app/model/minty-tool';
+import { AutoResizeDirective } from 'src/app/pipe/auto-resize-directive';
 
 @Component({
 	selector: 'minty-workflow-editor',
-	imports: [CommonModule, DragDropModule, FormsModule, TaskEditorComponent, TaskWidgetComponent, FilterPipe, ConfirmationDialogComponent],
+	imports: [CommonModule, DragDropModule, FormsModule, TaskEditorComponent, TaskWidgetComponent, FilterPipe, ConfirmationDialogComponent, AutoResizeDirective],
 	templateUrl: 'workflow-editor.component.html',
 	styleUrls: ['workflow.component.css', 'workflow-editor.component.css'],
 	providers: [

@@ -13,7 +13,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.ai.ollama.api.OllamaApi;
 
 import tom.api.ConversationId;
 import tom.api.services.assistant.AssistantManagementService;
@@ -21,9 +20,9 @@ import tom.api.services.assistant.LlmResult;
 import tom.api.services.assistant.StringResult;
 import tom.config.MintyConfiguration;
 import tom.config.model.ChatModelConfig;
+import tom.config.model.LlmConfig;
 import tom.config.model.MintyConfig;
-import tom.config.model.OllamaConfig;
-import tom.ollama.service.OllamaService;
+import tom.llm.service.LlmService;
 import tom.prioritythreadpool.PriorityTask;
 import tom.prioritythreadpool.PriorityThreadPoolTaskExecutor;
 import tom.tool.registry.ToolRegistryService;
@@ -42,8 +41,7 @@ class AssistantQueryServiceImplTest {
 	/* Mocks that are injected into the service */
 	/* --------------------------------------------------------------------- */
 	private final AssistantManagementService assistantManagementService = mock(AssistantManagementService.class);
-	private final OllamaService ollamaService = mock(OllamaService.class);
-	private final OllamaApi ollamaApi = mock(OllamaApi.class);
+	private final LlmService llmService = mock(LlmService.class);
 	private final UserServiceInternal userService = mock(UserServiceInternal.class);
 	private final ToolRegistryService toolRegistryService = mock(ToolRegistryService.class);
 	private MintyConfiguration mintyConfiguration = mock(MintyConfiguration.class);
@@ -56,17 +54,17 @@ class AssistantQueryServiceImplTest {
 		mintyConfiguration = mock(MintyConfiguration.class);
 
 		MintyConfig configMock = mock(MintyConfig.class);
-		OllamaConfig ollamaMock = mock(OllamaConfig.class);
+		LlmConfig llmMock = mock(LlmConfig.class);
 		when(mintyConfiguration.getConfig()).thenReturn(configMock);
-		when(configMock.ollama()).thenReturn(ollamaMock);
+		when(configMock.llm()).thenReturn(llmMock);
 
 		ChatModelConfig modelMock = mock(ChatModelConfig.class);
 		when(modelMock.name()).thenReturn("gpt-4o-mini");
 		when(modelMock.defaultContext()).thenReturn(2048);
 		when(modelMock.maximumContext()).thenReturn(8192);
 
-		when(ollamaMock.chatModels()).thenReturn(List.of(modelMock));
-		service = new AssistantQueryServiceImpl(assistantManagementService, ollamaService, ollamaApi, userService,
+		when(llmMock.modelDefinitions()).thenReturn(List.of(modelMock));
+		service = new AssistantQueryServiceImpl(assistantManagementService, llmService, userService,
 				toolRegistryService, mintyConfiguration, llmExecutor);
 	}
 
