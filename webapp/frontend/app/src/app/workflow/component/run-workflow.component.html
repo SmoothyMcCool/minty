@@ -1,11 +1,13 @@
 <div class="container-fluid">
 	<div class="p-2 text-dark">
+		<div class="row">
+			<h2 class="col">Run Workflow</h2>
+			<form class="col-auto d-flex justify-content-end mb-2">
+				<button type="button" id="submitButton" class="btn btn-primary me-2" (click)="runWorkflow()"><i class="bi bi-check-lg"></i></button>
+				<button type="button" id="cancelButton" class="btn btn-danger" (click)="cancel()"><i class="bi bi-arrow-counterclockwise"></i></button>
+			</form>
+		</div>
 		<h2>Run Workflow</h2>
-
-		<form class="d-flex justify-content-end mb-2">
-			<button type="button" id="submitButton" class="btn btn-primary me-2" (click)="runWorkflow()">RUN</button>
-			<button type="button" id="cancelButton" class="btn btn-danger" (click)="cancel()">CANCEL</button>
-		</form>
 
 		<minty-workflow-editor name="workflowEditor" [taskSpecifications]="taskSpecifications"
 				[outputTaskSpecifications]="outputTaskSpecifications" [defaults]="defaults" [(ngModel)]="workflow"></minty-workflow-editor>

@@ -1,0 +1,139 @@
+# Minty Configuration
+The configuration is:
+> 1. Minty Application Server. Install Minty, MariaDB
+> 2. GPU Server, running Ubuntu 24.
+
+## Set Up Application Server
+Assuming Minty is all up and running, configure the GPU server as below, and then connect via SSH.
+Set Minty URL to llama.cpp to http://localhost:9000
+
+```bash
+ssh -N -L 9000:localhost:8081 user@gpu-server-ip
+```
+
+---
+
+## Setting Up a CUDA‑Enabled llama.cpp Server on Ubuntu 24.04
+*(Target GPU: NVIDIA L40S - driver 550+ + CUDA 12.4)*
+
+> **TL;DR**
+> 1. Update & install build tools
+> 2. Remove any old NVIDIA/CUDA repos
+> 3. Install the Ubuntu-recommended NVIDIA driver (>=550)
+> 4. Install the CUDA 12.4 Toolkit (no driver)
+> 5. Install `llama.cpp` dependencies
+> 6. Clone, build, & run `llama.cpp` with CUDA support
+> 7. (Optional) Set up an SSH tunnel for remote access
+
+---
+
+### 1. Update & Install Essentials
+
+```bash
+sudo apt update
+sudo apt upgrade -y
+sudo apt install -y build-essential cmake git wget curl unzip
+```
+
+
+### 2. Install the Recommended NVIDIA Driver (550)
+
+```bash
+# Check the driver that Ubuntu recommends for your GPU
+ubuntu-drivers devices
+
+# Install the suggested driver (most likely nvidia-driver-550)
+sudo apt install -y nvidia-driver-550
+
+# Reboot to activate the driver
+sudo reboot
+```
+
+After reboot:
+
+```bash
+nvidia-smi
+```
+
+You should see your **L40S** GPU listed with **Driver Version 550**.
+
+---
+
+### 3. Install the CUDA Toolkit (12.4) – No Driver
+
+```bash
+sudo apt install -y cuda-toolkit
+nvcc --version   # Verify installation
+```
+
+> **Important:**
+> Do **not** install `cuda-drivers` or `nvidia-cuda-toolkit` from the NVIDIA repo.
+> The Ubuntu package (`cuda-toolkit`) + driver 550 works perfectly on the L40S
+
+---
+
+### 4. Install Dependencies for `llama.cpp`
+
+```bash
+sudo apt install -y libopenblas-dev libomp-dev
+```
+
+---
+
+### 5. Clone & Build `llama.cpp` with CUDA Support
+
+```bash
+# Clone the repository
+cd ~
+git clone https://github.com/ggml-org/llama.cpp
+cd llama.cpp
+
+# Create a build directory
+mkdir build
+
+# Configure with CUDA enabled
+cmake -B build -DGGML_CUDA=ON
+
+# Build (Release configuration)
+cmake --build build --config Release
+```
+
+The compiled binaries will be in `./build/bin`:
+
+- `llama-server` – the HTTP server
+- `llama-cli` – the command‑line interface
+
+---
+
+
+### 6. Run the `llama.cpp` Server
+
+Example for **GPT-OSS 20B** (adjust model path & context size as needed):
+
+```bash
+./build/bin/llama-server \
+  -m /path/to/gpt-oss-20b-mxfp4.gguf \
+  -c 128000 \
+  --gpu-layers 60 \
+  --host 127.0.0.1 \
+  --port 8081
+```
+
+- `-m` - path to the `.gguf` model file
+- `-c` - context window (e.g., 32768 tokens)
+- `--gpu-layers` - number of layers to keep on the GPU
+- `--host` / `--port` - expose the server on `127.0.0.1:8081`
+
+---
+
+### 9. Notes & Troubleshooting
+
+| Topic | Details |
+|-------|---------|
+| **CUDA Driver Compatibility** | `nvidia-driver-550` + `cuda-toolkit-12-4` is fully supported on the L40S. |
+| **Bleeding-Edge Drivers** | If you need newer driver features, you can upgrade later, but keep the Ubuntu packages for stability. |
+| **GPU Memory** | Adjust `--gpu-layers` based on your GPU's VRAM. |
+| **Server Accessibility** | Use the SSH tunnel or expose the server on a public IP if needed. |
+| **Re-building** | To rebuild after changing the model or CUDA settings, rerun the `cmake` and `cmake --build` steps. |
+
+---
