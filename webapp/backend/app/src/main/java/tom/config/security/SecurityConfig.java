@@ -30,7 +30,7 @@ public class SecurityConfig {
 
 	@Bean
 	UserDetailsService userDetailsService(UserRepository userRepository, UserServiceInternal userService) {
-		return new ExerciseTrackerUserDetailsService(userRepository, userService);
+		return new MintyUserDetailsService(userRepository, userService);
 	}
 
 	@Bean

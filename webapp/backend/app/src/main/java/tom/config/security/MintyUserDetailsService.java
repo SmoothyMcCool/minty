@@ -13,14 +13,14 @@ import tom.user.model.User;
 import tom.user.repository.UserRepository;
 import tom.user.service.UserServiceInternal;
 
-public class ExerciseTrackerUserDetailsService implements UserDetailsService {
+public class MintyUserDetailsService implements UserDetailsService {
 
-	private static final Logger logger = LogManager.getLogger(ExerciseTrackerUserDetailsService.class);
+	private static final Logger logger = LogManager.getLogger(MintyUserDetailsService.class);
 
 	private UserRepository userRepository;
 	private UserServiceInternal userService;
 
-	public ExerciseTrackerUserDetailsService(UserRepository userRepository, UserServiceInternal userService) {
+	public MintyUserDetailsService(UserRepository userRepository, UserServiceInternal userService) {
 		this.userRepository = userRepository;
 		this.userService = userService;
 	}
@@ -32,7 +32,7 @@ public class ExerciseTrackerUserDetailsService implements UserDetailsService {
 		try {
 			user = userService.decrypt(userRepository.findByAccount(username));
 		} catch (JsonProcessingException e) {
-			logger.error("ExerciseTrackerUserDetailsService: Failed to decrypt user", e);
+			logger.error("MintyUserDetailsService: Failed to decrypt user", e);
 		}
 		if (user == null) {
 			throw new UsernameNotFoundException("No user with username " + username);
