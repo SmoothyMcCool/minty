@@ -117,7 +117,7 @@ public class ConversationNamingService {
 					if (summary.startsWith("<think>")) {
 						summary = summary.substring(summary.indexOf("</think>") + "</think>".length());
 					}
-					summary = summary.trim();
+					summary = summary.strip();
 
 					conversation.setTitle(summary);
 					logger.info("Setting conversation title to " + summary);

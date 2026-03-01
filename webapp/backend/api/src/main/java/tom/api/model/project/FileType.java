@@ -1,13 +1,13 @@
-package tom.config.model;
+package tom.api.model.project;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum LlmEngine {
-	Ollama("Ollama"), openai("openai");
+public enum FileType {
+	code("code"), markdown("markdown"), json("json"), text("text"), diagram("diagram");
 
 	private final String value;
 
-	LlmEngine(String value) {
+	FileType(String value) {
 		this.value = value;
 	}
 

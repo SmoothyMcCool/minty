@@ -22,7 +22,7 @@
 	<modules>
 		<module>../api</module>
 		<module>../api-ollama</module>
-		<module>../api-vllm</module>
+		<module>../api-openai</module>
 		<module>../app</module>
 		<module>../common</module>
 		<module>../llm</module>

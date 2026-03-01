@@ -99,7 +99,7 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 				// If we fail, remove markdown fences if present and try again, since some LLMs
 				// give us markdown fences even if we dont want them.
 				String noMarkdownFences = response.replaceAll("(?s)^\\s*```[a-zA-Z0-9_-]*\\s*", "")
-						.replaceAll("(?s)\\s*```\\s*$", "").trim();
+						.replaceAll("(?s)\\s*```\\s*$", "").strip();
 				resultAsMap = mapper.readValue(noMarkdownFences, new TypeReference<List<Map<String, Object>>>() {
 				});
 			}

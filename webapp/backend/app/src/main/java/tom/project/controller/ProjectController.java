@@ -4,8 +4,6 @@ import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -15,12 +13,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 
 import tom.ApiError;
-import tom.api.NodeId;
 import tom.api.ProjectId;
-import tom.api.model.project.Node;
+import tom.api.model.project.FileType;
+import tom.api.model.project.NodeContent;
 import tom.api.model.project.NodeInfo;
 import tom.api.model.project.Project;
 import tom.api.services.ProjectService;
@@ -39,138 +36,196 @@ public class ProjectController {
 		this.projectService = projectService;
 	}
 
-	@GetMapping({ "" })
-	public ResponseEntity<ResponseWrapper<Project>> getProject(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("projectId") ProjectId projectId) {
-
-		ResponseWrapper<Project> response;
-
-		try {
-			Project newProject = projectService.getProject(user.getId(), projectId);
-			response = ResponseWrapper.SuccessResponse(newProject);
-		} catch (Exception e) {
-			logger.warn("Failed to list project contents.", e);
-			response = ResponseWrapper.ApiFailureResponse(500, List.of(ApiError.FAILED_TO_CREATE_PROJECT));
-		}
-
-		return new ResponseEntity<>(response, HttpStatus.OK);
-	}
-
-	@GetMapping({ "/list" })
-	public ResponseEntity<ResponseWrapper<List<Project>>> listProjects(@AuthenticationPrincipal UserDetailsUser user) {
-
-		ResponseWrapper<List<Project>> response;
-
-		try {
-			List<Project> projects = projectService.listProjects(user.getId());
-			response = ResponseWrapper.SuccessResponse(projects);
-		} catch (Exception e) {
-			logger.warn("Failed to list project contents.", e);
-			response = ResponseWrapper.ApiFailureResponse(500, List.of(ApiError.FAILED_TO_LIST_PROJECTS));
-		}
-
-		return new ResponseEntity<>(response, HttpStatus.OK);
-	}
-
-	@PostMapping({ "/create" })
-	public ResponseEntity<ResponseWrapper<Project>> addProject(@AuthenticationPrincipal UserDetailsUser user,
+	@PostMapping("/create")
+	public ResponseEntity<ResponseWrapper<Project>> createProject(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestBody Project project) {
 
-		ResponseWrapper<Project> response;
-
 		try {
-			Project newProject = projectService.createProject(user.getId(), project.name());
-			response = ResponseWrapper.SuccessResponse(newProject);
-		} catch (Exception e) {
-			logger.warn("Failed to list project contents.", e);
-			response = ResponseWrapper.ApiFailureResponse(500, List.of(ApiError.FAILED_TO_CREATE_PROJECT));
-		}
+			Project created = projectService.createProject(user.getId(), project.name());
 
-		return new ResponseEntity<>(response, HttpStatus.OK);
+			return ResponseEntity.ok(ResponseWrapper.SuccessResponse(created));
+
+		} catch (Exception e) {
+			logger.warn("Failed to create project.", e);
+			return ResponseEntity
+					.ok(ResponseWrapper.ApiFailureResponse(500, List.of(ApiError.FAILED_TO_CREATE_PROJECT)));
+		}
 	}
 
-	@DeleteMapping({ "/delete" })
+	@DeleteMapping("/delete")
 	public ResponseEntity<ResponseWrapper<Boolean>> deleteProject(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestParam("projectId") ProjectId projectId) {
 
-		ResponseWrapper<Boolean> response;
-
 		try {
 			projectService.deleteProject(user.getId(), projectId);
-			response = ResponseWrapper.SuccessResponse(true);
-		} catch (Exception e) {
-			logger.warn("Failed to list project contents.", e);
-			response = ResponseWrapper.ApiFailureResponse(500, List.of(ApiError.FAILED_TO_CREATE_PROJECT));
-		}
 
-		return new ResponseEntity<>(response, HttpStatus.OK);
+			return ResponseEntity.ok(ResponseWrapper.SuccessResponse(true));
+
+		} catch (Exception e) {
+			logger.warn("Failed to delete project.", e);
+			return ResponseEntity
+					.ok(ResponseWrapper.ApiFailureResponse(500, List.of(ApiError.FAILED_TO_DELETE_PROJECT)));
+		}
 	}
 
-	@GetMapping({ "/node/list" })
-	public ResponseEntity<ResponseWrapper<List<NodeInfo>>> listProjectContents(
-			@AuthenticationPrincipal UserDetailsUser user, @RequestParam("projectId") ProjectId projectId) {
-
-		ResponseWrapper<List<NodeInfo>> response;
+	@GetMapping
+	public ResponseEntity<ResponseWrapper<Project>> getProject(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("projectId") ProjectId projectId) {
 
 		try {
-			List<NodeInfo> projectFiles = projectService.listNodes(user.getId(), projectId);
-			response = ResponseWrapper.SuccessResponse(projectFiles);
-		} catch (Exception e) {
-			logger.warn("Failed to list project contents.", e);
-			response = ResponseWrapper.ApiFailureResponse(500, List.of(ApiError.FAILED_TO_ENUMERATE_PROJECT));
-		}
+			Project project = projectService.getProject(user.getId(), projectId);
 
-		return new ResponseEntity<>(response, HttpStatus.OK);
+			return ResponseEntity.ok(ResponseWrapper.SuccessResponse(project));
+
+		} catch (Exception e) {
+			logger.warn("Failed to retrieve project.", e);
+			return ResponseEntity
+					.ok(ResponseWrapper.ApiFailureResponse(500, List.of(ApiError.FAILED_TO_ENUMERATE_PROJECT)));
+		}
 	}
 
-	@GetMapping({ "/node" })
-	public ResponseEntity<ResponseWrapper<Node>> getNode(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("projectId") ProjectId projectId, @RequestParam("nodeId") NodeId nodeId) {
-
-		ResponseWrapper<Node> response;
+	@GetMapping("/list")
+	public ResponseEntity<ResponseWrapper<List<Project>>> listProjects(@AuthenticationPrincipal UserDetailsUser user) {
 
 		try {
-			Node node = projectService.getNode(user.getId(), projectId, nodeId);
-			response = ResponseWrapper.SuccessResponse(node);
-		} catch (Exception e) {
-			logger.warn("Failed to retrieve node.", e);
-			response = ResponseWrapper.ApiFailureResponse(500, List.of(ApiError.FAILED_TO_ENUMERATE_PROJECT));
-		}
+			return ResponseEntity.ok(ResponseWrapper.SuccessResponse(projectService.listProjects(user.getId())));
 
-		return new ResponseEntity<>(response, HttpStatus.OK);
+		} catch (Exception e) {
+			logger.warn("Failed to list projects.", e);
+			return ResponseEntity
+					.ok(ResponseWrapper.ApiFailureResponse(500, List.of(ApiError.FAILED_TO_LIST_PROJECTS)));
+		}
 	}
 
-	@PostMapping(value = "/node", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<ResponseWrapper<Boolean>> createOrUpdateNode(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("projectId") ProjectId projectId, @RequestPart("node") Node node) {
-
-		ResponseWrapper<Boolean> response;
+	@GetMapping("/node")
+	public ResponseEntity<ResponseWrapper<NodeContent>> readNode(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("projectId") ProjectId projectId, @RequestParam("path") String path) {
 
 		try {
-			projectService.createOrUpdateNode(user.getId(), projectId, node);
-			response = ResponseWrapper.SuccessResponse(true);
-		} catch (Exception e) {
-			logger.warn("Failed to create project entry.", e);
-			response = ResponseWrapper.ApiFailureResponse(500, List.of(ApiError.FAILED_TO_CREATE_OR_UPDATE_ENTRY));
-		}
+			NodeContent node = projectService.readNode(user.getId(), projectId, path);
 
-		return new ResponseEntity<>(response, HttpStatus.OK);
+			return ResponseEntity.ok(ResponseWrapper.SuccessResponse(node));
+
+		} catch (Exception e) {
+			logger.warn("Failed to read node.", e);
+			return ResponseEntity
+					.ok(ResponseWrapper.ApiFailureResponse(500, List.of(ApiError.FAILED_TO_ENUMERATE_PROJECT)));
+		}
 	}
 
-	@DeleteMapping(value = "/node")
+	@PostMapping("/node/file")
+	public ResponseEntity<ResponseWrapper<NodeInfo>> writeFile(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("projectId") ProjectId projectId, @RequestBody NodeContent node) {
+
+		try {
+			NodeInfo info = projectService.writeFile(user.getId(), projectId, node.getPath(), node.getFileType(),
+					node.getContent());
+
+			return ResponseEntity.ok(ResponseWrapper.SuccessResponse(info));
+
+		} catch (Exception e) {
+			logger.warn("Failed to write file.", e);
+			return ResponseEntity
+					.ok(ResponseWrapper.ApiFailureResponse(500, List.of(ApiError.FAILED_TO_CREATE_OR_UPDATE_ENTRY)));
+		}
+	}
+
+	@PostMapping("/node/folder")
+	public ResponseEntity<ResponseWrapper<NodeInfo>> createFolder(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("projectId") ProjectId projectId, @RequestParam("path") String path) {
+
+		try {
+			NodeInfo info = projectService.createFolder(user.getId(), projectId, path);
+
+			return ResponseEntity.ok(ResponseWrapper.SuccessResponse(info));
+
+		} catch (Exception e) {
+			logger.warn("Failed to create folder.", e);
+			return ResponseEntity
+					.ok(ResponseWrapper.ApiFailureResponse(500, List.of(ApiError.FAILED_TO_CREATE_OR_UPDATE_ENTRY)));
+		}
+	}
+
+	@PostMapping("/node/move")
+	public ResponseEntity<ResponseWrapper<NodeInfo>> moveNode(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("projectId") ProjectId projectId, @RequestParam("sourcePath") String sourcePath,
+			@RequestParam("targetPath") String targetPath) {
+
+		try {
+			NodeInfo info = projectService.moveNode(user.getId(), projectId, sourcePath, targetPath);
+
+			return ResponseEntity.ok(ResponseWrapper.SuccessResponse(info));
+
+		} catch (Exception e) {
+			logger.warn("Failed to move node.", e);
+			return ResponseEntity
+					.ok(ResponseWrapper.ApiFailureResponse(500, List.of(ApiError.FAILED_TO_CREATE_OR_UPDATE_ENTRY)));
+		}
+	}
+
+	@DeleteMapping("/node")
 	public ResponseEntity<ResponseWrapper<Boolean>> deleteNode(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("projectId") ProjectId projectId, @RequestParam("node") NodeId nodeId) {
-
-		ResponseWrapper<Boolean> response;
+			@RequestParam("projectId") ProjectId projectId, @RequestParam("path") String path) {
 
 		try {
-			projectService.deleteNode(user.getId(), projectId, nodeId);
-			response = ResponseWrapper.SuccessResponse(true);
-		} catch (Exception e) {
-			logger.warn("Failed to create project entry.", e);
-			response = ResponseWrapper.ApiFailureResponse(500, List.of(ApiError.FAILED_TO_CREATE_OR_UPDATE_ENTRY));
-		}
+			projectService.deleteNode(user.getId(), projectId, path);
 
-		return new ResponseEntity<>(response, HttpStatus.OK);
+			return ResponseEntity.ok(ResponseWrapper.SuccessResponse(true));
+
+		} catch (Exception e) {
+			logger.warn("Failed to delete node.", e);
+			return ResponseEntity
+					.ok(ResponseWrapper.ApiFailureResponse(500, List.of(ApiError.FAILED_TO_CREATE_OR_UPDATE_ENTRY)));
+		}
+	}
+
+	@PostMapping("/node/meta")
+	public ResponseEntity<ResponseWrapper<Boolean>> updateNodeMetadata(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("projectId") ProjectId projectId, @RequestParam("oldPath") String oldPath,
+			@RequestParam("newPath") String newPath,
+			@RequestParam(name = "fileType", required = false) String fileType) {
+
+		try {
+
+			FileType ft = fileType == null ? FileType.text : FileType.valueOf(fileType);
+
+			projectService.updateNodeMetadata(user.getId(), projectId, oldPath, newPath, ft);
+
+			return ResponseEntity.ok(ResponseWrapper.SuccessResponse(true));
+
+		} catch (Exception e) {
+			return ResponseEntity
+					.ok(ResponseWrapper.ApiFailureResponse(500, List.of(ApiError.FAILED_TO_CREATE_OR_UPDATE_ENTRY)));
+		}
+	}
+
+	@GetMapping("/node/tree")
+	public ResponseEntity<ResponseWrapper<List<NodeInfo>>> describeTree(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("projectId") ProjectId projectId) {
+
+		try {
+			return ResponseEntity
+					.ok(ResponseWrapper.SuccessResponse(projectService.describeTree(user.getId(), projectId)));
+
+		} catch (Exception e) {
+			logger.warn("Failed to describe tree.", e);
+			return ResponseEntity
+					.ok(ResponseWrapper.ApiFailureResponse(500, List.of(ApiError.FAILED_TO_ENUMERATE_PROJECT)));
+		}
+	}
+
+	@GetMapping("/node/children")
+	public ResponseEntity<ResponseWrapper<List<NodeInfo>>> listChildren(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("projectId") ProjectId projectId, @RequestParam("path") String path) {
+
+		try {
+			return ResponseEntity
+					.ok(ResponseWrapper.SuccessResponse(projectService.listChildren(user.getId(), projectId, path)));
+
+		} catch (Exception e) {
+			logger.warn("Failed to list children.", e);
+			return ResponseEntity
+					.ok(ResponseWrapper.ApiFailureResponse(500, List.of(ApiError.FAILED_TO_ENUMERATE_PROJECT)));
+		}
 	}
 }

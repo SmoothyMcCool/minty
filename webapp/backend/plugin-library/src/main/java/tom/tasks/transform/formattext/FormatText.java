@@ -82,7 +82,7 @@ public class FormatText implements MintyTask {
 			sb = new StringBuffer();
 			while (matcher.find()) {
 				String placeholder = matcher.group(0); // e.g. "{user.name}"
-				String path = matcher.group(1).trim(); // e.g. "user.name"
+				String path = matcher.group(1).strip(); // e.g. "user.name"
 
 				if (path.equalsIgnoreCase("id")) {
 					matcher.appendReplacement(sb, Matcher.quoteReplacement(input.getId()));

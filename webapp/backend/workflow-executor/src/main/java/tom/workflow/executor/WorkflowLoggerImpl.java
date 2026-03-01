@@ -39,7 +39,7 @@ public class WorkflowLoggerImpl implements AutoCloseable, TaskLogger {
 		if (StringUtils.isBlank(filename)) {
 			return "blank";
 		}
-		String sanitized = filename.replaceAll("[\\\\/:*?\"<>|]", "_").replaceAll("\\p{Cntrl}", "").trim();
+		String sanitized = filename.replaceAll("[\\\\/:*?\"<>|]", "_").replaceAll("\\p{Cntrl}", "").strip();
 		if (sanitized.isEmpty()) {
 			sanitized = "unnamed";
 		}

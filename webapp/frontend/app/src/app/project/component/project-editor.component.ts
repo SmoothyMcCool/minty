@@ -1,108 +1,99 @@
 import { CommonModule } from '@angular/common';
-import { Component, forwardRef } from '@angular/core';
-import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { Component, Input } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Project } from 'src/app/model/project/project';
 import { ProjectService } from '../project.service';
-import { NodeInfo } from 'src/app/model/project/node-info';
-import { Node } from 'src/app/model/project/node';
 import { ProjectNodeComponent } from './project-node.component';
 import { NodeViewerComponent } from './project-node-viewer.component';
 import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
+import { ProjectNode } from 'src/app/model/project/project-node';
 
 @Component({
 	selector: 'minty-project-editor',
 	imports: [CommonModule, FormsModule, ProjectNodeComponent, NodeViewerComponent, ConfirmationDialogComponent],
 	templateUrl: 'project-editor.component.html',
-	providers: [
-		{
-			provide: NG_VALUE_ACCESSOR,
-			useExisting: forwardRef(() => ProjectEditorComponent),
-			multi: true
-		}
-	]
 })
-export class ProjectEditorComponent implements ControlValueAccessor {
+export class ProjectEditorComponent {
+
+	private _project: Project;
+	@Input()
+		set project(value: Project) {
+			if (value) {
+				this._project = value;
+			}
+			this.refresh();
+		}
+		get project(): Project {
+			return this._project;
+		}
 
 	onChange = (_: any) => { };
 	onTouched: any = () => { };
 
-	project: Project;
-	nodes: NodeInfo[];
+	nodes: ProjectNode[];
 
-	selectedNodeInfo: NodeInfo;
-	selectedNode: Node;
+	selectedNode: ProjectNode;
 	editFile: boolean = false;
 	currentFileContents: string;
 
 	confirmDeleteNodeVisible = false;
-	nodeInfoToDelete: NodeInfo;
+	nodeToDelete: ProjectNode;
 
 	constructor(private projectService: ProjectService) {
 	}
 
 	refresh() {
 		this.nodes = [];
-		this.selectedNodeInfo = null;
 		this.selectedNode = null;
 		this.editFile = false;
 		if (this.project) {
-			this.projectService.listProjectEntries(this.project.id).subscribe((nodes: NodeInfo[]) => {
+			this.projectService.describeTree(this.project.id).subscribe((nodes: ProjectNode[]) => {
 				this.nodes = nodes;
 			});
 		}
 	}
 
-	onSelected(node: NodeInfo) {
+	onSelected(node: ProjectNode) {
 		if (node.type !== 'Folder') {
-			this.selectedNodeInfo = node;
-			if (this.selectedNodeInfo.nodeId) {
-				this.projectService.getNode(this.project.id, this.selectedNodeInfo).subscribe(node => {
+			this.selectedNode = node;
+			if (this.selectedNode) {
+				this.projectService.readNode(this.project.id, this.selectedNode.path).subscribe(node => {
 					this.selectedNode = node;
 				});
 			}
 		} else {
-			this.selectedNodeInfo = null;
+			this.selectedNode = null;
 		}
 	}
 
-	onUpdateNodeInfo(nodeInfo: NodeInfo) {
-		this.projectService.getNode(this.project.id, nodeInfo).subscribe(node => {
-			node.info = nodeInfo;
-			this.projectService.addOrUpdateNode(this.project.id, node).subscribe(() => {
+	onUpdateNode(updatedNode: ProjectNode) {
+
+		if (!this.selectedNode) {
+			return;
+		}
+
+		this.projectService.updateNodeMetadata(this.project.id, this.selectedNode.path, updatedNode.path, updatedNode.fileType)
+			.subscribe(() => {
 				this.refresh();
 			});
-		})
 	}
 
-	onDeleteNodeInfo(node: NodeInfo) {
-		this.nodeInfoToDelete = node;
+
+	onDeleteNode(node: ProjectNode) {
+		this.nodeToDelete = node;
 		this.confirmDeleteNodeVisible = true;
 	}
 
 	confirmDeleteNode() {
 		this.confirmDeleteNodeVisible = false;
-		this.projectService.deleteNode(this.project.id, this.nodeInfoToDelete).subscribe(() => {
+		this.projectService.deleteNode(this.project.id, this.nodeToDelete.path).subscribe(() => {
 			this.refresh();
 		});
 	}
 
-	writeValue(obj: any): void {
-		this.project = obj;
-		this.refresh();
-	}
-	registerOnChange(fn: any): void {
-		this.onChange = fn;
-	}
-	registerOnTouched(fn: any): void {
-		this.onTouched = fn;
-	}
-	setDisabledState(isDisabled: boolean): void {
-		// Nah.
-	}
-
 	editCurrentFile() {
 		this.editFile = true;
-		this.currentFileContents = this.selectedNode.data;
+		this.currentFileContents = this.selectedNode.content;
 	}
 
 	cancelEditingCurrentFile() {
@@ -114,34 +105,42 @@ export class ProjectEditorComponent implements ControlValueAccessor {
 	}
 
 	saveChangesToCurrentFile() {
-		this.selectedNode.data = this.currentFileContents;
-		this.projectService.addOrUpdateNode(this.project.id, this.selectedNode).subscribe(() => {
-			this.refresh();
-		});
+		if (!this.selectedNode) {
+			return;
+		}
+
+		this.selectedNode.content = this.currentFileContents;
+		this.projectService.writeFile(this.project.id, this.selectedNode).subscribe(() => {
+				this.refresh();
+			});
 	}
+
 
 	addFile() {
-		const entryInfo: NodeInfo = {
-			nodeId: null,
+		const node: ProjectNode = {
 			type: 'File',
-			name: crypto.randomUUID(),
-			parentId: this.nodes.find(node => node.name === '/').nodeId
-		}
-		const entry: Node = {
-			info: entryInfo,
-			data: ''
-		}
-		this.projectService.addOrUpdateNode(this.project.id, entry).subscribe(() => {
+			fileType: 'text',
+			path: `/new-file-${this.randomId(6)}.txt`,
+			version: 0,
+			content: ''
+		};
+
+		this.projectService.writeFile(this.project.id, node).subscribe(() => {
 			this.refresh();
 		});
 	}
 
-	childNodesOf(nodeId: String): NodeInfo[] {
-		return this.nodes.filter(node => node.parentId === nodeId);
+	addFolder() {
+		this.projectService.createFolder(this.project.id, `/new-folder-${this.randomId(6)}`).subscribe(() => {
+			this.refresh();
+		});
 	}
 
-	rootNodes(): NodeInfo[] {
-		const root = this.nodes.find(node => node.name === '/');
-		return this.nodes.filter(node => node.parentId === root.nodeId);
+	rootNodes(): ProjectNode[] {
+		return this.nodes && this.nodes.filter(node => node.path.split('/').length === 2);
 	}
+
+	randomId(length: number) {
+		return Math.random().toString(36).substring(2, length + 2);
+	};
 }

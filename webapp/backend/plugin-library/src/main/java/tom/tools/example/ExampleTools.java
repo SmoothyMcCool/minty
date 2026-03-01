@@ -53,4 +53,9 @@ public class ExampleTools implements MintyTool {
 		return "Example tools just for fun, to return weather forecasts for a location, and to get the current local time.";
 	}
 
+	@Override
+	public String prompt() {
+		return null;
+	}
+
 }

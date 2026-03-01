@@ -31,7 +31,7 @@ public class RenameDataConfig implements TaskConfigSpec {
 			}
 
 			renames = Arrays.stream(renameObj.split(",")).map(s -> s.split(":"))
-					.collect(Collectors.toMap(array -> array[0].trim(), array -> array[1].trim()));
+					.collect(Collectors.toMap(array -> array[0].strip(), array -> array[1].strip()));
 
 		}
 	}
@@ -59,7 +59,7 @@ public class RenameDataConfig implements TaskConfigSpec {
 
 	@Override
 	public Map<String, Object> getValues() {
-		return Map.of(InputRenames, renames.entrySet().stream().map(e -> e.getKey().trim() + ":" + e.getValue().trim())
+		return Map.of(InputRenames, renames.entrySet().stream().map(e -> e.getKey().strip() + ":" + e.getValue().strip())
 				.collect(Collectors.joining(",")));
 	}
 }

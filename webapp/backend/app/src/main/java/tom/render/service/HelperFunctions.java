@@ -24,7 +24,7 @@ public class HelperFunctions {
 	}
 
 	public boolean isHtml(String str) {
-		if (str == null || str.trim().isEmpty()) {
+		if (str == null || str.strip().isEmpty()) {
 			return false;
 		}
 		Document doc = Jsoup.parse(str);
@@ -37,11 +37,11 @@ public class HelperFunctions {
 	}
 
 	public String stripMarkdown(String text) {
-		return text.replaceAll("(?s)^\\s*```[a-zA-Z0-9_-]*\\s*", "").replaceAll("(?s)\\s*```\\s*$", "").trim();
+		return text.replaceAll("(?s)^\\s*```[a-zA-Z0-9_-]*\\s*", "").replaceAll("(?s)\\s*```\\s*$", "").strip();
 	}
 
 	public String tryMakeSafe(String text) {
-		if (text == null || text.trim().isEmpty())
+		if (text == null || text.strip().isEmpty())
 			return null;
 
 		String noMd = stripMarkdown(text);

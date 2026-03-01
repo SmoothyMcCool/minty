@@ -4,12 +4,12 @@
 	</span>
 
 	<span class="clickable-text" (click)="onSelect(node)">
-		{{node.name}}
+		{{node.path}}
 	</span>
 
 	<span class="flex-grow-1"></span>
 
-	<button class="btn btn-sm" style="font-size: 14px;" (click)="editNodeInfo()">
+	<button class="btn btn-sm" style="font-size: 14px;" (click)="editNodeInfo(); onSelect(node)">
 		<i class="bi bi-pencil-square"></i>
 	</button>
 	<button type="button" class="btn btn-sm p-0" style="font-size: 14px; color: red" (click)="deleteNode()">
@@ -18,9 +18,9 @@
 </li>
 
 <ul *ngIf="node.type === 'Folder' && isExpanded" class="list-unstyled ps-3">
-	<ng-container *ngFor="let child of childNodesOf(node.nodeId)">
-		<minty-project-node [node]="child" [selected]="selected" [nodes]="nodes" (select)="onSelect($event)"
-			(update)="onUpdate($event)" (delete)="onDelete($event)">
+	<ng-container *ngFor="let child of childNodesOf(node.path)">
+		<minty-project-node [node]="child" [selected]="selected" [nodes]="nodes" (nodeSelected)="onSelect($event)"
+			(update)="update.emit($event)" (delete)="delete.emit($event)">
 		</minty-project-node>
 	</ng-container>
 </ul>
@@ -38,17 +38,20 @@
 						<label for="nameInput" class="form-label">Name</label>
 						<input type="text" class="form-control" id="nameInput" name="nameInput" [(ngModel)]="editName" required>
 					</div>
-					<div class="col-12">
-						<label for="typeSelect" class="form-label">File Type</label>
-						<select class="form-select" id="typeSelect" [(ngModel)]="editType" name="typeSelect" required>
-							<option value="Folder">Folder</option>
-							<option value="File">File</option>
+					<div class="col" *ngIf="editNodeType === 'File'">
+						<label for="fileTypeSelect" class="form-label">File Type</label>
+						<select class="form-select" id="fileTypeSelect" [(ngModel)]="editFileType" name="fileTypeSelect" required>
+							<option>code</option>
+							<option>markdown</option>
+							<option>json</option>
+							<option>text</option>
+							<option>diagram</option>
 						</select>
 					</div>
-					<div class="col-12">
+					<div class="col">
 						<label for="typeSelect" class="form-label">Parent</label>
 						<select class="form-select" id="typeSelect" [(ngModel)]="editParent" name="parentSelect" required>
-							<option *ngFor="let folder of listFolders()" value="{{folder.nodeId}}">{{folder.name}}</option>
+							<option *ngFor="let folder of listFolders()">{{folder.path}}</option>
 						</select>
 					</div>
 				</form>
