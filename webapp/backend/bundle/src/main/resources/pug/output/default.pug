@@ -31,7 +31,7 @@ html(lang="en")
 					.normalize('NFKD')
 					.replace(/[\u0300-\u036f]/g, '')
 					.toLowerCase()
-					.trim()
+					.strip()
 					.replace(/[^\w\s-]/g, '')
 					.replace(/\s+/g, '-')
 					.replace(/-+/g, '-');

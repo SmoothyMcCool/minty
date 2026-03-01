@@ -7,8 +7,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 import javax.sql.DataSource;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.ai.ollama.api.OllamaApi;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -52,8 +50,8 @@ import tom.cache.service.SingleFlightCacheManager;
 import tom.config.model.LlmEngine;
 import tom.llm.service.LlmService;
 import tom.ollama.service.OllamaServiceImpl;
+import tom.openai.service.OpenAiServiceImpl;
 import tom.prioritythreadpool.PriorityThreadPoolTaskExecutor;
-import tom.vllm.service.VllmServiceImpl;
 
 @Configuration
 @EnableWebMvc
@@ -62,8 +60,6 @@ import tom.vllm.service.VllmServiceImpl;
 @EnableScheduling
 @ComponentScan("tom")
 public class ApplicationConfig implements WebMvcConfigurer {
-
-	private static final Logger logger = LogManager.getLogger(ApplicationConfig.class);
 
 	MintyConfigurationImpl properties;
 
@@ -83,7 +79,7 @@ public class ApplicationConfig implements WebMvcConfigurer {
 		if (engine == LlmEngine.Ollama) {
 			return new OllamaServiceImpl(ollamaApi, vectorJdbcTemplate, dataSource, properties);
 		}
-		return new VllmServiceImpl(openAiApi, vectorJdbcTemplate, dataSource, properties);
+		return new OpenAiServiceImpl(openAiApi, vectorJdbcTemplate, dataSource, properties);
 	}
 
 	@Bean

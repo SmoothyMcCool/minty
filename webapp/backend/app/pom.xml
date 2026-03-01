@@ -43,7 +43,7 @@
 		</dependency>
 		<dependency>
 			<groupId>tom.minty</groupId>
-			<artifactId>api-vllm</artifactId>
+			<artifactId>api-openai</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>

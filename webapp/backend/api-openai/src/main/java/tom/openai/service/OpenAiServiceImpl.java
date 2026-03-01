@@ -1,4 +1,4 @@
-package tom.vllm.service;
+package tom.openai.service;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -42,9 +42,9 @@ import tom.llm.service.LlmService;
 import tom.tool.auditing.AuditingToolCallingManager;
 
 //NO Service annotation. This bean is instantiated dynamically based on the LLM engine being used.
-public class VllmServiceImpl implements LlmService {
+public class OpenAiServiceImpl implements LlmService {
 
-	private static final Logger logger = LogManager.getLogger(VllmServiceImpl.class);
+	private static final Logger logger = LogManager.getLogger(OpenAiServiceImpl.class);
 
 	private final List<ChatModelConfig> modelDefinitions;
 	private final List<String> activeModels;
@@ -55,7 +55,7 @@ public class VllmServiceImpl implements LlmService {
 	private final EmbeddingModel embeddingModel;
 	private final ToolCallingManager defaultToolCallingManager;
 
-	public VllmServiceImpl(OpenAiApi openAiApi, JdbcTemplate vectorJdbcTemplate, DataSource dataSource,
+	public OpenAiServiceImpl(OpenAiApi openAiApi, JdbcTemplate vectorJdbcTemplate, DataSource dataSource,
 			MintyConfiguration properties) {
 		String embeddingModelName = properties.getConfig().llm().embedding().model();
 		int chatMemoryDepth = properties.getConfig().llm().chatMemoryDepth();
@@ -64,7 +64,7 @@ public class VllmServiceImpl implements LlmService {
 		activeModels = properties.getConfig().llm().activeModels();
 
 		try {
-			logger.info("Vllm Interface Service starting...");
+			logger.info("OpenAI API Interface Service starting...");
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.findAndRegisterModules();
 			mapper.enable(SerializationFeature.INDENT_OUTPUT);

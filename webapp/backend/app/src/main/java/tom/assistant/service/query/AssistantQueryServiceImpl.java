@@ -363,12 +363,23 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 				.map(toolName -> toolRegistryService.getTool(toolName, user.getId())).filter(Objects::nonNull).toList();
 
 		ChatClient chatClient = buildChatClient(assistant, computeContextSize(assistant, query, tools), query);
-
 		UserMessage message = UserMessage.builder().text(query.getQuery()).media(images).build();
+		StringBuilder systemPrompt = new StringBuilder();
 
 		ChatClientRequestSpec spec = chatClient.prompt();
+
+		if (!tools.isEmpty()) {
+			for (MintyTool tool : tools) {
+				String sysPrompt = tool.prompt();
+				if (sysPrompt != null && !sysPrompt.strip().isBlank()) {
+					systemPrompt.append(sysPrompt).append("\n\n\n");
+				}
+			}
+			spec.tools(tools.toArray());
+		}
+
 		if (!assistant.prompt().isBlank()) {
-			spec = spec.system(assistant.prompt());
+			spec = spec.system(systemPrompt.toString() + assistant.prompt());
 		}
 
 		if (assistant.hasMemory()) {
@@ -377,10 +388,6 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		}
 
 		spec = spec.messages(List.of(message));
-
-		if (!tools.isEmpty()) {
-			spec.tools(tools.toArray());
-		}
 
 		return spec;
 	}

@@ -1,42 +1,23 @@
 package tom.api.model.project;
 
-import java.time.OffsetDateTime;
-
-import tom.api.NodeId;
-
 public class NodeInfo {
-	private NodeId nodeId;
 	private NodeType type;
-	private String name;
-	private NodeId parentId;
-	private OffsetDateTime created;
-	private OffsetDateTime updated;
+	private FileType fileType;
+	private String path;
+	private int version;
 
 	public NodeInfo() {
-		nodeId = null;
 		type = NodeType.File;
-		name = "";
-		parentId = null;
-		created = OffsetDateTime.now();
-		updated = OffsetDateTime.now();
+		fileType = FileType.text;
+		path = "";
+		version = 0;
 	}
 
-	public NodeInfo(NodeId id, NodeType type, String name, NodeId parentId, OffsetDateTime created,
-			OffsetDateTime updated) {
-		this.nodeId = id;
+	public NodeInfo(NodeType type, FileType fileType, String path, int version) {
 		this.type = type;
-		this.name = name;
-		this.parentId = parentId;
-		this.created = created;
-		this.updated = updated;
-	}
-
-	public NodeId getNodeId() {
-		return nodeId;
-	}
-
-	public void setNodeId(NodeId id) {
-		this.nodeId = id;
+		this.fileType = fileType;
+		this.path = path;
+		this.version = version;
 	}
 
 	public NodeType getType() {
@@ -47,36 +28,28 @@ public class NodeInfo {
 		this.type = type;
 	}
 
-	public String getName() {
-		return name;
+	public FileType getFileType() {
+		return fileType;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setFileType(FileType fileType) {
+		this.fileType = fileType;
 	}
 
-	public NodeId getParentId() {
-		return parentId;
+	public String getPath() {
+		return path;
 	}
 
-	public void setParentId(NodeId parentId) {
-		this.parentId = parentId;
+	public void setPath(String path) {
+		this.path = path;
 	}
 
-	public OffsetDateTime getCreated() {
-		return created;
+	public int getVersion() {
+		return version;
 	}
 
-	public void setCreated(OffsetDateTime created) {
-		this.created = created;
-	}
-
-	public OffsetDateTime getUpdated() {
-		return updated;
-	}
-
-	public void setUpdated(OffsetDateTime updated) {
-		this.updated = updated;
+	public void setVersion(int version) {
+		this.version = version;
 	}
 
 }

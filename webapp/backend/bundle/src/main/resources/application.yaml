@@ -29,7 +29,7 @@ db:
 llm:
   engine: Ollama
   uri: http://localhost:11434
-  #engine: vllm
+  #engine: openai
   #uri: http://172.24.128.199:8081
   modelDefinitions:
     - name: gemma3:4b

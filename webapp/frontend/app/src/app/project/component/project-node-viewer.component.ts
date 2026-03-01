@@ -50,6 +50,6 @@ export class NodeViewerComponent implements ControlValueAccessor {
 
 		this.debounceTimer = setTimeout(() => {
 			this.onChange(text);
-		}, 500);
+		}, 100);
 	}
 }

@@ -174,22 +174,42 @@ CREATE TABLE IF NOT EXISTS SPRING_AI_CHAT_MEMORY (
 );
 CREATE TABLE IF NOT EXISTS Project (
 	id UUID NOT NULL,
-	ownerId UUID,
+	ownerId UUID NOT NULL,
 	name TEXT,
+	created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	PRIMARY KEY (id)
 );
 CREATE TABLE IF NOT EXISTS ProjectNode (
 	id UUID NOT NULL,
-	projectId UUID,
-	type TEXT,
-	name TEXT,
+	projectId UUID NOT NULL,
 	parentId UUID,
-	data LONGTEXT,
+	ownerId UUID NOT NULL,
+	name VARCHAR(255) NOT NULL,
+	path VARCHAR(512) NOT NULL,
+	type ENUM('Folder', 'File') NOT NULL,
+	fileType ENUM('code', 'markdown', 'text', 'diagram', 'json') NULL,
+	version int NOT NULL DEFAULT 0,
 	created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	PRIMARY KEY (id),
 	FOREIGN KEY (parentId) REFERENCES ProjectNode(id) ON DELETE CASCADE,
-	FOREIGN KEY (projectId) REFERENCES Project(id) ON DELETE CASCADE
+	FOREIGN KEY (projectId) REFERENCES Project(id) ON DELETE CASCADE,
+	UNIQUE KEY uk_node_project_path (projectId, path),
+	INDEX idx_node_project_parent (projectId, parentId),
+	INDEX idx_node_project_path (projectId, path)
+);
+CREATE TABLE ProjectFileContent (
+	id UUID NOT NULL,
+	nodeId UUID NOT NULL,
+	ownerId UUID NOT NULL,
+	version INT NOT NULL,
+	content LONGTEXT NOT NULL,
+	created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	PRIMARY KEY (id),
+	FOREIGN KEY (nodeId) REFERENCES ProjectNode(id) ON DELETE CASCADE,
+	UNIQUE KEY uk_node_version (nodeId, version),
+	INDEX idx_node_version (nodeId, version)
 );
 CREATE TABLE IF NOT EXISTS vector_store (
 	doc_id VARCHAR(255) PRIMARY KEY,
@@ -197,7 +217,6 @@ CREATE TABLE IF NOT EXISTS vector_store (
 	embedding VECTOR(768),
 	meta JSON
 );
-
 CREATE TABLE SPRING_SESSION (
 	PRIMARY_ID CHAR(36) NOT NULL,
 	SESSION_ID CHAR(36) NOT NULL,

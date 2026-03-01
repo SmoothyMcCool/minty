@@ -24,13 +24,13 @@ import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
 
 @Configuration
-public class VllmConfig {
+public class OpenAiApiConfig {
 
-	private static final Logger logger = LogManager.getLogger(VllmConfig.class);
+	private static final Logger logger = LogManager.getLogger(OpenAiApiConfig.class);
 
 	MintyConfigurationImpl properties;
 
-	public VllmConfig(MintyConfigurationImpl properties) {
+	public OpenAiApiConfig(MintyConfigurationImpl properties) {
 		this.properties = properties;
 	}
 
@@ -40,17 +40,17 @@ public class VllmConfig {
 	}
 
 	@Bean(destroyMethod = "dispose")
-	ConnectionProvider vllmConnectionProvider() {
-		return ConnectionProvider.builder("vllmPool").maxConnections(50).pendingAcquireMaxCount(50).build();
+	ConnectionProvider openaiApiConnectionProvider() {
+		return ConnectionProvider.builder("openAiApiPool").maxConnections(50).pendingAcquireMaxCount(50).build();
 	}
 
 	@Bean
-	WebClient.Builder openAiWebClientBuilder(ConnectionProvider vllmConnectionProvider) {
+	WebClient.Builder openAiWebClientBuilder(ConnectionProvider openaiApiConnectionProvider) {
 		Duration responseTimeout = properties.getConfig().llm().apiTimeout();
 		Duration connectTimeout = properties.getConfig().llm().apiConnectTimeout();
 
-		// vllm required HTTP/1.1
-		HttpClient httpClient = HttpClient.create(vllmConnectionProvider).protocol(HttpProtocol.HTTP11)
+		// vllm requires HTTP/1.1
+		HttpClient httpClient = HttpClient.create(openaiApiConnectionProvider).protocol(HttpProtocol.HTTP11)
 				.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, (int) connectTimeout.toMillis())
 				.responseTimeout(responseTimeout)
 				.doOnConnected(conn -> conn
@@ -62,12 +62,12 @@ public class VllmConfig {
 
 	@Bean
 	OpenAiApi openAiApi(WebClient.Builder openAiWebClientBuilder) {
-		URI vllmUri = properties.getConfig().llm().uri();
-		logger.info("vllm URI is " + vllmUri);
+		URI openAiApiUri = properties.getConfig().llm().uri();
+		logger.info("OpenAI API URI is " + openAiApiUri);
 
 		ApiKey apiKey = new SimpleApiKey("doesn't matter");
-		return OpenAiApi.builder().baseUrl(vllmUri.toString()).apiKey(apiKey).webClientBuilder(openAiWebClientBuilder)
-				.build();
+		return OpenAiApi.builder().baseUrl(openAiApiUri.toString()).apiKey(apiKey)
+				.webClientBuilder(openAiWebClientBuilder).build();
 	}
 
 }
