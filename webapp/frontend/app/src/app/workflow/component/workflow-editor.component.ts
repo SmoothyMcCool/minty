@@ -58,7 +58,15 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 	onTouched: any = () => { };
 
 	workflow: Workflow;
-	editTask: TaskRequest = undefined;
+	_editTask: TaskRequest = undefined;
+	get editTask(): TaskRequest {
+		return this._editTask;
+	}
+	set editTask(request: TaskRequest) {
+		this._editTask = request;
+		this.onTouched();
+		this.onChange(this.workflow);
+	}
 	specGroups: string[] = [];
 	enumLists: EnumList[];
 	models: Model[];
