@@ -95,8 +95,8 @@ threads:
   taskDefault: 5
   taskMax: 20
   # Default and maximum number of threads for LLM queries.
-  llmDefault: 1
-  llmMax: 1
+  llmDefault: 4
+  llmMax: 4
   # Default and maximum number of threads for document processing.
   documentDefault: 1
   documentMax: 2
