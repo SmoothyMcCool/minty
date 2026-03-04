@@ -27,7 +27,7 @@ public class ConditionalConfig implements TaskConfigSpec {
 	@Override
 	public Map<String, TaskConfigTypes> getConfig() {
 		Map<String, TaskConfigTypes> config = new HashMap<>();
-		config.put(BranchExpression, TaskConfigTypes.String);
+		config.put(BranchExpression, TaskConfigTypes.CodeEditor);
 		return config;
 	}
 

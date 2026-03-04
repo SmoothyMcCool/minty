@@ -13,6 +13,7 @@ import { Model } from 'src/app/model/model';
 import { MintyDoc } from 'src/app/model/minty-doc';
 import { MintyTool } from 'src/app/model/minty-tool';
 
+
 @Component({
 	selector: 'minty-task-config-editor',
 	templateUrl: 'task-configuration-editor.component.html',

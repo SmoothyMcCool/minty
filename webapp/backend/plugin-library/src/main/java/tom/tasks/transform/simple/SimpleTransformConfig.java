@@ -27,7 +27,7 @@ public class SimpleTransformConfig implements TaskConfigSpec {
 	@Override
 	public Map<String, TaskConfigTypes> getConfig() {
 		Map<String, TaskConfigTypes> config = new HashMap<>();
-		config.put(TransformExpression, TaskConfigTypes.String);
+		config.put(TransformExpression, TaskConfigTypes.CodeEditor);
 		return config;
 	}
 

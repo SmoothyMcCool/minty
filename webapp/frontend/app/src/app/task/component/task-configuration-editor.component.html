@@ -77,6 +77,13 @@
 					<minty-document-editor name="documentInput-{{item.key}}" [ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)"></minty-document-editor>
 				</div>
 			</ng-container>
+			<ng-container *ngSwitchCase="'CodeEditor'">
+				<div class="mb-3">
+					<label for="codeInput-{{item.key}}" class="fs-4">{{item.key}}</label>
+					<textarea id="codeBlock" class="form-control font-monospace border-0 rounded-0" rows="12"
+						spellcheck="false" style="background-color: #1e1e1e; color: #dcdcdc;" [ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)"></textarea>
+				</div>
+			</ng-container>
 			<ng-container *ngSwitchCase="'Assistant'">
 				<div class="mb-3">
 					<label for="assistantInput-{{item.key}}" class="fs-4">{{item.key}}</label>

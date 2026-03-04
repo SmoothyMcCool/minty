@@ -444,6 +444,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 				case TaskConfigTypes.StringList -> "[]";
 				case TaskConfigTypes.Map -> "{}";
 				case TaskConfigTypes.TextArea -> "";
+				case TaskConfigTypes.CodeEditor -> "";
 				case TaskConfigTypes.EnumList -> "";
 				case TaskConfigTypes.Packet -> {
 					String result = "";

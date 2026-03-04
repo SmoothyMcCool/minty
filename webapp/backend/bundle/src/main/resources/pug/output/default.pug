@@ -26,12 +26,13 @@ html(lang="en")
 		script.
 			//--- Slug helper ----------------------------------------------------
 			function slugify(text) {
-				return text
+				const clean = (text === null || text === undefined) ? '' : text;
+				return clean
 					.toString()
 					.normalize('NFKD')
 					.replace(/[\u0300-\u036f]/g, '')
 					.toLowerCase()
-					.strip()
+					.trim()
 					.replace(/[^\w\s-]/g, '')
 					.replace(/\s+/g, '-')
 					.replace(/-+/g, '-');

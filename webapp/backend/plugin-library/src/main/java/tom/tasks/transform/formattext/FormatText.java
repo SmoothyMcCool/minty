@@ -57,53 +57,52 @@ public class FormatText implements MintyTask {
 
 	@Override
 	public void run() {
-		Matcher matcher = PLACEHOLDER_PATTERN.matcher(config.getFormat());
-		StringBuffer sb = null;
 
-		// Make sure input.data is a JSON object.
+		Matcher matcher = PLACEHOLDER_PATTERN.matcher(config.getFormat());
+		StringBuffer sb = new StringBuffer();
+
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
 
 		List<Map<String, Object>> dataList = input.getData();
+
+		JsonNode root;
+		try {
+			// Wrap entire data array under "data"
+			root = mapper.createObjectNode().set("data", mapper.valueToTree(dataList));
+		} catch (Exception e) {
+			logger.warn("FormatText: Could not parse input into JSON object.");
+			return;
+		}
+
 		result = new Packet();
 		result.setId(input.getId());
 		result.setData(input.getData());
 
-		for (Map<String, Object> data : dataList) {
-			JsonNode root;
-			try {
-				root = mapper.valueToTree(data);
-			} catch (Exception e) {
-				logger.warn("FormatText: Could not parse input into JSON object.");
-				return;
-			}
+		while (matcher.find()) {
+			String placeholder = matcher.group(0);
+			String path = matcher.group(1).strip();
 
-			matcher.reset();
-			sb = new StringBuffer();
-			while (matcher.find()) {
-				String placeholder = matcher.group(0); // e.g. "{user.name}"
-				String path = matcher.group(1).strip(); // e.g. "user.name"
+			if (path.equalsIgnoreCase("id")) {
+				matcher.appendReplacement(sb, Matcher.quoteReplacement(input.getId()));
+			} else if (path.equalsIgnoreCase("text")) {
+				matcher.appendReplacement(sb,
+						Matcher.quoteReplacement(String.join(System.lineSeparator(), input.getText())));
+			} else {
 
-				if (path.equalsIgnoreCase("id")) {
-					matcher.appendReplacement(sb, Matcher.quoteReplacement(input.getId()));
-				} else if (path.equalsIgnoreCase("text")) {
-					matcher.appendReplacement(sb,
-							Matcher.quoteReplacement(String.join(System.lineSeparator(), input.getText())));
+				JsonNode valueNode = resolvePath(root, path);
+
+				if (valueNode != null && !valueNode.isMissingNode() && !valueNode.isNull()) {
+					matcher.appendReplacement(sb, Matcher.quoteReplacement(valueNode.asText()));
 				} else {
-					JsonNode valueNode = resolvePath(root, path);
-
-					if (valueNode != null && !valueNode.isMissingNode() && !valueNode.isNull()) {
-						matcher.appendReplacement(sb, Matcher.quoteReplacement(valueNode.asText()));
-					} else {
-						// leave placeholder as-is
-						matcher.appendReplacement(sb, Matcher.quoteReplacement(placeholder));
-					}
+					matcher.appendReplacement(sb, Matcher.quoteReplacement(placeholder));
 				}
 			}
-			matcher.appendTail(sb);
-
-			result.addText(sb.toString());
 		}
+
+		matcher.appendTail(sb);
+
+		result.addText(sb.toString());
 
 		outputs.get(0).write(result);
 	}
@@ -152,7 +151,7 @@ public class FormatText implements MintyTask {
 			@Override
 			public String produces() {
 				return "The provided config template with substitutions made from the received input. The result is returned in \"Text\".\n"
-						+ "If data contains an array, the outputt \"Text\" element will contain a corresponding array of text.";
+						+ "Even if data contains an array, the output \"Text\" element will contain only one element, but substitutions can refer to different array elements.";
 			}
 
 			@Override
