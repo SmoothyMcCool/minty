@@ -3,6 +3,7 @@ package tom.tasks.transform.rename;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
@@ -61,14 +62,14 @@ public class RenameData implements MintyTask {
 		}
 
 		input.getData().forEach(item -> {
-			item.forEach((key, value) -> {
-				if (renames.containsKey(key)) {
-					logger.debug("RenameData: Renaming " + key + " to " + renames.get(key));
-					item.put(renames.get(key), value);
-				} else {
-					item.put(key, value);
-				}
-			});
+		    Map<String, Object> renamed = item.entrySet().stream()
+		        .collect(Collectors.toMap(
+		            e -> renames.getOrDefault(e.getKey(), e.getKey()),
+		            Map.Entry::getValue,
+		            (v1, v2) -> v1  // in case of duplicate new keys – keep the first
+		        ));
+		    item.clear();
+		    item.putAll(renamed);
 		});
 
 		result.setData(data);

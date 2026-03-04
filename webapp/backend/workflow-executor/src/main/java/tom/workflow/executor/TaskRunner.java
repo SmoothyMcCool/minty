@@ -85,7 +85,6 @@ public class TaskRunner {
 		while (!allTasksSpawned.get()) {
 
 			MintyTask task = taskRegistryService.newTask(userId, request);
-			logger.info("New task created for " + request.getStepName());
 			if (task == null) {
 				failed = true;
 				return;
@@ -115,18 +114,14 @@ public class TaskRunner {
 
 							if (packet != null) {
 								if (packet == Connector.WRITING_COMPLETE) {
-									logger.info("Task " + request.getStepName() + " input terminated on port " + i);
 									task.inputTerminated(i);
 									inputDone = true;
 								} else {
 									// Tasks only ever get new copies of packets.
 									packet = new Packet(packet);
 									if (task.wantsInput(i, packet)) {
-										logger.info("Task " + request.getStepName() + " taking packet on port " + i);
 										inputDone = task.giveInput(i, packet);
 									} else {
-										logger.info(
-												"Task " + request.getStepName() + " didn't want packet on port " + i);
 										inputs.get(i).replace(packet);
 										inputDone = true;
 									}
@@ -163,7 +158,6 @@ public class TaskRunner {
 				CompletableFuture<Void> future = taskExecutor.submitCompletable(() -> {
 					boolean failed = false;
 					try {
-						logger.info("Task " + request.getStepName() + " about to run");
 						task.run();
 					} catch (Exception e) {
 						logger.warn("TaskRunner: Task failed due to exception: ", e);
@@ -177,15 +171,17 @@ public class TaskRunner {
 						}
 						executionState.failTask();
 
-						if (task.terminalFailure()) {
-							logger.warn("Task " + request.getStepName()
-									+ " failed with a terminal error. Task is stopping.");
-							throw new TerminalTaskError("Task " + request.getStepName()
-									+ " failed with a terminal error. Task is stopping.");
-						} else {
-							logger.warn("Task " + request.getStepName()
-									+ " failed with a non-terminal error. Workflow will attempt to continue.");
-						}
+						logger.warn("Task " + request.getStepName() + " failed. Workflow is stopping.");
+						throw new TerminalTaskError("Task " + request.getStepName() + " failed. Workflow is stopping.");
+
+						/*
+						 * if (task.terminalFailure()) { logger.warn("Task " + request.getStepName() +
+						 * " failed with a terminal error. Task is stopping."); throw new
+						 * TerminalTaskError("Task " + request.getStepName() +
+						 * " failed with a terminal error. Task is stopping."); } else {
+						 * logger.warn("Task " + request.getStepName() +
+						 * " failed with a non-terminal error. Workflow will attempt to continue."); }
+						 */
 					} else {
 						logger.info("Task " + request.getStepName() + " completed");
 						Packet result = task.getResult();
