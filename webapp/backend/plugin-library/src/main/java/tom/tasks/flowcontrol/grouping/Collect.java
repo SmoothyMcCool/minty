@@ -1,4 +1,4 @@
-package tom.tasks.transform.collecttext;
+package tom.tasks.flowcontrol.grouping;
 
 import java.util.List;
 import java.util.Map;
@@ -11,41 +11,31 @@ import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
 import tom.tasks.Grouping;
-import tom.tasks.GroupingEnumSpecCreator;
 import tom.tasks.TaskGroup;
 
 @RunnableTask
-public class CollectText implements MintyTask {
+public class Collect implements MintyTask {
 
 	private List<? extends OutputPort> outputs;
 
-	private TaskLogger logger;
-	private StringBuilder result;
-	private boolean readyToRun;
+	private Packet result;
 	private Grouping grouping;
-	private String separator;
 	private String groupingId;
+	private boolean readyToRun;
 
-	public CollectText() {
-		result = new StringBuilder();
+	public Collect() {
+		result = new Packet();
 		readyToRun = false;
-		grouping = Grouping.All;
-		separator = "";
-		groupingId = null;
-		outputs = null;
 	}
 
-	public CollectText(CollectTextConfig config) {
+	public Collect(CollectConfig config) {
 		this();
-		grouping = config.getGrouping();
-		separator = config.getSeparator();
+		this.grouping = config.getGrouping();
 	}
 
 	@Override
 	public Packet getResult() {
-		Packet packet = new Packet();
-		packet.addText(result.toString());
-		return packet;
+		return null;
 	}
 
 	@Override
@@ -55,11 +45,8 @@ public class CollectText implements MintyTask {
 
 	@Override
 	public void run() {
-		Packet results = new Packet();
-		results.setId(groupingId);
-		results.addText(result.toString());
 		for (OutputPort output : outputs) {
-			output.write(results);
+			output.write(result);
 		}
 	}
 
@@ -80,21 +67,14 @@ public class CollectText implements MintyTask {
 
 	@Override
 	public boolean giveInput(int inputNum, Packet dataPacket) {
-		if (inputNum != 0) {
-			logger.warn(
-					"CollectText: Workflow misconfiguration detect. CollectText should only ever have exactly one input!");
-		}
-
 		if (groupingId == null) {
 			groupingId = dataPacket.getId();
+			result.setId(dataPacket.getId());
 		}
 
-		for (String str : dataPacket.getText()) {
-			if (!result.isEmpty()) {
-				result.append(separator);
-			}
-			result.append(str);
-		}
+		result.addTextList(dataPacket.getText());
+		result.addDataList(dataPacket.getData());
+
 		return false;
 	}
 
@@ -114,19 +94,17 @@ public class CollectText implements MintyTask {
 
 			@Override
 			public String description() {
-				return "Combine Text from multiple packets";
+				return "Collect multiple packets into a single packet by appending contents together in a list.";
 			}
 
 			@Override
 			public String expects() {
-				return "This task collects the Text elements of Packets it receives and joins them together. "
-						+ "It will either group all records received into a single output, or can be configured "
-						+ "to group elements of the same key.";
+				return "Any packet.";
 			}
 
 			@Override
 			public String produces() {
-				return "This task produces no output. The collected text is available as a result.";
+				return "A single packet containing a list of all packets received as input.";
 			}
 
 			@Override
@@ -141,22 +119,22 @@ public class CollectText implements MintyTask {
 
 			@Override
 			public TaskConfigSpec taskConfiguration() {
-				return new CollectTextConfig(Map.of(GroupingEnumSpecCreator.EnumName, Grouping.All.toString()));
+				return new CollectConfig();
 			}
 
 			@Override
 			public TaskConfigSpec taskConfiguration(Map<String, Object> configuration) {
-				return new CollectTextConfig(configuration);
+				return new CollectConfig(configuration);
 			}
 
 			@Override
 			public String taskName() {
-				return "Collect Text";
+				return "Collect";
 			}
 
 			@Override
 			public String group() {
-				return TaskGroup.TRANSFORM.toString();
+				return TaskGroup.FLOW_CONTROL.toString();
 			}
 		};
 	}
@@ -173,7 +151,7 @@ public class CollectText implements MintyTask {
 
 	@Override
 	public void setLogger(TaskLogger workflowLogger) {
-		this.logger = workflowLogger;
+		// this.logger = workflowLogger;
 	}
 
 }

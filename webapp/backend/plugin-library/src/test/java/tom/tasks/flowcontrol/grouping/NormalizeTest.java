@@ -240,7 +240,7 @@ class NormalizeTest {
 	@DisplayName("TaskSpec provides correct metadata")
 	void testSpecification() {
 		TaskSpec spec = normalize.getSpecification();
-		assertEquals("Normalizer", spec.taskName());
+		assertEquals("Normalize", spec.taskName());
 		assertEquals("Flow Control", spec.group());
 		assertEquals(1, spec.numInputs());
 		assertEquals(1, spec.numOutputs());

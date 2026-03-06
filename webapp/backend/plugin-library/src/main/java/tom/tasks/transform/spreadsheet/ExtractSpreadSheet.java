@@ -3,8 +3,6 @@ package tom.tasks.transform.spreadsheet;
 import java.util.List;
 import java.util.Map;
 
-import tom.api.model.services.ServiceConsumer;
-import tom.api.services.PluginServices;
 import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;
@@ -16,13 +14,12 @@ import tom.tasks.TaskGroup;
 import tom.tasks.noop.NullTaskConfig;
 
 @RunnableTask
-public class ExtractSpreadSheet implements MintyTask, ServiceConsumer {
+public class ExtractSpreadSheet implements MintyTask {
 
 	private List<? extends OutputPort> outputs;
 
 	private TaskLogger logger;
 	private Packet input;
-	private PluginServices pluginServices;
 	private boolean failed;
 	private String error;
 	private Packet result;
@@ -37,11 +34,6 @@ public class ExtractSpreadSheet implements MintyTask, ServiceConsumer {
 
 	public ExtractSpreadSheet(TaskConfigSpec config) {
 		this();
-	}
-
-	@Override
-	public void setPluginServices(PluginServices pluginServices) {
-		this.pluginServices = pluginServices;
 	}
 
 	@Override

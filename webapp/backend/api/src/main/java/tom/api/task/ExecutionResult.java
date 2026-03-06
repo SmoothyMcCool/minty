@@ -1,5 +1,6 @@
 package tom.api.task;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +13,9 @@ public class ExecutionResult {
 
 	private Instant startTime;
 	private Instant endTime;
+	private String runtime;
 	private String logFile;
+	private String name;
 	private Map<String, List<Packet>> results;
 	private Map<String, List<String>> errors;
 
@@ -20,6 +23,7 @@ public class ExecutionResult {
 		startTime = Instant.now();
 		endTime = Instant.now();
 		logFile = "";
+		name = "";
 		results = new ConcurrentHashMap<>();
 		errors = new ConcurrentHashMap<>();
 	}
@@ -39,6 +43,7 @@ public class ExecutionResult {
 
 	public void setStartTime(Instant startTime) {
 		this.startTime = startTime;
+		calculateRuntime();
 	}
 
 	public Instant getEndTime() {
@@ -47,6 +52,15 @@ public class ExecutionResult {
 
 	public void setEndTime(Instant endTime) {
 		this.endTime = endTime;
+		calculateRuntime();
+	}
+
+	public void setRuntime(String runtime) {
+		this.runtime = runtime;
+	}
+
+	public String getRuntime() {
+		return runtime;
 	}
 
 	public String getLogFile() {
@@ -55,6 +69,14 @@ public class ExecutionResult {
 
 	public void setLogFile(String logFile) {
 		this.logFile = logFile;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	public Map<String, List<Packet>> getResults() {
@@ -74,7 +96,8 @@ public class ExecutionResult {
 	}
 
 	public Map<String, Object> toMap() {
-		return Map.of("startTime", startTime, "endTime", endTime, "results", results, "errors", errors);
+		return Map.of("name", name, "startTime", startTime, "endTime", endTime, "runtime", runtime, "results", results,
+				"errors", errors);
 	}
 
 	public void addResult(String stepName, Packet result) {
@@ -95,18 +118,13 @@ public class ExecutionResult {
 		setEndTime(Instant.now());
 	}
 
-	public tom.api.task.ExecutionResult toApiResult() {
-		tom.api.task.ExecutionResult result = new tom.api.task.ExecutionResult();
-		result.setEndTime(endTime);
-		result.setErrors(errors);
-		result.setResults(results);
-		result.setStartTime(startTime);
-
-		return result;
-	}
-
 	public void addStep(String stepName) {
 		results.put(stepName, new ArrayList<>());
 		errors.put(stepName, new ArrayList<>());
+	}
+
+	private void calculateRuntime() {
+		Duration duration = java.time.Duration.between(startTime, endTime);
+		runtime = String.format("%dh %dm %ds", duration.toHours(), duration.toMinutesPart(), duration.toSecondsPart());
 	}
 }

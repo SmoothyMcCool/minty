@@ -18,7 +18,6 @@ public class Normalize implements MintyTask {
 
 	private List<? extends OutputPort> outputs;
 
-	private TaskLogger logger;
 	private Packet input;
 	private boolean failed;
 
@@ -64,7 +63,6 @@ public class Normalize implements MintyTask {
 
 	@Override
 	public boolean giveInput(int inputNum, Packet dataPacket) {
-		logger.info("Normalize: input " + inputNum + " got " + dataPacket);
 		input = dataPacket;
 		return true;
 	}
@@ -120,7 +118,7 @@ public class Normalize implements MintyTask {
 
 			@Override
 			public String taskName() {
-				return "Normalizer";
+				return "Normalize";
 			}
 
 			@Override
@@ -142,7 +140,7 @@ public class Normalize implements MintyTask {
 
 	@Override
 	public void setLogger(TaskLogger workflowLogger) {
-		this.logger = workflowLogger;
+		// this.logger = workflowLogger;
 	}
 
 }
