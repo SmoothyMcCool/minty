@@ -1,0 +1,31 @@
+table.table.table-hover.table-sm
+  thead
+    tr
+      th(scope="col") #
+      th(scope="col") Text
+      if data.size() > 0
+        each val, key in data.get(0)
+          th(scope="col") #{key}
+
+  tbody
+    each d, idx in data
+      tr
+        td #{idx + 1}
+
+        td
+          - var t = (text.size() > idx) ? text.get(idx) : null
+          - var safe = helpers.tryMakeSafe(t)
+          if safe
+            != safe
+          else if t != null
+            #{t}
+
+        if data.size() > 0
+          each val, key in data.get(0)
+            td
+              - var value = d.get(key)
+              - var jsonSafe = helpers.jsonToString(value)
+              if jsonSafe
+                != jsonSafe
+              else
+                | 

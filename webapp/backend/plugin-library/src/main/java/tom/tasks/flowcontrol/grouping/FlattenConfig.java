@@ -1,4 +1,4 @@
-package tom.tasks.transform.collecttext;
+package tom.tasks.flowcontrol.grouping;
 
 import java.util.HashMap;
 import java.util.List;
@@ -9,19 +9,19 @@ import tom.api.task.TaskConfigTypes;
 import tom.tasks.Grouping;
 import tom.tasks.GroupingEnumSpecCreator;
 
-public class CollectTextConfig implements TaskConfigSpec {
+public class FlattenConfig implements TaskConfigSpec {
 
-	public static final String Separator = "Separator";
+	public static final String Separator = "Text Separator";
 
 	private Grouping grouping;
 	private String separator;
 
-	public CollectTextConfig() {
+	public FlattenConfig() {
 		grouping = Grouping.All;
 		separator = "";
 	}
 
-	public CollectTextConfig(Map<String, Object> config) {
+	public FlattenConfig(Map<String, Object> config) {
 		this();
 		if (config.containsKey(GroupingEnumSpecCreator.EnumName)) {
 			grouping = Grouping.valueOf(config.get(GroupingEnumSpecCreator.EnumName).toString());

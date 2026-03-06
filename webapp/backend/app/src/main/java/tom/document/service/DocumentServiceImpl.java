@@ -303,6 +303,7 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 	@Override
 	public String fileBytesToText(byte[] bytes) {
 		Tika tika = new Tika();
+		tika.setMaxStringLength(-1);
 		tika.detect(bytes);
 		try {
 			return tika.parseToString(new ByteArrayInputStream(bytes));

@@ -19,7 +19,6 @@ public class RenameData implements MintyTask {
 
 	private List<? extends OutputPort> outputs;
 
-	private TaskLogger logger;
 	private RenameDataConfig config;
 	private Packet input;
 	private Packet result;
@@ -62,16 +61,13 @@ public class RenameData implements MintyTask {
 		}
 
 		input.getData().forEach(item -> {
-		    Map<String, Object> renamed = item.entrySet().stream()
-		        .collect(Collectors.toMap(
-		            e -> renames.getOrDefault(e.getKey(), e.getKey()),
-		            Map.Entry::getValue,
-		            (v1, v2) -> v1  // in case of duplicate new keys – keep the first
-		        ));
-		    item.clear();
-		    item.putAll(renamed);
+			Map<String, Object> renamed = item.entrySet().stream().collect(Collectors
+					.toMap(e -> renames.getOrDefault(e.getKey(), e.getKey()), Map.Entry::getValue, (v1, v2) -> v1));
+			item.clear();
+			data.add(renamed);
 		});
 
+		result.setText(input.getText());
 		result.setData(data);
 
 		outputs.get(0).write(result);
@@ -170,7 +166,7 @@ public class RenameData implements MintyTask {
 
 	@Override
 	public void setLogger(TaskLogger workflowLogger) {
-		this.logger = workflowLogger;
+		// this.logger = workflowLogger;
 	}
 
 }

@@ -16,6 +16,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.core.task.AsyncTaskExecutor;
 
 import tom.api.UserId;
+import tom.api.task.ExecutionResult;
 import tom.api.task.OutputTask;
 import tom.api.task.TaskSpec;
 import tom.task.model.TaskRequest;
@@ -81,8 +82,10 @@ public class WorkflowRunner {
 				outputTaskRequest.setConfiguration(workflow.getOutputStep().getConfiguration());
 				OutputTask outputTask = taskRegistryService.newOutputTask(userId, outputTaskRequest);
 
-				executionState.getExecutionRecord()
-						.setOutput(outputTask.execute(executionState.getResult().toApiResult()));
+				ExecutionResult executionResult = executionState.getResult();
+				executionResult.setName(getWorkflowName());
+
+				executionState.getExecutionRecord().setOutput(outputTask.execute(executionResult));
 				executionState.getExecutionRecord().setOutputFormat(outputTask.getSpecification().getFormat());
 			} else {
 				logger.warn("This workflow has no output task set. Cannot produce any output.");
@@ -108,6 +111,7 @@ public class WorkflowRunner {
 	public void start() {
 
 		executionState = new WorkflowExecution();
+		executionState.setName(getWorkflowName());
 		executionState.setOwnerId(userId);
 		executionState.getResult().start();
 

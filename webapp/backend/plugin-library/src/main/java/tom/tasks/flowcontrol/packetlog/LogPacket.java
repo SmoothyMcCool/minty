@@ -113,7 +113,7 @@ public class LogPacket implements MintyTask {
 
 			@Override
 			public String taskName() {
-				return "Packet Logger";
+				return "Log Packets";
 			}
 
 			@Override

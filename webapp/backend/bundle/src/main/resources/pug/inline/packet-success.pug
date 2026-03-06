@@ -9,9 +9,9 @@ if text.size() > 0 || data.size() > 0
           each t in text
             - var safe = helpers.tryMakeSafe(t)
             if safe
-              li.list-group-item !{safe} // raw HTML – already sanitized
+              li.list-group-item !{safe}
             else
-              li.list-group-item #{t} // plain-text (escaped)
+              li.list-group-item #{t}
       else if text.size() == 1
         - var safe = helpers.tryMakeSafe(text.get(0))
         if safe
