@@ -1,0 +1,89 @@
+.add-step-button {
+	position: absolute;
+	top: 10px;
+	left: 20px;
+	z-index: 10;
+	pointer-events: auto;
+}
+
+.canvas {
+	flex: 1;
+	position: relative;
+	background: #e8f0ec;
+	overflow: auto;
+	min-width: 0;
+	min-height: 600px;
+}
+
+.canvas-container {
+	display: flex;
+	width: 100%;
+	height: 100%;
+}
+
+.canvas-element {
+	position: absolute;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	cursor: grab;
+	user-select: none;
+}
+
+.connections {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+}
+
+.modal {
+	z-index: 1050;
+}
+
+.modal-backdrop {
+	z-index: 1040;
+}
+
+.quick-add {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: 300px;
+
+	background: white;
+	border: 1px solid #ccc;
+	border-radius: 6px;
+	padding: 10px;
+
+	z-index: 1000;
+	box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+}
+
+.quick-add-results {
+	max-height: 300px;
+	overflow-y: auto;
+}
+
+.quick-add-item {
+	padding: 6px;
+	cursor: pointer;
+}
+
+.quick-add-item.selected {
+	background: #0d6efd;
+	color: white;
+}
+
+.quick-add-item:hover {
+	background: #eee;
+}
+
+.task-list-column {
+	flex: 0 0 250px;
+	min-width: 400px;
+	max-height: 100%;
+	overflow-y: auto;
+	overflow-x: hidden;
+}

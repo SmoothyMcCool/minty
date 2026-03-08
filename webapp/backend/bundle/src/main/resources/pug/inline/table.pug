@@ -8,24 +8,30 @@ table.table.table-hover.table-sm
           th(scope="col") #{key}
 
   tbody
-    each d, idx in data
+    // --- Text rows ---
+    each t, idx in text
       tr
         td #{idx + 1}
-
-        td
-          - var t = (text.size() > idx) ? text.get(idx) : null
-          - var safe = helpers.tryMakeSafe(t)
-          if safe
-            != safe
-          else if t != null
-            #{t}
-
+        - var safe = helpers.tryMakeSafe(t)
+        if safe != safe
+          td
+        else if t != null
+          td #{t}
+        else
+          td
+        // Fill empty cells for data columns
         if data.size() > 0
           each val, key in data.get(0)
             td
-              - var value = d.get(key)
-              - var jsonSafe = helpers.jsonToString(value)
-              if jsonSafe
-                != jsonSafe
-              else
-                | 
+
+    // --- Data rows ---
+    each d, idx in data
+      tr
+        td #{idx + 1}
+        td
+        each val, key in d
+          - var jsonSafe = helpers.jsonToString(val)
+          if jsonSafe != jsonSafe
+            td
+          else
+            td #{jsonSafe}

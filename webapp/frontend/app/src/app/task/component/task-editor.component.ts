@@ -35,7 +35,7 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor, OnDest
 	get taskSpecification(): TaskSpecification {
 		return this._taskSpecification;
 	}
-	@Input() defaults: string[];
+	@Input() defaults: AttributeMap;
 	@Input() enumLists: EnumList[];
 	@Input() models: Model[];
 	@Input() documents: MintyDoc[];

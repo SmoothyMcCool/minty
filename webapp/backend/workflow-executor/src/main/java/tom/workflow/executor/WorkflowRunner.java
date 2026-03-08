@@ -1,6 +1,8 @@
 package tom.workflow.executor;
 
 import java.nio.file.Path;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -105,7 +107,8 @@ public class WorkflowRunner {
 	}
 
 	public String getWorkflowName() {
-		return workflow.getName() + " - " + executionState.getResult().getStartTime().toString();
+		return workflow.getName() + " - " + DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z")
+				.withZone(ZoneId.systemDefault()).format(executionState.getResult().getStartTime());
 	}
 
 	public void start() {

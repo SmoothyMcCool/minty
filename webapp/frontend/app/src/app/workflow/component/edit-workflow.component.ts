@@ -8,7 +8,7 @@ import { Workflow } from 'src/app/model/workflow/workflow';
 import { WorkflowService } from '../workflow.service';
 import { OutputTaskSpecification, AttributeMap, TaskSpecification } from 'src/app/model/workflow/task-specification';
 import { AlertService } from 'src/app/alert.service';
-import { WorkflowEditorComponent } from './workflow-editor.component';
+import { WorkflowEditorComponent } from './workflow-editor/workflow-editor.component';
 import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
 
 @Component({

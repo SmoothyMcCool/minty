@@ -1,9 +1,15 @@
 package tom.project.controller;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -13,6 +19,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.multipart.MultipartFile;
 
 import tom.ApiError;
 import tom.api.ProjectId;
@@ -21,7 +29,10 @@ import tom.api.model.project.NodeContent;
 import tom.api.model.project.NodeInfo;
 import tom.api.model.project.Project;
 import tom.api.services.ProjectService;
+import tom.config.MintyConfiguration;
 import tom.controller.ResponseWrapper;
+import tom.document.service.DocumentMarkdownProcessingTask;
+import tom.document.service.DocumentServiceInternal;
 import tom.model.security.UserDetailsUser;
 
 @Controller
@@ -31,9 +42,14 @@ public class ProjectController {
 	private static final Logger logger = LogManager.getLogger(ProjectController.class);
 
 	private final ProjectService projectService;
+	private final DocumentServiceInternal documentService;
+	private final Path tempFileStore;
 
-	public ProjectController(ProjectService projectService) {
+	public ProjectController(ProjectService projectService, DocumentServiceInternal documentService,
+			MintyConfiguration mintyConfig) {
 		this.projectService = projectService;
+		this.documentService = documentService;
+		tempFileStore = mintyConfig.getConfig().fileStores().temp();
 	}
 
 	@PostMapping("/create")
@@ -227,5 +243,29 @@ public class ProjectController {
 			return ResponseEntity
 					.ok(ResponseWrapper.ApiFailureResponse(500, List.of(ApiError.FAILED_TO_ENUMERATE_PROJECT)));
 		}
+	}
+
+	@PostMapping(value = { "/node/convert/markdown" }, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<ResponseWrapper<String>> convertToMarkdown(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("projectId") ProjectId projectId, @RequestPart("file") MultipartFile mpf) {
+
+		File file = new File(tempFileStore + "/" + mpf.getOriginalFilename());
+		try {
+			Files.createDirectories(file.toPath());
+			mpf.transferTo(file);
+			DocumentMarkdownProcessingTask task = new DocumentMarkdownProcessingTask(user.getId(), projectId, file,
+					documentService, projectService);
+
+			documentService.processFileToMarkdown(task);
+		} catch (IllegalStateException | IOException e) {
+			logger.error("Failed to store file: ", e);
+			ResponseWrapper<String> response = ResponseWrapper
+					.ApiFailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), List.of(ApiError.REQUEST_FAILED));
+			return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+
+		ResponseWrapper<String> response = ResponseWrapper
+				.SuccessResponse("You'll find your file in the active project.");
+		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 }

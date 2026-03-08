@@ -12,12 +12,13 @@ import { AssistantConfigurationEditorComponent } from './assistant-configuration
 import { Model } from 'src/app/model/model';
 import { MintyDoc } from 'src/app/model/minty-doc';
 import { MintyTool } from 'src/app/model/minty-tool';
+import { PipelineTransformEditorComponent } from './pipeline-transform-editor.component';
 
 
 @Component({
 	selector: 'minty-task-config-editor',
 	templateUrl: 'task-configuration-editor.component.html',
-	imports: [CommonModule, FormsModule, MapEditorComponent, StringListEditorComponent, EnumListEditorComponent, PacketEditorComponent, DocumentEditorComponent, AssistantConfigurationEditorComponent],
+	imports: [CommonModule, FormsModule, MapEditorComponent, StringListEditorComponent, EnumListEditorComponent, PacketEditorComponent, DocumentEditorComponent, AssistantConfigurationEditorComponent, PipelineTransformEditorComponent],
 	providers: [
 		{
 			provide: NG_VALUE_ACCESSOR,
@@ -28,7 +29,7 @@ import { MintyTool } from 'src/app/model/minty-tool';
 })
 export class AttributeMapEditorComponent implements ControlValueAccessor {
 
-	@Input() defaults: string[] = [];
+	@Input()  defaults: AttributeMap;
 	@Input() taskSpecification: TaskSpecification;
 	@Input() enumLists: EnumList[];
 	@Input() models: Model[];

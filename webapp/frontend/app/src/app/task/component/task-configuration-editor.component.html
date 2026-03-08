@@ -3,7 +3,7 @@
 		<ng-container [ngSwitch]="item.value">
 			<ng-container *ngSwitchCase="'Number'">
 				<div class="mb-3">
-					<ng-container *ngIf="defaults?.includes(item.key); else notDefaultNumber">
+					<ng-container *ngIf="defaults && defaults[item.key]; else notDefaultNumber">
 						<label for="numberInput-{{item.key}}">{{item.key}} (System or User Default)</label>
 					</ng-container>
 					<ng-template #notDefaultNumber>
@@ -11,12 +11,12 @@
 					</ng-template>
 					<input type="number" step="1" class="form-control form-control-sm" id="numberInput-{{item.key}}"
 						name="numberInput-{{item.key}}" [ngModel]="getConfig(item.key)"
-						(ngModelChange)="valueChanged(item.key, $event)" [readonly]="defaults?.includes(item.key)">
+						(ngModelChange)="valueChanged(item.key, $event)" [readonly]="defaults && defaults[item.key]">
 				</div>
 			</ng-container>
 			<ng-container *ngSwitchCase="'Boolean'">
 				<div class="mb-3">
-					<ng-container *ngIf="defaults && defaults.includes(item.key); else notDefaultNumber">
+					<ng-container *ngIf="defaults && defaults[item.key]; else notDefaultNumber">
 						<label for="booleanInput-{{item.key}}" class="fs-4">{{item.key}} (System or User Default)</label>
 					</ng-container>
 					<ng-template #notDefaultNumber>
@@ -25,20 +25,20 @@
 					<div class="form-group mb-2">
 						<input type="checkbox" class="form-check-input me-2" id="booleanInput-{{item.key}}"
 							name="booleanInput-{{item.key}}" [ngModel]="getConfig(item.key)"
-							(ngModelChange)="valueChanged(item.key, $event)" [disabled]="defaults?.includes(item.key)">
+							(ngModelChange)="valueChanged(item.key, $event)" [disabled]="defaults && defaults[item.key]">
 					</div>
 				</div>
 			</ng-container>
 			<ng-container *ngSwitchCase="'String'">
 				<div class="mb-3">
-					<ng-container *ngIf="defaults && defaults.includes(item.key); else notDefaultNumber">
+					<ng-container *ngIf="defaults && defaults[item.key]; else notDefaultNumber">
 						<label for="stringInput-{{item.key}}" class="fs-4">{{item.key}} (System or User Default)</label>
 					</ng-container>
 					<ng-template #notDefaultNumber>
 						<label for="stringInput-{{item.key}}" class="fs-4">{{item.key}}</label>
 					</ng-template>
 					<input [type]="(item.key || '').toLowerCase().includes('password') ? 'password' : 'text'" class="form-control form-control-sm" id="stringInput-{{item.key}}" name="stringInput-{{item.key}}"
-						[ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)" [readonly]="defaults?.includes(item.key)">
+						[ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)" [readonly]="defaults && defaults[item.key]">
 				</div>
 			</ng-container>
 			<ng-container *ngSwitchCase="'TextArea'">
@@ -77,11 +77,23 @@
 					<minty-document-editor name="documentInput-{{item.key}}" [ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)"></minty-document-editor>
 				</div>
 			</ng-container>
+			<ng-container *ngSwitchCase="'PipelineEditor'">
+				<div class="mb-3">
+					<label for="pipelineInput-{{item.key}}" class="fs-4">{{item.key}}</label>
+					<minty-pipeline-transform-editor name="pipelineInput-{{item.key}}" [ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)"></minty-pipeline-transform-editor>
+				</div>
+			</ng-container>
 			<ng-container *ngSwitchCase="'CodeEditor'">
 				<div class="mb-3">
 					<label for="codeInput-{{item.key}}" class="fs-4">{{item.key}}</label>
 					<textarea id="codeBlock" class="form-control font-monospace border-0 rounded-0" rows="12"
 						spellcheck="false" style="background-color: #1e1e1e; color: #dcdcdc;" [ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)"></textarea>
+				</div>
+			</ng-container>
+			<ng-container *ngSwitchCase="'ReadOnly'">
+				<div class="mb-3">
+					<label class="fs-4">{{item.key}}</label>
+					<div id="readOnly" class="form-control" style="white-space: pre-wrap;">{{getConfig(item.key)}}</div>
 				</div>
 			</ng-container>
 			<ng-container *ngSwitchCase="'Assistant'">

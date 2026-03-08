@@ -445,6 +445,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 				case TaskConfigTypes.Map -> "{}";
 				case TaskConfigTypes.TextArea -> "";
 				case TaskConfigTypes.CodeEditor -> "";
+				case TaskConfigTypes.ReadOnly -> "";
 				case TaskConfigTypes.EnumList -> "";
 				case TaskConfigTypes.Packet -> {
 					String result = "";
@@ -459,6 +460,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 				case TaskConfigTypes.Assistant -> {
 					yield new AssistantSpec().toJson();
 				}
+				case TaskConfigTypes.PipelineEditor -> "";
 				};
 
 				taskCfg.put(innerEntry.getKey(), value);
