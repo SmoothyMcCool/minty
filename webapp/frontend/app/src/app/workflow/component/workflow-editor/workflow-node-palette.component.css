@@ -1,0 +1,42 @@
+
+.node-palette {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+
+	width: 350px;
+	max-height: 500px;
+
+	background: white;
+	border-radius: 8px;
+	padding: 12px;
+
+	z-index: 2000;
+
+	box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.node-list {
+	max-height: 400px;
+	overflow-y: auto;
+}
+
+.node-item {
+	padding: 8px;
+	cursor: pointer;
+	border-radius: 4px;
+}
+
+.node-item:hover,
+.node-item.selected {
+	background: #0d6efd;
+	color: white;
+}
+
+.node-palette-backdrop {
+	position: fixed;
+	inset: 0;
+	z-index: 1999;
+	background: rgba(0,0,0,0.3);
+}

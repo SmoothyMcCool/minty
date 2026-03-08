@@ -4,9 +4,11 @@
 		<div class="col-3 border-end">
 			<h5 class="mb-3">Files</h5>
 			<ul class="list-group">
-				<li class="list-group-item position-relative text-bg-light bg-opacity-75" *ngFor="let node of rootNodes()">
+				<li class="list-group-item position-relative text-bg-light bg-opacity-75"
+					*ngFor="let node of rootNodes()">
 					<minty-project-node [node]="node" [selected]="selectedNode" [nodes]="nodes"
-						(nodeSelected)="onSelected($event)" (update)="onUpdateNode($event)" (delete)="onDeleteNode($event)"></minty-project-node>
+						(nodeSelected)="onSelected($event)" (update)="onUpdateNode($event)"
+						(delete)="onDeleteNode($event)"></minty-project-node>
 				</li>
 				<li class="list-group-item position-relative text-bg-light bg-opacity-75" style="height: 2.5rem">
 					<button class="btn" (click)="addFolder()">
@@ -14,6 +16,9 @@
 					</button>
 					<button class="btn" (click)="addFile()">
 						<i class="bi bi-file-earmark-plus"></i>
+					</button>
+					<button class="btn" (click)="addAndConvertToMd()">
+						<i class="bi bi-filetype-md"></i>
 					</button>
 				</li>
 			</ul>
@@ -39,7 +44,8 @@
 				</div>
 			</div>
 			<h1>{{selectedNode.path}}</h1>
-			<minty-project-node-viewer [ngModel]="selectedNode.content" (ngModelChange)="onFileContentsChanged($event)" [edit]="editFile"></minty-project-node-viewer>
+			<minty-project-node-viewer [ngModel]="selectedNode.content" (ngModelChange)="onFileContentsChanged($event)"
+				[edit]="editFile"></minty-project-node-viewer>
 		</div>
 		<ng-template #noSelection>
 			<h5 class="col-9 text-muted">Select a file to view its contents</h5>
@@ -47,7 +53,29 @@
 	</div>
 </div>
 
-<minty-confirmation-dialog [title]="'Delete File'"
-	[message]="'Are you sure you want to delete this file/folder?'" [visible]="confirmDeleteNodeVisible"
-	(confirm)="confirmDeleteNode()" (cancel)="confirmDeleteNodeVisible = false">
+<div class="modal fade" tabindex="-1" [ngClass]="{'show d-block': mdFileDialogVisible}"
+	[style.display]="mdFileDialogVisible ? 'block' : 'none'">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">Save as Markdown</h5>
+				<button type="button" class="btn-close" (click)="mdFileDialogVisible = false"></button>
+			</div>
+			<div class="modal-body">
+				<div class="mb-3">
+					<label for="mdFilename" class="form-label">Filename</label>
+					<input class="form-control" type="file" id="mdFile" (change)="markdownFileSelected($event)">
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" (click)="mdFileDialogVisible = false">Cancel</button>
+				<button type="button" class="btn btn-primary"
+					(click)="addMarkdownFile()">OK</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<minty-confirmation-dialog [title]="'Delete File'" [message]="'Are you sure you want to delete this file/folder?'"
+	[visible]="confirmDeleteNodeVisible" (confirm)="confirmDeleteNode()" (cancel)="confirmDeleteNodeVisible = false">
 </minty-confirmation-dialog>

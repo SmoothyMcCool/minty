@@ -1,0 +1,87 @@
+<div class="container-fluid">
+
+	<!-- Header -->
+	<div class="d-flex justify-content-between align-items-center mb-3">
+		<h5 class="mb-0">Pipeline Editor</h5>
+
+		<button class="btn btn-primary btn-sm" (click)="addOperation()">
+			<i class="bi bi-plus"></i> Add Operation
+		</button>
+	</div>
+
+
+	<!-- Empty state -->
+	<div *ngIf="pipeline?.operations?.length === 0" class="alert alert-light">
+		Pipeline has no operations yet.
+	</div>
+
+
+	<!-- Pipeline steps -->
+	<div cdkDropList (cdkDropListDropped)="drop($event)">
+
+		<div *ngFor="let op of pipeline?.operations; let i = index" class="card mb-3 shadow-sm" cdkDrag>
+
+			<!-- Header -->
+			<div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
+				<div class="d-flex align-items-center gap-2">
+					<span class="badge bg-light text-dark">{{i + 1}}</span>
+					<strong>{{op.name || "New Operation"}}</strong>
+				</div>
+
+				<div class="btn-group btn-group-sm">
+					<button class="btn btn-light" (click)="moveUp(i)"><i class="bi bi-arrow-up"></i></button>
+					<button class="btn btn-light" (click)="moveDown(i)"><i class="bi bi-arrow-down"></i></button>
+					<button class="btn btn-warning" (click)="toggleDescription(i)"><i
+							class="bi bi-question-circle"></i></button>
+					<button class="btn btn-danger" (click)="removeOperation(i)"><i class="bi bi-x-lg"></i></button>
+				</div>
+			</div>
+
+
+			<!-- Body -->
+			<div class="card-body">
+
+				<!-- Operation select -->
+				<div class="mb-3">
+
+					<label class="form-label">Operation</label>
+
+					<select class="form-select" [(ngModel)]="op.name" (ngModelChange)="onOperationChange(op)">
+						<option *ngFor="let available of operations" [value]="available.op">{{available.op}}</option>
+					</select>
+
+				</div>
+
+
+				<!-- Description -->
+				<div *ngIf="showDescriptions[i] && getOperation(op.name)" class="alert alert-light border small">
+					<div style="white-space: pre-line">{{getOperation(op.name)?.description}}</div>
+				</div>
+
+
+				<!-- Configuration -->
+				<div *ngIf="requiresConfig(op)">
+
+					<label class="form-label">
+						Configuration (JSON Object or Array, or SpEL Expression)
+					</label>
+
+					<textarea class="form-control font-monospace" rows="6" [class.is-invalid]="jsonErrors[i]"
+						[ngModel]="getConfigJson(op)" (ngModelChange)="updateConfig(op, $event, i)"></textarea>
+
+					<div *ngIf="jsonErrors[i]" class="invalid-feedback">
+						Invalid
+					</div>
+
+				</div>
+			</div>
+
+
+			<!-- Footer -->
+			<div class="card-footer bg-light text-end">
+				<button class="btn btn-outline-primary btn-sm" (click)="addOperation(i + 1)">+ Insert Step
+					After</button>
+			</div>
+		</div>
+	</div>
+</div>

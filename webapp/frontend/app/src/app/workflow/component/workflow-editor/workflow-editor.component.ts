@@ -1,13 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, forwardRef, Input, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
+import { Component, ElementRef, forwardRef, HostListener, Input, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { Connection, OutputTaskSpecification, AttributeMap, TaskRequest, TaskSpecification } from 'src/app/model/workflow/task-specification';
 import { Workflow } from 'src/app/model/workflow/workflow';
-import { TaskWidgetComponent } from './task-widget.component';
+import { TaskWidgetComponent } from '../task-widget.component';
 import { CdkDragMove, DragDropModule } from '@angular/cdk/drag-drop';
 import { FilterPipe } from 'src/app/pipe/filter-pipe';
 import { TaskEditorComponent } from 'src/app/task/component/task-editor.component';
-import { WorkflowService } from '../workflow.service';
+import { WorkflowService } from '../../workflow.service';
 import { EnumList } from 'src/app/model/workflow/enum-list';
 import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
 import { AssistantService } from 'src/app/assistant.service';
@@ -17,12 +17,15 @@ import { MintyDoc } from 'src/app/model/minty-doc';
 import { ToolService } from 'src/app/tool.service';
 import { MintyTool } from 'src/app/model/minty-tool';
 import { AutoResizeDirective } from 'src/app/pipe/auto-resize-directive';
+import { WorkflowGeometryService } from './services/workflow-geometry.service';
+import { WorkflowNodePaletteComponent } from './workflow-node-palette.component';
+import { WorkflowTaskEditorModalComponent } from './workflow-task-editor-modal.component';
 
 @Component({
 	selector: 'minty-workflow-editor',
-	imports: [CommonModule, DragDropModule, FormsModule, TaskEditorComponent, TaskWidgetComponent, FilterPipe, ConfirmationDialogComponent, AutoResizeDirective],
+	imports: [CommonModule, DragDropModule, FormsModule, TaskEditorComponent, TaskWidgetComponent, FilterPipe, ConfirmationDialogComponent, AutoResizeDirective, WorkflowNodePaletteComponent, WorkflowTaskEditorModalComponent],
 	templateUrl: 'workflow-editor.component.html',
-	styleUrls: ['workflow.component.css', 'workflow-editor.component.css'],
+	styleUrls: ['../workflow.component.css', 'workflow-editor.component.css'],
 	providers: [
 		{
 			provide: NG_VALUE_ACCESSOR,
@@ -32,6 +35,8 @@ import { AutoResizeDirective } from 'src/app/pipe/auto-resize-directive';
 	]
 })
 export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
+
+	@ViewChild('taskSearchBox') taskSearchBox!: ElementRef<HTMLInputElement>;
 
 	private _taskSpecifications: TaskSpecification[] = [];
 	@Input()
@@ -73,9 +78,22 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 	documents: MintyDoc[];
 	tools: MintyTool[];
 
+	pendingDeleteTask?: TaskRequest;
+
+	addStepVisible = false;
+	taskSearch = '';
+
+	canvasMouse = { x: 0, y: 0 };
+	spawnPosition = { x: 0, y: 0 };
+	selectedIndex = 0;
+
 	confirmDeleteStepVisible: boolean = false;
 
-	constructor(private workflowService: WorkflowService, private assistantService: AssistantService, private toolService: ToolService, private documentService: DocumentService) {
+	constructor(private workflowService: WorkflowService,
+		private workflowGeometryService: WorkflowGeometryService,
+		private assistantService: AssistantService,
+		private toolService: ToolService,
+		private documentService: DocumentService) {
 	}
 
 	ngOnInit() {
@@ -105,17 +123,14 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 		this.onChange(this.workflow);
 	}
 
-	addStep(taskSpecification: TaskSpecification) {
+	addStepAt(taskSpecification: TaskSpecification, x: number, y: number) {
 
 		const updated = { ...taskSpecification.configuration };
 
 		if (taskSpecification.configuration) {
 			for (const key of Object.keys(taskSpecification.configuration)) {
-				// System and user defaults are stored in the form "Task Name::Property Name", so
-				// we need to build that up to find our keys.
-				const fullKey = taskSpecification.taskName + '::' + key;
-				if (this.defaults && fullKey in this.defaults) {
-					updated[key] = this.defaults[fullKey];
+				if (this.defaults && key in this.defaults) {
+					updated[key] = this.defaults[key];
 				}
 			}
 		}
@@ -126,8 +141,8 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 			id: crypto.randomUUID(),
 			configuration: updated,
 			layout: {
-				x: 0,
-				y: 0,
+				x: x,
+				y: y,
 				numInputs: taskSpecification.numInputs,
 				numOutputs: taskSpecification.numOutputs
 			}
@@ -137,15 +152,18 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 		this.updateWorkflow();
 	}
 
+	addStep(taskSpecification: TaskSpecification) {
+		const spawn = this.spawnPosition || this.workflowGeometryService.getCanvasCentre(this.canvasRef.nativeElement);
+		this.addStepAt(taskSpecification, spawn.x, spawn.y);
+	}
+
 	addOutputStep(taskSpecification: OutputTaskSpecification) {
+		const spawn = this.spawnPosition || this.workflowGeometryService.getCanvasCentre(this.canvasRef.nativeElement);
 		const updated = { ...taskSpecification.configuration };
 		if (taskSpecification.configuration) {
 			for (const key of Object.keys(taskSpecification.configuration)) {
-				// System and user defaults are stored in the form "Task Name::Property Name", so
-				// we need to build that up to find our keys.
-				const fullKey = taskSpecification.taskName + '::' + key;
-				if (this.defaults &&fullKey in this.defaults) {
-					updated[key] = this.defaults[fullKey];
+				if (this.defaults && key in this.defaults) {
+					updated[key] = this.defaults[key];
 				}
 			}
 		}
@@ -157,8 +175,8 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 			id: crypto.randomUUID(),
 			configuration: taskSpecification.configuration,
 			layout: {
-				x: 0,
-				y: 0,
+				x: spawn.x,
+				y: spawn.y,
 				numInputs: 0,
 				numOutputs: 0
 			}
@@ -166,6 +184,64 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 
 		this.workflow.outputStep = task;
 		this.updateWorkflow();
+	}
+
+	@HostListener('document:keydown.space', ['$event'])
+	onSpacebar(event: KeyboardEvent) {
+
+		if (this.editTask) return;
+
+		const target = event.target as HTMLElement;
+
+		if (target.tagName === 'INPUT' ||
+			target.tagName === 'TEXTAREA' ||
+			target.isContentEditable) {
+			return;
+		}
+
+		event.preventDefault();
+
+		this.spawnPosition = { ...this.canvasMouse };
+		this.addStepVisible = true;
+	}
+
+	@HostListener('document:keydown.escape', ['$event'])
+	onEscape() {
+		this.addStepVisible = false;
+	}
+
+	@HostListener('document:keydown', ['$event'])
+	onKeyDown(event: KeyboardEvent) {
+
+		if (!this.addStepVisible) {
+			return;
+		}
+
+		const results = this.filteredTaskSpecifications();
+
+		if (!results.length) {
+			return;
+		}
+
+		if (event.key === 'ArrowDown') {
+			event.preventDefault();
+			this.selectedIndex = (this.selectedIndex + 1) % results.length;
+		}
+
+		if (event.key === 'ArrowUp') {
+			event.preventDefault();
+			this.selectedIndex =
+				(this.selectedIndex - 1 + results.length) % results.length;
+		}
+
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			this.addStep(results[this.selectedIndex]);
+		}
+
+		if (event.key === 'Escape') {
+			this.addStepVisible = false;
+		}
 	}
 
 	onStartConnection(task: TaskRequest, data: { portIndex: number; isInput: boolean; event: MouseEvent }) {
@@ -261,33 +337,45 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 	}
 
 	onMouseMove(event: MouseEvent) {
-		if (this.tempConnection) {
-			setTimeout(() => {
-				const canvasRect = this.canvasRef.nativeElement.getBoundingClientRect();
 
-				// Default: mouse position
-				let toX = event.clientX - canvasRect.left;
-				let toY = event.clientY - canvasRect.top;
+		const canvas = this.canvasRef.nativeElement;
+		// Track mouse position relative to canvas
+		this.canvasMouse = this.workflowGeometryService.getCanvasRelativePosition(event, canvas);
 
-				// If hovering over a port, snap to its center, but only if:
-				// 1. it's a different task than the originating task.
-				// 2. If the originating port not the same input/output type as the hovered task.
-				if (this.hoveredPort && this.hoveredPort.task.id !== this.tempConnection.portId &&
-					this.hoveredPort.isInput !== this.tempConnection.isInput) {
-					toX = this.getPortCenterX(this.hoveredPort.task.id, this.hoveredPort.portIndex, this.hoveredPort.isInput);
-					toY = this.getPortCenterY(this.hoveredPort.task.id, this.hoveredPort.portIndex, this.hoveredPort.isInput);
-				}
-
-				if (this.tempConnection.isInput) {
-					this.tempConnection.fromX = toX;
-					this.tempConnection.fromY = toY;
-				} else {
-					this.tempConnection.toX = toX;
-					this.tempConnection.toY = toY;
-				}
-			}, 0);
+		if (!this.tempConnection) {
+			return;
 		}
+
+		setTimeout(() => {
+
+			let toPoint = {
+				x: this.canvasMouse.x,
+				y: this.canvasMouse.y
+			};
+
+			// Snap to port if hovering over valid port
+			const snap = this.workflowGeometryService.getSnappedPortPosition(
+				this.hoveredPort,
+				this.tempConnection,
+				(id: string) => this.getWidget(id)
+			);
+
+			if (snap) {
+				toPoint = snap;
+			}
+
+			// Update connection preview geometry
+			if (this.tempConnection.isInput) {
+				this.tempConnection.fromX = toPoint.x;
+				this.tempConnection.fromY = toPoint.y;
+			} else {
+				this.tempConnection.toX = toPoint.x;
+				this.tempConnection.toY = toPoint.y;
+			}
+
+		}, 0);
 	}
+
 
 	onDisplayTask(taskId: string) {
 		let step: TaskRequest;
@@ -328,26 +416,7 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 		}
 
 		// If the number of inputs or outputs changed, we need to remove any invalid connections now.
-		this.workflow.connections = this.workflow.connections.filter(connection => {
-			if (connection.readerId !== this.editTask.id && connection.writerId !== this.editTask.id) {
-				return true;
-			}
-			const numInputPorts = this.editTask.configuration['Number of Inputs'] !== undefined
-				? Number(this.editTask.configuration['Number of Inputs'])
-				: this.editTask.layout.numInputs;
-
-			const numOutputPorts = this.editTask.configuration['Number of Outputs'] !== undefined
-				? Number(this.editTask.configuration['Number of Outputs'])
-				: this.editTask.layout.numOutputs;
-
-			if (connection.readerId === this.editTask.id) {
-				return connection.readerPort < numInputPorts;
-			}
-			if (connection.writerId === this.editTask.id) {
-				return connection.writerPort < numOutputPorts;
-			}
-			return true;
-		});
+		this.workflow.connections = this.workflowGeometryService.validateConnectionsForTask(this.editTask, this.workflow.connections);
 
 		this.editTask = null;
 		this.updateWorkflow();
@@ -376,32 +445,8 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 		this.tempConnection = null;
 	}
 
-	getTaskWidgetBoundingBox(elementId: string): { x: number, y: number, width: number, height: number } {
-		const widget = this.taskWidgets.find(w => w.task.id === elementId);
-		const step = this.workflow.steps.find(step => step.id === elementId);
-		return { x: step.layout.x, y: step.layout.y, width: widget.rect.width, height: widget.rect.height };
-	}
-
-	getPortCenterX(elementId: string, portIndex: number, isInput: boolean): number {
-		const widget = this.taskWidgets.find(w => w.task.id === elementId);
-		if (!widget) {
-			return 0;
-		}
-		return widget.getPortCenter(portIndex, isInput).x;
-	}
-
-	getPortCenterY(elementId: string, portIndex: number, isInput: boolean): number {
-		const widget = this.taskWidgets.find(w => w.task.id === elementId);
-		if (!widget) {
-			return 0;
-		}
-		return widget.getPortCenter(portIndex, isInput).y;
-	}
-
-	defaultsFor(task: TaskRequest): string[] {
-
-		const result: string[] = Object.keys(task.configuration || {}).filter(key => this.defaults && key in this.defaults);
-		return result;
+	private getWidget(taskId: string) {
+		return this.taskWidgets.find(w => w.task.id === taskId);
 	}
 
 	specFor(task: TaskRequest): TaskSpecification {
@@ -437,74 +482,27 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 		// Nah.
 	}
 
-	getEscapedGroupId(group: string): string {
-		return group.replace(/[^a-zA-Z0-9_-]/g, '-');
-	}
-
-	sortandFilterSpecifications(group: string, specifications: TaskSpecification[]) {
-		if (!specifications) {
-			return;
-		}
-		if (!group) {
-			return specifications.sort((left, right) => left.taskName.localeCompare(right.taskName));
-		}
-		return specifications.filter(spec => spec.group === group).sort((left, right) => left.taskName.localeCompare(right.taskName));
-	}
-
 	trackStepById(_index: number, step: TaskRequest) {
 		return step.id;
 	}
 
 	getConnectionPoints(c: Connection) {
-		const writerX = this.getPortCenterX(c.writerId, c.writerPort, false);
-		const writerY = this.getPortCenterY(c.writerId, c.writerPort, false);
+		const writerWidget = this.getWidget(c.writerId);
+		const readerWidget = this.getWidget(c.readerId);
 
-		const readerX = this.getPortCenterX(c.readerId, c.readerPort, true);
-		const readerY = this.getPortCenterY(c.readerId, c.readerPort, true);
-
-		const offset = 20; // how far we dip below / go around
-
-		// If this is a self-connection.
-		if (c.writerId === c.readerId) {
-			const box = this.getTaskWidgetBoundingBox(c.writerId);
-			const rightX = box.x - offset;
-			const downY = writerY + offset; // drop below the widget
-			const topY = readerY - offset; // rise above reader
-
-			return {
-				d: `M ${writerX} ${writerY} ` + // start at bottom port
-					`L ${writerX} ${downY} ` +  // drop
-					`L ${rightX} ${downY} ` +   // horizontal around the right edge
-					`L ${rightX} ${topY} ` +    // climb up to the top port
-					`L ${readerX} ${topY}` +    // drop
-					`L ${readerX} ${readerY}`,  // finish at reader port
-				isStraight: false
-			};
-		}
-
-		// If writer is above the reader, draw a straight line
-		if (writerY < readerY) {
-			return {
-				d: `M ${writerX} ${writerY} L ${readerX} ${readerY}`,
-				isStraight: true
-			};
-		}
-
-		// Writer is higher, draw a U‑shaped poly‑line
-		const midY = writerY + offset; // drop below writer
-		const topY = readerY - offset; // rise above reader
-		const readerWriterMidpoint = (readerX + writerX) / 2;
-
-		return {
-			d: `M ${writerX} ${writerY} ` +            // start
-				`L ${writerX} ${midY} ` +              // drop
-				`L ${readerWriterMidpoint} ${midY} ` + // horizontal
-				`L ${readerWriterMidpoint} ${topY} ` + // rise
-				`L ${readerX} ${topY} ` +              // horizontal
-				`L ${readerX} ${readerY}`,             // finish
-			isStraight: false
-		};
+		return this.workflowGeometryService.getConnectionPath(
+			c,
+			(id, port, isInput) => {
+				const widget = id === c.writerId ? writerWidget : readerWidget;
+				return this.workflowGeometryService.getPortCenter(widget, port, isInput).x;
+			},
+			(id, port, isInput) => {
+				const widget = id === c.writerId ? writerWidget : readerWidget;
+				return this.workflowGeometryService.getPortCenter(widget, port, isInput).y;
+			}
+		);
 	}
+
 
 	private cloneTask(task: TaskRequest): TaskRequest {
 		return {
@@ -514,8 +512,66 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 		};
 	}
 
+	cancelEdit() {
+		this.editTask = null;
+	}
+
+	openAddStep() {
+		this.spawnPosition = {
+			x: this.canvasMouse.x,
+			y: this.canvasMouse.y
+		};
+
+		this.addStepVisible = true;
+	}
+
 	private updateWorkflow() {
 		this.onTouched();
 		this.onChange(this.workflow);
+	}
+
+	filteredTaskSpecifications(): TaskSpecification[] {
+
+		let results = this.taskSpecifications;
+
+		if (this.taskSearch?.trim()) {
+			const term = this.taskSearch.toLowerCase();
+
+			results = results.filter(spec =>
+				spec.taskName.toLowerCase().includes(term)
+			);
+		}
+
+		// Sort by name
+		return results.sort((a, b) =>
+			a.taskName.localeCompare(b.taskName)
+		);
+	}
+
+	onTaskNodeSelected(spec: TaskSpecification) {
+		this.addStep(spec);
+		this.addStepVisible = false;
+	}
+
+	onOutputNodeSelected(spec: OutputTaskSpecification) {
+		this.addOutputStep(spec);
+		this.addStepVisible = false;
+	}
+
+	updateTaskName(data: { oldId: string; newId: string }) {
+		this.workflow.connections.forEach(connection => {
+			if (connection.readerId === data.oldId) {
+				connection.readerId = data.newId;
+			}
+			if (connection.writerId === data.oldId) {
+				connection.writerId = data.newId;
+			}
+		});
+		this.updateWorkflow();
+	}
+
+	onTaskDeleteRequest(task: TaskRequest) {
+		this.pendingDeleteTask = task;
+		this.confirmDeleteStepVisible = true;
 	}
 }

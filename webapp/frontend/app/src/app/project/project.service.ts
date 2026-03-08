@@ -5,6 +5,7 @@ import { AlertService } from "../alert.service";
 import { ApiResult } from "../model/api-result";
 import { Project } from "../model/project/project";
 import { ProjectNode } from "../model/project/project-node";
+import { DocProperties } from "../document/document-editor.component";
 
 @Injectable({
 	providedIn: 'root'
@@ -22,6 +23,7 @@ export class ProjectService {
 
 	private static readonly ReadNode = 'api/project/node';
 	private static readonly WriteFile = 'api/project/node/file';
+	private static readonly ConvertToMarkdownAndAddFile = 'api/project/node/convert/markdown';
 	private static readonly CreateFolder = 'api/project/node/folder';
 	private static readonly MoveNode = 'api/project/node/move';
 	private static readonly DeleteNode = 'api/project/node';
@@ -136,6 +138,23 @@ export class ProjectService {
 			this.handleError(),
 			map((result: ApiResult) => result.data as ProjectNode)
 		);
+	}
+
+	convertAndAddMarkdown(projectId: string, doc: DocProperties): Observable<string> {
+		const formData = new FormData();
+		formData.append('projectId', projectId);
+		formData.append('file', doc.file, doc.title);
+
+		return this.http.post<ApiResult>(ProjectService.ConvertToMarkdownAndAddFile, formData)
+			.pipe(
+				catchError(error => {
+					this.alertService.postFailure(JSON.stringify(error));
+					return EMPTY;
+				}),
+				map((result: ApiResult) => {
+					return result.data as string;
+				})
+			);
 	}
 
 	// -------------------------

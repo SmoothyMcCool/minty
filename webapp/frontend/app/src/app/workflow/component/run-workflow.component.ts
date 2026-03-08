@@ -8,7 +8,7 @@ import { WorkflowService } from '../workflow.service';
 import { TaskSpecification, OutputTaskSpecification, AttributeMap } from 'src/app/model/workflow/task-specification';
 import { Workflow } from 'src/app/model/workflow/workflow';
 import { AlertService } from 'src/app/alert.service';
-import { WorkflowEditorComponent } from './workflow-editor.component';
+import { WorkflowEditorComponent } from './workflow-editor/workflow-editor.component';
 
 @Component({
 	selector: 'minty-run-workflow',

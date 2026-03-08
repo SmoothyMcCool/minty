@@ -7,6 +7,7 @@ import { ProjectNodeComponent } from './project-node.component';
 import { NodeViewerComponent } from './project-node-viewer.component';
 import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
 import { ProjectNode } from 'src/app/model/project/project-node';
+import { DocProperties } from 'src/app/document/document-editor.component';
 
 @Component({
 	selector: 'minty-project-editor',
@@ -38,6 +39,12 @@ export class ProjectEditorComponent {
 
 	confirmDeleteNodeVisible = false;
 	nodeToDelete: ProjectNode;
+
+	mdFileDialogVisible = false;
+	document: DocProperties = {
+		title: '',
+		file: undefined
+	};
 
 	constructor(private projectService: ProjectService) {
 	}
@@ -115,7 +122,6 @@ export class ProjectEditorComponent {
 			});
 	}
 
-
 	addFile() {
 		const node: ProjectNode = {
 			type: 'File',
@@ -128,6 +134,22 @@ export class ProjectEditorComponent {
 		this.projectService.writeFile(this.project.id, node).subscribe(() => {
 			this.refresh();
 		});
+	}
+
+	addAndConvertToMd() {
+		this.mdFileDialogVisible = true;
+	}
+
+	addMarkdownFile() {
+		this.mdFileDialogVisible = false;
+		this.projectService.convertAndAddMarkdown(this.project.id, this.document).subscribe();
+	}
+
+	markdownFileSelected(event: Event) {
+		const newFiles = (event.target as HTMLInputElement).files;
+		if (newFiles && newFiles.length > 0) {
+			this.document = { title: newFiles[0].name, file: newFiles[0] };
+		}
 	}
 
 	addFolder() {

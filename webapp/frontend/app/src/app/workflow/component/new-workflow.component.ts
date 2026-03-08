@@ -9,7 +9,7 @@ import { WorkflowService } from '../workflow.service';
 import { Workflow } from 'src/app/model/workflow/workflow';
 import { OutputTaskSpecification, AttributeMap, TaskSpecification } from 'src/app/model/workflow/task-specification';
 import { ResultTemplate } from 'src/app/model/workflow/result-template';
-import { WorkflowEditorComponent } from './workflow-editor.component';
+import { WorkflowEditorComponent } from './workflow-editor/workflow-editor.component';
 import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
 
 @Component({

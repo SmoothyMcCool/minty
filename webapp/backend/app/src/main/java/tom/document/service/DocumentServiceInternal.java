@@ -12,6 +12,8 @@ public interface DocumentServiceInternal extends DocumentService {
 
 	void processFile(File file);
 
+	void processFileToMarkdown(DocumentMarkdownProcessingTask task);
+
 	void transformAndStore(File file, MintyDoc doc);
 
 	void markDocumentComplete(MintyDoc doc);
