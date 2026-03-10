@@ -1,7 +1,6 @@
 package tom.document.service;
 
 import java.io.File;
-import java.nio.file.Files;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -9,8 +8,8 @@ import org.apache.logging.log4j.Logger;
 import tom.api.ProjectId;
 import tom.api.UserId;
 import tom.api.model.project.FileType;
-import tom.api.services.DocumentService;
 import tom.api.services.ProjectService;
+import tom.document.service.markdown.DocumentParser;
 
 public class DocumentMarkdownProcessingTask implements Runnable {
 
@@ -18,15 +17,13 @@ public class DocumentMarkdownProcessingTask implements Runnable {
 	private final UserId userId;
 	private final ProjectId projectId;
 	private final File file;
-	private final DocumentService documentService;
 	private final ProjectService projectService;
 
 	public DocumentMarkdownProcessingTask(UserId userId, ProjectId projectId, File file,
-			DocumentService documentService, ProjectService projectService) {
+			ProjectService projectService) {
 		this.userId = userId;
 		this.projectId = projectId;
 		this.file = file;
-		this.documentService = documentService;
 		this.projectService = projectService;
 	}
 
@@ -34,11 +31,14 @@ public class DocumentMarkdownProcessingTask implements Runnable {
 	public void run() {
 		try {
 			String filename = file.getName();
-			logger.info("Started processing " + filename);
+			int lastDot = filename.lastIndexOf('.');
+			String baseName = (lastDot == -1) ? filename : filename.substring(0, lastDot);
+			String newName = baseName + ".md";
+			logger.info("Started processing " + newName);
 
-			String markdown = documentService.fileBytesToMarkdown(Files.readAllBytes(file.toPath()));
+			String markdown = DocumentParser.parse(file);
 
-			projectService.writeFile(userId, projectId, "/" + filename, FileType.markdown, markdown);
+			projectService.writeFile(userId, projectId, "/" + newName, FileType.markdown, markdown);
 			logger.info("Markdown processing complete for " + file.getName());
 
 		} catch (Exception e) {

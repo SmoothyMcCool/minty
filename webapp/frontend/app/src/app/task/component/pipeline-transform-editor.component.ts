@@ -136,8 +136,8 @@ export class PipelineTransformEditorComponent implements ControlValueAccessor {
 		}
 
 		try {
-			if (typeof value !== 'string') {
-				const parsed = JSON.parse(value);
+			const parsed = JSON.parse(value);
+			if (typeof parsed !== 'string') {
 				op.configuration = parsed;
 				this.jsonErrors[index] = false;
 			}
