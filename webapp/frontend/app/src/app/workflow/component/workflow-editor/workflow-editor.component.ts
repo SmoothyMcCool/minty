@@ -139,6 +139,7 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 			taskName: taskSpecification.taskName,
 			stepName: taskSpecification.taskName,
 			id: crypto.randomUUID(),
+			loggingActive: true,
 			configuration: updated,
 			layout: {
 				x: x,
@@ -173,6 +174,7 @@ export class WorkflowEditorComponent implements ControlValueAccessor, OnInit {
 			taskName: taskSpecification.taskName,
 			stepName: taskSpecification.taskName,
 			id: crypto.randomUUID(),
+			loggingActive: true,
 			configuration: taskSpecification.configuration,
 			layout: {
 				x: spawn.x,

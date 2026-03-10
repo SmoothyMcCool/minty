@@ -219,6 +219,7 @@ public class WorkflowRunner {
 			stdLogger.warn("Workflow failed with exception: ", e);
 			logger.warn("Workflow failed with exception: ", e);
 			logger.close();
+			cancel();
 		}
 
 	}

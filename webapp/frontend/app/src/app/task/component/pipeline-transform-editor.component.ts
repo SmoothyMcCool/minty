@@ -136,13 +136,19 @@ export class PipelineTransformEditorComponent implements ControlValueAccessor {
 		}
 
 		try {
-			const parsed = JSON.parse(value);
-			if (typeof parsed !== 'string') {
-				op.configuration = parsed;
-				this.jsonErrors[index] = false;
-			}
-			else {
+			const configType = this.operations.find(operation => operation.op.localeCompare(op.name) === 0).configType
+			if (configType === 'text') {
 				op.configuration = value;
+			} else {
+				const parsed = JSON.parse(value);
+				if (typeof parsed !== 'string') {
+					op.configuration = parsed;
+					this.jsonErrors[index] = false;
+				}
+				else {
+					op.configuration = value;
+					this.jsonErrors[index] = true;
+				}
 			}
 		}
 		catch {

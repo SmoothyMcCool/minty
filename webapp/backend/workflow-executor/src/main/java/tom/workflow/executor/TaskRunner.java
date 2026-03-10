@@ -90,7 +90,11 @@ public class TaskRunner {
 				return;
 			}
 
-			task.setLogger(logger);
+			if (request.isLoggingActive()) {
+				task.setLogger(logger);
+			} else {
+				task.setLogger(NullWorkflowLogger.NullLogger);
+			}
 			task.setOutputConnectors(outputs);
 
 			int numInputs = task.getSpecification().numInputs();
@@ -183,7 +187,6 @@ public class TaskRunner {
 						 * " failed with a non-terminal error. Workflow will attempt to continue."); }
 						 */
 					} else {
-						logger.info("Task " + request.getStepName() + " completed");
 						Packet result = task.getResult();
 						if (result != null) {
 							results.add(result);
@@ -191,7 +194,6 @@ public class TaskRunner {
 						executionState.completeTask();
 
 						if (task.stepComplete()) {
-							logger.info("Task " + request.getStepName() + " is terminated");
 							allTasksSpawned.set(true);
 						}
 					}
