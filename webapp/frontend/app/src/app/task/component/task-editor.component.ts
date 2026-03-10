@@ -139,6 +139,7 @@ ${description}
 		this.task = updatedTask;
 		this.taskNameChanged.emit({ oldName: this.task.stepName, newName: name });
 		this.onChange(this.task);
+		this.onTouched();
 	}
 
 	onConfigurationChanged(config: AttributeMap) {
@@ -150,6 +151,16 @@ ${description}
 				configuration: { ...config }
 			}
 			this.onChange(this.task);
+			this.onTouched();
 		}
+	}
+
+	onLoggingActiveChange(active: boolean) {
+		this.task = {
+				...this.task,
+				loggingActive: active
+		}
+		this.onChange(this.task);
+		this.onTouched();
 	}
 }

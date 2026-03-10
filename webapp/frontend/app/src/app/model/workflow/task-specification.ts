@@ -28,6 +28,7 @@ export interface TaskRequest {
 	taskName: string;
 	stepName: string;
 	id: string;
+	loggingActive: boolean;
 	configuration: AttributeMap;
 	layout: TaskLayout
 }

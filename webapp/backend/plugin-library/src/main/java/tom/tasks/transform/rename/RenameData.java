@@ -1,9 +1,9 @@
 package tom.tasks.transform.rename;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
@@ -61,9 +61,10 @@ public class RenameData implements MintyTask {
 		}
 
 		input.getData().forEach(item -> {
-			Map<String, Object> renamed = item.entrySet().stream().collect(Collectors
-					.toMap(e -> renames.getOrDefault(e.getKey(), e.getKey()), Map.Entry::getValue, (v1, v2) -> v1));
-			item.clear();
+			Map<String, Object> renamed = new HashMap<>();
+			item.forEach((k, v) -> {
+				renamed.put(renames.getOrDefault(k, k), v);
+			});
 			data.add(renamed);
 		});
 

@@ -1,37 +1,47 @@
+// --- Determine column headers ---
+- var firstRow = null
+if data != null && data.size() > 0
+  - firstRow = data.get(0)
+
+// --- Safe HTML cell renderer ---
+mixin safeCell(val)
+  - var safe = helpers.tryMakeSafe(val)
+  if safe != null
+    td !{safe}
+  else if val != null
+    td #{val}
+  else
+    td
+
+
 table.table.table-hover.table-sm
   thead
     tr
       th(scope="col") #
       th(scope="col") Text
-      if data.size() > 0
-        each val, key in data.get(0)
-          th(scope="col") #{key}
+      if firstRow != null
+        each entry in firstRow.entrySet()
+          th(scope="col") #{entry.getKey()}
 
   tbody
     // --- Text rows ---
-    each t, idx in text
-      tr
-        td #{idx + 1}
-        - var safe = helpers.tryMakeSafe(t)
-        if safe != safe
-          td
-        else if t != null
-          td #{t}
-        else
-          td
-        // Fill empty cells for data columns
-        if data.size() > 0
-          each val, key in data.get(0)
-            td
+    if text != null
+      each t, idx in text
+        tr
+          td #{idx + 1}
+          +safeCell(t)
+          if firstRow != null
+            each entry in firstRow.entrySet()
+              td
 
     // --- Data rows ---
-    each d, idx in data
-      tr
-        td #{idx + 1}
-        td
-        each val, key in d
-          - var jsonSafe = helpers.jsonToString(val)
-          if jsonSafe != jsonSafe
-            td
-          else
-            td #{jsonSafe}
+    if data != null
+      each d, idx in data
+        tr
+          td #{idx + 1}
+          td
+          if firstRow != null
+            each entry in firstRow.entrySet()
+              - var key = entry.getKey()
+              - var val = d.get(key)
+              +safeCell(val)

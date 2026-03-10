@@ -8,12 +8,14 @@ public class TaskRequest {
 	private String taskName;
 	private String stepName;
 	private UUID id;
+	private boolean loggingActive;
 	private Map<String, Object> configuration;
 	private TaskLayout layout;
 
 	public TaskRequest() {
 		taskName = "";
 		stepName = "";
+		loggingActive = true;
 		configuration = Map.of();
 	}
 
@@ -39,6 +41,14 @@ public class TaskRequest {
 
 	public void setId(UUID id) {
 		this.id = id;
+	}
+
+	public boolean isLoggingActive() {
+		return loggingActive;
+	}
+
+	public void setLoggingActive(boolean loggingActive) {
+		this.loggingActive = loggingActive;
 	}
 
 	public Map<String, Object> getConfiguration() {

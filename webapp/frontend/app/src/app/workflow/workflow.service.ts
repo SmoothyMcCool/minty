@@ -128,6 +128,7 @@ export class WorkflowService {
 					taskName: item.taskName,
 					stepName: item.stepName,
 					id: item.id,
+					loggingActive: item.loggingActive,
 					configuration: { ...item.configuration },
 					layout: {
 						x: item.layout.x,
@@ -144,6 +145,7 @@ export class WorkflowService {
 				taskName: workflow.outputStep.taskName,
 				stepName: workflow.outputStep.stepName,
 				id: workflow.outputStep.id,
+				loggingActive: workflow.outputStep.loggingActive,
 				configuration: { ...workflow.outputStep.configuration },
 				layout: {
 					x: workflow.outputStep.layout.x,
@@ -177,6 +179,7 @@ export class WorkflowService {
 					taskName: item.taskName,
 					stepName: item.stepName,
 					id: item.id,
+					loggingActive: item.loggingActive,
 					configuration: { ...item.configuration },
 					layout: {
 						x: item.layout.x,
@@ -193,6 +196,7 @@ export class WorkflowService {
 				taskName: workflow.outputStep.taskName,
 				stepName: workflow.outputStep.stepName,
 				id: workflow.outputStep.id,
+				loggingActive: workflow.outputStep.loggingActive,
 				configuration: { ...workflow.outputStep.configuration },
 				layout: {
 					x: workflow.outputStep.layout.x,
@@ -332,6 +336,7 @@ export class WorkflowService {
 					taskName: element.taskName,
 					stepName: element.stepName,
 					id: element.id,
+					loggingActive: element.loggingActive,
 					configuration: element.configuration,
 					layout: {
 						x: element.layout.x,
@@ -356,6 +361,7 @@ export class WorkflowService {
 				taskName: workflow.outputStep.taskName,
 				stepName: workflow.outputStep.stepName,
 				id: workflow.outputStep.id,
+				loggingActive: workflow.outputStep.loggingActive,
 				configuration: workflow.outputStep.configuration,
 				layout: {
 					x: workflow.outputStep.layout.x,

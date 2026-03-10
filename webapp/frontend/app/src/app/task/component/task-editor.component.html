@@ -15,6 +15,13 @@
 			<input [type]="text" class="form-control form-control-sm" id="stepName" name="stepName"
 				[ngModel]="task.stepName" (ngModelChange)="onStepNameChanged($event)">
 		</div>
+		<div class="mb-3">
+			<div class="form-check">
+				<input type="checkbox" class="form-check-input" id="isLoggingActive" name="isLoggingActive"
+					[ngModel]="task.loggingActive" (ngModelChange)="onLoggingActiveChange($event)">
+				<label for="isLoggingActive" class="form-check-label">Log Task Output</label>
+			</div>
+		</div>
 		<minty-task-config-editor
 			[ngModel]="configForEditor"
 			(ngModelChange)="onConfigurationChanged($event)"
