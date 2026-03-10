@@ -31,8 +31,7 @@ import tom.api.model.project.Project;
 import tom.api.services.ProjectService;
 import tom.config.MintyConfiguration;
 import tom.controller.ResponseWrapper;
-import tom.document.service.DocumentMarkdownProcessingTask;
-import tom.document.service.DocumentServiceInternal;
+import tom.document.service.markdown.DocumentParser;
 import tom.model.security.UserDetailsUser;
 
 @Controller
@@ -42,13 +41,10 @@ public class ProjectController {
 	private static final Logger logger = LogManager.getLogger(ProjectController.class);
 
 	private final ProjectService projectService;
-	private final DocumentServiceInternal documentService;
 	private final Path tempFileStore;
 
-	public ProjectController(ProjectService projectService, DocumentServiceInternal documentService,
-			MintyConfiguration mintyConfig) {
+	public ProjectController(ProjectService projectService, MintyConfiguration mintyConfig) {
 		this.projectService = projectService;
-		this.documentService = documentService;
 		tempFileStore = mintyConfig.getConfig().fileStores().temp();
 	}
 
@@ -253,10 +249,28 @@ public class ProjectController {
 		try {
 			Files.createDirectories(file.toPath());
 			mpf.transferTo(file);
-			DocumentMarkdownProcessingTask task = new DocumentMarkdownProcessingTask(user.getId(), projectId, file,
-					documentService, projectService);
 
-			documentService.processFileToMarkdown(task);
+			try {
+				String filename = file.getName();
+				int lastDot = filename.lastIndexOf('.');
+				String baseName = (lastDot == -1) ? filename : filename.substring(0, lastDot);
+				String newName = baseName + ".md";
+				logger.info("Started processing " + newName);
+
+				String markdown = DocumentParser.parse(file);
+
+				projectService.writeFile(user.getId(), projectId, "/" + newName, FileType.markdown, markdown);
+				logger.info("Markdown processing complete for " + file.getName());
+
+				ResponseWrapper<String> response = ResponseWrapper.SuccessResponse("File processed successfully.");
+				return new ResponseEntity<>(response, HttpStatus.OK);
+
+			} catch (Exception e) {
+				logger.error("Markdown processing failed: ", e);
+			} finally {
+				file.delete();
+			}
+
 		} catch (IllegalStateException | IOException e) {
 			logger.error("Failed to store file: ", e);
 			ResponseWrapper<String> response = ResponseWrapper

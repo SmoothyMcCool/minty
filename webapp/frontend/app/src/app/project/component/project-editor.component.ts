@@ -8,6 +8,7 @@ import { NodeViewerComponent } from './project-node-viewer.component';
 import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
 import { ProjectNode } from 'src/app/model/project/project-node';
 import { DocProperties } from 'src/app/document/document-editor.component';
+import { AlertService } from 'src/app/alert.service';
 
 @Component({
 	selector: 'minty-project-editor',
@@ -46,7 +47,7 @@ export class ProjectEditorComponent {
 		file: undefined
 	};
 
-	constructor(private projectService: ProjectService) {
+	constructor(private projectService: ProjectService, private alertService: AlertService) {
 	}
 
 	refresh() {
@@ -79,10 +80,9 @@ export class ProjectEditorComponent {
 			return;
 		}
 
-		this.projectService.updateNodeMetadata(this.project.id, this.selectedNode.path, updatedNode.path, updatedNode.fileType)
-			.subscribe(() => {
-				this.refresh();
-			});
+		this.projectService.updateNodeMetadata(this.project.id, this.selectedNode.path, updatedNode.path, updatedNode.fileType).subscribe(() => {
+			this.refresh();
+		});
 	}
 
 
@@ -116,10 +116,12 @@ export class ProjectEditorComponent {
 			return;
 		}
 
+		const currentNode = this.selectedNode;
 		this.selectedNode.content = this.currentFileContents;
 		this.projectService.writeFile(this.project.id, this.selectedNode).subscribe(() => {
-				this.refresh();
-			});
+			this.refresh();
+			this.onSelected(currentNode);
+		});
 	}
 
 	addFile() {
@@ -142,7 +144,10 @@ export class ProjectEditorComponent {
 
 	addMarkdownFile() {
 		this.mdFileDialogVisible = false;
-		this.projectService.convertAndAddMarkdown(this.project.id, this.document).subscribe();
+		this.projectService.convertAndAddMarkdown(this.project.id, this.document).subscribe((result: string) => {
+			this.alertService.postSuccess(result);
+			this.refresh();
+		});
 	}
 
 	markdownFileSelected(event: Event) {

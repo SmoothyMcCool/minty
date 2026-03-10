@@ -3,7 +3,6 @@ package tom.document.service;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
@@ -16,11 +15,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tika.Tika;
 import org.apache.tika.exception.TikaException;
-import org.apache.tika.metadata.Metadata;
-import org.apache.tika.parser.AutoDetectParser;
-import org.apache.tika.parser.ParseContext;
-import org.apache.tika.sax.ToXMLContentHandler;
-import org.jsoup.Jsoup;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.model.transformer.KeywordMetadataEnricher;
@@ -35,8 +29,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.SAXException;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -325,127 +317,4 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 		}
 	}
 
-	@Override
-	public String fileBytesToMarkdown(byte[] bytes) {
-		ContentHandler handler = new ToXMLContentHandler();
-		AutoDetectParser parser = new AutoDetectParser();
-		Metadata metadata = new Metadata();
-		ParseContext context = new ParseContext();
-
-		try (InputStream stream = new ByteArrayInputStream(bytes)) {
-			parser.parse(stream, handler, metadata, context);
-		} catch (IOException | TikaException | SAXException e) {
-			throw new RuntimeException("Failed to parse file.", e);
-		}
-
-		String htmlContent = handler.toString();
-
-		org.jsoup.nodes.Document doc = Jsoup.parse(htmlContent);
-		return htmlToMarkdown(doc.body());
-	}
-
-	private static String htmlToMarkdown(org.jsoup.nodes.Element element) {
-		StringBuilder md = new StringBuilder();
-
-		for (org.jsoup.nodes.Element child : element.children()) {
-			switch (child.tagName()) {
-			case "h1":
-				md.append("# ").append(child.text()).append("\n\n");
-				break;
-			case "h2":
-				md.append("## ").append(child.text()).append("\n\n");
-				break;
-			case "h3":
-				md.append("### ").append(child.text()).append("\n\n");
-				break;
-			case "h4":
-				md.append("#### ").append(child.text()).append("\n\n");
-				break;
-			case "h5":
-				md.append("##### ").append(child.text()).append("\n\n");
-				break;
-			case "h6":
-				md.append("###### ").append(child.text()).append("\n\n");
-				break;
-
-			case "strong":
-			case "b":
-				md.append("**").append(child.text()).append("**");
-				break;
-			case "em":
-			case "i":
-				md.append("_").append(child.text()).append("_");
-				break;
-
-			case "p":
-				md.append(child.text()).append("\n\n");
-				break;
-
-			case "ul":
-				for (org.jsoup.nodes.Element li : child.select("li")) {
-					md.append("- ").append(htmlToMarkdown(li).trim()).append("\n");
-				}
-				md.append("\n");
-				break;
-
-			case "ol":
-				int counter = 1;
-				for (org.jsoup.nodes.Element li : child.select("li")) {
-					md.append(counter++).append(". ").append(htmlToMarkdown(li).trim()).append("\n");
-				}
-				md.append("\n");
-				break;
-
-			case "li":
-				md.append(child.text());
-				break;
-
-			case "a":
-				md.append("[").append(child.text()).append("](").append(child.attr("href")).append(")");
-				break;
-
-			case "table":
-				md.append(tableToMarkdown(child)).append("\n\n");
-				break;
-
-			default:
-				// Recursive for nested elements
-				md.append(htmlToMarkdown(child));
-			}
-		}
-
-		return md.toString();
-	}
-
-	private static String tableToMarkdown(org.jsoup.nodes.Element table) {
-		StringBuilder md = new StringBuilder();
-
-		org.jsoup.select.Elements rows = table.select("tr");
-		if (rows.isEmpty())
-			return "";
-
-		// Header
-		org.jsoup.select.Elements headers = rows.get(0).select("th, td");
-		for (org.jsoup.nodes.Element th : headers) {
-			md.append("| ").append(th.text()).append(" ");
-		}
-		md.append("|\n");
-
-		// Separator
-		for (int i = 0; i < headers.size(); i++) {
-			md.append("|---");
-		}
-		md.append("|\n");
-
-		// Rows
-		for (int i = 1; i < rows.size(); i++) {
-			org.jsoup.select.Elements cols = rows.get(i).select("td");
-			for (org.jsoup.nodes.Element col : cols) {
-				md.append("| ").append(col.text()).append(" ");
-			}
-			md.append("|\n");
-		}
-
-		return md.toString();
-	}
 }

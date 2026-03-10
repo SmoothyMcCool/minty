@@ -22,9 +22,7 @@ public class FlattenOperation implements TransformOperation {
 		Map<String, Object> merged = new HashMap<>();
 
 		for (Map<String, Object> row : packet.getData()) {
-
 			for (Map.Entry<String, Object> entry : row.entrySet()) {
-
 				if (lastWins) {
 					merged.put(entry.getKey(), entry.getValue());
 				} else {
