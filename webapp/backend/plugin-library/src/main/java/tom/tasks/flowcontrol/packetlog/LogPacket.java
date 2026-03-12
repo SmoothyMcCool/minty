@@ -9,18 +9,16 @@ import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;
 import tom.api.task.TaskConfigSpec;
-import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
 import tom.tasks.TaskGroup;
 import tom.tasks.noop.NullTaskConfig;
 
 @RunnableTask
-public class LogPacket implements MintyTask {
+public class LogPacket extends MintyTask {
 
 	private List<? extends OutputPort> outputs;
 
-	private TaskLogger logger;
 	private Packet input;
 	private boolean failed;
 
@@ -46,9 +44,9 @@ public class LogPacket implements MintyTask {
 	@Override
 	public void run() {
 		try {
-			logger.info(input.toJson());
+			info(input.toJson());
 		} catch (JsonProcessingException e) {
-			logger.info(input.toString());
+			info(input.toString());
 		}
 
 		for (OutputPort output : outputs) {
@@ -131,11 +129,6 @@ public class LogPacket implements MintyTask {
 	@Override
 	public boolean failed() {
 		return failed;
-	}
-
-	@Override
-	public void setLogger(TaskLogger workflowLogger) {
-		this.logger = workflowLogger;
 	}
 
 }

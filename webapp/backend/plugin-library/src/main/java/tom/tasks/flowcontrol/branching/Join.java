@@ -7,17 +7,15 @@ import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;
 import tom.api.task.TaskConfigSpec;
-import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
 import tom.tasks.TaskGroup;
 
 @RunnableTask
-public class Join implements MintyTask {
+public class Join extends MintyTask {
 
 	private List<? extends OutputPort> outputs;
 
-	private TaskLogger logger;
 	private Packet input;
 	private JoinConfig config;
 
@@ -50,7 +48,7 @@ public class Join implements MintyTask {
 
 	@Override
 	public boolean giveInput(int inputNum, Packet dataPacket) {
-		logger.debug("Join: received packet of Id " + dataPacket.getId() + ", on port " + inputNum);
+		debug("received packet of Id " + dataPacket.getId() + ", on port " + inputNum);
 		input = dataPacket;
 		return true;
 	}
@@ -124,11 +122,6 @@ public class Join implements MintyTask {
 	@Override
 	public boolean failed() {
 		return false;
-	}
-
-	@Override
-	public void setLogger(TaskLogger workflowLogger) {
-		this.logger = workflowLogger;
 	}
 
 }

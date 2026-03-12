@@ -10,17 +10,15 @@ import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;
 import tom.api.task.TaskConfigSpec;
-import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
 import tom.tasks.TaskGroup;
 
 @RunnableTask
-public class FormatTemplateHtml implements MintyTask, ServiceConsumer {
+public class FormatTemplateHtml extends MintyTask implements ServiceConsumer {
 
 	private List<? extends OutputPort> outputs;
 
-	private TaskLogger logger;
 	private FormatTemplateHtmlConfig config;
 	private Packet input;
 	private PluginServices pluginServices;
@@ -68,7 +66,7 @@ public class FormatTemplateHtml implements MintyTask, ServiceConsumer {
 
 			outputs.get(0).write(result);
 		} catch (IOException e) {
-			logger.warn("FormatTemplateHtml: Failed to generate pug template", e);
+			warn("Failed to generate pug template", e);
 			failed = true;
 		}
 	}
@@ -89,8 +87,7 @@ public class FormatTemplateHtml implements MintyTask, ServiceConsumer {
 	@Override
 	public void setOutputConnectors(List<? extends OutputPort> outputs) {
 		if (outputs.size() != 1) {
-			logger.warn(
-					"FormatTemplateHtml: Workflow misconfiguration detect. FormatTemplateHtml should only ever have exactly one output!");
+			warn("Workflow misconfiguration detect. FormatTemplateHtml should only ever have exactly one output!");
 		}
 		this.outputs = outputs;
 	}
@@ -158,11 +155,6 @@ public class FormatTemplateHtml implements MintyTask, ServiceConsumer {
 	@Override
 	public boolean failed() {
 		return failed;
-	}
-
-	@Override
-	public void setLogger(TaskLogger workflowLogger) {
-		this.logger = workflowLogger;
 	}
 
 	@Override

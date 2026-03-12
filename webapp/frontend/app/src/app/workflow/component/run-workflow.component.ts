@@ -20,6 +20,7 @@ export class RunWorkflowComponent implements OnInit {
 
 	defaults: AttributeMap;
 	workflow: Workflow;
+	logLevel: string = "Debug";
 	taskSpecifications: TaskSpecification[];
 	outputTaskSpecifications: OutputTaskSpecification[];
 
@@ -66,7 +67,7 @@ export class RunWorkflowComponent implements OnInit {
 	runWorkflow() {
 		this.workflowService.sanitize(this.workflow, this.taskSpecifications, this.defaults);
 
-		this.workflowService.execute(this.workflow).subscribe((result: string) => {
+		this.workflowService.execute(this.workflow, this.logLevel).subscribe((result: string) => {
 			this.alertService.postSuccess(result);
 		});
 		this.router.navigateByUrl('workflow');

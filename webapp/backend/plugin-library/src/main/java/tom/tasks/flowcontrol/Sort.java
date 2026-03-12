@@ -8,18 +8,16 @@ import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;
 import tom.api.task.TaskConfigSpec;
-import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
 import tom.tasks.TaskGroup;
 import tom.tasks.noop.NullTaskConfig;
 
 @RunnableTask
-public class Sort implements MintyTask {
+public class Sort extends MintyTask {
 
 	private List<? extends OutputPort> outputs;
 
-	private TaskLogger logger;
 	private List<Packet> input;
 	private boolean allInputReceived;
 	private boolean failed;
@@ -50,7 +48,7 @@ public class Sort implements MintyTask {
 
 		for (OutputPort output : outputs) {
 			for (Packet p : input) {
-				logger.debug("Sort: sending packet with Id: " + p.getId());
+				debug("Sending packet with Id: " + p.getId());
 				output.write(p);
 			}
 		}
@@ -58,7 +56,7 @@ public class Sort implements MintyTask {
 
 	@Override
 	public boolean giveInput(int inputNum, Packet dataPacket) {
-		logger.debug("Sort: Received packet of ID " + dataPacket.getId());
+		debug("Received packet of ID " + dataPacket.getId());
 		input.add(dataPacket);
 		return false;
 	}
@@ -132,11 +130,6 @@ public class Sort implements MintyTask {
 	@Override
 	public boolean failed() {
 		return failed;
-	}
-
-	@Override
-	public void setLogger(TaskLogger workflowLogger) {
-		this.logger = workflowLogger;
 	}
 
 }

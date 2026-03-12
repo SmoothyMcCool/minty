@@ -84,3 +84,20 @@ button:disabled {
 	white-space: pre-wrap;
 	word-wrap: break-word;
 }
+
+markdown table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-bottom: 1rem;
+}
+
+markdown th,
+markdown td {
+	border: 1px solid #a0a0a0;
+	padding: 0.5rem;
+}
+
+markdown th {
+	background-color: #73d2e5;
+	font-weight: 600;
+}

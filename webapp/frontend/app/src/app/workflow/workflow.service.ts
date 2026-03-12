@@ -232,9 +232,10 @@ export class WorkflowService {
 			);
 	}
 
-	execute(workflow: Workflow): Observable<string> {
+	execute(workflow: Workflow, logLevel: string): Observable<string> {
 		const body = {
 			id: workflow.id,
+			logLevel: logLevel,
 			taskConfigurationList: workflow.steps.map(step => step.configuration),
 			outputConfiguration: workflow.outputStep ? workflow.outputStep.configuration : null
 		};

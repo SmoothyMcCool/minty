@@ -63,9 +63,10 @@ class IdentifyTest {
 	@Test
 	void run_setsIdAndWritesToAllOutputs_whenKeyExists() {
 		// Arrange
-		when(config.getIdElement()).thenReturn("name");
+		when(config.getIdElement()).thenReturn("data[0].name");
 		Identify id = new Identify(config);
 		id.setLogger(logger);
+		id.setName("ID");
 		id.setOutputConnectors(List.of(outputPort1, outputPort2));
 
 		Map<String, Object> data = Map.of("name", "Alice");
@@ -88,7 +89,7 @@ class IdentifyTest {
 	 */
 	@Test
 	void run_setsIdFromNestedMap_whenKeyExists() {
-		when(config.getIdElement()).thenReturn("user.id");
+		when(config.getIdElement()).thenReturn("data[0].user.id");
 		Identify id = new Identify(config);
 		id.setLogger(logger);
 		id.setOutputConnectors(List.of(outputPort1));
@@ -111,7 +112,7 @@ class IdentifyTest {
 	 */
 	@Test
 	void run_setsIdFromListIndex_whenKeyExists() {
-		when(config.getIdElement()).thenReturn("users.0.id");
+		when(config.getIdElement()).thenReturn("data[0].users.0.id");
 		Identify id = new Identify(config);
 		id.setLogger(logger);
 		id.setOutputConnectors(List.of(outputPort1));
@@ -139,6 +140,7 @@ class IdentifyTest {
 		when(config.getIdElement()).thenReturn("missing");
 		Identify id = new Identify(config);
 		id.setLogger(logger);
+		id.setName("ID");
 		id.setOutputConnectors(List.of(outputPort1));
 
 		Map<String, Object> data = Map.of("foo", "bar");
@@ -148,7 +150,7 @@ class IdentifyTest {
 		id.run();
 
 		assertEquals("", packet.getId()); // id stays empty
-		verify(logger).warn(contains("Identify: could not find the ID key"));
+		verify(logger).warn(contains("ID: Could not find the ID key"));
 		verify(outputPort1).write(packet); // still forwarded
 	}
 

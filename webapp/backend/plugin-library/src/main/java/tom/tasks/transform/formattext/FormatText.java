@@ -13,17 +13,15 @@ import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;
 import tom.api.task.TaskConfigSpec;
-import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
 import tom.tasks.TaskGroup;
 
 @RunnableTask
-public class FormatText implements MintyTask {
+public class FormatText extends MintyTask {
 
 	private List<? extends OutputPort> outputs;
 
-	private TaskLogger logger;
 	private FormatTextConfig config;
 	private Packet input;
 	private String error;
@@ -71,7 +69,7 @@ public class FormatText implements MintyTask {
 			// Wrap entire data array under "data"
 			root = mapper.createObjectNode().set("data", mapper.valueToTree(dataList));
 		} catch (Exception e) {
-			logger.warn("FormatText: Could not parse input into JSON object.");
+			warn("Could not parse input into JSON object.");
 			return;
 		}
 
@@ -121,8 +119,7 @@ public class FormatText implements MintyTask {
 	@Override
 	public void setOutputConnectors(List<? extends OutputPort> outputs) {
 		if (outputs.size() != 1) {
-			logger.warn(
-					"FormatText: Workflow misconfiguration detect. FormatText should only ever have exactly one output!");
+			warn("Workflow misconfiguration detect. FormatText should only ever have exactly one output!");
 		}
 		this.outputs = outputs;
 	}
@@ -230,11 +227,6 @@ public class FormatText implements MintyTask {
 		}
 
 		return resolvePath(next, tail);
-	}
-
-	@Override
-	public void setLogger(TaskLogger workflowLogger) {
-		this.logger = workflowLogger;
 	}
 
 }

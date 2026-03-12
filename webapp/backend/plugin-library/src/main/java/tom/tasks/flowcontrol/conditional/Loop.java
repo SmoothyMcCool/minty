@@ -10,19 +10,17 @@ import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;
 import tom.api.task.TaskConfigSpec;
-import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
 import tom.tasks.TaskGroup;
 
 @RunnableTask
-public class Loop implements MintyTask {
+public class Loop extends MintyTask {
 
 	private List<? extends OutputPort> outputs;
 
 	private Packet input;
 	private ConditionalConfig config;
-	private TaskLogger logger;
 	private boolean terminalFailure;
 	private boolean loopComplete;
 
@@ -74,7 +72,7 @@ public class Loop implements MintyTask {
 		} catch (Exception e) {
 			String error = "Loop caught exception while trying to apply SpEL expression: " + expression + ", to input: "
 					+ input.toString();
-			logger.error(error);
+			error(error);
 			terminalFailure = true;
 			throw new RuntimeException(error, e);
 		}
@@ -158,11 +156,6 @@ public class Loop implements MintyTask {
 	}
 
 	@Override
-	public void setLogger(TaskLogger workflowLogger) {
-		logger = workflowLogger;
-	}
-
-	@Override
 	public boolean terminalFailure() {
 		return terminalFailure;
 	}
@@ -171,4 +164,5 @@ public class Loop implements MintyTask {
 	public boolean stepComplete() {
 		return loopComplete;
 	}
+
 }

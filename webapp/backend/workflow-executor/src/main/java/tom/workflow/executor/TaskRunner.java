@@ -90,6 +90,8 @@ public class TaskRunner {
 				return;
 			}
 
+			task.setName(request.getStepName());
+
 			if (request.isLoggingActive()) {
 				task.setLogger(logger);
 			} else {

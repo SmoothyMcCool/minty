@@ -46,6 +46,7 @@ class GroupByTest {
 	@BeforeEach
 	void setUp() {
 		groupBy = new GroupBy();
+		groupBy.setName("GroupByTestObj");
 		groupBy.setLogger(logger);
 		groupBy.setOutputConnectors(List.of(output1, output2));
 	}
@@ -122,7 +123,7 @@ class GroupByTest {
 		boolean result = groupBy.giveInput(0, key);
 
 		assertTrue(result, "giveInput should return true for first key");
-		verify(logger).debug("GroupBy: Setting key with Id K1");
+		verify(logger).debug("GroupByTestObj: Setting key with Id K1");
 	}
 
 	@Test
@@ -156,7 +157,7 @@ class GroupByTest {
 		boolean result = groupBy.giveInput(1, data);
 
 		assertFalse(result, "giveInput on data input should return false");
-		verify(logger).debug("GroupBy: Adding packet with Id K1");
+		verify(logger).debug("GroupByTestObj: Adding packet with Id K1");
 
 		// Capture the packet that will be written by run()
 		ArgumentCaptor<Packet> captor = ArgumentCaptor.forClass(Packet.class);
@@ -227,7 +228,7 @@ class GroupByTest {
 		assertEquals(out1.getData(), out2.getData(), "data lists should match");
 
 		// Verify debug logging
-		verify(logger, times(2)).debug("GroupBy: Writing out items for key K1");
+		verify(logger, times(2)).debug("GroupByTestObj: Writing out items for key K1");
 	}
 
 	/* --------------------------------------------------------------------- */

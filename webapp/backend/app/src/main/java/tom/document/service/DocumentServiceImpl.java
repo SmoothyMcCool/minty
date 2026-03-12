@@ -39,6 +39,7 @@ import tom.config.MintyConfiguration;
 import tom.document.model.DocumentState;
 import tom.document.model.MintyDoc;
 import tom.document.repository.DocumentRepository;
+import tom.document.service.spreadsheet.SpreadsheetExtractor;
 import tom.llm.service.LlmService;
 
 @Service
@@ -309,12 +310,25 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 	public String fileBytesToText(byte[] bytes) {
 		Tika tika = new Tika();
 		tika.setMaxStringLength(-1);
-		tika.detect(bytes);
+		String mime = tika.detect(bytes);
+
 		try {
+			if (isSpreadsheet(mime)) {
+				return SpreadsheetExtractor.extract(bytes);
+			}
+
 			return tika.parseToString(new ByteArrayInputStream(bytes));
 		} catch (IOException | TikaException e) {
 			throw new RuntimeException("Failed to parse file.", e);
 		}
+	}
+
+	private boolean isSpreadsheet(String mime) {
+
+		return mime != null && (mime.equals("application/vnd.ms-excel")
+				|| mime.equals("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+				|| mime.equals("application/vnd.ms-excel.sheet.macroenabled.12")
+				|| mime.equals("application/vnd.oasis.opendocument.spreadsheet"));
 	}
 
 }

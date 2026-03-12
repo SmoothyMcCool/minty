@@ -11,15 +11,13 @@ import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;
 import tom.api.task.TaskConfigSpec;
-import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
 import tom.tasks.TaskGroup;
 
 @RunnableTask
-public class EmitDocument implements MintyTask, ServiceConsumer {
+public class EmitDocument extends MintyTask implements ServiceConsumer {
 
-	private TaskLogger logger;
 	private EmitDocumentConfig config;
 	private List<? extends OutputPort> outputs;
 	private boolean readyToRun;
@@ -65,14 +63,14 @@ public class EmitDocument implements MintyTask, ServiceConsumer {
 	public boolean giveInput(int inputNum, Packet dataPacket) {
 		// This task should never receive input. If we ever do, log the error, but
 		// signal that we have all the input we need.
-		logger.warn("Workflow misconfiguration detect. EmitDocument should never receive input!");
+		warn("Workflow misconfiguration detect. EmitDocument should never receive input!");
 		return true;
 	}
 
 	@Override
 	public void setOutputConnectors(List<? extends OutputPort> outputs) {
 		if (outputs.size() != 1) {
-			logger.warn("Workflow misconfiguration detect. EmitDocument should only ever have exactly one output!");
+			warn("Workflow misconfiguration detect. EmitDocument should only ever have exactly one output!");
 		}
 		this.outputs = outputs;
 	}
@@ -141,11 +139,6 @@ public class EmitDocument implements MintyTask, ServiceConsumer {
 	@Override
 	public boolean failed() {
 		return failed;
-	}
-
-	@Override
-	public void setLogger(TaskLogger workflowLogger) {
-		this.logger = workflowLogger;
 	}
 
 	@Override

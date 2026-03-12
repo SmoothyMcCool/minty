@@ -12,6 +12,10 @@ public class NullWorkflowLogger implements TaskLogger {
 	}
 
 	@Override
+	public void trace(String message) {
+	}
+
+	@Override
 	public void debug(String message) {
 	}
 
@@ -43,8 +47,16 @@ public class NullWorkflowLogger implements TaskLogger {
 	public void debug(String message, Throwable e) {
 	}
 
+	@Override
+	public void trace(String message, Throwable e) {
+	}
+
 	public String getFileName() {
 		return "";
+	}
+
+	@Override
+	public void setLoggingLevel(LogLevel level) {
 	}
 
 }

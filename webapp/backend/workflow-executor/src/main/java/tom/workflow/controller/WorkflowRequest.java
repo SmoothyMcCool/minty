@@ -7,15 +7,17 @@ import java.util.UUID;
 public class WorkflowRequest {
 
 	private UUID id;
+	private String logLevel;
 	private List<Map<String, Object>> taskConfigurationList = List.of();
 	private Map<String, Object> outputConfiguration = Map.of();
 
 	public WorkflowRequest() {
 	}
 
-	public WorkflowRequest(UUID id, List<Map<String, Object>> taskConfigurationList,
+	public WorkflowRequest(UUID id, String logLevel, List<Map<String, Object>> taskConfigurationList,
 			Map<String, Object> outputConfiguration) {
 		this.id = id;
+		this.logLevel = logLevel;
 		this.taskConfigurationList = taskConfigurationList;
 		this.outputConfiguration = outputConfiguration;
 	}
@@ -26,6 +28,14 @@ public class WorkflowRequest {
 
 	public void setId(UUID id) {
 		this.id = id;
+	}
+
+	public String getLogLevel() {
+		return logLevel;
+	}
+
+	public void setLogLevel(String logLevel) {
+		this.logLevel = logLevel;
 	}
 
 	public List<Map<String, Object>> getTaskConfigurationList() {

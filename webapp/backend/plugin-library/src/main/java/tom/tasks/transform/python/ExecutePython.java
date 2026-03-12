@@ -15,7 +15,6 @@ import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;
 import tom.api.task.TaskConfigSpec;
-import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
 import tom.tasks.TaskGroup;
@@ -46,11 +45,10 @@ if __name__ == "__main__":
 */
 
 @RunnableTask
-public class ExecutePython implements MintyTask, ServiceConsumer {
+public class ExecutePython extends MintyTask implements ServiceConsumer {
 
 	private List<? extends OutputPort> outputs;
 
-	private TaskLogger logger;
 	private ExecutePythonConfig configuration;
 	private Packet result;
 	private PluginServices pluginServices;
@@ -95,38 +93,38 @@ public class ExecutePython implements MintyTask, ServiceConsumer {
 
 		try {
 			if (StringUtils.isBlank(configuration.getPython())) {
-				logger.warn("No python code provided to task!");
+				warn("No python code provided to task!");
 				error = "No python code provided to task.";
 				failed = true;
 				return;
 			}
 
-			logger.debug("ExecutePython: Executing " + configuration.getPython());
+			debug("Executing " + configuration.getPython());
 
 			PythonResult pyResult = pluginServices.getPythonService().executeCodeString(configuration.getPython(),
 					input);
 
-			logger.info("Python complete. Logs:");
-			pyResult.logs().forEach(log -> logger.info(log));
+			info("Python complete. Logs:");
+			pyResult.logs().forEach(log -> info(log));
 			try {
 				result.setText((List<String>) pyResult.result().get("text"));
 			} catch (Exception e) {
-				logger.warn("Text element returned from python is invalid. Should be a List<String>");
+				warn("Text element returned from python is invalid. Should be a List<String>");
 			}
 			try {
 				result.setData((List<Map<String, Object>>) pyResult.result().get("data"));
 			} catch (Exception e) {
-				logger.warn("Data element returned from python is invalid. Should be a List<Map<String, Object>>)");
+				warn("Data element returned from python is invalid. Should be a List<Map<String, Object>>)");
 			}
 
 		} catch (PythonException e) {
-			logger.warn("ExecutePython: Caught exception while running python:", e);
+			warn("Caught exception while running python:", e);
 			if (e.getLogs() != null) {
-				e.getLogs().forEach(log -> logger.info(log));
+				e.getLogs().forEach(log -> info(log));
 			}
 			failed = true;
 		} catch (Exception e) {
-			logger.warn("ExecutePython: Caught exception while running python:", e);
+			warn("Caught exception while running python:", e);
 			failed = true;
 		}
 
@@ -223,8 +221,4 @@ public class ExecutePython implements MintyTask, ServiceConsumer {
 		return failed;
 	}
 
-	@Override
-	public void setLogger(TaskLogger workflowLogger) {
-		this.logger = workflowLogger;
-	}
 }

@@ -7,18 +7,16 @@ import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;
 import tom.api.task.TaskConfigSpec;
-import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
 import tom.tasks.TaskGroup;
 import tom.tasks.noop.NullTaskConfig;
 
 @RunnableTask
-public class ExtractSpreadSheet implements MintyTask {
+public class ExtractSpreadSheet extends MintyTask {
 
 	private List<? extends OutputPort> outputs;
 
-	private TaskLogger logger;
 	private Packet input;
 	private boolean failed;
 	private String error;
@@ -71,8 +69,7 @@ public class ExtractSpreadSheet implements MintyTask {
 	@Override
 	public void setOutputConnectors(List<? extends OutputPort> outputs) {
 		if (outputs.size() != 1) {
-			logger.warn(
-					"ExtractSpreadSheet: Workflow misconfiguration detect. ExtractSpreadSheet should only ever have exactly one output!");
+			warn("Workflow misconfiguration detect. ExtractSpreadSheet should only ever have exactly one output!");
 		}
 		this.outputs = outputs;
 	}
@@ -141,11 +138,6 @@ public class ExtractSpreadSheet implements MintyTask {
 	@Override
 	public boolean failed() {
 		return failed;
-	}
-
-	@Override
-	public void setLogger(TaskLogger workflowLogger) {
-		this.logger = workflowLogger;
 	}
 
 	@Override
