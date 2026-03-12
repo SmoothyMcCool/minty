@@ -24,17 +24,15 @@ import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;
 import tom.api.task.TaskConfigSpec;
-import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
 import tom.tasks.TaskGroup;
 
 @RunnableTask
-public class AiQuery implements MintyTask, ServiceConsumer {
+public class AiQuery extends MintyTask implements ServiceConsumer {
 
 	private final String ConversationId = "Conversation ID";
 
-	private TaskLogger logger;
 	private PluginServices pluginServices;
 	private AiQueryConfig config;
 	private UserId userId;
@@ -147,8 +145,7 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 						break;
 
 					} catch (QueueFullException | ConversationInUseException e) {
-						logger.debug(
-								"AiQuery: LLM queue is full or conversation in use. Sleeping for 5 seconds before trying again.",
+						trace("LLM queue is full or conversation in use. Sleeping for 5 seconds before trying again.",
 								e);
 						Thread.sleep(Duration.ofSeconds(5));
 					}
@@ -162,7 +159,7 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 						response = llmResult instanceof StringResult ? ((StringResult) llmResult).getValue() : null;
 						break;
 					}
-					logger.debug("AiQuery: LLM response not ready. Sleeping for 5 seconds before trying again.");
+					trace("LLM response not ready. Sleeping for 5 seconds before trying again.");
 					Thread.sleep(Duration.ofSeconds(5));
 				}
 
@@ -281,8 +278,4 @@ public class AiQuery implements MintyTask, ServiceConsumer {
 		return failed;
 	}
 
-	@Override
-	public void setLogger(TaskLogger workflowLogger) {
-		this.logger = workflowLogger;
-	}
 }

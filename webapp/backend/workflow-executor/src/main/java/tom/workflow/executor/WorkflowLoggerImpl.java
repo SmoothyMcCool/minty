@@ -22,10 +22,13 @@ public class WorkflowLoggerImpl implements AutoCloseable, TaskLogger {
 	private final FileAppender appender;
 	private final Path filePath;
 	private final String fileName;
+	private TaskLogger.LogLevel logLevel;
 
 	public WorkflowLoggerImpl(Path path, String unsanitizedFilename) {
 		PatternLayout layout = PatternLayout.newBuilder().withPattern("[%d{HH:mm:ss}] %-5p - %m%n")
 				.withConfiguration(cfg).build();
+
+		logLevel = LogLevel.DEBUG;
 
 		fileName = sanitize(unsanitizedFilename);
 		filePath = path.resolve(fileName);
@@ -62,23 +65,38 @@ public class WorkflowLoggerImpl implements AutoCloseable, TaskLogger {
 	}
 
 	@Override
+	public void trace(String message) {
+		if (logLevel.getLevel() <= LogLevel.TRACE.getLevel()) {
+			log(Level.TRACE, message);
+		}
+	}
+
+	@Override
 	public void debug(String message) {
-		log(Level.DEBUG, message);
+		if (logLevel.getLevel() <= LogLevel.DEBUG.getLevel()) {
+			log(Level.DEBUG, message);
+		}
 	}
 
 	@Override
 	public void info(String message) {
-		log(Level.INFO, message);
+		if (logLevel.getLevel() <= LogLevel.INFO.getLevel()) {
+			log(Level.INFO, message);
+		}
 	}
 
 	@Override
 	public void error(String message) {
-		log(Level.ERROR, message);
+		if (logLevel.getLevel() <= LogLevel.ERROR.getLevel()) {
+			log(Level.ERROR, message);
+		}
 	}
 
 	@Override
 	public void warn(String message) {
-		log(Level.WARN, message);
+		if (logLevel.getLevel() <= LogLevel.WARN.getLevel()) {
+			log(Level.WARN, message);
+		}
 	}
 
 	@Override
@@ -88,26 +106,46 @@ public class WorkflowLoggerImpl implements AutoCloseable, TaskLogger {
 
 	@Override
 	public void info(String message, Throwable e) {
-		log(Level.INFO, message, e);
+		if (logLevel.getLevel() <= LogLevel.INFO.getLevel()) {
+			log(Level.INFO, message, e);
+		}
 	}
 
 	@Override
 	public void error(String message, Throwable e) {
-		log(Level.ERROR, message, e);
+		if (logLevel.getLevel() <= LogLevel.ERROR.getLevel()) {
+			log(Level.ERROR, message, e);
+		}
 	}
 
 	@Override
 	public void warn(String message, Throwable e) {
-		log(Level.WARN, message, e);
+		if (logLevel.getLevel() <= LogLevel.WARN.getLevel()) {
+			log(Level.WARN, message, e);
+		}
 	}
 
 	@Override
 	public void debug(String message, Throwable e) {
-		log(Level.DEBUG, message, e);
+		if (logLevel.getLevel() <= LogLevel.DEBUG.getLevel()) {
+			log(Level.DEBUG, message, e);
+		}
+	}
+
+	@Override
+	public void trace(String message, Throwable e) {
+		if (logLevel.getLevel() <= LogLevel.TRACE.getLevel()) {
+			log(Level.TRACE, message, e);
+		}
 	}
 
 	public String getFileName() {
 		return fileName;
+	}
+
+	@Override
+	public void setLoggingLevel(LogLevel level) {
+		this.logLevel = level;
 	}
 
 }

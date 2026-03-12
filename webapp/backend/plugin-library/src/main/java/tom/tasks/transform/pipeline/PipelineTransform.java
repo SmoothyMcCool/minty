@@ -7,7 +7,6 @@ import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;
 import tom.api.task.TaskConfigSpec;
-import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
 import tom.tasks.TaskGroup;
@@ -16,11 +15,10 @@ import tom.tasks.transform.pipeline.operations.PipelineOperationRegistry;
 import tom.tasks.transform.pipeline.operations.TransformOperation;
 
 @RunnableTask
-public class PipelineTransform implements MintyTask {
+public class PipelineTransform extends MintyTask {
 
 	private List<? extends OutputPort> outputs;
 
-	private TaskLogger logger;
 	private PipelineTransformConfig config;
 	private Packet input;
 	private Packet result;
@@ -70,7 +68,7 @@ public class PipelineTransform implements MintyTask {
 					throw new RuntimeException("Unknown pipeline operation: " + opName);
 				}
 
-				logger.debug("Applying pipeline operation: " + opName);
+				debug("Applying pipeline operation: " + opName);
 				// Execute operation
 				op.execute(result, operation.getConfiguration());
 
@@ -78,16 +76,16 @@ public class PipelineTransform implements MintyTask {
 
 			String postPipeline = result.toJson();
 
-			logger.debug("Pipeline transform completed");
-			logger.debug("Before: " + prePipeline);
-			logger.debug("After: " + postPipeline);
+			debug("Pipeline transform completed");
+			debug("Before: " + prePipeline);
+			debug("After: " + postPipeline);
 
 			outputs.get(0).write(result);
 
 		} catch (Exception e) {
 			failed = true;
 			error = "PipelineTransform failed: " + e.getMessage();
-			logger.error(error, e);
+			error(error, e);
 			throw new RuntimeException(error, e);
 		}
 	}
@@ -178,8 +176,4 @@ public class PipelineTransform implements MintyTask {
 		return failed;
 	}
 
-	@Override
-	public void setLogger(TaskLogger workflowLogger) {
-		this.logger = workflowLogger;
-	}
 }

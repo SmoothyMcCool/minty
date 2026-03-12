@@ -8,14 +8,13 @@ import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;
 import tom.api.task.TaskConfigSpec;
-import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
 import tom.tasks.TaskGroup;
 
 @RunnableTask
-public class EmitText implements MintyTask {
-	private TaskLogger logger;
+public class EmitText extends MintyTask {
+
 	private EmitTextConfig config;
 	private List<? extends OutputPort> outputs;
 	private boolean readyToRun;
@@ -51,7 +50,7 @@ public class EmitText implements MintyTask {
 		output.setData(List.of());
 		output.setText(List.of(text));
 
-		logger.debug("EmitText: Emitting " + output.toString());
+		debug("Emitting " + output.toString());
 		outputs.get(0).write(output);
 	}
 
@@ -59,14 +58,14 @@ public class EmitText implements MintyTask {
 	public boolean giveInput(int inputNum, Packet dataPacket) {
 		// This task should never receive input. If we ever do, log the error, but
 		// signal that we have all the input we need.
-		logger.warn("Workflow misconfiguration detect. Text Emitter should never receive input!");
+		warn("Workflow misconfiguration detect. Text Emitter should never receive input!");
 		return true;
 	}
 
 	@Override
 	public void setOutputConnectors(List<? extends OutputPort> outputs) {
 		if (outputs.size() != 1) {
-			logger.warn("Workflow misconfiguration detect. Text Emitter should only ever have exactly one output!");
+			warn("Workflow misconfiguration detect. Text Emitter should only ever have exactly one output!");
 		}
 		this.outputs = outputs;
 	}
@@ -135,11 +134,6 @@ public class EmitText implements MintyTask {
 	@Override
 	public boolean failed() {
 		return failed;
-	}
-
-	@Override
-	public void setLogger(TaskLogger workflowLogger) {
-		this.logger = workflowLogger;
 	}
 
 }

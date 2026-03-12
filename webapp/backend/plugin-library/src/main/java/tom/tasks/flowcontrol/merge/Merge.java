@@ -8,13 +8,12 @@ import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;
 import tom.api.task.TaskConfigSpec;
-import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
 import tom.tasks.TaskGroup;
 
 @RunnableTask
-public class Merge implements MintyTask {
+public class Merge extends MintyTask {
 
 	private static final Packet NullPacket = new Packet();
 
@@ -144,10 +143,6 @@ public class Merge implements MintyTask {
 	@Override
 	public boolean failed() {
 		return false;
-	}
-
-	@Override
-	public void setLogger(TaskLogger workflowLogger) {
 	}
 
 }

@@ -7,14 +7,13 @@ import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;
 import tom.api.task.TaskConfigSpec;
-import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
 import tom.tasks.TaskGroup;
 import tom.tasks.noop.NullTaskConfig;
 
 @RunnableTask
-public class Normalize implements MintyTask {
+public class Normalize extends MintyTask {
 
 	private List<? extends OutputPort> outputs;
 
@@ -136,11 +135,6 @@ public class Normalize implements MintyTask {
 	@Override
 	public boolean failed() {
 		return failed;
-	}
-
-	@Override
-	public void setLogger(TaskLogger workflowLogger) {
-		// this.logger = workflowLogger;
 	}
 
 }

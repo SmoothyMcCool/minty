@@ -14,7 +14,6 @@ import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;
 import tom.api.task.TaskConfigSpec;
-import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
 import tom.confluence.ConfluenceClient;
@@ -22,7 +21,7 @@ import tom.confluence.model.PageResponse;
 import tom.tasks.TaskGroup;
 
 @RunnableTask
-public class ConfluenceQuery implements MintyTask, ServiceConsumer {
+public class ConfluenceQuery extends MintyTask implements ServiceConsumer {
 
 	private ConfluenceQueryConfig config;
 	private Packet input;
@@ -215,10 +214,6 @@ public class ConfluenceQuery implements MintyTask, ServiceConsumer {
 			}
 
 		};
-	}
-
-	@Override
-	public void setLogger(TaskLogger workflowLogger) {
 	}
 
 	@Override

@@ -12,15 +12,13 @@ import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;
 import tom.api.task.TaskConfigSpec;
-import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
 import tom.tasks.TaskGroup;
 
 @RunnableTask
-public class EmitPacket implements MintyTask {
+public class EmitPacket extends MintyTask {
 
-	private TaskLogger logger;
 	private EmitPacketConfig config;
 	private List<? extends OutputPort> outputs;
 	private boolean readyToRun;
@@ -64,12 +62,12 @@ public class EmitPacket implements MintyTask {
 
 		} catch (Exception e) {
 			failed = true;
-			logger.warn("EmitPacket: Data is not valid JSON list.");
+			warn("Data is not valid JSON list.");
 			throw new RuntimeException(e);
 		}
 
 		for (Packet p : data) {
-			logger.debug("EmitPacket: Emitting " + p.toString());
+			debug("Emitting " + p.toString());
 			outputs.get(0).write(p);
 		}
 	}
@@ -78,14 +76,14 @@ public class EmitPacket implements MintyTask {
 	public boolean giveInput(int inputNum, Packet dataPacket) {
 		// This task should never receive input. If we ever do, log the error, but
 		// signal that we have all the input we need.
-		logger.warn("Workflow misconfiguration detect. EmitPacket should never receive input!");
+		warn("Workflow misconfiguration detect. EmitPacket should never receive input!");
 		return true;
 	}
 
 	@Override
 	public void setOutputConnectors(List<? extends OutputPort> outputs) {
 		if (outputs.size() != 1) {
-			logger.warn("Workflow misconfiguration detect. EmitPacket should only ever have exactly one output!");
+			warn("Workflow misconfiguration detect. EmitPacket should only ever have exactly one output!");
 		}
 		this.outputs = outputs;
 	}
@@ -154,11 +152,6 @@ public class EmitPacket implements MintyTask {
 	@Override
 	public boolean failed() {
 		return failed;
-	}
-
-	@Override
-	public void setLogger(TaskLogger workflowLogger) {
-		this.logger = workflowLogger;
 	}
 
 }

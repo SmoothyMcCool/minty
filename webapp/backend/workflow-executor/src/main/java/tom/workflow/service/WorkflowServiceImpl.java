@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import tom.NotOwnedException;
 import tom.api.UserId;
+import tom.api.task.TaskLogger;
 import tom.config.MintyConfiguration;
 import tom.task.model.TaskRequest;
 import tom.task.registry.TaskRegistryService;
@@ -73,7 +74,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 			workflow.getOutputStep().setConfiguration(request.getOutputConfiguration());
 		}
 
-		WorkflowRunner runner = new WorkflowRunner(userId, workflow, taskRegistryService, workflowTrackingService,
+		WorkflowRunner runner = new WorkflowRunner(userId, workflow,
+				TaskLogger.LogLevel.fromString(request.getLogLevel()), taskRegistryService, workflowTrackingService,
 				taskExecutor, workflowLoggingFolder);
 
 		workflowTrackingService.trackWorkflow(runner);

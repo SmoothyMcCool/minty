@@ -2,22 +2,28 @@ package tom.tasks.flowcontrol;
 
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;
 import tom.api.task.TaskConfigSpec;
-import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
 import tom.tasks.TaskGroup;
 
 @RunnableTask
-public class Identify implements MintyTask {
+public class Identify extends MintyTask {
+
+	private static final Pattern LIST_ACCESS_PATTERN = Pattern.compile("([a-zA-Z0-9_]+)\\[(\\d+)]");
 
 	private List<? extends OutputPort> outputs;
 
-	private TaskLogger logger;
 	private Packet input;
 	private IdentifyConfig config;
 	private boolean failed;
@@ -45,55 +51,30 @@ public class Identify implements MintyTask {
 
 	@Override
 	public void run() {
-		Object keyValue = findKeyFromObject(config.getIdElement(), input.getData().getFirst());
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
 
-		// current now holds the element that we want to use as the ID. If current is
-		// null, we did not find the key we wanted.
-		if (keyValue != null) {
-			input.setId(keyValue.toString());
+		JsonNode root;
+
+		try {
+			// Convert full packet to JSON tree
+			root = mapper.valueToTree(input.toMap());
+		} catch (Exception e) {
+			warn("Could not convert packet to JSON.");
+			return;
+		}
+
+		JsonNode valueNode = resolvePath(root, config.getIdElement());
+
+		if (valueNode != null && !valueNode.isMissingNode() && !valueNode.isNull()) {
+			input.setId(valueNode.asText());
 		} else {
-			logger.warn("Identify: could not find the ID key in the provided data.");
+			warn("Could not find the ID key in the provided data.");
 		}
 
 		for (OutputPort output : outputs) {
 			output.write(input);
 		}
-	}
-
-	private Object findKeyFromObject(String path, Object current) {
-		String[] keys = path.split("\\.");
-
-		Object o = current;
-
-		for (String key : keys) {
-
-			if (o instanceof Map) {
-				o = ((Map<?, ?>) o).get(key);
-
-			} else if (o instanceof List) {
-				try {
-					int index = Integer.parseInt(key);
-					List<?> list = (List<?>) o;
-					if (index < 0 || index >= list.size()) {
-						o = null;
-						break;
-					}
-					o = list.get(index);
-				} catch (NumberFormatException e) {
-					o = null;
-					break;
-				}
-
-			} else {
-				o = null;
-				break;
-			}
-
-			if (o == null) {
-				break;
-			}
-		}
-		return o;
 	}
 
 	@Override
@@ -173,9 +154,51 @@ public class Identify implements MintyTask {
 		return failed;
 	}
 
-	@Override
-	public void setLogger(TaskLogger workflowLogger) {
-		this.logger = workflowLogger;
+	private static JsonNode resolvePath(JsonNode current, String path) {
+
+		String[] parts = path.split("\\.", 2);
+		String head = parts[0];
+		String tail = (parts.length > 1) ? parts[1] : null;
+
+		JsonNode next = null;
+
+		Matcher listMatcher = LIST_ACCESS_PATTERN.matcher(head);
+
+		if (listMatcher.matches()) {
+			// format: field[index]
+			String field = listMatcher.group(1);
+			int index = Integer.parseInt(listMatcher.group(2));
+
+			JsonNode arrayNode = current.get(field);
+			if (arrayNode != null && arrayNode.isArray() && index >= 0 && index < arrayNode.size()) {
+				next = arrayNode.get(index);
+			} else {
+				return null;
+			}
+
+		} else if (head.matches("\\d+")) {
+			// format: .0 when current node is already an array
+			int index = Integer.parseInt(head);
+
+			if (current.isArray() && index >= 0 && index < current.size()) {
+				next = current.get(index);
+			} else {
+				return null;
+			}
+
+		} else {
+			// regular object field
+			next = current.get(head);
+			if (next == null) {
+				return null;
+			}
+		}
+
+		if (tail == null) {
+			return next;
+		}
+
+		return resolvePath(next, tail);
 	}
 
 }

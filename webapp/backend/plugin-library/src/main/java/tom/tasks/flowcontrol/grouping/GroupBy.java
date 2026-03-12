@@ -7,18 +7,16 @@ import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;
 import tom.api.task.TaskConfigSpec;
-import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
 import tom.tasks.TaskGroup;
 import tom.tasks.noop.NullTaskConfig;
 
 @RunnableTask
-public class GroupBy implements MintyTask {
+public class GroupBy extends MintyTask {
 
 	private List<? extends OutputPort> outputs;
 
-	private TaskLogger logger;
 	private Packet keyPacket;
 	private Packet result;
 	private boolean failed;
@@ -48,7 +46,7 @@ public class GroupBy implements MintyTask {
 	@Override
 	public void run() {
 		for (OutputPort output : outputs) {
-			logger.debug("GroupBy: Writing out items for key " + keyPacket.getId());
+			debug("Writing out items for key " + keyPacket.getId());
 			output.write(result);
 		}
 	}
@@ -68,7 +66,7 @@ public class GroupBy implements MintyTask {
 		}
 		readyToRun = true;
 		if (inputNum == 1) {
-			logger.info("GroupBy: Rejecting packet with id " + dataPacket.getId());
+			info("Rejecting packet with id " + dataPacket.getId());
 		}
 
 		return false;
@@ -78,7 +76,7 @@ public class GroupBy implements MintyTask {
 	public boolean giveInput(int inputNum, Packet dataPacket) {
 		if (inputNum == 0) {
 			if (keyPacket == null) {
-				logger.debug("GroupBy: Setting key with Id " + dataPacket.getId());
+				debug("Setting key with Id " + dataPacket.getId());
 				keyPacket = dataPacket;
 				result.setId(dataPacket.getId());
 			} else {
@@ -87,7 +85,7 @@ public class GroupBy implements MintyTask {
 			return true;
 		}
 		if (inputNum == 1) {
-			logger.debug("GroupBy: Adding packet with Id " + dataPacket.getId());
+			debug("Adding packet with Id " + dataPacket.getId());
 			result.addDataList(dataPacket.getData());
 			result.addTextList(dataPacket.getText());
 			return false;
@@ -168,11 +166,6 @@ public class GroupBy implements MintyTask {
 	@Override
 	public boolean failed() {
 		return failed;
-	}
-
-	@Override
-	public void setLogger(TaskLogger workflowLogger) {
-		this.logger = workflowLogger;
 	}
 
 }

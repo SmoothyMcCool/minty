@@ -7,11 +7,10 @@ import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;
 import tom.api.task.TaskConfigSpec;
-import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.tasks.TaskGroup;
 
-public class NullTask implements MintyTask {
+public class NullTask extends MintyTask {
 
 	@Override
 	public String getError() {
@@ -103,10 +102,6 @@ public class NullTask implements MintyTask {
 	@Override
 	public Packet getResult() {
 		return null;
-	}
-
-	@Override
-	public void setLogger(TaskLogger workflowLogger) {
 	}
 
 }

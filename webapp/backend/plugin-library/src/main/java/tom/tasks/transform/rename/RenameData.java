@@ -9,13 +9,12 @@ import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;
 import tom.api.task.TaskConfigSpec;
-import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
 import tom.tasks.TaskGroup;
 
 @RunnableTask
-public class RenameData implements MintyTask {
+public class RenameData extends MintyTask {
 
 	private List<? extends OutputPort> outputs;
 
@@ -163,11 +162,6 @@ public class RenameData implements MintyTask {
 	public boolean failed() {
 		// TODO Auto-generated method stub
 		return failed;
-	}
-
-	@Override
-	public void setLogger(TaskLogger workflowLogger) {
-		// this.logger = workflowLogger;
 	}
 
 }

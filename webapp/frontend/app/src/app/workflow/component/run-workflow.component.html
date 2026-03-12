@@ -3,11 +3,20 @@
 		<div class="row">
 			<h2 class="col">Run Workflow</h2>
 			<form class="col-auto d-flex justify-content-end mb-2">
+				<label for="logLevel" class="col-form-label me-1">Log at</label>
+				<div class="me-5">
+					<select class="form-select bg-opacity-75" name="logLevel" [(ngModel)]="logLevel">
+						<option>Trace</option>
+						<option>Debug</option>
+						<option>Info</option>
+						<option>Warn</option>
+						<option>Error</option>
+					</select>
+				</div>
 				<button type="button" id="submitButton" class="btn btn-primary me-2" (click)="runWorkflow()"><i class="bi bi-check-lg"></i></button>
 				<button type="button" id="cancelButton" class="btn btn-danger" (click)="cancel()"><i class="bi bi-arrow-counterclockwise"></i></button>
 			</form>
 		</div>
-		<h2>Run Workflow</h2>
 
 		<minty-workflow-editor name="workflowEditor" [taskSpecifications]="taskSpecifications"
 				[outputTaskSpecifications]="outputTaskSpecifications" [defaults]="defaults" [(ngModel)]="workflow"></minty-workflow-editor>

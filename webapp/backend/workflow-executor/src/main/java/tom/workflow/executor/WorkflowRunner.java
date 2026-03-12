@@ -20,6 +20,7 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import tom.api.UserId;
 import tom.api.task.ExecutionResult;
 import tom.api.task.OutputTask;
+import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
 import tom.task.model.TaskRequest;
 import tom.task.registry.TaskRegistryService;
@@ -45,11 +46,12 @@ public class WorkflowRunner {
 	private UserId userId;
 	private WorkflowExecution executionState;
 	private WorkflowLoggerImpl logger;
+	private TaskLogger.LogLevel logLevel;
 	private Path logFolder;
 
-	public WorkflowRunner(UserId userId, Workflow workflow, TaskRegistryService taskRegistryService,
-			WorkflowTrackingService workflowTrackingService, AsyncTaskExecutor taskExecutor,
-			Path workflowLoggingFolder) {
+	public WorkflowRunner(UserId userId, Workflow workflow, TaskLogger.LogLevel logLevel,
+			TaskRegistryService taskRegistryService, WorkflowTrackingService workflowTrackingService,
+			AsyncTaskExecutor taskExecutor, Path workflowLoggingFolder) {
 		workflowComplete = false;
 		this.userId = userId;
 		this.workflow = workflow;
@@ -57,6 +59,7 @@ public class WorkflowRunner {
 		this.workflowTrackingService = workflowTrackingService;
 		this.taskExecutor = taskExecutor;
 		this.executionState = null;
+		this.logLevel = logLevel;
 		logFolder = workflowLoggingFolder;
 		tasks = new ArrayList<>();
 	}
@@ -120,6 +123,7 @@ public class WorkflowRunner {
 
 		String logFile = getWorkflowName() + ".log";
 		logger = new WorkflowLoggerImpl(logFolder, logFile);
+		logger.setLoggingLevel(logLevel);
 		logFile = logger.getFileName();
 		executionState.getResult().setLogFile(logFile);
 
