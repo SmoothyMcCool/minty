@@ -46,30 +46,25 @@ public class Branch extends MintyTask {
 
 	@Override
 	public void run() {
-		String expression = config.getBranchExpression();
-		// Turn data.foo -> data[0].foo, same for text
-		expression = expression.replaceAll("\\bdata\\.(\\w+)", "data[0].$1");
-		expression = expression.replaceAll("\\btext\\.(\\w+)", "text[0].$1");
-
 		try {
-
-			// Evaluate with SpEL
+			String expression = config.getBranchExpression();
 			Packet result = input;
 			SpelExpressionParser parser = new SpelExpressionParser();
-			StandardEvaluationContext context = new StandardEvaluationContext(result);
-			context.setBeanResolver(null);
-
+			StandardEvaluationContext context = new StandardEvaluationContext();
+			context.setVariable("p", result);
 			Object raw = parser.parseExpression(expression).getValue(context);
+
 			if (!(raw instanceof Boolean)) {
 				throw new IllegalArgumentException("Expression did not return a boolean value: " + raw);
 			}
-			conditionMet = ((Boolean) raw);
+
+			conditionMet = (Boolean) raw;
 			int outputPort = conditionMet ? 0 : 1;
 			outputs.get(outputPort).write(result);
 
 		} catch (Exception e) {
-			String error = "Branch caught exception while trying to apply SpEL expression: " + expression
-					+ ", to input: " + input.toString();
+			String error = "Branch caught exception while applying SpEL: " + config.getBranchExpression()
+					+ ", to input: " + input;
 			error(error);
 			throw new RuntimeException(error, e);
 		}

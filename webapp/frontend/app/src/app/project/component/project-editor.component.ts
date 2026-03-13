@@ -42,6 +42,7 @@ export class ProjectEditorComponent {
 	nodeToDelete: ProjectNode;
 
 	mdFileDialogVisible = false;
+	zipFileDialogVisible = false
 	document: DocProperties = {
 		title: '',
 		file: undefined
@@ -150,7 +151,19 @@ export class ProjectEditorComponent {
 		});
 	}
 
-	markdownFileSelected(event: Event) {
+	addZipToProject() {
+		this.zipFileDialogVisible = true;
+	}
+
+	addZip() {
+		this.zipFileDialogVisible = false;
+		this.projectService.writeZipFile(this.project.id, this.document).subscribe((result: string) => {
+			this.alertService.postSuccess(result);
+			this.refresh();
+		});
+	}
+
+	fileSelected(event: Event) {
 		const newFiles = (event.target as HTMLInputElement).files;
 		if (newFiles && newFiles.length > 0) {
 			this.document = { title: newFiles[0].name, file: newFiles[0] };

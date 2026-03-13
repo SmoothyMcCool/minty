@@ -1,5 +1,7 @@
 package tom.api.services;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 import tom.api.ProjectId;
@@ -37,4 +39,5 @@ public interface ProjectService {
 
 	List<NodeInfo> listChildren(UserId userId, ProjectId projectId, String path);
 
+	void importZip(UserId userId, ProjectId projectId, InputStream zipStream) throws IOException;
 }
