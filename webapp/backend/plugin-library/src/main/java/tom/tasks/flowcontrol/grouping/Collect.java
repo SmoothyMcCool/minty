@@ -34,7 +34,7 @@ public class Collect extends MintyTask {
 
 	@Override
 	public Packet getResult() {
-		return null;
+		return result;
 	}
 
 	@Override

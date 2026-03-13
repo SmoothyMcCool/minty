@@ -1,10 +1,17 @@
 package tom.project.service;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -294,6 +301,90 @@ public class ProjectServiceImpl implements ProjectService {
 		return nodeRepository.findByProjectIdAndParentIdAndOwnerId(projectId.getValue(), folder.getId(), userId)
 				.stream().map(n -> new NodeInfo(n.getType(), n.getFileType(), n.getPath(), n.getVersion()))
 				.collect(Collectors.toList());
+	}
+
+	@Override
+	@Transactional
+	public void importZip(UserId userId, ProjectId projectId, InputStream zipStream) throws IOException {
+		validateProjectAccess(userId, projectId);
+
+		try (ZipInputStream zis = new ZipInputStream(zipStream, StandardCharsets.UTF_8)) {
+			ZipEntry entry;
+
+			while ((entry = zis.getNextEntry()) != null) {
+				String entryName = entry.getName();
+
+				if (entryName.contains("..")) {
+					throw new IllegalStateException("Invalid zip entry: " + entryName);
+				}
+
+				String path = "/" + entryName.replace("\\", "/");
+
+				if (entry.isDirectory()) {
+					ensureFolderPath(userId, projectId, path);
+					continue;
+				}
+
+				String folderPath = path.substring(0, path.lastIndexOf("/"));
+				ensureFolderPath(userId, projectId, folderPath);
+				String content = readZipEntry(zis);
+				FileType type = detectFileType(path);
+				writeFile(userId, projectId, path, type, content);
+				zis.closeEntry();
+			}
+		}
+	}
+
+	private void ensureFolderPath(UserId userId, ProjectId projectId, String path) {
+		if (path == null || path.isEmpty() || path.equals("/")) {
+			return;
+		}
+
+		String[] parts = path.split("/");
+		String current = "";
+
+		for (String part : parts) {
+			if (part.isEmpty())
+				continue;
+
+			current += "/" + part;
+
+			if (nodeRepository.findByProjectIdAndPathAndOwnerId(projectId.getValue(), current, userId).isEmpty()) {
+				createFolder(userId, projectId, current);
+			}
+		}
+	}
+
+	private String readZipEntry(InputStream is) throws IOException {
+		BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+
+		StringBuilder sb = new StringBuilder();
+		String line;
+
+		while ((line = reader.readLine()) != null) {
+			sb.append(line).append("\n");
+		}
+
+		return sb.toString();
+	}
+
+	private FileType detectFileType(String path) {
+		String lower = path.toLowerCase();
+
+		if (lower.endsWith(".md")) {
+			return FileType.markdown;
+		}
+		if (lower.endsWith(".json")) {
+			return FileType.json;
+		}
+		if (lower.endsWith(".yaml") || lower.endsWith(".yml")) {
+			return FileType.yaml;
+		}
+		if (lower.endsWith(".html")) {
+			return FileType.html;
+		}
+
+		return FileType.text;
 	}
 
 	private void insertFileVersion(UserId userId, UUID nodeId, int version, String content) {

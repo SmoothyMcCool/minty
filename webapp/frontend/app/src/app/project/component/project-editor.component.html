@@ -20,6 +20,9 @@
 					<button class="btn" (click)="addAndConvertToMd()">
 						<i class="bi bi-filetype-md"></i>
 					</button>
+					<button class="btn" (click)="addZipToProject()">
+						<i class="bi bi-file-earmark-zip"></i>
+					</button>
 				</li>
 			</ul>
 		</div>
@@ -64,13 +67,36 @@
 			<div class="modal-body">
 				<div class="mb-3">
 					<label for="mdFilename" class="form-label">Filename</label>
-					<input class="form-control" type="file" id="mdFile" (change)="markdownFileSelected($event)">
+					<input class="form-control" type="file" id="mdFile" (change)="fileSelected($event)">
 				</div>
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-secondary" (click)="mdFileDialogVisible = false">Cancel</button>
 				<button type="button" class="btn btn-primary"
 					(click)="addMarkdownFile()">OK</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" tabindex="-1" [ngClass]="{'show d-block': zipFileDialogVisible}"
+	[style.display]="zipFileDialogVisible ? 'block' : 'none'">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">Add Zip to Project</h5>
+				<button type="button" class="btn-close" (click)="zipFileDialogVisible = false"></button>
+			</div>
+			<div class="modal-body">
+				<div class="mb-3">
+					<label for="zipFilename" class="form-label">Filename</label>
+					<input class="form-control" type="file" id="mdFile" (change)="fileSelected($event)">
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" (click)="zipFileDialogVisible = false">Cancel</button>
+				<button type="button" class="btn btn-primary"
+					(click)="addZip()">OK</button>
 			</div>
 		</div>
 	</div>

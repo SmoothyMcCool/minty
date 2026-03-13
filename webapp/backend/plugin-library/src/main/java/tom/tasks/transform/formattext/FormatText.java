@@ -5,10 +5,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;
@@ -29,7 +25,6 @@ public class FormatText extends MintyTask {
 	private boolean failed;
 
 	private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\{([^{}]+)}");
-	private static final Pattern LIST_ACCESS_PATTERN = Pattern.compile("([a-zA-Z0-9_]+)\\[(\\d+)]");
 
 	public FormatText() {
 		input = null;
@@ -55,52 +50,10 @@ public class FormatText extends MintyTask {
 
 	@Override
 	public void run() {
-
-		Matcher matcher = PLACEHOLDER_PATTERN.matcher(config.getFormat());
-		StringBuffer sb = new StringBuffer();
-
-		ObjectMapper mapper = new ObjectMapper();
-		mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
-
-		List<Map<String, Object>> dataList = input.getData();
-
-		JsonNode root;
-		try {
-			// Wrap entire data array under "data"
-			root = mapper.createObjectNode().set("data", mapper.valueToTree(dataList));
-		} catch (Exception e) {
-			warn("Could not parse input into JSON object.");
-			return;
-		}
-
-		result = new Packet();
-		result.setId(input.getId());
-		result.setData(input.getData());
-
-		while (matcher.find()) {
-			String placeholder = matcher.group(0);
-			String path = matcher.group(1).strip();
-
-			if (path.equalsIgnoreCase("id")) {
-				matcher.appendReplacement(sb, Matcher.quoteReplacement(input.getId()));
-			} else if (path.equalsIgnoreCase("text")) {
-				matcher.appendReplacement(sb,
-						Matcher.quoteReplacement(String.join(System.lineSeparator(), input.getText())));
-			} else {
-
-				JsonNode valueNode = resolvePath(root, path);
-
-				if (valueNode != null && !valueNode.isMissingNode() && !valueNode.isNull()) {
-					matcher.appendReplacement(sb, Matcher.quoteReplacement(valueNode.asText()));
-				} else {
-					matcher.appendReplacement(sb, Matcher.quoteReplacement(placeholder));
-				}
-			}
-		}
-
-		matcher.appendTail(sb);
-
-		result.addText(sb.toString());
+		TemplateRenderer renderer = new TemplateRenderer();
+		List<String> text = renderer.render(input, config.getFormat());
+		Packet result = new Packet(input);
+		result.addTextList(text);
 
 		outputs.get(0).write(result);
 	}
@@ -193,40 +146,23 @@ public class FormatText extends MintyTask {
 		return failed;
 	}
 
-	private static JsonNode resolvePath(JsonNode current, String path) {
+	public String expandTemplate(Packet packet, String template) {
+		Matcher matcher = PLACEHOLDER_PATTERN.matcher(template);
+		StringBuffer sb = new StringBuffer();
 
-		String[] parts = path.split("\\.", 2); // head + remainder
-		String head = parts[0];
-		String tail = (parts.length > 1) ? parts[1] : null;
+		while (matcher.find()) {
+			String placeholder = matcher.group(0);
+			String path = matcher.group(1).strip();
 
-		JsonNode next = null;
+			String value = packet.resolve(path);
 
-		Matcher listMatcher = LIST_ACCESS_PATTERN.matcher(head);
-		if (listMatcher.matches()) {
-			// List access, e.g. friends[0]
-			String field = listMatcher.group(1);
-			int index = Integer.parseInt(listMatcher.group(2));
-
-			JsonNode arrayNode = current.get(field);
-			if (arrayNode != null && arrayNode.isArray() && index >= 0 && index < arrayNode.size()) {
-				next = arrayNode.get(index);
+			if (value != null) {
+				matcher.appendReplacement(sb, Matcher.quoteReplacement(value));
 			} else {
-				return null;
-			}
-
-		} else {
-			// Regular map access
-			next = current.get(head);
-			if (next == null) {
-				return null;
+				matcher.appendReplacement(sb, Matcher.quoteReplacement(placeholder));
 			}
 		}
-
-		if (tail == null) {
-			return next;
-		}
-
-		return resolvePath(next, tail);
+		matcher.appendTail(sb);
+		return sb.toString();
 	}
-
 }

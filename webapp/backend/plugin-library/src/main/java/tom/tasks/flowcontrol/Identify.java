@@ -5,9 +5,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
@@ -51,25 +49,13 @@ public class Identify extends MintyTask {
 
 	@Override
 	public void run() {
-		ObjectMapper mapper = new ObjectMapper();
-		mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
+		String idPath = config.getIdElement();
+		String value = input.resolve(idPath);
 
-		JsonNode root;
-
-		try {
-			// Convert full packet to JSON tree
-			root = mapper.valueToTree(input.toMap());
-		} catch (Exception e) {
-			warn("Could not convert packet to JSON.");
-			return;
-		}
-
-		JsonNode valueNode = resolvePath(root, config.getIdElement());
-
-		if (valueNode != null && !valueNode.isMissingNode() && !valueNode.isNull()) {
-			input.setId(valueNode.asText());
+		if (value != null) {
+			input.setId(value);
 		} else {
-			warn("Could not find the ID key in the provided data.");
+			warn("Could not find ID element: " + idPath);
 		}
 
 		for (OutputPort output : outputs) {

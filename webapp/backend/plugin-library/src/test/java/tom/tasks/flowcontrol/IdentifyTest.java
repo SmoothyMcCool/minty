@@ -112,7 +112,7 @@ class IdentifyTest {
 	 */
 	@Test
 	void run_setsIdFromListIndex_whenKeyExists() {
-		when(config.getIdElement()).thenReturn("data[0].users.0.id");
+		when(config.getIdElement()).thenReturn("data[0].users[0].id");
 		Identify id = new Identify(config);
 		id.setLogger(logger);
 		id.setOutputConnectors(List.of(outputPort1));
@@ -150,7 +150,7 @@ class IdentifyTest {
 		id.run();
 
 		assertEquals("", packet.getId()); // id stays empty
-		verify(logger).warn(contains("ID: Could not find the ID key"));
+		verify(logger).warn(contains("ID: Could not find ID element: missing"));
 		verify(outputPort1).write(packet); // still forwarded
 	}
 

@@ -282,4 +282,19 @@ public class ProjectController {
 				.SuccessResponse("You'll find your file in the active project.");
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
+
+	@PostMapping(value = "/node/import/zip", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<ResponseWrapper<String>> importZip(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("projectId") ProjectId projectId, @RequestPart("file") MultipartFile file) {
+
+		try {
+			projectService.importZip(user.getId(), projectId, file.getInputStream());
+			return ResponseEntity.ok(ResponseWrapper.SuccessResponse("Zip imported successfully"));
+		} catch (Exception e) {
+			logger.warn("Failed to import zip.", e);
+			return ResponseEntity
+					.ok(ResponseWrapper.ApiFailureResponse(500, List.of(ApiError.FAILED_TO_CREATE_OR_UPDATE_ENTRY)));
+		}
+	}
+
 }
