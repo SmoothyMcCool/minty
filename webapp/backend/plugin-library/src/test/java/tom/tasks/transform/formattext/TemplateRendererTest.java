@@ -1,7 +1,6 @@
 package tom.tasks.transform.formattext;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,10 +51,8 @@ public class TemplateRendererTest {
 
 		String template = "ID = {id}";
 
-		List<String> result = renderer.render(packet, template);
-
-		assertEquals(1, result.size());
-		assertEquals("ID = a", result.get(0));
+		String result = renderer.render(packet, template);
+		assertEquals("ID = a", result);
 	}
 
 	@Test
@@ -63,9 +60,9 @@ public class TemplateRendererTest {
 
 		String template = "Name: {data[0].name}";
 
-		List<String> result = renderer.render(packet, template);
+		String result = renderer.render(packet, template);
 
-		assertEquals("Name: asdf", result.get(0));
+		assertEquals("Name: asdf", result);
 	}
 
 	@Test
@@ -77,12 +74,9 @@ public class TemplateRendererTest {
 				{/data[0].comments}
 				""";
 
-		List<String> result = renderer.render(packet, template);
+		String result = renderer.render(packet, template);
 
-		assertEquals(2, result.size());
-
-		assertEquals("alice: this is comment 1", result.get(0).trim());
-		assertEquals("bob: this is comment 2", result.get(1).trim());
+		assertEquals("alice: this is comment 1\nbob: this is comment 2", result);
 	}
 
 	@Test
@@ -95,11 +89,9 @@ public class TemplateRendererTest {
 				{/data[0].comments}
 				""";
 
-		List<String> result = renderer.render(packet, template);
+		String result = renderer.render(packet, template);
 
-		assertEquals("Comments:", result.get(0));
-		assertEquals("- alice", result.get(1).trim());
-		assertEquals("- bob", result.get(2).trim());
+		assertEquals("Comments:\n- alice\n- bob", result);
 	}
 
 	@Test
@@ -123,10 +115,9 @@ public class TemplateRendererTest {
 				{/data}
 				""";
 
-		List<String> result = renderer.render(packet, template);
+		String result = renderer.render(packet, template);
 
-		assertTrue(result.stream().anyMatch(s -> s.contains("Post: asdf")));
-		assertTrue(result.stream().anyMatch(s -> s.contains("reply from charlie")));
+		assertEquals("Post: asdf\nreply from charlie", result);
 	}
 
 	@Test
@@ -134,9 +125,9 @@ public class TemplateRendererTest {
 
 		String template = "Unknown: {data[0].missing}";
 
-		List<String> result = renderer.render(packet, template);
+		String result = renderer.render(packet, template);
 
-		assertEquals("Unknown: {data[0].missing}", result.get(0));
+		assertEquals("Unknown: {data[0].missing}", result);
 	}
 
 	@Test
@@ -144,9 +135,9 @@ public class TemplateRendererTest {
 
 		String template = "{data[0].name} has id {id}";
 
-		List<String> result = renderer.render(packet, template);
+		String result = renderer.render(packet, template);
 
-		assertEquals("asdf has id a", result.get(0));
+		assertEquals("asdf has id a", result);
 	}
 
 	@Test
@@ -154,13 +145,13 @@ public class TemplateRendererTest {
 
 		String template = """
 				{#data[0].nonexistent}
-				should not appear
+				will be empty
 				{/data[0].nonexistent}
 				""";
 
-		List<String> result = renderer.render(packet, template);
+		String result = renderer.render(packet, template);
 
-		assertTrue(result.isEmpty());
+		assertEquals("", result);
 	}
 
 }

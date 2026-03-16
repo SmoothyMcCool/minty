@@ -4,10 +4,12 @@ import tom.api.model.assistant.Assistant;
 
 public interface AssistantRegistryService {
 
-	Assistant createDefaultAssistant(String model);
+	Assistant createDefaultAssistant();
 
-	Assistant createConversationNamingAssistant(String model);
+	Assistant createConversationNamingAssistant();
 
-	Assistant createDiagrammingAssistant(String model);
+	Assistant createDiagrammingAssistant();
+
+	Assistant createSummarizingAssistant();
 
 }

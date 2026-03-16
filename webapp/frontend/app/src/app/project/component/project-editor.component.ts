@@ -151,6 +151,14 @@ export class ProjectEditorComponent {
 		});
 	}
 
+	decomposeAndAddMarkdown() {
+		this.mdFileDialogVisible = false;
+		this.projectService.decomposeAndAddMarkdown(this.project.id, this.document).subscribe((result: string) => {
+			this.alertService.postSuccess(result);
+			this.refresh();
+		});
+	}
+
 	addZipToProject() {
 		this.zipFileDialogVisible = true;
 	}

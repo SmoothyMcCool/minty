@@ -57,3 +57,42 @@ assistants:
 
 
       tools: []
+
+    - name: Summarizer Bot
+      model: gpt-oss:20b
+      contextSize: 128000
+      temperature: 0.1
+      topK: 5
+      shared: false
+      hasMemory: false
+      prompt: |
+         Task: Create an index entry for a document section.
+
+         Document: ${DOCUMENT_NAME}
+         Section Title: ${SECTION_TITLE}
+         Section Location: ${SECTION_BREADCRUMB}
+
+         Output format:
+
+         SUMMARY:
+         1-2 sentences describing the information in this section. Rephrase all ideas in your own language.
+
+         KEYWORDS:
+         (3-5 keywords)
+         - keyword
+         - keyword
+
+         TOPICS:
+         (3-6 items) Rephrase all ideas in your own language.
+         - topic
+         - topic
+         - topic
+
+         QUESTIONS:
+         (2-4 questions) Rephrase all ideas in your own language.
+         - question this section answers
+         - question this section answers
+
+         Text to summarize will follow.
+         ---------
+      tools: []

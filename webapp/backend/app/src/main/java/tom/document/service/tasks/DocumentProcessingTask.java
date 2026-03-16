@@ -1,4 +1,4 @@
-package tom.document.service;
+package tom.document.service.tasks;
 
 import java.io.File;
 import java.util.UUID;
@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import tom.api.DocumentId;
 import tom.document.model.DocumentState;
 import tom.document.model.MintyDoc;
+import tom.document.service.DocumentServiceInternal;
 
 public class DocumentProcessingTask implements Runnable {
 

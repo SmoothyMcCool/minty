@@ -31,8 +31,6 @@ public class ConversationNamingService {
 
 	private static final Logger logger = LogManager.getLogger(ConversationNamingService.class);
 
-	private final String conversationNamingModel;
-
 	private final ConversationRepository conversationRepository;
 	private final AssistantQueryService assistantQueryService;
 	private final AssistantRegistryService assistantRegistryService;
@@ -41,20 +39,18 @@ public class ConversationNamingService {
 
 	public ConversationNamingService(ConversationRepository conversationRepository,
 			AssistantQueryService assistantQueryService, AssistantRegistryService assistantRegistryService,
-			ConversationServiceInternal conversationService, LlmService llmService,
-			MintyConfiguration properties) {
+			ConversationServiceInternal conversationService, LlmService llmService, MintyConfiguration properties) {
 		this.conversationRepository = conversationRepository;
 		this.assistantQueryService = assistantQueryService;
 		this.assistantRegistryService = assistantRegistryService;
 		this.llmService = llmService;
 		this.conversationService = conversationService;
-		conversationNamingModel = properties.getConfig().llm().conversationNamingModel();
 	}
 
 	@Scheduled(fixedDelay = 5000)
 	@Transactional
 	void nameConversations() {
-		assistantRegistryService.createConversationNamingAssistant(conversationNamingModel);
+		assistantRegistryService.createConversationNamingAssistant();
 		List<ConversationEntity> conversations = conversationRepository.findAllByTitle(null);
 
 		// Ignore all conversations internal to workflows.

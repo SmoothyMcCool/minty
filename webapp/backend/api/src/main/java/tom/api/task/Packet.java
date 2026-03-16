@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -18,8 +16,6 @@ public class Packet {
 
 	private static ObjectMapper mapper = JsonMapper.builder().enable(SerializationFeature.INDENT_OUTPUT)
 			.addModule(new JavaTimeModule()).build();
-
-	private static final Pattern LIST_ACCESS_PATTERN = Pattern.compile("([a-zA-Z0-9_]+)\\[(\\d+)]");
 
 	private String id;
 	private List<String> text;
@@ -150,9 +146,9 @@ public class Packet {
 			return String.join(System.lineSeparator(), text);
 		}
 
-		JsonNode node = resolveNode(toJsonTree(), path);
+		JsonNode node = resolveNode(path);
 
-		if (node == null || node.isMissingNode() || node.isNull()) {
+		if (node == null || node.isNull()) {
 			return null;
 		}
 
@@ -161,10 +157,6 @@ public class Packet {
 		}
 
 		return node.toString();
-	}
-
-	public JsonNode resolveNode(String path) {
-		return resolveNode(toJsonTree(), path);
 	}
 
 	public List<JsonNode> resolveArray(String path) {
@@ -204,39 +196,65 @@ public class Packet {
 		return node;
 	}
 
-	private static JsonNode resolveNode(JsonNode current, String path) {
-		String[] parts = path.split("\\.", 2);
-		String head = parts[0];
-		String tail = parts.length > 1 ? parts[1] : null;
+	private JsonNode resolveNode(String path) {
+		JsonNode current = toJsonTree();
+		List<Object> tokens = tokenizePath(path);
 
-		JsonNode next;
-
-		Matcher listMatcher = LIST_ACCESS_PATTERN.matcher(head);
-
-		if (listMatcher.matches()) {
-			String field = listMatcher.group(1);
-			int index = Integer.parseInt(listMatcher.group(2));
-
-			JsonNode arrayNode = current.get(field);
-
-			if (arrayNode == null || !arrayNode.isArray() || index >= arrayNode.size()) {
+		for (Object token : tokens) {
+			if (current == null) {
 				return null;
 			}
 
-			next = arrayNode.get(index);
-
-		} else {
-			next = current.get(head);
-
-			if (next == null) {
-				return null;
+			if (token instanceof String) {
+				current = current.get((String) token);
+			} else if (token instanceof Integer) {
+				int index = (Integer) token;
+				if (!current.isArray() || index >= current.size()) {
+					return null;
+				}
+				current = current.get(index);
 			}
 		}
 
-		if (tail == null) {
-			return next;
-		}
-
-		return resolveNode(next, tail);
+		return current;
 	}
+
+	private static List<Object> tokenizePath(String path) {
+		List<Object> tokens = new ArrayList<>();
+		int i = 0;
+
+		while (i < path.length()) {
+			char c = path.charAt(i);
+
+			if (c == '.') {
+				i++;
+				continue;
+			}
+
+			if (c == '[') {
+				int end = path.indexOf(']', i);
+				String inside = path.substring(i + 1, end).trim();
+
+				if (inside.matches("\\d+")) {
+					tokens.add(Integer.parseInt(inside));
+				} else {
+					inside = inside.replaceAll("^['\"]|['\"]$", "");
+					tokens.add(inside);
+				}
+
+				i = end + 1;
+				continue;
+			}
+
+			int start = i;
+			while (i < path.length() && path.charAt(i) != '.' && path.charAt(i) != '[') {
+				i++;
+			}
+
+			tokens.add(path.substring(start, i));
+		}
+
+		return tokens;
+	}
+
 }

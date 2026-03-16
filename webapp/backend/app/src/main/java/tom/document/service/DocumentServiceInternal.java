@@ -4,15 +4,18 @@ import java.io.File;
 import java.util.List;
 
 import tom.api.DocumentId;
+import tom.api.ProjectId;
 import tom.api.UserId;
-import tom.api.services.DocumentService;
+import tom.api.services.ProjectService;
+import tom.api.services.document.DocumentService;
 import tom.document.model.MintyDoc;
 
 public interface DocumentServiceInternal extends DocumentService {
 
 	void processFile(File file);
 
-	void processFileToMarkdown(DocumentMarkdownProcessingTask task);
+	void processFileToMarkdownAndDecompose(UserId userId, ProjectId projectId, File file,
+			ProjectService projectService);
 
 	void transformAndStore(File file, MintyDoc doc);
 

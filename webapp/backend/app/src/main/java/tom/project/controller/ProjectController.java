@@ -31,7 +31,8 @@ import tom.api.model.project.Project;
 import tom.api.services.ProjectService;
 import tom.config.MintyConfiguration;
 import tom.controller.ResponseWrapper;
-import tom.document.service.markdown.DocumentParser;
+import tom.document.service.DocumentServiceInternal;
+import tom.document.service.extract.DocumentExtractor;
 import tom.model.security.UserDetailsUser;
 
 @Controller
@@ -41,10 +42,13 @@ public class ProjectController {
 	private static final Logger logger = LogManager.getLogger(ProjectController.class);
 
 	private final ProjectService projectService;
+	private final DocumentServiceInternal documentService;
 	private final Path tempFileStore;
 
-	public ProjectController(ProjectService projectService, MintyConfiguration mintyConfig) {
+	public ProjectController(ProjectService projectService, DocumentServiceInternal documentService,
+			MintyConfiguration mintyConfig) {
 		this.projectService = projectService;
+		this.documentService = documentService;
 		tempFileStore = mintyConfig.getConfig().fileStores().temp();
 	}
 
@@ -257,7 +261,8 @@ public class ProjectController {
 				String newName = baseName + ".md";
 				logger.info("Started processing " + newName);
 
-				String markdown = DocumentParser.parse(file);
+				DocumentExtractor extractor = new DocumentExtractor();
+				String markdown = extractor.extract(file);
 
 				projectService.writeFile(user.getId(), projectId, "/" + newName, FileType.markdown, markdown);
 				logger.info("Markdown processing complete for " + file.getName());
@@ -269,6 +274,41 @@ public class ProjectController {
 				logger.error("Markdown processing failed: ", e);
 			} finally {
 				file.delete();
+			}
+
+		} catch (IllegalStateException | IOException e) {
+			logger.error("Failed to store file: ", e);
+			ResponseWrapper<String> response = ResponseWrapper
+					.ApiFailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), List.of(ApiError.REQUEST_FAILED));
+			return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+
+		ResponseWrapper<String> response = ResponseWrapper
+				.SuccessResponse("You'll find your file in the active project.");
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@PostMapping(value = { "/node/convert/markdown/decompose" }, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<ResponseWrapper<String>> convertToMarkdownAndDecompose(
+			@AuthenticationPrincipal UserDetailsUser user, @RequestParam("projectId") ProjectId projectId,
+			@RequestPart("file") MultipartFile mpf) {
+
+		File file = new File(tempFileStore + "/" + mpf.getOriginalFilename());
+
+		try {
+			Files.createDirectories(file.toPath());
+			mpf.transferTo(file);
+
+			try {
+				logger.info("Markdown processing started for " + file.getName());
+				documentService.processFileToMarkdownAndDecompose(user.getId(), projectId, file, projectService);
+
+				ResponseWrapper<String> response = ResponseWrapper
+						.SuccessResponse("Markdown processing started for " + file.getName());
+				return new ResponseEntity<>(response, HttpStatus.OK);
+
+			} catch (Exception e) {
+				logger.error("Markdown processing failed: ", e);
 			}
 
 		} catch (IllegalStateException | IOException e) {
