@@ -22,18 +22,22 @@ public class AssistantRegistryServiceImpl implements AssistantRegistryService {
 	}
 
 	@Override
-	public Assistant createDefaultAssistant(String model) {
-		return assistantRegistry.get("default", model);
+	public Assistant createDefaultAssistant() {
+		return assistantRegistry.get("default");
 	}
 
 	@Override
-	public Assistant createConversationNamingAssistant(String model) {
-		return assistantRegistry.get("Conversation Naming Bot", model);
+	public Assistant createConversationNamingAssistant() {
+		return assistantRegistry.get("Conversation Naming Bot");
 	}
 
 	@Override
-	public Assistant createDiagrammingAssistant(String model) {
-		return assistantRegistry.get("Diagramming Bot", model);
+	public Assistant createDiagrammingAssistant() {
+		return assistantRegistry.get("Diagramming Bot");
 	}
 
+	@Override
+	public Assistant createSummarizingAssistant() {
+		return assistantRegistry.get("Summarizer Bot");
+	}
 }

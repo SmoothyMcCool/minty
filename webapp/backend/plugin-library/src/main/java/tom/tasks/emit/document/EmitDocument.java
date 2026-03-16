@@ -1,5 +1,8 @@
 package tom.tasks.emit.document;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -7,6 +10,7 @@ import java.util.Map;
 
 import tom.api.model.services.ServiceConsumer;
 import tom.api.services.PluginServices;
+import tom.api.services.document.SpreadsheetFormat;
 import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;
@@ -49,7 +53,21 @@ public class EmitDocument extends MintyTask implements ServiceConsumer {
 	@Override
 	public void run() {
 		byte[] data = Base64.getDecoder().decode(config.getBase64());
-		String text = pluginServices.getDocumentService().fileBytesToText(data);
+		Path tempFile = null;
+		String text = "";
+		try {
+			tempFile = Files.createTempFile("temp-", ".tmp");
+			Files.write(tempFile, data);
+			text = pluginServices.getDocumentService().fileToMarkdown(tempFile.toFile(), SpreadsheetFormat.TSV);
+		} catch (IOException e) {
+			error("Failed to read file: ", e);
+		} finally {
+			try {
+				Files.deleteIfExists(tempFile);
+			} catch (IOException e) {
+				error("Failed to delete temporary file: ", e);
+			}
+		}
 
 		Packet p = new Packet();
 		p.setId(null);

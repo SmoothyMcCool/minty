@@ -36,7 +36,9 @@
 		<maven.resources.version>3.4.0</maven.resources.version>
 
 		<!-- Library versions -->
+		<commonmark.version>0.27.1</commonmark.version>
 		<commons.lang.version>3.20.0</commons.lang.version>
+		<docx4j.version>11.5.11</docx4j.version>
 		<hibernate.version>7.2.1.Final</hibernate.version>
 		<hikari.cp.version>7.0.2</hikari.cp.version>
 		<httpcore.version>5.4</httpcore.version>
@@ -50,6 +52,7 @@
 		<jsoup.version>1.22.1</jsoup.version>
 		<mariadb.client.version>3.5.7</mariadb.client.version>
 		<micrometer.version>1.16.2</micrometer.version>
+		<pdfbox.version>3.0.7</pdfbox.version>
 		<pug4j.version>2.3.1</pug4j.version>
 		<spring.version>6.2.15</spring.version>
 		<spring.data.version>2025.0.6</spring.data.version>
@@ -224,6 +227,36 @@
 				<groupId>org.apache.commons</groupId>
 				<artifactId>commons-lang3</artifactId>
 				<version>${commons.lang.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.commonmark</groupId>
+				<artifactId>commonmark</artifactId>
+				<version>${commonmark.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.docx4j</groupId>
+				<artifactId>docx4j-core</artifactId>
+				<version>${docx4j.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.docx4j</groupId>
+				<artifactId>docx4j-JAXB-ReferenceImpl</artifactId>
+				<version>${docx4j.version}</version>
+				<exclusions>
+					<exclusion>
+						<groupId>com.fasterxml.woodstox</groupId>
+						<artifactId>woodstox-core</artifactId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.pdfbox</groupId>
+				<artifactId>pdfbox</artifactId>
+				<version>${pdfbox.version}</version>
 			</dependency>
 
 			<!-- Testing -->

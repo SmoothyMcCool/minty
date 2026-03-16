@@ -2,10 +2,6 @@ package tom.tasks.flowcontrol;
 
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import com.fasterxml.jackson.databind.JsonNode;
 
 import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
@@ -17,8 +13,6 @@ import tom.tasks.TaskGroup;
 
 @RunnableTask
 public class Identify extends MintyTask {
-
-	private static final Pattern LIST_ACCESS_PATTERN = Pattern.compile("([a-zA-Z0-9_]+)\\[(\\d+)]");
 
 	private List<? extends OutputPort> outputs;
 
@@ -138,53 +132,6 @@ public class Identify extends MintyTask {
 	@Override
 	public boolean failed() {
 		return failed;
-	}
-
-	private static JsonNode resolvePath(JsonNode current, String path) {
-
-		String[] parts = path.split("\\.", 2);
-		String head = parts[0];
-		String tail = (parts.length > 1) ? parts[1] : null;
-
-		JsonNode next = null;
-
-		Matcher listMatcher = LIST_ACCESS_PATTERN.matcher(head);
-
-		if (listMatcher.matches()) {
-			// format: field[index]
-			String field = listMatcher.group(1);
-			int index = Integer.parseInt(listMatcher.group(2));
-
-			JsonNode arrayNode = current.get(field);
-			if (arrayNode != null && arrayNode.isArray() && index >= 0 && index < arrayNode.size()) {
-				next = arrayNode.get(index);
-			} else {
-				return null;
-			}
-
-		} else if (head.matches("\\d+")) {
-			// format: .0 when current node is already an array
-			int index = Integer.parseInt(head);
-
-			if (current.isArray() && index >= 0 && index < current.size()) {
-				next = current.get(index);
-			} else {
-				return null;
-			}
-
-		} else {
-			// regular object field
-			next = current.get(head);
-			if (next == null) {
-				return null;
-			}
-		}
-
-		if (tail == null) {
-			return next;
-		}
-
-		return resolvePath(next, tail);
 	}
 
 }

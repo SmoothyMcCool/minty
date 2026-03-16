@@ -1,7 +1,6 @@
 import { CommonModule } from "@angular/common";
 import { Component, EventEmitter, Input, Output } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import * as path from "path";
 import { ProjectNode } from "src/app/model/project/project-node";
 
 @Component({

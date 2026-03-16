@@ -198,20 +198,9 @@ public class ProjectServiceImpl implements ProjectService {
 	@Transactional
 	public int deleteNode(UserId userId, ProjectId projectId, String path) {
 		// Make sure node exists. Will throw if not.
-		getRequiredNode(userId, projectId, path);
-
-		List<ProjectNodeEntity> affected = nodeRepository
-				.findByProjectIdAndPathStartingWithAndOwnerId(projectId.getValue(), path, userId);
-
-		for (ProjectNodeEntity n : affected) {
-			if (n.getType() == NodeType.File) {
-				fileContentRepository.findByNodeIdOrderByVersionDesc(n.getId()).forEach(fileContentRepository::delete);
-			}
-		}
-
-		nodeRepository.deleteAll(affected);
-
-		return affected.size();
+		ProjectNodeEntity node = getRequiredNode(userId, projectId, path);
+		nodeRepository.delete(node);
+		return 1;
 	}
 
 	@Override

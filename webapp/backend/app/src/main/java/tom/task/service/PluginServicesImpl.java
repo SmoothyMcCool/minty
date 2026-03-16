@@ -4,7 +4,6 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import tom.api.services.ConversationService;
-import tom.api.services.DocumentService;
 import tom.api.services.HttpService;
 import tom.api.services.PluginServices;
 import tom.api.services.ProjectService;
@@ -13,6 +12,7 @@ import tom.api.services.UserService;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
 import tom.api.services.cache.CacheService;
+import tom.api.services.document.DocumentService;
 import tom.api.services.python.PythonService;
 import tom.conversation.service.ConversationServiceInternal;
 

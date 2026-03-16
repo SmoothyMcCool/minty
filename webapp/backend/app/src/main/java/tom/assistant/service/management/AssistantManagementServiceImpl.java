@@ -31,7 +31,6 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 	private final AssistantRegistryService assistantRegistryService;
 	private final LlmService llmService;
 	private ConversationServiceInternal conversationService;
-	private final MintyConfiguration properties;
 
 	public AssistantManagementServiceImpl(AssistantRepository assistantRepository,
 			AssistantDocumentLinkService assistantDocumentLinkService,
@@ -40,7 +39,6 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 		this.assistantDocumentLinkService = assistantDocumentLinkService;
 		this.assistantRegistryService = assistantRegistryService;
 		this.llmService = llmService;
-		this.properties = properties;
 	}
 
 	@Override
@@ -103,11 +101,14 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 	@Override
 	@Transactional
 	public Assistant findAssistant(UserId userId, AssistantId assistantId) {
-		if (assistantId.equals(AssistantManagementService.ConversationNamingAssistantId)) {
-			return assistantRegistryService
-					.createConversationNamingAssistant(properties.getConfig().llm().conversationNamingModel());
+		if (assistantId.equals(AssistantManagementService.DefaultAssistantId)) {
+			return assistantRegistryService.createDefaultAssistant();
+		} else if (assistantId.equals(AssistantManagementService.ConversationNamingAssistantId)) {
+			return assistantRegistryService.createConversationNamingAssistant();
 		} else if (assistantId.equals(AssistantManagementService.DiagrammingAssistantId)) {
-			return assistantRegistryService.createDiagrammingAssistant(properties.getConfig().llm().diagrammingModel());
+			return assistantRegistryService.createDiagrammingAssistant();
+		} else if (assistantId.equals(AssistantManagementService.DocumentSummarizingAssistantId)) {
+			return assistantRegistryService.createSummarizingAssistant();
 		}
 
 		try {

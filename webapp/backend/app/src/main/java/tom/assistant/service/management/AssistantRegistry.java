@@ -50,8 +50,8 @@ public class AssistantRegistry {
 		}
 	}
 
-	public Assistant get(String name, String model) {
-		return new AssistantBuilder(assistants.get(name)).model(model).build();
+	public Assistant get(String name) {
+		return new AssistantBuilder(assistants.get(name)).build();
 	}
 
 	public boolean has(String key) {

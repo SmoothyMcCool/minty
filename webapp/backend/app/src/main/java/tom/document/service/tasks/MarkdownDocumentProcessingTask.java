@@ -1,4 +1,4 @@
-package tom.document.service;
+package tom.document.service.tasks;
 
 import java.io.File;
 
@@ -9,17 +9,17 @@ import tom.api.ProjectId;
 import tom.api.UserId;
 import tom.api.model.project.FileType;
 import tom.api.services.ProjectService;
-import tom.document.service.markdown.DocumentParser;
+import tom.document.service.extract.DocumentExtractor;
 
-public class DocumentMarkdownProcessingTask implements Runnable {
+public class MarkdownDocumentProcessingTask implements Runnable {
 
-	private static final Logger logger = LogManager.getLogger(DocumentMarkdownProcessingTask.class);
+	private static final Logger logger = LogManager.getLogger(MarkdownDocumentProcessingTask.class);
 	private final UserId userId;
 	private final ProjectId projectId;
 	private final File file;
 	private final ProjectService projectService;
 
-	public DocumentMarkdownProcessingTask(UserId userId, ProjectId projectId, File file,
+	public MarkdownDocumentProcessingTask(UserId userId, ProjectId projectId, File file,
 			ProjectService projectService) {
 		this.userId = userId;
 		this.projectId = projectId;
@@ -36,7 +36,8 @@ public class DocumentMarkdownProcessingTask implements Runnable {
 			String newName = baseName + ".md";
 			logger.info("Started processing " + newName);
 
-			String markdown = DocumentParser.parse(file);
+			DocumentExtractor extractor = new DocumentExtractor();
+			String markdown = extractor.extract(file);
 
 			projectService.writeFile(userId, projectId, "/" + newName, FileType.markdown, markdown);
 			logger.info("Markdown processing complete for " + file.getName());

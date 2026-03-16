@@ -1,8 +1,6 @@
 package tom.document.service;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
@@ -13,8 +11,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.tika.Tika;
-import org.apache.tika.exception.TikaException;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.model.transformer.KeywordMetadataEnricher;
@@ -34,12 +30,20 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.transaction.Transactional;
 import tom.api.DocumentId;
+import tom.api.ProjectId;
 import tom.api.UserId;
+import tom.api.services.ProjectService;
+import tom.api.services.assistant.AssistantManagementService;
+import tom.api.services.assistant.AssistantQueryService;
+import tom.api.services.document.SpreadsheetFormat;
 import tom.config.MintyConfiguration;
+import tom.conversation.service.ConversationServiceInternal;
 import tom.document.model.DocumentState;
 import tom.document.model.MintyDoc;
 import tom.document.repository.DocumentRepository;
-import tom.document.service.spreadsheet.SpreadsheetExtractor;
+import tom.document.service.extract.DocumentExtractor;
+import tom.document.service.tasks.DecomposedMarkdownDocumentProcessingTask;
+import tom.document.service.tasks.DocumentProcessingTask;
 import tom.llm.service.LlmService;
 
 @Service
@@ -52,6 +56,9 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 	private final AssistantDocumentLinkService assistantDocumentLinkService;
 	private final DocumentRepository documentRepository;
 	private final JdbcTemplate vectorJdbcTemplate;
+	private final ConversationServiceInternal conversationService;
+	private final AssistantManagementService assistantManagementService;
+	private final AssistantQueryService assistantQueryService;
 	private final int keywordsPerDocument;
 	private final int documentTargetChunkSize;
 	private final int macroTargetChunkSize;
@@ -64,12 +71,16 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 	public DocumentServiceImpl(DocumentRepository documentRepository,
 			@Qualifier("fileProcessingExecutor") ThreadPoolTaskExecutor fileProcessingExecutor, LlmService llmService,
 			AssistantDocumentLinkService assistantDocumentLinkService, MintyConfiguration properties,
-			JdbcTemplate vectorJdbcTemplate) {
+			JdbcTemplate vectorJdbcTemplate, ConversationServiceInternal conversationService,
+			AssistantManagementService assistantManagementService, AssistantQueryService assistantQueryService) {
 		this.fileProcessingExecutor = fileProcessingExecutor;
 		this.llmService = llmService;
 		this.documentRepository = documentRepository;
 		this.assistantDocumentLinkService = assistantDocumentLinkService;
 		this.vectorJdbcTemplate = vectorJdbcTemplate;
+		this.conversationService = conversationService;
+		this.assistantManagementService = assistantManagementService;
+		this.assistantQueryService = assistantQueryService;
 		docFileStore = properties.getConfig().fileStores().docs();
 		keywordsPerDocument = properties.getConfig().llm().embedding().keywordsPerDocument();
 		documentTargetChunkSize = properties.getConfig().llm().embedding().documentTargetChunkSize();
@@ -126,7 +137,10 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 	}
 
 	@Override
-	public void processFileToMarkdown(DocumentMarkdownProcessingTask task) {
+	public void processFileToMarkdownAndDecompose(UserId userId, ProjectId projectId, File file,
+			ProjectService projectService) {
+		DecomposedMarkdownDocumentProcessingTask task = new DecomposedMarkdownDocumentProcessingTask(userId, projectId,
+				file, projectService, conversationService, assistantManagementService, assistantQueryService);
 		fileProcessingExecutor.submit(task);
 	}
 
@@ -307,28 +321,14 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 	}
 
 	@Override
-	public String fileBytesToText(byte[] bytes) {
-		Tika tika = new Tika();
-		tika.setMaxStringLength(-1);
-		String mime = tika.detect(bytes);
-
+	public String fileToMarkdown(File file, SpreadsheetFormat format) {
 		try {
-			if (isSpreadsheet(mime)) {
-				return SpreadsheetExtractor.extract(bytes);
-			}
-
-			return tika.parseToString(new ByteArrayInputStream(bytes));
-		} catch (IOException | TikaException e) {
+			DocumentExtractor extractor = new DocumentExtractor();
+			extractor.setSpreadsheetFormat(format);
+			return extractor.extract(file);
+		} catch (Exception e) {
 			throw new RuntimeException("Failed to parse file.", e);
 		}
-	}
-
-	private boolean isSpreadsheet(String mime) {
-
-		return mime != null && (mime.equals("application/vnd.ms-excel")
-				|| mime.equals("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-				|| mime.equals("application/vnd.ms-excel.sheet.macroenabled.12")
-				|| mime.equals("application/vnd.oasis.opendocument.spreadsheet"));
 	}
 
 }

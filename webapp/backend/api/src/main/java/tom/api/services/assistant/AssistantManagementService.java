@@ -13,6 +13,8 @@ public interface AssistantManagementService {
 	final AssistantId ConversationNamingAssistantId = new AssistantId(
 			UUID.fromString("00000000-0000-0000-0000-000000000001"));
 	final AssistantId DiagrammingAssistantId = new AssistantId(UUID.fromString("00000000-0000-0000-0000-000000000002"));
+	final AssistantId DocumentSummarizingAssistantId = new AssistantId(
+			UUID.fromString("00000000-0000-0000-0000-000000000003"));
 
 	Assistant createAssistant(UserId userId, Assistant assistant);
 

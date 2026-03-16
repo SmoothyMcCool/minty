@@ -51,9 +51,9 @@ public class FormatText extends MintyTask {
 	@Override
 	public void run() {
 		TemplateRenderer renderer = new TemplateRenderer();
-		List<String> text = renderer.render(input, config.getFormat());
+		String rendered = renderer.render(input, config.getFormat());
 		Packet result = new Packet(input);
-		result.addTextList(text);
+		result.addTextList(List.of(rendered));
 
 		outputs.get(0).write(result);
 	}
