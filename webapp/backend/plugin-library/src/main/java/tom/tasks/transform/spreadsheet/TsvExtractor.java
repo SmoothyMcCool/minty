@@ -81,27 +81,30 @@ public final class TsvExtractor {
 				continue;
 			}
 
-			// Header line: starts with a tab and contains at least one tab
-			if (headerTokens == null && line.startsWith("\t") && line.contains("\t")) {
+			// Any line containing a tab is either a header or data row
+			if (!line.contains("\t")) {
+				continue;
+			}
+
+			// Header line: first tab-delimited line encountered
+			if (headerTokens == null) {
 				headerTokens = splitLine(line.trim());
 				continue;
 			}
 
 			// Data row
-			if (headerTokens != null && line.startsWith("\t") && line.contains("\t")) {
-				List<String> tokens = splitLine(line.trim());
-				Map<String, Object> row = new LinkedHashMap<>();
+			List<String> tokens = splitLine(line.trim());
+			Map<String, Object> row = new LinkedHashMap<>();
 
-				for (int i = 0; i < headerTokens.size(); i++) {
-					String key = headerTokens.get(i);
-					String value = i < tokens.size() ? tokens.get(i) : null;
-					row.put(key, parseValue(value));
-				}
-
-				Packet rowPacket = new Packet();
-				rowPacket.addData(row);
-				result.add(rowPacket);
+			for (int i = 0; i < headerTokens.size(); i++) {
+				String key = headerTokens.get(i);
+				String value = i < tokens.size() ? tokens.get(i) : null;
+				row.put(key, parseValue(value));
 			}
+
+			Packet rowPacket = new Packet();
+			rowPacket.addData(row);
+			result.add(rowPacket);
 		}
 
 		if (headerTokens == null) {

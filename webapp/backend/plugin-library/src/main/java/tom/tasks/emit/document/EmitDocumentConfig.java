@@ -4,21 +4,30 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import tom.api.task.TaskConfigSpec;
 import tom.api.task.TaskConfigTypes;
 
 public class EmitDocumentConfig implements TaskConfigSpec {
 
 	public static final String File = "File";
-	String base64;
+	private FileData fileData;
+
+	private static final ObjectMapper mapper = new ObjectMapper();
 
 	public EmitDocumentConfig() {
-		base64 = "";
+		fileData = new FileData();
 	}
 
 	public EmitDocumentConfig(Map<String, Object> config) {
 		if (config.containsKey(File)) {
-			base64 = config.get(File).toString();
+			try {
+				fileData = mapper.readValue(mapper.writeValueAsString(config.get(File)), FileData.class);
+			} catch (JsonProcessingException e) {
+				fileData = null;
+			}
 		}
 	}
 
@@ -29,8 +38,8 @@ public class EmitDocumentConfig implements TaskConfigSpec {
 		return config;
 	}
 
-	String getBase64() {
-		return base64;
+	FileData getFileData() {
+		return fileData;
 	}
 
 	@Override
@@ -45,6 +54,6 @@ public class EmitDocumentConfig implements TaskConfigSpec {
 
 	@Override
 	public Map<String, Object> getValues() {
-		return Map.of(File, base64);
+		return Map.of(File, fileData);
 	}
 }

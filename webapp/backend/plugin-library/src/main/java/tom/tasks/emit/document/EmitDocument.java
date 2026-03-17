@@ -3,6 +3,7 @@ package tom.tasks.emit.document;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -52,11 +53,22 @@ public class EmitDocument extends MintyTask implements ServiceConsumer {
 
 	@Override
 	public void run() {
-		byte[] data = Base64.getDecoder().decode(config.getBase64());
+		FileData fileData = config.getFileData();
+
+		byte[] data = Base64.getDecoder().decode(fileData.getFile());
+		String extension = ".tmp";
+
+		Path path = Paths.get(fileData.getName());
+		String fileName = path.getFileName().toString();
+		int lastIndexOfDot = fileName.lastIndexOf('.');
+		if (lastIndexOfDot != -1 && lastIndexOfDot != fileName.length() - 1) {
+			extension = fileName.substring(lastIndexOfDot + 1);
+		}
+
 		Path tempFile = null;
 		String text = "";
 		try {
-			tempFile = Files.createTempFile("temp-", ".tmp");
+			tempFile = Files.createTempFile("temp-", "." + extension);
 			Files.write(tempFile, data);
 			text = pluginServices.getDocumentService().fileToMarkdown(tempFile.toFile(), SpreadsheetFormat.TSV);
 		} catch (IOException e) {

@@ -1,10 +1,15 @@
 package tom.project.controller;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Base64;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,6 +32,7 @@ import tom.api.ProjectId;
 import tom.api.model.project.FileType;
 import tom.api.model.project.NodeContent;
 import tom.api.model.project.NodeInfo;
+import tom.api.model.project.NodeType;
 import tom.api.model.project.Project;
 import tom.api.services.ProjectService;
 import tom.config.MintyConfiguration;
@@ -334,6 +340,40 @@ public class ProjectController {
 			logger.warn("Failed to import zip.", e);
 			return ResponseEntity
 					.ok(ResponseWrapper.ApiFailureResponse(500, List.of(ApiError.FAILED_TO_CREATE_OR_UPDATE_ENTRY)));
+		}
+	}
+
+	@GetMapping(value = "/node/export/zip")
+	public ResponseEntity<ResponseWrapper<String>> exportZip(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("projectId") ProjectId projectId) {
+
+		try {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+			try (ZipOutputStream zip = new ZipOutputStream(baos)) {
+
+				List<NodeInfo> nodes = projectService.describeTree(user.getId(), projectId);
+
+				for (NodeInfo node : nodes) {
+
+					if (node.getType() == NodeType.Folder) {
+						continue;
+					}
+
+					NodeContent content = projectService.readNode(user.getId(), projectId, node.getPath());
+
+					ZipEntry entry = new ZipEntry(node.getPath().replaceFirst("^/", ""));
+					zip.putNextEntry(entry);
+					zip.write(content.getContent().getBytes(StandardCharsets.UTF_8));
+					zip.closeEntry();
+				}
+			}
+
+			String base64 = Base64.getEncoder().encodeToString(baos.toByteArray());
+			return ResponseEntity.ok(ResponseWrapper.SuccessResponse(base64));
+
+		} catch (IOException e) {
+			return ResponseEntity.ok(ResponseWrapper.ApiFailureResponse(500, List.of(ApiError.FAILED_TO_ZIP_PROJECT)));
 		}
 	}
 

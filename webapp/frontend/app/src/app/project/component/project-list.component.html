@@ -13,6 +13,9 @@
 			<button type="button" class="btn btn-sm btn-primary me-4" *ngIf="activeProject !== project.id" (click)="setActive(project)">
 				Set Active
 			</button>
+			<button type="button" class="btn btn-sm me-2" style="font-size: 14px" (click)="downloadProject(project)">
+				<i class="bi bi-download"></i>
+			</button>
 			<button type="button" class="btn btn-sm p-0" style="font-size: 14px; color: red"
 				[disabled]="deleteInProgress" (click)="deleteProject(project)">
 				<i class="bi bi-trash3"></i>

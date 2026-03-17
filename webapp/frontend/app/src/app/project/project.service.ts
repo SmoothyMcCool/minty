@@ -25,6 +25,7 @@ export class ProjectService {
 	private static readonly WriteFile = 'api/project/node/file';
 	private static readonly ConvertToMarkdownAndAddFile = 'api/project/node/convert/markdown';
 	private static readonly ConvertToMarkdownDecomposeAndAddFile = 'api/project/node/convert/markdown/decompose';
+	private static readonly ExportZip = 'api/project/node/export/zip';
 	private static readonly ImportZip = 'api/project/node/import/zip';
 	private static readonly CreateFolder = 'api/project/node/folder';
 	private static readonly MoveNode = 'api/project/node/move';
@@ -193,6 +194,33 @@ export class ProjectService {
 			);
 	}
 
+	downloadProjectZip(projectId: string) {
+		const params = new HttpParams()
+			.set('projectId', projectId);
+
+		this.http.get<ApiResult>(ProjectService.ExportZip, { params: params }).pipe(
+			this.handleError(),
+			map((result: ApiResult) => result.data as string)
+		).subscribe(base64 => {
+			const binary = atob(base64);
+			const bytes = new Uint8Array(binary.length);
+			for (let i = 0; i < binary.length; i++) {
+				bytes[i] = binary.charCodeAt(i);
+			}
+
+			const blob = new Blob([bytes], { type: 'application/zip' });
+			const url = URL.createObjectURL(blob);
+			const link = document.createElement('a');
+			link.href = url;
+			link.download = 'project-' + projectId + '.zip';
+			link.style.display = 'none';
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			window.URL.revokeObjectURL(url);
+		});
+	}
+	
 	// -------------------------
 	// CREATE FOLDER
 	// -------------------------

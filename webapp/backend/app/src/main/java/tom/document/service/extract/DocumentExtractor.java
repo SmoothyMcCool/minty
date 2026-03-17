@@ -35,9 +35,13 @@ public class DocumentExtractor {
 
 		String markdown;
 
+		String name = file.getName().toLowerCase();
+		boolean isCsv = mime.equals("text/csv") || name.endsWith(".csv");
+		boolean isTsv = name.endsWith(".tsv") || name.endsWith(".tab");
+
 		if (mime.contains("wordprocessingml")) {
 			markdown = DocxExtractor.extract(file);
-		} else if (mime.contains("spreadsheet") || mime.contains("excel")) {
+		} else if (isCsv || isTsv || mime.contains("spreadsheet") || mime.contains("excel")) {
 			markdown = SpreadsheetExtractor.extract(file, format);
 		} else if (mime.equals("application/pdf")) {
 			markdown = PdfExtractor.extract(file);
