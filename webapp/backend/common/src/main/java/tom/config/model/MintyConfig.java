@@ -8,8 +8,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
 public record MintyConfig(OutputConfig output, SessionConfig session, FileStoresConfig fileStores, DatabaseConfig db,
-		LlmConfig llm, ThreadPoolConfig threads, String secret, List<PluginConfig> pluginConfiguration,
-		List<String> userDefaults, Map<String, Object> systemDefaults) {
+		LlmConfig llm, ParsingConfig parsingConfiguration, ThreadPoolConfig threads, String secret,
+		List<PluginConfig> pluginConfiguration, List<String> userDefaults, Map<String, Object> systemDefaults) {
 
 	public String prettyPrint() {
 		try {

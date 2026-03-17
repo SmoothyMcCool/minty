@@ -2,8 +2,6 @@ package tom.tasks.transform.formattext;
 
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
@@ -23,8 +21,6 @@ public class FormatText extends MintyTask {
 	private String error;
 	private Packet result;
 	private boolean failed;
-
-	private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\{([^{}]+)}");
 
 	public FormatText() {
 		input = null;
@@ -146,23 +142,4 @@ public class FormatText extends MintyTask {
 		return failed;
 	}
 
-	public String expandTemplate(Packet packet, String template) {
-		Matcher matcher = PLACEHOLDER_PATTERN.matcher(template);
-		StringBuffer sb = new StringBuffer();
-
-		while (matcher.find()) {
-			String placeholder = matcher.group(0);
-			String path = matcher.group(1).strip();
-
-			String value = packet.resolve(path);
-
-			if (value != null) {
-				matcher.appendReplacement(sb, Matcher.quoteReplacement(value));
-			} else {
-				matcher.appendReplacement(sb, Matcher.quoteReplacement(placeholder));
-			}
-		}
-		matcher.appendTail(sb);
-		return sb.toString();
-	}
 }

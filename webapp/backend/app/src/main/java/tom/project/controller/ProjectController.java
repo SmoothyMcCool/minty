@@ -35,10 +35,10 @@ import tom.api.model.project.NodeInfo;
 import tom.api.model.project.NodeType;
 import tom.api.model.project.Project;
 import tom.api.services.ProjectService;
+import tom.api.services.document.extract.DocumentExtractorService;
 import tom.config.MintyConfiguration;
 import tom.controller.ResponseWrapper;
 import tom.document.service.DocumentServiceInternal;
-import tom.document.service.extract.DocumentExtractor;
 import tom.model.security.UserDetailsUser;
 
 @Controller
@@ -49,12 +49,14 @@ public class ProjectController {
 
 	private final ProjectService projectService;
 	private final DocumentServiceInternal documentService;
+	private final DocumentExtractorService documentExtractorService;
 	private final Path tempFileStore;
 
 	public ProjectController(ProjectService projectService, DocumentServiceInternal documentService,
-			MintyConfiguration mintyConfig) {
+			MintyConfiguration mintyConfig, DocumentExtractorService documentExtractorService) {
 		this.projectService = projectService;
 		this.documentService = documentService;
+		this.documentExtractorService = documentExtractorService;
 		tempFileStore = mintyConfig.getConfig().fileStores().temp();
 	}
 
@@ -267,8 +269,7 @@ public class ProjectController {
 				String newName = baseName + ".md";
 				logger.info("Started processing " + newName);
 
-				DocumentExtractor extractor = new DocumentExtractor();
-				String markdown = extractor.extract(file);
+				String markdown = documentExtractorService.extract(file);
 
 				projectService.writeFile(user.getId(), projectId, "/" + newName, FileType.markdown, markdown);
 				logger.info("Markdown processing complete for " + file.getName());

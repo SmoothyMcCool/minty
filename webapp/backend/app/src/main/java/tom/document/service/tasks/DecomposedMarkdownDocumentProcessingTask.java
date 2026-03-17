@@ -25,9 +25,9 @@ import tom.api.services.assistant.AssistantQueryService;
 import tom.api.services.assistant.ConversationInUseException;
 import tom.api.services.assistant.QueueFullException;
 import tom.api.services.assistant.StringResult;
+import tom.api.services.document.extract.DocumentExtractorService;
+import tom.api.services.document.extract.Section;
 import tom.conversation.service.ConversationServiceInternal;
-import tom.document.service.extract.DocumentExtractor;
-import tom.document.service.tasks.MarkdownSectionSplitter.Section;
 
 public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 
@@ -39,12 +39,14 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 	private final ConversationServiceInternal conversationService;
 	private final AssistantManagementService assistantManagementService;
 	private final AssistantQueryService assistantQueryService;
+	private final DocumentExtractorService documentExtractorService;
 	private final String documentName;
 	private final String documentFolder;
 
 	public DecomposedMarkdownDocumentProcessingTask(UserId userId, ProjectId projectId, File file,
 			ProjectService projectService, ConversationServiceInternal conversationService,
-			AssistantManagementService assistantManagementService, AssistantQueryService assistantQueryService) {
+			AssistantManagementService assistantManagementService, AssistantQueryService assistantQueryService,
+			DocumentExtractorService documentExtractorService) {
 		this.userId = userId;
 		this.projectId = projectId;
 		this.file = file;
@@ -52,6 +54,7 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 		this.conversationService = conversationService;
 		this.assistantManagementService = assistantManagementService;
 		this.assistantQueryService = assistantQueryService;
+		this.documentExtractorService = documentExtractorService;
 
 		String filename = file.getName();
 		int lastDot = filename.lastIndexOf('.');
@@ -67,8 +70,7 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 			logger.info("Started processing " + documentName);
 
 			// Parse whole document to markdown.
-			DocumentExtractor extractor = new DocumentExtractor();
-			String markdown = extractor.extract(file);
+			String markdown = documentExtractorService.extract(file);
 
 			// Split into sections.
 			List<Section> sections = MarkdownSectionSplitter.split(markdown);
@@ -96,7 +98,7 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 
 		for (Section s : sections) {
 			String filename = sectionFilename(s);
-			String breadcrumb = buildBreadcrumb(sections, s);
+			String breadcrumb = documentExtractorService.buildBreadcrumb(sections, s);
 
 			md.append("### ").append(s.index).append(". ").append(s.title).append("\n");
 			md.append("   File: `").append(filename).append("`\n");
@@ -182,26 +184,6 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 			String name = sectionFilename(s);
 			projectService.writeFile(userId, projectId, documentFolder + "/" + name, FileType.markdown, s.content);
 		}
-	}
-
-	/**
-	 * Builds a human-readable breadcrumb trail for a section by walking up the
-	 * parent chain. e.g. "System Design > Interface Design > Serial Interface"
-	 */
-	private String buildBreadcrumb(List<Section> sections, Section target) {
-		StringBuilder crumb = new StringBuilder(target.title);
-		Integer parentIndex = target.parentIndex;
-
-		while (parentIndex != null) {
-			final int idx = parentIndex;
-			Section parent = sections.stream().filter(s -> s.index == idx).findFirst().orElse(null);
-			if (parent == null)
-				break;
-			crumb.insert(0, parent.title + " > ");
-			parentIndex = parent.parentIndex;
-		}
-
-		return crumb.toString();
 	}
 
 	/**

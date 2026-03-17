@@ -15,8 +15,7 @@ public class TemplateRenderer {
 	private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\{([^{}]+)}");
 
 	public String render(Packet packet, String template) {
-		JsonNode root = packetToNode(packet);
-		return renderBlock(packet, root, template).strip();
+		return renderBlock(packet, null, template).strip();
 	}
 
 	private String renderBlock(Packet packet, JsonNode context, String template) {
@@ -30,20 +29,14 @@ public class TemplateRenderer {
 
 		while (matcher.find()) {
 			String path = matcher.group(1).strip();
-			String block = matcher.group(2);
-
-			// normalize leading/trailing newline caused by template layout
-			if (block.startsWith("\n")) {
-				block = block.substring(1);
-			}
+			String block = matcher.group(2).replaceFirst("^\\r?\\n", "");
 
 			JsonNode node = resolveNode(packet, context, path);
 			StringBuilder replacement = new StringBuilder();
 
 			if (node != null && node.isArray()) {
 				for (JsonNode element : node) {
-					String rendered = renderBlock(packet, element, block);
-					replacement.append(rendered);
+					replacement.append(renderBlock(packet, element, block));
 				}
 			}
 
@@ -59,21 +52,13 @@ public class TemplateRenderer {
 		StringBuffer sb = new StringBuffer();
 
 		while (matcher.find()) {
-			String placeholder = matcher.group(1).strip();
-			JsonNode node = resolveNode(packet, context, placeholder);
+			String path = matcher.group(1).strip();
+			JsonNode node = resolveNode(packet, context, path);
 
-			if (node != null && !node.isNull()) {
-				String value;
-				if (node.isValueNode()) {
-					value = node.asText();
-				} else {
-					value = node.toString();
-				}
-				matcher.appendReplacement(sb, Matcher.quoteReplacement(value));
-			} else {
-				// preserve placeholder
-				matcher.appendReplacement(sb, Matcher.quoteReplacement(matcher.group(0)));
-			}
+			String value = (node != null && !node.isNull()) ? (node.isValueNode() ? node.asText() : node.toString())
+					: matcher.group(0);
+
+			matcher.appendReplacement(sb, Matcher.quoteReplacement(value));
 		}
 
 		matcher.appendTail(sb);
@@ -81,65 +66,42 @@ public class TemplateRenderer {
 	}
 
 	private JsonNode resolveNode(Packet packet, JsonNode context, String path) {
-		// try relative resolution first
-		JsonNode node = resolveAgainstNode(context, path);
-
-		if (node != null) {
-			return node;
+		if (context != null) {
+			JsonNode node = resolveAgainstContext(context, path);
+			if (node != null) {
+				return node;
+			}
 		}
-
-		// fallback to full packet path
-		Object obj = packet.resolveObject(path);
-
-		if (obj instanceof JsonNode) {
-			return (JsonNode) obj;
-		}
-
-		if (obj != null) {
-			return packetToNode(packet).get(path);
-		}
-
-		return null;
+		return packet.resolveNode(path);
 	}
 
-	private JsonNode resolveAgainstNode(JsonNode node, String path) {
-		List<Object> tokens = tokenize(path);
-		JsonNode current = node;
+	private JsonNode resolveAgainstContext(JsonNode context, String path) {
+		List<String> parts = tokenize(path);
+		JsonNode current = context;
 
-		for (Object token : tokens) {
-			if (current == null) {
+		for (String part : parts) {
+			if (current == null)
 				return null;
-			}
 
-			if (token instanceof String) {
-				String field = (String) token;
-
-				if (current.has(field)) {
-					current = current.get(field);
-				} else {
+			if (part.matches("\\d+")) {
+				int index = Integer.parseInt(part);
+				if (!current.isArray() || index >= current.size())
 					return null;
-				}
-
-			} else if (token instanceof Integer) {
-				int index = (Integer) token;
-
-				if (!current.isArray() || index >= current.size()) {
-					return null;
-				}
-
 				current = current.get(index);
+			} else {
+				if (!current.has(part))
+					return null;
+				current = current.get(part);
 			}
 		}
-
 		return current;
 	}
 
-	private List<Object> tokenize(String path) {
-		List<Object> tokens = new ArrayList<>();
+	private List<String> tokenize(String path) {
+		List<String> tokens = new ArrayList<>();
 		int i = 0;
 
 		while (i < path.length()) {
-
 			char c = path.charAt(i);
 
 			if (c == '.') {
@@ -150,35 +112,19 @@ public class TemplateRenderer {
 			if (c == '[') {
 				int end = path.indexOf(']', i);
 				String inside = path.substring(i + 1, end).trim();
-
-				if (inside.matches("\\d+")) {
-					tokens.add(Integer.parseInt(inside));
-				} else {
-					inside = inside.replaceAll("^['\"]|['\"]$", "");
-					tokens.add(inside);
-				}
-
+				// strip quotes for ['Multi Word'] style
+				inside = inside.replaceAll("^['\"]|['\"]$", "");
+				tokens.add(inside);
 				i = end + 1;
 				continue;
 			}
 
 			int start = i;
-
-			while (i < path.length() && path.charAt(i) != '.' && path.charAt(i) != '[') {
+			while (i < path.length() && path.charAt(i) != '.' && path.charAt(i) != '[')
 				i++;
-			}
-
 			tokens.add(path.substring(start, i));
 		}
 
 		return tokens;
-	}
-
-	private JsonNode packetToNode(Packet packet) {
-		try {
-			return new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(packet.toMap());
-		} catch (Exception e) {
-			throw new RuntimeException("Failed to convert packet to JSON tree", e);
-		}
 	}
 }

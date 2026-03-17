@@ -9,7 +9,7 @@ import tom.api.ProjectId;
 import tom.api.UserId;
 import tom.api.model.project.FileType;
 import tom.api.services.ProjectService;
-import tom.document.service.extract.DocumentExtractor;
+import tom.api.services.document.extract.DocumentExtractorService;
 
 public class MarkdownDocumentProcessingTask implements Runnable {
 
@@ -18,13 +18,15 @@ public class MarkdownDocumentProcessingTask implements Runnable {
 	private final ProjectId projectId;
 	private final File file;
 	private final ProjectService projectService;
+	private final DocumentExtractorService documentExtractorService;
 
-	public MarkdownDocumentProcessingTask(UserId userId, ProjectId projectId, File file,
-			ProjectService projectService) {
+	public MarkdownDocumentProcessingTask(UserId userId, ProjectId projectId, File file, ProjectService projectService,
+			DocumentExtractorService documentExtractorService) {
 		this.userId = userId;
 		this.projectId = projectId;
 		this.file = file;
 		this.projectService = projectService;
+		this.documentExtractorService = documentExtractorService;
 	}
 
 	@Override
@@ -36,8 +38,7 @@ public class MarkdownDocumentProcessingTask implements Runnable {
 			String newName = baseName + ".md";
 			logger.info("Started processing " + newName);
 
-			DocumentExtractor extractor = new DocumentExtractor();
-			String markdown = extractor.extract(file);
+			String markdown = documentExtractorService.extract(file);
 
 			projectService.writeFile(userId, projectId, "/" + newName, FileType.markdown, markdown);
 			logger.info("Markdown processing complete for " + file.getName());

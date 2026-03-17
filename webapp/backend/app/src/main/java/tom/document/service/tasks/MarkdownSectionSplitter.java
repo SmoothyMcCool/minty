@@ -3,15 +3,9 @@ package tom.document.service.tasks;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MarkdownSectionSplitter {
+import tom.api.services.document.extract.Section;
 
-	public static class Section {
-		public int index;
-		public int level;
-		public String title;
-		public String content;
-		public Integer parentIndex; // null if top-level
-	}
+public class MarkdownSectionSplitter {
 
 	public static List<Section> split(String markdown) {
 		List<Section> sections = new ArrayList<>();

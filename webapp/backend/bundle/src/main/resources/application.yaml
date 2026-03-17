@@ -87,6 +87,32 @@ llm:
     batchSize: 1
     maxEmbeddingTokens: 700
 
+# Document parsing configuration
+parsingConfiguration:
+  pandocPath: D:\Applications\pandoc\pandoc.exe
+  pandocMimeTypes:
+    - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+    - application/msword
+    - application/vnd.oasis.opendocument.text
+    - text/html
+    - text/markdown
+    - application/rtf
+    - text/rst
+    - text/x-rst
+    - application/epub+zip
+  pandocExtensions:
+    - .docx
+    - .doc
+    - .odt
+    - .html
+    - .htm
+    - .md
+    - .markdown
+    - .rtf
+    - .rst
+    - .epub
+    - .tex
+
 # Thread pool configuration
 threads:
   # Default and maximum number of threads for task execution. AI processing does not run in these threads

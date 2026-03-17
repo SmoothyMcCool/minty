@@ -11,11 +11,23 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.Option;
+import com.jayway.jsonpath.ParseContext;
+import com.jayway.jsonpath.spi.json.JacksonJsonNodeJsonProvider;
+import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 
 public class Packet {
 
-	private static ObjectMapper mapper = JsonMapper.builder().enable(SerializationFeature.INDENT_OUTPUT)
+	private static final ObjectMapper mapper = JsonMapper.builder().enable(SerializationFeature.INDENT_OUTPUT)
 			.addModule(new JavaTimeModule()).build();
+
+	private static final Configuration jaywayConfig = Configuration.builder()
+			.jsonProvider(new JacksonJsonNodeJsonProvider(mapper)).mappingProvider(new JacksonMappingProvider(mapper))
+			.options(Option.SUPPRESS_EXCEPTIONS).build();
+
+	private static final ParseContext jayway = JsonPath.using(jaywayConfig);
 
 	private String id;
 	private List<String> text;
@@ -126,14 +138,17 @@ public class Packet {
 		return "Packet [id=" + id + ", text=" + text + ", data=" + dataStr + "]";
 	}
 
-	private JsonNode toJsonTree() {
-
-		if (jsonCache == null) {
-			jsonCache = mapper.valueToTree(this.toMap());
-		}
-
-		return jsonCache;
-	}
+	// -------------------------------------------------------------------------
+	// Path resolution (via Jayway JSONPath)
+	//
+	// Paths may be supplied in two forms:
+	// - Standard JSONPath: $.data[0].name (preferred, full Jayway syntax)
+	// - Legacy shorthand: data[0].name ($ prefix added automatically)
+	//
+	// Special shorthands that bypass JSONPath entirely:
+	// - "id" -> returns the packet id directly
+	// - "text" -> returns all text entries joined by the system line separator
+	// -------------------------------------------------------------------------
 
 	public String resolve(String path) {
 		path = path.strip();
@@ -146,26 +161,40 @@ public class Packet {
 			return String.join(System.lineSeparator(), text);
 		}
 
-		JsonNode node = resolveNode(path);
+		Object result = readPath(path);
 
-		if (node == null || node.isNull()) {
+		if (result == null) {
 			return null;
 		}
 
-		if (node.isValueNode()) {
-			return node.asText();
+		if (result instanceof JsonNode node) {
+			if (node.isNull())
+				return null;
+			if (node.isValueNode())
+				return node.asText();
+			return node.toString();
 		}
 
-		return node.toString();
+		return result.toString();
 	}
 
 	public List<JsonNode> resolveArray(String path) {
-		JsonNode node = resolveNode(path);
-		List<JsonNode> result = new ArrayList<>();
-		if (node != null && node.isArray()) {
-			node.forEach(result::add);
+		Object result = readPath(path);
+		List<JsonNode> list = new ArrayList<>();
+
+		if (result instanceof JsonNode node && node.isArray()) {
+			node.forEach(list::add);
 		}
-		return result;
+
+		return list;
+	}
+
+	public JsonNode resolveNode(String path) {
+		Object result = readPath(path);
+		if (result instanceof JsonNode node) {
+			return node;
+		}
+		return null;
 	}
 
 	public boolean resolveBoolean(String path) {
@@ -177,84 +206,38 @@ public class Packet {
 	}
 
 	public Object resolveObject(String path) {
-		JsonNode node = resolveNode(path);
+		Object result = readPath(path);
 
-		if (node == null) {
-			return null;
-		}
-
-		if (node.isNumber()) {
-			return node.numberValue();
-		}
-		if (node.isBoolean()) {
-			return node.booleanValue();
-		}
-		if (node.isTextual()) {
-			return node.textValue();
+		if (result instanceof JsonNode node) {
+			if (node.isNumber())
+				return node.numberValue();
+			if (node.isBoolean())
+				return node.booleanValue();
+			if (node.isTextual())
+				return node.textValue();
 		}
 
-		return node;
+		return result;
 	}
 
-	private JsonNode resolveNode(String path) {
-		JsonNode current = toJsonTree();
-		List<Object> tokens = tokenizePath(path);
+	// -------------------------------------------------------------------------
+	// Internal helpers
+	// -------------------------------------------------------------------------
 
-		for (Object token : tokens) {
-			if (current == null) {
-				return null;
-			}
-
-			if (token instanceof String) {
-				current = current.get((String) token);
-			} else if (token instanceof Integer) {
-				int index = (Integer) token;
-				if (!current.isArray() || index >= current.size()) {
-					return null;
-				}
-				current = current.get(index);
-			}
-		}
-
-		return current;
+	/**
+	 * Evaluates a JSONPath expression against this packet's JSON tree. Accepts both
+	 * full JSONPath ($.foo) and legacy shorthand (foo), in which case a "$." prefix
+	 * is added automatically.
+	 */
+	private Object readPath(String path) {
+		String normalized = path.startsWith("$") ? path : "$." + path;
+		return jayway.parse(toJsonTree()).read(normalized);
 	}
 
-	private static List<Object> tokenizePath(String path) {
-		List<Object> tokens = new ArrayList<>();
-		int i = 0;
-
-		while (i < path.length()) {
-			char c = path.charAt(i);
-
-			if (c == '.') {
-				i++;
-				continue;
-			}
-
-			if (c == '[') {
-				int end = path.indexOf(']', i);
-				String inside = path.substring(i + 1, end).trim();
-
-				if (inside.matches("\\d+")) {
-					tokens.add(Integer.parseInt(inside));
-				} else {
-					inside = inside.replaceAll("^['\"]|['\"]$", "");
-					tokens.add(inside);
-				}
-
-				i = end + 1;
-				continue;
-			}
-
-			int start = i;
-			while (i < path.length() && path.charAt(i) != '.' && path.charAt(i) != '[') {
-				i++;
-			}
-
-			tokens.add(path.substring(start, i));
+	private JsonNode toJsonTree() {
+		if (jsonCache == null) {
+			jsonCache = mapper.valueToTree(this.toMap());
 		}
-
-		return tokens;
+		return jsonCache;
 	}
-
 }

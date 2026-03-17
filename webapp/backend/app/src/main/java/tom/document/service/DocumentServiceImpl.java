@@ -2,7 +2,9 @@ package tom.document.service;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -16,12 +18,10 @@ import org.springframework.ai.document.Document;
 import org.springframework.ai.model.transformer.KeywordMetadataEnricher;
 import org.springframework.ai.model.transformer.SummaryMetadataEnricher;
 import org.springframework.ai.model.transformer.SummaryMetadataEnricher.SummaryType;
-import org.springframework.ai.reader.tika.TikaDocumentReader;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
@@ -36,14 +36,16 @@ import tom.api.services.ProjectService;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
 import tom.api.services.document.SpreadsheetFormat;
+import tom.api.services.document.extract.DocumentExtractorService;
+import tom.api.services.document.extract.Section;
 import tom.config.MintyConfiguration;
 import tom.conversation.service.ConversationServiceInternal;
 import tom.document.model.DocumentState;
 import tom.document.model.MintyDoc;
 import tom.document.repository.DocumentRepository;
-import tom.document.service.extract.DocumentExtractor;
 import tom.document.service.tasks.DecomposedMarkdownDocumentProcessingTask;
 import tom.document.service.tasks.DocumentProcessingTask;
+import tom.document.service.tasks.MarkdownSectionSplitter;
 import tom.llm.service.LlmService;
 
 @Service
@@ -59,6 +61,7 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 	private final ConversationServiceInternal conversationService;
 	private final AssistantManagementService assistantManagementService;
 	private final AssistantQueryService assistantQueryService;
+	private final DocumentExtractorService documentExtractorService;
 	private final int keywordsPerDocument;
 	private final int documentTargetChunkSize;
 	private final int macroTargetChunkSize;
@@ -72,7 +75,8 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 			@Qualifier("fileProcessingExecutor") ThreadPoolTaskExecutor fileProcessingExecutor, LlmService llmService,
 			AssistantDocumentLinkService assistantDocumentLinkService, MintyConfiguration properties,
 			JdbcTemplate vectorJdbcTemplate, ConversationServiceInternal conversationService,
-			AssistantManagementService assistantManagementService, AssistantQueryService assistantQueryService) {
+			AssistantManagementService assistantManagementService, AssistantQueryService assistantQueryService,
+			DocumentExtractorService documentExtractorService) {
 		this.fileProcessingExecutor = fileProcessingExecutor;
 		this.llmService = llmService;
 		this.documentRepository = documentRepository;
@@ -81,6 +85,7 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 		this.conversationService = conversationService;
 		this.assistantManagementService = assistantManagementService;
 		this.assistantQueryService = assistantQueryService;
+		this.documentExtractorService = documentExtractorService;
 		docFileStore = properties.getConfig().fileStores().docs();
 		keywordsPerDocument = properties.getConfig().llm().embedding().keywordsPerDocument();
 		documentTargetChunkSize = properties.getConfig().llm().embedding().documentTargetChunkSize();
@@ -140,14 +145,15 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 	public void processFileToMarkdownAndDecompose(UserId userId, ProjectId projectId, File file,
 			ProjectService projectService) {
 		DecomposedMarkdownDocumentProcessingTask task = new DecomposedMarkdownDocumentProcessingTask(userId, projectId,
-				file, projectService, conversationService, assistantManagementService, assistantQueryService);
+				file, projectService, conversationService, assistantManagementService, assistantQueryService,
+				documentExtractorService);
 		fileProcessingExecutor.submit(task);
 	}
 
 	@Override
 	public void transformAndStore(File file, MintyDoc doc) {
 		FileSystemResource resource = new FileSystemResource(file);
-		List<Document> rawDocuments = read(resource);
+		List<Document> rawDocuments = read(resource.getFile());
 
 		// Summarize larger sections first
 		List<Document> macroChunks = split(rawDocuments, macroTargetChunkSize);
@@ -173,9 +179,17 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 		}
 	}
 
-	private List<Document> read(Resource resource) {
-		TikaDocumentReader reader = new TikaDocumentReader(resource);
-		return reader.read();
+	private List<Document> read(File file) {
+		String markdown = documentExtractorService.extract(file);
+		List<Section> sections = MarkdownSectionSplitter.split(markdown);
+
+		return sections.stream().filter(s -> !s.content.isBlank()).map(s -> {
+			Map<String, Object> metadata = new HashMap<>();
+			metadata.put("section_title", s.title);
+			metadata.put("section_level", s.level);
+			metadata.put("section_breadcrumb", documentExtractorService.buildBreadcrumb(sections, s));
+			return new Document(s.content, metadata);
+		}).toList();
 	}
 
 	private List<Document> split(List<Document> documents, int targetChunkSize) {
@@ -323,9 +337,7 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 	@Override
 	public String fileToMarkdown(File file, SpreadsheetFormat format) {
 		try {
-			DocumentExtractor extractor = new DocumentExtractor();
-			extractor.setSpreadsheetFormat(format);
-			return extractor.extract(file);
+			return documentExtractorService.extract(file, format);
 		} catch (Exception e) {
 			throw new RuntimeException("Failed to parse file.", e);
 		}

@@ -4,6 +4,7 @@ import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
 import tom.api.services.cache.CacheService;
 import tom.api.services.document.DocumentService;
+import tom.api.services.document.extract.DocumentExtractorService;
 import tom.api.services.python.PythonService;
 
 public interface PluginServices {
@@ -27,4 +28,6 @@ public interface PluginServices {
 	ProjectService getProjectService();
 
 	CacheService getCacheService();
+
+	DocumentExtractorService getDocumentExtractorService();
 }

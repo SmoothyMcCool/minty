@@ -60,7 +60,9 @@ public class ConversationNamingService {
 		conversations.forEach(conversation -> {
 			List<Message> messages = llmService.getChatMemory()
 					.get(conversation.getConversationId().value().toString());
-			if (messages.size() > 1) {
+
+			// More than one message, or first message is at least 80 characters.
+			if (messages.size() > 1 || (messages.size() == 1 && messages.get(0).getText().length() > 80)) {
 				logger.info("Starting on conversation ID " + conversation.getConversationId().toString());
 				StringBuilder sb = new StringBuilder();
 				messages.forEach(message -> {
