@@ -57,6 +57,10 @@ export class ProjectListComponent implements OnInit {
 		this.router.navigate(['/projects', id]);
 	}
 
+	downloadProject(project: Project) {
+		this.projectService.downloadProjectZip(project.id);
+	}
+
 	deleteProject(project: Project) {
 		this.projectPendingDeletion = project;
 		this.confirmDeleteProjectVisible = true;

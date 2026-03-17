@@ -39,7 +39,7 @@ export class DocumentEditorComponent implements ControlValueAccessor {
 		}
 	}
 
-	private readFileAsBase64(file: File): Promise<string> {
+	private readFileAsBase64(file: File): Promise<{ file: string, name: string }> {
 		return new Promise((resolve, reject) => {
 			this.reader?.abort();
 			this.reader = new FileReader();
@@ -52,7 +52,7 @@ export class DocumentEditorComponent implements ControlValueAccessor {
 			this.reader.onload = () => {
 				const dataUrl = this.reader.result as string;
 				const base64 = dataUrl.split(',')[1];
-				resolve(base64);
+				resolve({ file: base64, name: file.name });
 			};
 
 			this.reader.readAsDataURL(file);
