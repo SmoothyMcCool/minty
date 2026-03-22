@@ -8,6 +8,7 @@ import tom.api.services.HttpService;
 import tom.api.services.PluginServices;
 import tom.api.services.ProjectService;
 import tom.api.services.RenderService;
+import tom.api.services.SkillService;
 import tom.api.services.UserService;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
@@ -31,12 +32,14 @@ public class PluginServicesImpl implements PluginServices {
 	private final ProjectService projectService;
 	private final CacheService cacheService;
 	private final DocumentExtractorService documentExtractorService;
+	private final SkillService skillsService;
 
 	public PluginServicesImpl(@Lazy AssistantManagementService assistantManagementService,
 			@Lazy AssistantQueryService assistantQueryService, @Lazy ConversationServiceInternal conversationService,
 			@Lazy HttpService httpService, @Lazy PythonService pythonService, @Lazy RenderService renderService,
 			@Lazy UserService userService, @Lazy DocumentService documentService, @Lazy ProjectService projectService,
-			@Lazy CacheService cacheService, @Lazy DocumentExtractorService documentExtractorService) {
+			@Lazy CacheService cacheService, @Lazy DocumentExtractorService documentExtractorService,
+			@Lazy SkillService skillsService) {
 		this.assistantManagementService = assistantManagementService;
 		this.assistantQueryService = assistantQueryService;
 		this.conversationService = conversationService;
@@ -48,6 +51,7 @@ public class PluginServicesImpl implements PluginServices {
 		this.projectService = projectService;
 		this.cacheService = cacheService;
 		this.documentExtractorService = documentExtractorService;
+		this.skillsService = skillsService;
 	}
 
 	@Override
@@ -103,5 +107,10 @@ public class PluginServicesImpl implements PluginServices {
 	@Override
 	public DocumentExtractorService getDocumentExtractorService() {
 		return documentExtractorService;
+	}
+
+	@Override
+	public SkillService getSkillsService() {
+		return skillsService;
 	}
 }

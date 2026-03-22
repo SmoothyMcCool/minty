@@ -1,4 +1,4 @@
-<ng-container *ngIf="config && taskSpecification">
+<ng-container *ngIf="initialized && config && taskSpecification">
 	<div class="form-group mb-1" *ngFor="let item of taskSpecification.configSpec | keyvalue">
 		<ng-container [ngSwitch]="item.value">
 			<ng-container *ngSwitchCase="'Number'">
@@ -99,7 +99,7 @@
 			<ng-container *ngSwitchCase="'Assistant'">
 				<div class="mb-3">
 					<label for="assistantInput-{{item.key}}" class="fs-4">{{item.key}}</label>
-					<minty-assistant-configuration-editor [models]="models" [tools]="tools" [documents]="documents" [choices]="getChoicesFor(item.key)" name="assistantInput-{{item.key}}" [ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)"></minty-assistant-configuration-editor>
+					<minty-assistant-configuration-editor name="assistantInput-{{item.key}}" [choices]="getChoicesFor(item.key)" [ngModel]="getConfig(item.key)" (ngModelChange)="valueChanged(item.key, $event)"></minty-assistant-configuration-editor>
 				</div>
 			</ng-container>
 			<ng-container *ngSwitchDefault>

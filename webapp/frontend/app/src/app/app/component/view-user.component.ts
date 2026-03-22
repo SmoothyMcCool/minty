@@ -30,10 +30,7 @@ export class ViewUserComponent implements OnInit {
 			this.messageOrder = this.user.settings['Message Order'] ?? 'Newest at Top';
 			this.buttonAlignment = this.user.settings['Button Alignment'] ?? 'Left';
 			this.theme = this.user.settings['Theme'] ?? 'Light Mode';
-			this.userService.userDefaults().subscribe(userDefaults => {
-				this.user.defaults = userDefaults;
-				this.defaultValues = Object.entries(this.user.defaults).map(([key, value]) => ({ key,value }));
-			});
+			this.defaultValues = Object.entries(this.user.defaults).map(([key, value]) => ({ key,value }));
 		});
 	}
 

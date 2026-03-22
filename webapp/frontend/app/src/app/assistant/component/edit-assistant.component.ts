@@ -44,9 +44,7 @@ export class EditAssistantComponent implements OnInit {
 		this.assistantService.models().subscribe((models: Model[]) => {
 			this.models = models;
 		});
-		this.toolService.list().subscribe((tools: MintyTool[]) => {
-			this.tools = tools;
-		});
+		this.toolService.list().subscribe(tools => this.tools = tools);
 	}
 
 	formInvalid(): boolean {

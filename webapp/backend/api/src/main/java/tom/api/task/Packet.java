@@ -231,7 +231,23 @@ public class Packet {
 	 */
 	private Object readPath(String path) {
 		String normalized = path.startsWith("$") ? path : "$." + path;
+		normalized = expandTopLevelShorthand(normalized);
 		return jayway.parse(toJsonTree()).read(normalized);
+	}
+
+	/**
+	 * If the path references $.data.x or $.text.x (without an explicit index),
+	 * automatically inserts [0] so that $.data.x becomes $.data[0].x. Leaves paths
+	 * that already have an index (e.g. $.data[1].x) untouched.
+	 */
+	private String expandTopLevelShorthand(String path) {
+		if (path.matches("\\$\\.data(\\..+)") && !path.startsWith("$.data[")) {
+			return path.replaceFirst("\\$\\.data", "\\$.data[0]");
+		}
+		if (path.matches("\\$\\.text(\\..+)") && !path.startsWith("$.text[")) {
+			return path.replaceFirst("\\$\\.text", "\\$.text[0]");
+		}
+		return path;
 	}
 
 	private JsonNode toJsonTree() {

@@ -39,9 +39,7 @@ export class NewAssistantComponent implements OnInit {
 		this.documentService.list().subscribe(docs => {
 			this.documents = docs;
 		});
-		this.toolService.list().subscribe((tools: MintyTool[]) => {
-			this.tools = tools;
-		});
+		this.toolService.list().subscribe(tools => this.tools = tools);
 	}
 
 	formInvalid(): boolean {

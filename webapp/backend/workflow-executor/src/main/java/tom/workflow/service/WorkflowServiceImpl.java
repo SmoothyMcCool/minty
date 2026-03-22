@@ -2,6 +2,7 @@ package tom.workflow.service;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import tom.NotOwnedException;
 import tom.api.UserId;
+import tom.api.services.UserService;
 import tom.api.task.TaskLogger;
 import tom.config.MintyConfiguration;
 import tom.task.model.TaskRequest;
@@ -33,16 +35,20 @@ public class WorkflowServiceImpl implements WorkflowService {
 	private final WorkflowRepository workflowRepository;
 	private final TaskRegistryService taskRegistryService;
 	private final WorkflowTrackingService workflowTrackingService;
+	private final UserService userService;
 	private final AsyncTaskExecutor taskExecutor;
 	private final Path workflowLoggingFolder;
+	private final MintyConfiguration properties;
 
 	public WorkflowServiceImpl(WorkflowRepository workflowRepository, TaskRegistryService taskRegistryService,
-			WorkflowTrackingService workflowTrackingService,
+			WorkflowTrackingService workflowTrackingService, UserService userService,
 			@Qualifier("taskExecutor") ThreadPoolTaskExecutor taskExecutor, MintyConfiguration properties) {
 		this.workflowRepository = workflowRepository;
 		this.taskRegistryService = taskRegistryService;
 		this.workflowTrackingService = workflowTrackingService;
+		this.userService = userService;
 		this.taskExecutor = taskExecutor;
+		this.properties = properties;
 		workflowLoggingFolder = properties.getConfig().fileStores().workflowLogs();
 		if (workflowLoggingFolder == null) {
 			throw new RuntimeException("Workflow log folder location is not defined.");
@@ -60,6 +66,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 		Workflow workflow = maybeWorkflow.get().toModelWorkflow();
 		List<TaskRequest> steps = workflow.getSteps();
 
+		Map<String, String> defaults = userService.getUserDefaults(userId);
+		defaults.putAll(properties.getSystemDefaults());
+
 		if (steps.size() != request.getTaskConfigurationList().size()) {
 			logger.warn("Expected to get " + steps.size() + " configuration objects, but instead got "
 					+ request.getTaskConfigurationList().size());
@@ -67,11 +76,23 @@ public class WorkflowServiceImpl implements WorkflowService {
 		}
 
 		for (int i = 0; i < steps.size(); i++) {
-			steps.get(i).setConfiguration(request.getTaskConfigurationList().get(i));
+			Map<String, Object> config = request.getTaskConfigurationList().get(i);
+			config.forEach((k, v) -> {
+				if (defaults.containsKey(k)) {
+					config.put(k, defaults.get(k));
+				}
+			});
+			steps.get(i).setConfiguration(config);
 		}
 
 		if (workflow.getOutputStep() != null) {
-			workflow.getOutputStep().setConfiguration(request.getOutputConfiguration());
+			Map<String, Object> config = request.getOutputConfiguration();
+			config.forEach((k, v) -> {
+				if (defaults.containsKey(k)) {
+					config.put(k, defaults.get(k));
+				}
+			});
+			workflow.getOutputStep().setConfiguration(config);
 		}
 
 		WorkflowRunner runner = new WorkflowRunner(userId, workflow,

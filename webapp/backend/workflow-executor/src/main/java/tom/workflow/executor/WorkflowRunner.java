@@ -193,6 +193,9 @@ public class WorkflowRunner {
 						runner.run();
 						executionState.getResult().getErrors().put(runner.getName(), runner.getErrors());
 						executionState.getResult().getResults().put(runner.getName(), runner.getResults());
+						if (runner.failed()) {
+							executionState.setFailed(true);
+						}
 
 						if (runner.failed()) {
 							throw new WorkflowRunnerException("Runner " + runner.getName() + " failed.");
@@ -213,6 +216,7 @@ public class WorkflowRunner {
 			CompletableFuture<Void> allDone = FutureUtils.allOfFailFast(tasks, logger);
 			allDone.whenComplete((r, ex) -> {
 				if (ex != null) {
+					executionState.setFailed(true);
 					logger.warn("A task failed with exception: ", ex);
 				} else {
 					logger.info("Workflow complete.");
@@ -222,8 +226,9 @@ public class WorkflowRunner {
 		} catch (Exception e) {
 			stdLogger.warn("Workflow failed with exception: ", e);
 			logger.warn("Workflow failed with exception: ", e);
-			logger.close();
 			cancel();
+			executionState.setFailed(true);
+			workflowComplete();
 		}
 
 	}

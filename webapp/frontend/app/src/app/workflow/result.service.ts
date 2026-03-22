@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, map, shareReplay, switchMap } from 'rxjs/operators';
-import { EMPTY, Observable, of, Subscription, throwError, timer } from 'rxjs';
+import { EMPTY, Observable, of, throwError, timer } from 'rxjs';
 import { TrackableSubject } from '../trackable-subject';
 import { AlertService } from '../alert.service';
 import { ApiResult } from '../model/api-result';

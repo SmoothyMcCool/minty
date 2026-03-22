@@ -22,15 +22,10 @@
 				<label for="isLoggingActive" class="form-check-label">Log Task Output</label>
 			</div>
 		</div>
-		<minty-task-config-editor
+		<minty-attribute-map-editor
 			[ngModel]="configForEditor"
 			(ngModelChange)="onConfigurationChanged($event)"
 			[taskSpecification]="taskSpecification"
-			[defaults]="defaults"
-			[enumLists]="enumLists"
-			[models]="models"
-			[tools]="tools"
-			[documents]="documents"
-			name="{{task.taskName}}-taskConfig"></minty-task-config-editor>
+			name="{{task.taskName}}-taskConfig"></minty-attribute-map-editor>
 	</form>
 </ng-container>

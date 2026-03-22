@@ -7,7 +7,7 @@
 	</text>
 
 	<g>
-		<rect *ngFor="let port of topPorts; let i = index" [attr.x]="port.x" [attr.y]="port.y" [attr.width]="port.size"
+		<rect *ngFor="let port of inputPorts; let i = index" [attr.x]="port.x" [attr.y]="port.y" [attr.width]="port.size"
 			[attr.height]="port.size" class="port"
 			(mousedown)="onPortMouseDown(i, true, $event); $event.stopPropagation()"
 			(mouseup)="onPortMouseUp(i, true, $event); $event.stopPropagation()"
@@ -16,7 +16,7 @@
 	</g>
 
 	<g>
-		<rect *ngFor="let port of bottomPorts; let i = index" [attr.x]="port.x" [attr.y]="port.y" [attr.width]="port.size"
+		<rect *ngFor="let port of outputPorts; let i = index" [attr.x]="port.x" [attr.y]="port.y" [attr.width]="port.size"
 			[attr.height]="port.size" class="port"
 			(mousedown)="onPortMouseDown(i, false, $event); $event.stopPropagation()"
 			(mouseup)="onPortMouseUp(i, false, $event); $event.stopPropagation()"

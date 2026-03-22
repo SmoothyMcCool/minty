@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { AfterViewChecked, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
@@ -14,6 +14,7 @@ import { User } from 'src/app/model/user';
 import { AlertService } from 'src/app/alert.service';
 import { Workflow } from 'src/app/model/workflow/workflow';
 import { WorkflowService } from '../workflow.service';
+import * as bootstrap from 'bootstrap';
 
 @Component({
 	selector: 'minty-workflow-list',
@@ -33,7 +34,7 @@ import { WorkflowService } from '../workflow.service';
 		])
 	]
 })
-export class WorkflowListComponent implements OnInit, OnDestroy {
+export class WorkflowListComponent implements AfterViewChecked, OnInit, OnDestroy {
 
 	responseType: string;
 	currentResult: WorkflowResult = null;
@@ -61,6 +62,16 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 		private workflowService: WorkflowService,
 		private resultService: ResultService,
 		private userService: UserService) {
+	}
+
+	ngAfterViewChecked() {
+		const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+		Array.from(tooltipTriggerList).forEach(el => {
+			const existing = bootstrap.Tooltip.getInstance(el);
+			if (!existing) {
+				new bootstrap.Tooltip(el);
+			}
+		});
 	}
 
 	ngOnInit() {
@@ -219,6 +230,22 @@ export class WorkflowListComponent implements OnInit, OnDestroy {
 		} else {
 			this.alertService.postFailure("Failed to duplicate workflow.");
 		}
+	}
+
+	downloadWorkflow(workflow: Workflow) {
+		const workflowToDownload: Workflow = JSON.parse(JSON.stringify(workflow));
+		workflowToDownload.id = '';
+		workflowToDownload.ownerId = '';
+		const blob = new Blob([JSON.stringify(workflowToDownload, undefined, 2)], { type: 'application/json' });
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement('a');
+		link.href = url;
+		link.download = workflow.name + '.json';
+		link.style.display = 'none';
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+		window.URL.revokeObjectURL(url);
 	}
 
 	filterChanged(filter: string) {

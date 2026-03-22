@@ -9,38 +9,60 @@ export class WorkflowGeometryService {
 
 	private portOffset = 20;
 
+	public static TaskRect = { x: 1, y: 1, width: 98, height: 48 };
+
 	/**
 	 * Get port center position
 	 */
-	getPortCenter(
-		widget: TaskWidgetComponent | undefined,
-		portIndex: number,
-		isInput: boolean
-	) {
-		if (!widget) {
+	getPortCenter(task: TaskRequest, portIndex: number, isInput: boolean): { x: number, y: number } {
+		if (!task) {
 			return { x: 0, y: 0 };
 		}
 
-		return widget.getPortCenter(portIndex, isInput);
+		const ports = isInput ? this.calculateInputPorts(task) : this.calculateOutputPorts(task);
+		if (!ports[portIndex]) {
+			console.warn(
+				`TaskWidgetComponent.getPortCenter(): portIndex ${portIndex} out of range for task ${task.stepName}. ` +
+				`Available ports: ${ports.length}`
+			);
+			return { x: 0, y: 0 };
+		}
+		// Account for task layout position
+		const layoutX = task.layout.tempX ?? task.layout.x;
+		const layoutY = task.layout.tempY ?? task.layout.y;
+		return {
+			x: layoutX + ports[portIndex].x + ports[portIndex].size / 2,
+			y: layoutY + ports[portIndex].y + ports[portIndex].size / 2
+		};
 	}
 
-	/**
-	 * Get bounding box for node
-	 */
-	getBoundingBox(
-		widget: TaskWidgetComponent | undefined,
-		step: TaskRequest | undefined
-	) {
-		if (!widget || !step) {
-			return { x: 0, y: 0, width: 0, height: 0 };
+	calculateInputPorts(task: TaskRequest): { x: number; y: number; size: number }[] {
+		const numTopPorts = Number(task.configuration['Number of Inputs'] ?? task.layout.numInputs);
+		return this.calculatePorts(numTopPorts, WorkflowGeometryService.TaskRect.y);
+	}
+
+	calculateOutputPorts(task: TaskRequest): { x: number; y: number; size: number }[] {
+		const numBottomPorts = Number(task.configuration['Number of Outputs'] ?? task.layout.numOutputs);
+		return this.calculatePorts(numBottomPorts, WorkflowGeometryService.TaskRect.y + WorkflowGeometryService.TaskRect.height);
+	}
+
+	private calculatePorts(n: number, y: number): { x: number; y: number; size: number }[] {
+		const r = WorkflowGeometryService.TaskRect;
+		const gap = r.width / (n + 1);
+		const desiredSize = r.height * 0.5;
+		const squareSize = Math.min(desiredSize, gap * 0.9, 15);
+
+		const topY = y - squareSize / 2;
+
+		const ports: { x: number; y: number; size: number }[] = [];
+
+		for (let i = 0; i < n; i++) {
+			const cx = r.x + gap * (i + 1);
+			const x = cx - squareSize / 2;
+			ports.push({ x, y: topY, size: squareSize });
 		}
 
-		return {
-			x: step.layout.x,
-			y: step.layout.y,
-			width: widget.rect.width,
-			height: widget.rect.height
-		};
+		return ports;
 	}
 
 	/**
@@ -118,7 +140,7 @@ export class WorkflowGeometryService {
 		};
 	}
 
-	getSnappedPortPosition(hoveredPort: { task: TaskRequest; portIndex: number; isInput: boolean }, tempConnection: any, widgetResolver: (taskId: string) => TaskWidgetComponent | undefined) {
+	getSnappedPortPosition(hoveredPort: { task: TaskRequest; portIndex: number; isInput: boolean }, tempConnection: any, taskResolver: (taskId: string) => TaskRequest | undefined) {
 		if (!hoveredPort || !tempConnection) {
 			return null;
 		}
@@ -127,13 +149,14 @@ export class WorkflowGeometryService {
 			return null;
 		}
 
-		const widget = widgetResolver(hoveredPort.task.id);
+		const task = taskResolver(hoveredPort.task.id);
 
-		if (!widget) {
+		if (!task) {
 			return null;
 		}
 
-		return widget.getPortCenter(
+		return this.getPortCenter(
+			hoveredPort.task,
 			hoveredPort.portIndex,
 			hoveredPort.isInput
 		);

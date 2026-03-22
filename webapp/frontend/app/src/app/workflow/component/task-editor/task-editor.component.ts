@@ -3,11 +3,7 @@ import { Component, ElementRef, EventEmitter, forwardRef, Input, OnDestroy, OnIn
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { Popover } from 'bootstrap';
 import { AttributeMap, TaskRequest, TaskSpecification } from 'src/app/model/workflow/task-specification';
-import { AttributeMapEditorComponent } from './task-configuration-editor.component';
-import { EnumList } from 'src/app/model/workflow/enum-list';
-import { Model } from 'src/app/model/model';
-import { MintyDoc } from 'src/app/model/minty-doc';
-import { MintyTool } from 'src/app/model/minty-tool';
+import { AttributeMapEditorComponent } from './attribute-map-editor.component';
 
 @Component({
 	selector: 'minty-task-editor',
@@ -35,11 +31,6 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor, OnDest
 	get taskSpecification(): TaskSpecification {
 		return this._taskSpecification;
 	}
-	@Input() defaults: AttributeMap;
-	@Input() enumLists: EnumList[];
-	@Input() models: Model[];
-	@Input() documents: MintyDoc[];
-	@Input() tools: MintyTool[];
 
 	@Output() taskNameChanged = new EventEmitter<{ oldName: string, newName: string }>();
 
@@ -50,8 +41,7 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor, OnDest
 	onChange = (_: any) => { };
 	onTouched: any = () => {};
 
-	constructor() {
-	}
+	constructor() {	}
 
 	ngOnInit() {
 	}

@@ -1,0 +1,81 @@
+<div class="container-fluid py-3">
+
+	<button class="btn btn-primary mb-3" (click)="skillFileDialogVisible = true">Add Skill</button>
+
+	<div class="row">
+
+		<!-- Left pane - skill list -->
+		<div class="col-3 border-end">
+			<h5 class="mb-3">Skills</h5>
+			<ul class="list-group">
+				<li class="list-group-item list-group-item-action position-relative text-bg-light bg-opacity-75"
+					*ngFor="let skill of skills" [class.active]="skill.name === selectedSkill?.metadata?.name"
+					(click)="onSelectSkill(skill)" style="cursor: pointer">
+					{{skill.name}}
+				</li>
+			</ul>
+		</div>
+
+		<!-- Right panes -->
+		<div class="col-9" *ngIf="selectedSkill; else noSelection">
+
+			<!-- Skill header -->
+			<div class="mb-3 pb-2 border-bottom">
+				<h5 class="mb-1">{{selectedSkill.metadata.name}}</h5>
+				<p class="text-muted mb-0">{{selectedSkill.metadata.description}}</p>
+			</div>
+
+			<div class="row">
+				<!-- File list -->
+				<div class="col-4 border-end">
+					<h6 class="mb-3">Files</h6>
+					<ul class="list-group">
+						<li class="list-group-item list-group-item-action text-bg-light bg-opacity-75"
+							*ngFor="let file of selectedSkill.files" [class.active]="file === selectedFile"
+							(click)="onSelectFile(file)" style="cursor: pointer">
+							<i class="bi bi-file-earmark me-2"></i>{{file.relativePath}}
+						</li>
+					</ul>
+				</div>
+
+				<!-- File contents -->
+				<div class="col-8" *ngIf="selectedFile; else noFileSelection">
+					<h6 class="text-muted mb-3">{{ selectedFile.relativePath }}</h6>
+					<markdown mermaid [data]="renderContent(selectedFile.content)"></markdown>
+				</div>
+
+				<ng-template #noFileSelection>
+					<h5 class="col-8 text-muted">Select a file to view its contents</h5>
+				</ng-template>
+			</div>
+		</div>
+
+		<ng-template #noSelection>
+			<h5 class="col-9 text-muted">Select a skill to view its files</h5>
+		</ng-template>
+
+	</div>
+</div>
+
+<div class="modal fade" tabindex="-1" [ngClass]="{'show d-block': skillFileDialogVisible}"
+	[style.display]="skillFileDialogVisible ? 'block' : 'none'">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">Add Skill</h5>
+				<button type="button" class="btn-close" (click)="skillFileDialogVisible = false"></button>
+			</div>
+			<div class="modal-body">
+				<div class="mb-3">
+					<label for="zipFilename" class="form-label">Filename</label>
+					<input class="form-control" type="file" id="zipFilename" (change)="fileSelected($event)">
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" (click)="skillFileDialogVisible = false">Cancel</button>
+				<button type="button" class="btn btn-primary"
+					(click)="addSkill()">OK</button>
+			</div>
+		</div>
+	</div>
+</div>

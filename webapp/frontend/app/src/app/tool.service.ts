@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResult } from './model/api-result';
-import { catchError, map } from 'rxjs/operators';
-import { EMPTY, Observable } from 'rxjs';
+import { catchError, map, take } from 'rxjs/operators';
+import { EMPTY, Observable, ReplaySubject } from 'rxjs';
 import { AlertService } from './alert.service';
 import { MintyTool } from './model/minty-tool';
 
@@ -14,11 +14,10 @@ export class ToolService {
 
 	private static readonly ListTools = 'api/tools';
 
-	constructor(private http: HttpClient, private alertService: AlertService) {
-	}
+	private tools$ = new ReplaySubject<MintyTool[]>(1);
 
-	list(): Observable<MintyTool[]> {
-		return this.http.get<ApiResult>(ToolService.ListTools)
+	constructor(private http: HttpClient, private alertService: AlertService) {
+		this.http.get<ApiResult>(ToolService.ListTools)
 			.pipe(
 				catchError(error => {
 					this.alertService.postFailure(JSON.stringify(error));
@@ -27,7 +26,11 @@ export class ToolService {
 				map((result: ApiResult) => {
 					return result.data as MintyTool[];
 				})
-			);
+			).subscribe(tools => this.tools$.next(tools));
+	}
+
+	list(): Observable<MintyTool[]> {
+		return this.tools$.pipe(take(1));
 	}
 
 }

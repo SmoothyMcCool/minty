@@ -21,8 +21,11 @@ export class EditWorkflowComponent implements OnInit {
 
 	defaults: AttributeMap;
 	workflow: Workflow;
-	taskSpecifications: TaskSpecification[];
-	outputTaskSpecifications: OutputTaskSpecification[];
+	logLevel: string = "Debug";
+	unsavedChanges = false;
+	isNew = false;
+	uploadDialogVisible = false;
+	uploadedWorkflow: Workflow;
 
 	confirmCancelVisible = false;
 
@@ -35,20 +38,12 @@ export class EditWorkflowComponent implements OnInit {
 
 	ngOnInit() {
 		this.route.params.subscribe(params => {
-			forkJoin({
-				systemDefaults: this.userService.systemDefaults(),
-				userDefaults: this.userService.userDefaults(),
-				taskSpecifications: this.workflowService.listTaskSpecifications(),
-				outputTaskSpecifications: this.workflowService.listOutputTaskSpecifications()
-			}).subscribe(({ systemDefaults, userDefaults, taskSpecifications, outputTaskSpecifications }) => {
+			// User defaults should take priority in conflicts.
+			this.defaults = { ...this.userService.getSystemDefaults(), ...this.userService.getUserDefaults() };
 
-				// User defaults should take priority in conflicts.
-				this.defaults = { ...systemDefaults, ...userDefaults };
-				this.taskSpecifications = taskSpecifications;
-				this.taskSpecifications = taskSpecifications;
-				this.outputTaskSpecifications = outputTaskSpecifications;
-
-				// This is nested inside to ensure that all required information is loaded before the actual workflow.
+			// This is nested inside to ensure that all required information is loaded before the actual workflow.
+			const workflowId = params['id'];
+			if (workflowId) {
 				this.workflowService.getWorkflow(params['id']).subscribe((workflow: Workflow) => {
 					workflow.steps.forEach(step => {
 						const updated = step.configuration;
@@ -61,22 +56,34 @@ export class EditWorkflowComponent implements OnInit {
 					});
 					this.workflow = workflow;
 				});
+			}
+			this.isNew = this.route.snapshot.queryParamMap.get('new') === 'true';
 
-			});
 		});
-
 	}
 
 	updateWorkflow() {
-		this.workflowService.sanitize(this.workflow, this.taskSpecifications, this.defaults);
+		this.workflowService.sanitize(this.workflow);
 
 		this.workflowService.updateWorkflow(this.workflow).subscribe(() => {
 			this.alertService.postSuccess('Workflow Updated!');
-			this.router.navigateByUrl('workflow');
+			this.unsavedChanges = false;
 		});
 	}
 
+	runWorkflow() {
+		this.workflowService.sanitize(this.workflow);
+
+		this.workflowService.execute(this.workflow, this.logLevel).subscribe((result: string) => {
+			this.alertService.postSuccess(result);
+		});
+		this.router.navigateByUrl('workflow');
+	}
+
 	cancel() {
+		if (!this.unsavedChanges) {
+			this.confirmCancel();
+		}
 		this.confirmCancelVisible = true;
 	}
 
@@ -94,6 +101,30 @@ export class EditWorkflowComponent implements OnInit {
 			})),
 			connections: workflow.connections.map(conn => ({ ...conn }))
 		};
+		this.unsavedChanges = true;
 	}
 
+	showUploadWorkflowDialog() {
+		this.uploadedWorkflow = undefined;
+		this.uploadDialogVisible = true;
+	}
+
+	fileSelected(event: Event) {
+		const fileList = (event.target as HTMLInputElement).files;
+		if (fileList && fileList.length > 0) {
+			const file = fileList[0];
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				this.uploadedWorkflow = JSON.parse(e.target.result as string);
+				console.log(this.uploadedWorkflow);
+			};
+			reader.readAsText(file);
+		}
+	}
+
+	uploadWorkflow() {
+		this.workflow = this.uploadedWorkflow;
+		this.uploadedWorkflow = undefined;
+		this.uploadDialogVisible = false;
+	}
 }

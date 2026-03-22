@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { AlertService } from '../alert.service';
-import { catchError, EMPTY, map, Observable } from 'rxjs';
+import { catchError, EMPTY, map, Observable, ReplaySubject, take } from 'rxjs';
 import { ApiResult } from '../model/api-result';
-import { ResultTemplate } from '../model/workflow/result-template';
 import { EnumList } from '../model/workflow/enum-list';
 import { OutputTaskSpecification, AttributeMap, TaskRequest, TaskSpecification } from '../model/workflow/task-specification';
 import { Workflow } from '../model/workflow/workflow';
+import { UserService } from '../user.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -26,12 +26,13 @@ export class WorkflowService {
 	private static readonly GetTaskHelpFiles = 'api/workflow/help/task';
 	private static readonly GetOutputHelpFiles = 'api/workflow/help/output';
 
+	private taskSpecifications$ = new ReplaySubject<TaskSpecification[]>(1);
+	private taskSpecificationsSnapshot: TaskSpecification[];
+	private outputTaskSpecifications$ = new ReplaySubject<OutputTaskSpecification[]>(1);
+	private enumLists$ = new ReplaySubject<EnumList[]>(1);
 
-	constructor(private http: HttpClient, private alertService: AlertService) {
-	}
-
-	listTaskSpecifications(): Observable<TaskSpecification[]> {
-		return this.http.get<ApiResult>(WorkflowService.ListTaskSpecifications)
+	constructor(private http: HttpClient, private alertService: AlertService, private userService: UserService) {
+		this.http.get<ApiResult>(WorkflowService.ListTaskSpecifications)
 			.pipe(
 				catchError(error => {
 					this.alertService.postFailure(JSON.stringify(error));
@@ -46,11 +47,12 @@ export class WorkflowService {
 
 					return returnValue;
 				})
-			);
-	}
+			).subscribe(specs => {
+				this.taskSpecifications$.next(specs);
+				this.taskSpecificationsSnapshot = specs;
+			});
 
-	listOutputTaskSpecifications(): Observable<OutputTaskSpecification[]> {
-		return this.http.get<ApiResult>(WorkflowService.ListOutputTaskSpecifications)
+		this.http.get<ApiResult>(WorkflowService.ListOutputTaskSpecifications)
 			.pipe(
 				catchError(error => {
 					this.alertService.postFailure(JSON.stringify(error));
@@ -65,7 +67,26 @@ export class WorkflowService {
 
 					return returnValue;
 				})
-			);
+			).subscribe(specs => this.outputTaskSpecifications$.next(specs));
+
+		this.http.get<ApiResult>(WorkflowService.ListEnumLists)
+			.pipe(
+				catchError(error => {
+					this.alertService.postFailure(JSON.stringify(error));
+					return EMPTY;
+				}),
+				map((result: ApiResult) => {
+					return result.data as EnumList[];
+				})
+			).subscribe(lists => this.enumLists$.next(lists));
+	}
+
+	listTaskSpecifications(): Observable<TaskSpecification[]> {
+		return this.taskSpecifications$.pipe(take(1));
+	}
+
+	listOutputTaskSpecifications(): Observable<OutputTaskSpecification[]> {
+		return this.outputTaskSpecifications$.pipe(take(1));
 	}
 
 	getWorkflow(workflowId: string): Observable<Workflow> {
@@ -253,16 +274,7 @@ export class WorkflowService {
 	}
 
 	listEnumLists(): Observable<EnumList[]> {
-		return this.http.get<ApiResult>(WorkflowService.ListEnumLists)
-			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
-				map((result: ApiResult) => {
-					return result.data as EnumList[];
-				})
-			);
+		return this.enumLists$.pipe(take(1));
 	}
 
 	getTaskHelpFiles(): Observable<Map<string, string>> {
@@ -291,9 +303,12 @@ export class WorkflowService {
 			);
 	}
 
-	sanitize(workflow: Workflow, taskSpecifications: TaskSpecification[], defaults: AttributeMap) {
+	sanitize(workflow: Workflow) {
+		// User defaults should take priority in conflicts.
+		const defaults = { ...this.userService.getSystemDefaults(), ...this.userService.getUserDefaults() };
+
 		workflow.steps.forEach(step => {
-			const spec = taskSpecifications.find(spec => spec.taskName === step.taskName);
+			const spec = this.taskSpecificationsSnapshot.find(spec => spec.taskName === step.taskName);
 			if (spec) {
 				// This removes any keys that should not be present (which happens sometimes if the task type is
 				// changed during workflow construction or editing, but we need it that way so we don't nuke old

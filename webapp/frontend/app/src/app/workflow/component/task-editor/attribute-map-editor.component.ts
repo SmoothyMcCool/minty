@@ -9,15 +9,13 @@ import { EnumList } from 'src/app/model/workflow/enum-list';
 import { PacketEditorComponent } from './packet-editor.component';
 import { DocumentEditorComponent } from './document-editor.component';
 import { AssistantConfigurationEditorComponent } from './assistant-configuration-editor.component';
-import { Model } from 'src/app/model/model';
-import { MintyDoc } from 'src/app/model/minty-doc';
-import { MintyTool } from 'src/app/model/minty-tool';
 import { PipelineTransformEditorComponent } from './pipeline-transform-editor.component';
+import { WorkflowStateService } from '../workflow-editor/services/workflow-state.service';
 
 
 @Component({
-	selector: 'minty-task-config-editor',
-	templateUrl: 'task-configuration-editor.component.html',
+	selector: 'minty-attribute-map-editor',
+	templateUrl: 'attribute-map-editor.component.html',
 	imports: [CommonModule, FormsModule, MapEditorComponent, StringListEditorComponent, EnumListEditorComponent, PacketEditorComponent, DocumentEditorComponent, AssistantConfigurationEditorComponent, PipelineTransformEditorComponent],
 	providers: [
 		{
@@ -29,12 +27,10 @@ import { PipelineTransformEditorComponent } from './pipeline-transform-editor.co
 })
 export class AttributeMapEditorComponent implements ControlValueAccessor {
 
-	@Input()  defaults: AttributeMap;
 	@Input() taskSpecification: TaskSpecification;
-	@Input() enumLists: EnumList[];
-	@Input() models: Model[];
-	@Input() documents: MintyDoc[];
-	@Input() tools: MintyTool[];
+	defaults: AttributeMap;
+	enumLists: EnumList[];
+	initialized = false;
 
 	config: AttributeMap = {};
 	onChange = (_: any) => { };
@@ -42,7 +38,7 @@ export class AttributeMapEditorComponent implements ControlValueAccessor {
 
 	resultTemplates: string[] = [];
 
-	constructor() {
+	constructor(private workflowStateService: WorkflowStateService) {
 	}
 
 	valueChanged(key: string, value: string) {
@@ -71,8 +67,11 @@ export class AttributeMapEditorComponent implements ControlValueAccessor {
 		if (!obj) {
 			return;
 		}
+		this.enumLists = this.workflowStateService.enumLists;
+		this.defaults = this.workflowStateService.defaults;
 
 		this.config = { ...obj };
+		this.initialized = true;
 	}
 	registerOnChange(fn: any): void {
 		this.onChange = fn;

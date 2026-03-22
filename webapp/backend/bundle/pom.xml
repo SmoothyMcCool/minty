@@ -27,11 +27,7 @@
 			<exclusions>
 				<exclusion>
 					<groupId>tom.minty</groupId>
-					<artifactId>task-library</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>tom.minty</groupId>
-					<artifactId>tool-library</artifactId>
+					<artifactId>plugin-library</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
@@ -42,11 +38,7 @@
 			<exclusions>
 				<exclusion>
 					<groupId>tom.minty</groupId>
-					<artifactId>task-library</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>tom.minty</groupId>
-					<artifactId>tool-library</artifactId>
+					<artifactId>plugin-library</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
@@ -126,7 +118,7 @@
 						</configuration>
 					</execution>
 					<execution>
-						<id>install-mariadb-driver</id>
+						<id>copy-pug-files</id>
 						<phase>package</phase>
 						<goals>
 							<goal>copy-resources</goal>
@@ -138,6 +130,24 @@
 									<directory>${basedir}/src/main/resources/pug</directory>
 									<includes>
 										<include>**/*.pug</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+					<execution>
+						<id>copy-skill-files</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${output.directory}/working/skills</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${basedir}/src/main/resources/skills</directory>
+									<includes>
+										<include>**/*.skill</include>
 									</includes>
 								</resource>
 							</resources>

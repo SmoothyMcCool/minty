@@ -127,6 +127,7 @@ CREATE TABLE IF NOT EXISTS WorkflowExecution (
 	ownerId UUID,
 	name TEXT,
 	state JSON,
+	failed BOOLEAN,
 	recordId UUID,
 	PRIMARY KEY (id),
 	CONSTRAINT fk_workflow_execution_workflow_record

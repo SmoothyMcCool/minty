@@ -3,8 +3,8 @@
 
 <div class="node-palette" *ngIf="visible" (keydown)="onKeyDown($event)">
 
-	<input class="form-control mb-2" placeholder="Search nodes..." [(ngModel)]="search"
-		(ngModelChange)="onSearchChange()" autofocus>
+	<input #searchInput class="form-control mb-2" placeholder="Search nodes..." [(ngModel)]="search"
+		(ngModelChange)="onSearchChange()">
 
 	<div class="node-list">
 

@@ -1,0 +1,46 @@
+<div class="canvas-container mb-2" (mousemove)="onMouseMove($event)" (mouseup)="cancelConnection()">
+
+	<!-- Canvas -->
+	<div #canvas class="canvas border border-success rounded flex-grow-1 flex-fill overflow-auto">
+
+		<button class="btn btn-success add-step-button" (click)="onAddStep()">+ Add Step</button>
+
+		<!-- SVG for connections -->
+		<svg class="connections" [attr.width]="svgDimensions.width" [attr.height]="svgDimensions.height">
+			<!-- Existing connections -->
+			<path *ngFor="let c of workflow?.connections" [attr.d]="getConnectionPoints(c).d"
+				[attr.stroke]="getConnectionPoints(c).isStraight ? 'black' : 'black'" stroke-width="2"
+				fill="none">
+			</path>
+
+			<!-- Temporary connection (drag‑and‑drop) -->
+			<line *ngIf="tempConnection" [attr.x1]="tempConnection.fromX" [attr.y1]="tempConnection.fromY"
+				[attr.x2]="tempConnection.toX" [attr.y2]="tempConnection.toY" stroke="gray" stroke-width="2"
+				stroke-dasharray="5,5">
+			</line>
+		</svg>
+
+
+		<!-- Canvas elements -->
+		<minty-task-widget [task]="step" *ngFor="let step of workflow?.steps ; trackBy: trackStepById" cdkDrag cdkDragBoundary=".canvas"
+			(cdkDragMoved)="onDragMoved($event, step)" (cdkDragEnded)="onDragEnded($event, step)"
+			[cdkDragFreeDragPosition]="{ x: step.layout.x, y: step.layout.y }"
+			[id]="step.stepName"
+			(displayTask)="onDisplayTask(step.id)"
+			(startConnection)="onStartConnection(step, $event)"
+			(endConnection)="onEndConnection(step, $event)"
+			(hoverPort)="onHoverPort(step, $event)"></minty-task-widget>
+
+		<ng-container *ngIf="workflow?.outputStep">
+			<minty-task-widget [task]="workflow.outputStep" cdkDrag cdkDragBoundary=".canvas"
+				(cdkDragMoved)="onDragMoved($event, workflow.outputStep)" (cdkDragEnded)="onDragEnded($event, workflow.outputStep)"
+				[cdkDragFreeDragPosition]="{ x: workflow.outputStep.layout.x, y: workflow.outputStep.layout.y }"
+				[id]="workflow.outputStep.stepName"
+				(displayTask)="onDisplayTask(workflow.outputStep.id)"
+				(startConnection)="onStartConnection(workflow.outputStep, $event)"
+				(endConnection)="onEndConnection(workflow.outputStep, $event)"
+				(hoverPort)="onHoverPort(workflow.outputStep, $event)"></minty-task-widget>
+		</ng-container>
+
+	</div>
+</div>

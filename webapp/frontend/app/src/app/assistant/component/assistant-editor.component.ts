@@ -67,11 +67,11 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 		if (this.assistant) {
 			this.modelChanged(this.assistant.model);
 
-			this.usedDocs = this._documents.filter(doc => this.assistant.documentIds.find(id => id === doc.documentId) != undefined);
-			this.unusedDocs = this._documents.filter(doc => this.usedDocs.find(asstDoc => asstDoc.documentId === doc.documentId) == undefined);
+			this.usedDocs = this.documents.filter(doc => this.assistant.documentIds.find(id => id === doc.documentId) != undefined);
+			this.unusedDocs = this.documents.filter(doc => this.usedDocs.find(asstDoc => asstDoc.documentId === doc.documentId) == undefined);
 
-			this.usedTools = this._tools.filter(tool => this.assistant.tools.find(name => name.localeCompare(tool.name) === 0) != undefined);
-			this.unusedTools = this._tools.filter(tool => this.usedTools.find(asstTool => asstTool.name.localeCompare(tool.name) === 0) == undefined);
+			this.usedTools = this.tools.filter(tool => this.assistant.tools.find(name => name.localeCompare(tool.name) === 0) != undefined);
+			this.unusedTools = this.tools.filter(tool => this.usedTools.find(asstTool => asstTool.name.localeCompare(tool.name) === 0) == undefined);
 		}
 	}
 

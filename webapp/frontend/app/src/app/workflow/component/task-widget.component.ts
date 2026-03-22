@@ -1,7 +1,8 @@
-import { Component, HostListener, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, SimpleChanges, OnChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import {TaskRequest } from 'src/app/model/workflow/task-specification';
+import { TaskRequest } from 'src/app/model/workflow/task-specification';
+import { WorkflowGeometryService } from './workflow-editor/services/workflow-geometry.service';
 
 @Component({
 	selector: 'minty-task-widget',
@@ -9,81 +10,45 @@ import {TaskRequest } from 'src/app/model/workflow/task-specification';
 	imports: [CommonModule, FormsModule],
 	templateUrl: 'task-widget.component.html',
 	styleUrls: ['task-widget.component.css'],
-	host: { 'class': 'canvas-element' }
+	host: { 'class': 'canvas-element' },
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class TaskWidgetComponent implements OnInit {
+export class TaskWidgetComponent implements OnChanges {
 
-	_task: TaskRequest = null;
-	@Input()
-		set task(value: TaskRequest){
-			this._task = value;
-			this.recalc();
-		}
-		get task(): TaskRequest {
-			return this._task;
-		}
+	@Input() task: TaskRequest = null;
+	private numInputs = 0;
+	private numOutputs = 0;
+	inputPorts: { x: number; y: number; size: number }[];
+	outputPorts: { x: number; y: number; size: number }[];
+
 	@Output() startConnection = new EventEmitter<{ portIndex: number; isInput: boolean; event: MouseEvent }>();
 	@Output() endConnection = new EventEmitter<{ portIndex: number; isInput: boolean; event: MouseEvent }>();
 	@Output() hoverPort = new EventEmitter<{ portIndex: number; isInput: boolean; entering: boolean }>();
 	@Output() displayTask = new EventEmitter<null>();
 
-	rect = { x: 1, y: 1, width: 98, height: 48 };
+	rect = WorkflowGeometryService.TaskRect;
 
-	topPorts: { x: number; y: number; size: number }[] = [];
-	bottomPorts: { x: number; y: number; size: number }[] = [];
+	public constructor(private workflowGeometryService: WorkflowGeometryService) { }
 
-	ngOnInit() {
-		this.recalc();
+	ngOnChanges(changes: SimpleChanges): void {
+		if (changes['task']) {
+			this.refreshPorts();
+		}
 	}
 
-	@HostListener('window:resize')
-	onResize() {
-		this.recalc();
-	}
+	private refreshPorts(): void {
+		const numInputPorts = Number(this.task.configuration['Number of Inputs'] ?? this.task.layout.numInputs);
+		const numOutputports = Number(this.task.configuration['Number of Outputs'] ?? this.task.layout.numOutputs);
 
-	recalc() {
-		const numTopPorts = Number(this.task.configuration['Number of Inputs'] ?? this.task.layout.numInputs);
-		const numBottomPorts = Number(this.task.configuration['Number of Outputs'] ?? this.task.layout.numOutputs);
-
-		this.topPorts = this.calculatePorts(numTopPorts, this.rect.y);
-		this.bottomPorts = this.calculatePorts(numBottomPorts, this.rect.y + this.rect.height);
-	}
-
-	calculatePorts(n: number, y: number): { x: number; y: number; size: number }[] {
-		const r = this.rect;
-		const gap = r.width / (n + 1);
-		const desiredSize = r.height * 0.5;
-		const squareSize = Math.min(desiredSize, gap * 0.9, 15);
-
-		const topY = y - squareSize / 2;
-
-		const ports: { x: number; y: number; size: number }[] = [];
-
-		for (let i = 0; i < n; i++) {
-			const cx = r.x + gap * (i + 1);
-			const x = cx - squareSize / 2;
-			ports.push({ x, y: topY, size: squareSize });
+		if (numInputPorts !== this.numInputs) {
+			this.numInputs = numInputPorts;
+			this.inputPorts = this.workflowGeometryService.calculateInputPorts(this.task);
 		}
 
-		return ports;
-	}
-
-	getPortCenter(portIndex: number, isInput: boolean): { x: number; y: number } {
-		const ports = isInput ? this.topPorts : this.bottomPorts;
-		if (!ports[portIndex]) {
-			console.warn(
-				`TaskWidgetComponent.getPortCenter(): portIndex ${portIndex} out of range for task ${this.task.stepName}. ` +
-				`Available ports: ${ports.length}`
-			);
-			return { x: 0, y: 0 };
+		if (numOutputports !== this.numOutputs) {
+			this.numOutputs = numOutputports;
+			this.outputPorts = this.workflowGeometryService.calculateOutputPorts(this.task);
 		}
-		// Account for task layout position
-		const layoutX = this.task.layout.tempX ?? this.task.layout.x;
-		const layoutY = this.task.layout.tempY ?? this.task.layout.y;
-		return {
-			x: layoutX + ports[portIndex].x + ports[portIndex].size / 2,
-			y: layoutY + ports[portIndex].y + ports[portIndex].size / 2
-		};
 	}
 
 	onPortMouseUp(portIndex: number, isInput: boolean, event: MouseEvent) {

@@ -78,9 +78,8 @@ export class ProjectNodeComponent {
 		// Guard against processing events from children.
 		if (this.node.path === node.path && node.type === 'Folder') {
 			this.toggle();
-		} else {
-			this.nodeSelected.emit(node);
 		}
+		this.nodeSelected.emit(node);
 	}
 
 	deleteNode() {

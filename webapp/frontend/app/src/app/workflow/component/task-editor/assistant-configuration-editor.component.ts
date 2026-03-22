@@ -1,5 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { ChangeDetectionStrategy, Component, forwardRef, Input } from "@angular/core";
+import { Component, forwardRef, Input } from "@angular/core";
 import { FormsModule, NG_VALUE_ACCESSOR, ControlValueAccessor } from "@angular/forms";
 import { AssistantEditorComponent } from "src/app/assistant/component/assistant-editor.component";
 import { Assistant, createAssistant } from "src/app/model/assistant";
@@ -9,6 +9,7 @@ import { EnumListEditorComponent } from "./enumlist-editor.component";
 import { Model } from "src/app/model/model";
 import { MintyDoc } from "src/app/model/minty-doc";
 import { MintyTool } from "src/app/model/minty-tool";
+import { WorkflowStateService } from "../workflow-editor/services/workflow-state.service";
 
 @Component({
 	selector: 'minty-assistant-configuration-editor',
@@ -25,9 +26,9 @@ import { MintyTool } from "src/app/model/minty-tool";
 export class AssistantConfigurationEditorComponent implements ControlValueAccessor {
 
 	@Input() choices: EnumList;
-	@Input() models: Model[];
-	@Input() documents: MintyDoc[];
-	@Input() tools: MintyTool[];
+	models: Model[];
+	documents: MintyDoc[];
+	tools: MintyTool[];
 
 	assistantSpec: AssistantSpec | null = null;
 	useCustomAssistant: boolean = true;
@@ -38,10 +39,16 @@ export class AssistantConfigurationEditorComponent implements ControlValueAccess
 	assistantId: string | null = null;
 	assistant: Assistant = createAssistant();
 
+	public constructor(private workflowStateService: WorkflowStateService) {}
+
 	writeValue(value: AssistantSpec | null): void {
 		if (!value) {
 			return;
 		}
+
+		this.models = this.workflowStateService.models;
+		this.documents = this.workflowStateService.documents;
+		this.tools = this.workflowStateService.tools;
 
 		const spec: AssistantSpec = typeof value === 'string' ? JSON.parse(value) : value;
 

@@ -4,6 +4,6 @@ import java.util.UUID;
 
 import tom.workflow.tracking.model.ExecutionState;
 
-public record WorkflowState(UUID id, String name, ExecutionState state) {
+public record WorkflowState(UUID id, String name, boolean failed, ExecutionState state) {
 
 }

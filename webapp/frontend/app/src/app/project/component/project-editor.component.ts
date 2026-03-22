@@ -71,7 +71,7 @@ export class ProjectEditorComponent {
 				});
 			}
 		} else {
-			this.selectedNode = null;
+			this.selectedNode = node;
 		}
 	}
 

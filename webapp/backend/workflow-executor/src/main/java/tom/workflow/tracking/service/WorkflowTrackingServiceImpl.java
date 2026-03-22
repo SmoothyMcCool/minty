@@ -57,10 +57,11 @@ public class WorkflowTrackingServiceImpl implements WorkflowTrackingService {
 	public synchronized List<WorkflowState> getWorkflowList(UserId userId) {
 		List<WorkflowState> memoryResults = runningWorkflows.stream().filter(item -> item.getUser().equals(userId))
 				.map(item -> new WorkflowState(item.getExecutionState().getId(), item.getWorkflowName(),
-						item.getExecutionState().getState()))
+						item.getExecutionState().isFailed(), item.getExecutionState().getState()))
 				.toList();
 		List<WorkflowState> dbResults = workflowExecutionRepository.findAllByOwnerId(userId).stream()
-				.map(item -> new WorkflowState(item.getId(), item.getName(), item.getState())).toList();
+				.map(item -> new WorkflowState(item.getId(), item.getName(), item.isFailed(), item.getState()))
+				.toList();
 		return Stream.concat(memoryResults.stream(), dbResults.stream()).toList();
 	}
 

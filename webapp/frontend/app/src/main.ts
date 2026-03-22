@@ -22,8 +22,6 @@ import { ResponseInterceptor } from './app/response-interceptor';
 import { ViewDiagramsComponent } from './app/diagram/component/view-diagrams.component';
 import { EditWorkflowComponent } from './app/workflow/component/edit-workflow.component';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
-import { NewWorkflowComponent } from './app/workflow/component/new-workflow.component';
-import { RunWorkflowComponent } from './app/workflow/component/run-workflow.component';
 import { ViewHelpComponent } from './app/help/component/view-help.component';
 import { DocumentsHelpComponent } from './app/help/component/documents-help.component';
 import { AssistantsHelpComponent } from './app/help/component/assistants-help.component';
@@ -38,6 +36,7 @@ import { WorkflowsTasksCreateComponent } from './app/help/component/workflows-ta
 import { ViewProjectComponent } from './app/project/component/view-project.component';
 import { ProjectListComponent } from './app/project/component/project-list.component';
 import { EditProjectComponent } from './app/project/component/edit-project.component';
+import { ViewSkillsComponent } from './app/skills/component/view-skills.component';
 
 export function clipboardOptionsFactory(): ClipboardOptions {
 	return {};
@@ -83,6 +82,10 @@ bootstrapApplication(AppComponent, {
 			{
 				path: 'documents',
 				component: ViewDocumentsComponent
+			},
+			{
+				path: 'skills',
+				component: ViewSkillsComponent
 			},
 			{
 				path: 'help',
@@ -177,12 +180,8 @@ bootstrapApplication(AppComponent, {
 						component: EditWorkflowComponent
 					},
 					{
-						path: 'new',
-						component: NewWorkflowComponent
-					},
-					{
-						path: ':id',
-						component: RunWorkflowComponent
+						path: 'edit',
+						component: EditWorkflowComponent
 					}
 				]
 			}

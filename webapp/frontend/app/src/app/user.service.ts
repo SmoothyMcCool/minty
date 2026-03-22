@@ -18,14 +18,19 @@ export class UserService {
 	private static readonly Signup = 'api/user/new';
 	private static readonly Update = 'api/user/update';
 	private static readonly GetSystemDefaults = 'api/user/defaults/system';
-	private static readonly GetUserDefaults = 'api/user/defaults/user';
 	private static readonly GetUser = 'api/user';
 
 	private user: User = null;
+	private userDefaults: AttributeMap;
+	private systemDefaults: AttributeMap;
+
 	private timeoutTimer$ = new Subject<'start' | 'stop'>();
 
 	constructor(private alertService: AlertService, private http: HttpClient, private router: Router) {
 		this.startSessionTimeout();
+
+		this.systemDefaults = null;
+		this.userDefaults = null;
 	}
 
 	loggedIn(): boolean {
@@ -33,6 +38,14 @@ export class UserService {
 	}
 
 	getUser(): Observable<User> {
+		// Kind of a hack but I need to defer this call to break a DI loop
+		this.http.get<ApiResult>(UserService.GetSystemDefaults)
+			.pipe(
+				map((result: ApiResult) => {
+					return result.data as AttributeMap;
+				})
+			).subscribe(systemDefaults => this.systemDefaults = systemDefaults);
+
 		if (this.user === null) {
 			return this.http.get<ApiResult>(UserService.GetUser)
 				.pipe(
@@ -84,6 +97,9 @@ export class UserService {
 			defaults: { ...user.defaults },
 			settings: { ...user.settings }
 		};
+
+		this.userDefaults = body.defaults;
+
 		return this.http.post<ApiResult>(UserService.Update, body)
 			.pipe(
 				map((result: ApiResult) => {
@@ -93,22 +109,12 @@ export class UserService {
 			);
 	}
 
-	systemDefaults(): Observable<AttributeMap> {
-		return this.http.get<ApiResult>(UserService.GetSystemDefaults)
-			.pipe(
-				map((result: ApiResult) => {
-					return result.data as AttributeMap;
-				})
-			);
+	getSystemDefaults(): AttributeMap {
+		return this.systemDefaults;
 	}
 
-	userDefaults(): Observable<AttributeMap> {
-		return this.http.get<ApiResult>(UserService.GetUserDefaults)
-			.pipe(
-				map((result: ApiResult) => {
-					return result.data as AttributeMap;
-				})
-			);
+	getUserDefaults(): AttributeMap {
+		return this.userDefaults;
 	}
 
 	logout(): void {

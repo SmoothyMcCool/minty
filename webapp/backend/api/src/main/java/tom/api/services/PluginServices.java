@@ -30,4 +30,6 @@ public interface PluginServices {
 	CacheService getCacheService();
 
 	DocumentExtractorService getDocumentExtractorService();
+
+	SkillService getSkillsService();
 }

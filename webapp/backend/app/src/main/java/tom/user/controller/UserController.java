@@ -1,6 +1,7 @@
 package tom.user.controller;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -66,6 +67,9 @@ public class UserController {
 		try {
 			user = userService.decrypt(encryptedUser);
 			user.setPassword("");
+			user.getDefaults().forEach((k, v) -> {
+				user.getDefaults().put(k, "Value hidden");
+			});
 		} catch (Exception e) {
 			ResponseWrapper<User> response = ResponseWrapper.ApiFailureResponse(HttpStatus.BAD_REQUEST.value(),
 					List.of(ApiError.FAILED_TO_DECRYPT_USER));
@@ -155,6 +159,16 @@ public class UserController {
 		}
 
 		try {
+
+			// Since the frontend never actually asks for user settings, we only have
+			// updated settings here. Merge them with the ones in the database.
+			User decryptedUser = userService.decrypt(existingUser);
+			decryptedUser.getDefaults().forEach((k, v) -> {
+				if (!user.getDefaults().containsKey(k) || user.getDefaults().get(k).contentEquals("Value hidden")) {
+					user.getDefaults().put(k, v);
+				}
+			});
+
 			EncryptedUser updatedUser = userService.encrypt(user);
 			User savedUser = userService.decrypt(userRepository.save(updatedUser));
 			savedUser.setPassword("");
@@ -170,25 +184,11 @@ public class UserController {
 	@GetMapping({ "/defaults/system" })
 	public ResponseEntity<ResponseWrapper<Map<String, String>>> systemDefaults(
 			@AuthenticationPrincipal UserDetailsUser userDetails) {
-		ResponseWrapper<Map<String, String>> response = ResponseWrapper.SuccessResponse(properties.getSystemDefaults());
-		return new ResponseEntity<>(response, HttpStatus.OK);
-	}
-
-	@GetMapping({ "/defaults/user" })
-	public ResponseEntity<ResponseWrapper<Map<String, String>>> userDefaults(
-			@AuthenticationPrincipal UserDetailsUser userDetails) {
-		User user = userService.getUserFromId(userDetails.getId()).orElseThrow();
-		Map<String, String> currentUserDefaults = user.getDefaults();
-		Map<String, String> taskDefaults = properties.getUserDefaults();
-
-		// Add any values absent to currentUserDefaults from taskDefaults.
-		taskDefaults.entrySet().stream().forEach(value -> {
-			if (!currentUserDefaults.containsKey(value.getKey())) {
-				currentUserDefaults.put(value.getKey(), value.getValue());
-			}
+		Map<String, String> systemProperties = new HashMap<>();
+		properties.getSystemDefaults().forEach((k, v) -> {
+			systemProperties.put(k, "Value hidden");
 		});
-
-		ResponseWrapper<Map<String, String>> response = ResponseWrapper.SuccessResponse(currentUserDefaults);
+		ResponseWrapper<Map<String, String>> response = ResponseWrapper.SuccessResponse(systemProperties);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 

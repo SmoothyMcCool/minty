@@ -30,6 +30,7 @@ public class WorkflowExecution {
 	private String name;
 	@Convert(converter = ExecutionStateConverter.class)
 	private ExecutionState state;
+	private boolean failed;
 	@OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	@JoinColumn(name = "recordId", unique = true)
 	private ExecutionRecord executionRecord;
@@ -39,6 +40,7 @@ public class WorkflowExecution {
 		this.ownerId = null;
 		this.name = "";
 		state = new ExecutionState();
+		failed = false;
 		executionRecord = new ExecutionRecord();
 	}
 
@@ -80,6 +82,14 @@ public class WorkflowExecution {
 
 	public void setState(ExecutionState state) {
 		this.state = state;
+	}
+
+	public boolean isFailed() {
+		return failed;
+	}
+
+	public void setFailed(boolean failed) {
+		this.failed = failed;
 	}
 
 	public ExecutionRecord getExecutionRecord() {

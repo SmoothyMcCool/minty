@@ -10,8 +10,7 @@
 			</div>
 
 			<div class="modal-body">
-				<minty-task-editor [(ngModel)]="editedTask" [taskSpecification]="specification" [defaults]="defaults"
-					[enumLists]="enumLists" [models]="models" [tools]="tools" [documents]="documents"
+				<minty-task-editor [(ngModel)]="editedTask" [taskSpecification]="specification"
 					(taskNameChanged)="onTaskNameChanged($event)">
 				</minty-task-editor>
 			</div>

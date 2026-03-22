@@ -171,6 +171,7 @@ public class TaskRunner {
 					}
 
 					if (failed || task.failed()) {
+						failed = true;
 						String error = task.getError();
 						if (StringUtils.isNotBlank(error)) {
 							errors.add(task.getError());
@@ -180,14 +181,6 @@ public class TaskRunner {
 						logger.warn("Task " + request.getStepName() + " failed. Workflow is stopping.");
 						throw new TerminalTaskError("Task " + request.getStepName() + " failed. Workflow is stopping.");
 
-						/*
-						 * if (task.terminalFailure()) { logger.warn("Task " + request.getStepName() +
-						 * " failed with a terminal error. Task is stopping."); throw new
-						 * TerminalTaskError("Task " + request.getStepName() +
-						 * " failed with a terminal error. Task is stopping."); } else {
-						 * logger.warn("Task " + request.getStepName() +
-						 * " failed with a non-terminal error. Workflow will attempt to continue."); }
-						 */
 					} else {
 						Packet result = task.getResult();
 						if (result != null) {
