@@ -66,6 +66,7 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 	private final int documentTargetChunkSize;
 	private final int macroTargetChunkSize;
 	private final int embeddingBatchSize;
+	private final MintyConfiguration config;
 	// private final int maxEmbeddingTokens;
 
 	private final Path docFileStore;
@@ -76,7 +77,7 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 			AssistantDocumentLinkService assistantDocumentLinkService, MintyConfiguration properties,
 			JdbcTemplate vectorJdbcTemplate, ConversationServiceInternal conversationService,
 			AssistantManagementService assistantManagementService, AssistantQueryService assistantQueryService,
-			DocumentExtractorService documentExtractorService) {
+			DocumentExtractorService documentExtractorService, MintyConfiguration config) {
 		this.fileProcessingExecutor = fileProcessingExecutor;
 		this.llmService = llmService;
 		this.documentRepository = documentRepository;
@@ -86,6 +87,7 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 		this.assistantManagementService = assistantManagementService;
 		this.assistantQueryService = assistantQueryService;
 		this.documentExtractorService = documentExtractorService;
+		this.config = config;
 		docFileStore = properties.getConfig().fileStores().docs();
 		keywordsPerDocument = properties.getConfig().llm().embedding().keywordsPerDocument();
 		documentTargetChunkSize = properties.getConfig().llm().embedding().documentTargetChunkSize();
@@ -146,7 +148,7 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 			ProjectService projectService) {
 		DecomposedMarkdownDocumentProcessingTask task = new DecomposedMarkdownDocumentProcessingTask(userId, projectId,
 				file, projectService, conversationService, assistantManagementService, assistantQueryService,
-				documentExtractorService);
+				documentExtractorService, config);
 		fileProcessingExecutor.submit(task);
 	}
 
@@ -181,7 +183,7 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 
 	private List<Document> read(File file) {
 		String markdown = documentExtractorService.extract(file);
-		List<Section> sections = MarkdownSectionSplitter.split(markdown);
+		List<Section> sections = MarkdownSectionSplitter.split(markdown, config.getConfig().pandoc().headingLevel());
 
 		return sections.stream().filter(s -> !s.content.isBlank()).map(s -> {
 			Map<String, Object> metadata = new HashMap<>();

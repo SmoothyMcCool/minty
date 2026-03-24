@@ -14,6 +14,7 @@ fileStores:
   workflowLogs: ${output.directory}/working/logs
   pug: ${output.directory}/working/pug
   skills: ${output.directory}/working/skills
+  scripts: ${output.directory}/working/scripts
 
 # Database configuration
 db:
@@ -89,9 +90,16 @@ llm:
     maxEmbeddingTokens: 700
 
 # Document parsing configuration
-parsingConfiguration:
-  pandocPath: D:\Applications\pandoc\pandoc.exe
-  pandocMimeTypes:
+pandoc:
+  path: D:\Applications\pandoc\pandoc.exe
+  outputFormat: gfm
+  luaFilter: # flatten.lua
+  noHighlight: true
+  stripComments: true
+  wrap: none
+  headingLevel: 3
+  extraArgs: # list format
+  mimeTypes:
     - application/vnd.openxmlformats-officedocument.wordprocessingml.document
     - application/msword
     - application/vnd.oasis.opendocument.text
@@ -101,7 +109,7 @@ parsingConfiguration:
     - text/rst
     - text/x-rst
     - application/epub+zip
-  pandocExtensions:
+  extensions:
     - .docx
     - .doc
     - .odt

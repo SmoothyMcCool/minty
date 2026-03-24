@@ -49,6 +49,7 @@ export class SkillViewerComponent {
 		this.skillService.uploadSkill(this.skillFile).subscribe(response => {
 			this.alertService.postSuccess(response);
 			this.refreshSkillList();
+			this.skillFile = null;
 		});
 	}
 

@@ -2,8 +2,6 @@ package tom.api.skill;
 
 import java.util.List;
 
-import tom.api.skill.SkillMetadata;
-
 public record Skill(String name, SkillMetadata metadata, List<SkillFile> files) {
 	SkillFile mainFile() {
 		return files.stream().filter(f -> f.relativePath().equals("SKILL.md")).findFirst()
