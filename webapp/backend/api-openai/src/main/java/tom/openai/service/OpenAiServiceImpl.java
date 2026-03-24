@@ -136,8 +136,7 @@ public class OpenAiServiceImpl implements LlmService {
 			List<Advisor> advisors) {
 
 		OpenAiChatOptions chatOptions = OpenAiChatOptions.builder().model(assistant.model())
-				.temperature(assistant.temperature()).parallelToolCalls(false).responseFormat(null).streamUsage(true)
-				.build();
+				.temperature(assistant.temperature()).parallelToolCalls(false).responseFormat(null).build();
 
 		ChatModel chatModel = OpenAiChatModel.builder().openAiApi(openAiApi)
 				.toolCallingManager(new AuditingToolCallingManager(query.getConversationId().getValue().toString(),

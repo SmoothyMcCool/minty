@@ -27,6 +27,7 @@ import tom.api.services.assistant.QueueFullException;
 import tom.api.services.assistant.StringResult;
 import tom.api.services.document.extract.DocumentExtractorService;
 import tom.api.services.document.extract.Section;
+import tom.config.MintyConfiguration;
 import tom.conversation.service.ConversationServiceInternal;
 
 public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
@@ -42,11 +43,12 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 	private final DocumentExtractorService documentExtractorService;
 	private final String documentName;
 	private final String documentFolder;
+	private final MintyConfiguration config;
 
 	public DecomposedMarkdownDocumentProcessingTask(UserId userId, ProjectId projectId, File file,
 			ProjectService projectService, ConversationServiceInternal conversationService,
 			AssistantManagementService assistantManagementService, AssistantQueryService assistantQueryService,
-			DocumentExtractorService documentExtractorService) {
+			DocumentExtractorService documentExtractorService, MintyConfiguration config) {
 		this.userId = userId;
 		this.projectId = projectId;
 		this.file = file;
@@ -55,6 +57,7 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 		this.assistantManagementService = assistantManagementService;
 		this.assistantQueryService = assistantQueryService;
 		this.documentExtractorService = documentExtractorService;
+		this.config = config;
 
 		String filename = file.getName();
 		int lastDot = filename.lastIndexOf('.');
@@ -73,7 +76,8 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 			String markdown = documentExtractorService.extract(file);
 
 			// Split into sections.
-			List<Section> sections = MarkdownSectionSplitter.split(markdown);
+			List<Section> sections = MarkdownSectionSplitter.split(markdown,
+					config.getConfig().pandoc().headingLevel());
 
 			String summary = writeSummary(sections);
 

@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -32,14 +33,10 @@ public class DocumentExtractorServiceImpl implements DocumentExtractorService {
 	private static final Logger logger = LogManager.getLogger(DocumentExtractorServiceImpl.class);
 
 	private static final Tika tika = new Tika();
-	private final String pandocPath;
-	private final List<String> pandocMimeTypes;
-	private final List<String> pandocExtensions;
+	private final MintyConfiguration config;
 
 	public DocumentExtractorServiceImpl(MintyConfiguration configuration) {
-		this.pandocPath = configuration.getConfig().parsingConfiguration().pandocPath();
-		this.pandocMimeTypes = configuration.getConfig().parsingConfiguration().pandocMimeTypes();
-		this.pandocExtensions = configuration.getConfig().parsingConfiguration().pandocExtensions();
+		this.config = configuration;
 	}
 
 	@Override
@@ -103,11 +100,11 @@ public class DocumentExtractorServiceImpl implements DocumentExtractorService {
 	 * or file extension.
 	 */
 	private boolean isPandocSupported(String mime, String fileName) {
-		if (pandocMimeTypes.contains(mime)) {
+		if (config.getConfig().pandoc().mimeTypes().contains(mime)) {
 			return true;
 		}
 		// Also match on extension for cases where MIME detection is ambiguous
-		for (String ext : pandocExtensions) {
+		for (String ext : config.getConfig().pandoc().extensions()) {
 			if (fileName.endsWith(ext)) {
 				return true;
 			}
@@ -123,12 +120,15 @@ public class DocumentExtractorServiceImpl implements DocumentExtractorService {
 	 * @throws InterruptedException
 	 */
 	private String extractWithPandoc(File file) throws IOException, InterruptedException {
-		ProcessBuilder pb = new ProcessBuilder(pandocPath, "--to=gfm", // GitHub-flavoured Markdown output
-				"--wrap=none", // don't hard-wrap lines
-				file.getAbsolutePath());
+		List<String> command = buildCommand(file);
+		ProcessBuilder pb = new ProcessBuilder(command);
+
 		pb.redirectErrorStream(false); // keep stderr separate so we can report it
 
+		String commandString = String.join(" ", pb.command());
+		logger.info("Executing command " + commandString);
 		Process process = pb.start();
+		process.toString();
 
 		// Read stdout (the converted Markdown)
 		String output;
@@ -149,6 +149,31 @@ public class DocumentExtractorServiceImpl implements DocumentExtractorService {
 		}
 
 		return output;
+	}
+
+	private List<String> buildCommand(File file) {
+		List<String> cmd = new ArrayList<>();
+		cmd.add(config.getConfig().pandoc().path());
+		cmd.add("--to=" + config.getConfig().pandoc().outputFormat());
+		cmd.add("--wrap=" + config.getConfig().pandoc().wrap());
+
+		if (config.getConfig().pandoc().noHighlight()) {
+			cmd.add("--syntax-highlighting=none");
+		}
+		if (config.getConfig().pandoc().stripComments()) {
+			cmd.add("--strip-comments");
+		}
+		if (config.getConfig().pandoc().luaFilter() != null && !config.getConfig().pandoc().luaFilter().isBlank()) {
+			cmd.add("--lua-filter=" + config.getConfig().fileStores().scripts() + File.separator
+					+ config.getConfig().pandoc().luaFilter());
+		}
+
+		if (config.getConfig().pandoc().extraArgs() != null && !config.getConfig().pandoc().extraArgs().isEmpty()) {
+			cmd.addAll(config.getConfig().pandoc().extraArgs());
+		}
+		cmd.add(file.getAbsolutePath());
+
+		return cmd;
 	}
 
 	private static String parseWithTika(File file) throws IOException, SAXException, TikaException {
