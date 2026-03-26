@@ -13,4 +13,6 @@ public interface DocumentExtractorService {
 
 	String buildBreadcrumb(List<Section> sections, Section target);
 
+	List<Section> extractAndSplit(File file);
+
 }

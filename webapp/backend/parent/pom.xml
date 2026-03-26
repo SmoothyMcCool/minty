@@ -52,6 +52,7 @@
 		<mariadb.client.version>3.5.7</mariadb.client.version>
 		<micrometer.version>1.16.2</micrometer.version>
 		<pdfbox.version>3.0.7</pdfbox.version>
+		<poi.version>5.5.1</poi.version>
 		<pug4j.version>2.3.1</pug4j.version>
 		<spring.version>6.2.15</spring.version>
 		<spring.data.version>2025.0.6</spring.data.version>
@@ -159,6 +160,12 @@
 				<version>${tika.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.poi</groupId>
+				<artifactId>poi</artifactId>
+				<version>${poi.version}</version>
 			</dependency>
 
 			<!-- pug4j -->

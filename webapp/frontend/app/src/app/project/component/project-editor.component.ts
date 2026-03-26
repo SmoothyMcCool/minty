@@ -151,9 +151,17 @@ export class ProjectEditorComponent {
 		});
 	}
 
-	decomposeAndAddMarkdown() {
+	decomposeMarkdown() {
 		this.mdFileDialogVisible = false;
-		this.projectService.decomposeAndAddMarkdown(this.project.id, this.document).subscribe((result: string) => {
+		this.projectService.decomposeMarkdown(this.project.id, this.document).subscribe((result: string) => {
+			this.alertService.postSuccess(result);
+			this.refresh();
+		});
+	}
+
+	decomposeAndSummarizeMarkdown() {
+		this.mdFileDialogVisible = false;
+		this.projectService.decomposeAndSummarizeMarkdown(this.project.id, this.document).subscribe((result: string) => {
 			this.alertService.postSuccess(result);
 			this.refresh();
 		});

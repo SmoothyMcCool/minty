@@ -16,7 +16,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 
-import tom.api.services.document.SpreadsheetFormat;
+import tom.document.SpreadsheetFormat;
 
 public class SpreadsheetExtractor {
 

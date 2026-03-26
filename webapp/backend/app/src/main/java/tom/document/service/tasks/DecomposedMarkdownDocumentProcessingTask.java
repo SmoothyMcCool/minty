@@ -29,6 +29,7 @@ import tom.api.services.document.extract.DocumentExtractorService;
 import tom.api.services.document.extract.Section;
 import tom.config.MintyConfiguration;
 import tom.conversation.service.ConversationServiceInternal;
+import tom.document.service.extract.pandoc.markdown.MarkdownSectionSplitter;
 
 public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 
@@ -44,6 +45,7 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 	private final String documentName;
 	private final String documentFolder;
 	private final MintyConfiguration config;
+	List<Section> sections;
 
 	public DecomposedMarkdownDocumentProcessingTask(UserId userId, ProjectId projectId, File file,
 			ProjectService projectService, ConversationServiceInternal conversationService,
@@ -66,27 +68,39 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 		this.documentFolder = "/documents/" + documentName;
 	}
 
+	public void decompose() throws Exception {
+		// Parse whole document to markdown.
+		String markdown = documentExtractorService.extract(file);
+
+		// Split into sections.
+		sections = MarkdownSectionSplitter.split(markdown, config.getConfig().pandoc().headingLevel(),
+				config.getConfig().pandoc().minimumSectionSize()).stream().map(section -> {
+					Section s = new Section();
+					s.content = section.content;
+					s.index = section.index;
+					s.level = section.level;
+					s.parentIndex = section.parentIndex;
+					s.title = section.title;
+					return s;
+				}).toList();
+		saveSections(sections);
+	}
+
 	@Override
 	public void run() {
 		try {
 
 			logger.info("Started processing " + documentName);
 
-			// Parse whole document to markdown.
-			String markdown = documentExtractorService.extract(file);
-
-			// Split into sections.
-			List<Section> sections = MarkdownSectionSplitter.split(markdown,
-					config.getConfig().pandoc().headingLevel());
-
 			String summary = writeSummary(sections);
 
 			saveSummary(summary);
-			saveSections(sections);
 
 			logger.info("Decomposed markdown processing complete for " + file.getName());
 
-		} catch (Exception e) {
+		} catch (
+
+		Exception e) {
 			logger.error("Markdown processing failed: ", e);
 		} finally {
 			file.delete();
@@ -108,7 +122,14 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 			md.append("   File: `").append(filename).append("`\n");
 			md.append("   Path: `").append(breadcrumb).append("`\n\n");
 			md.append("#### Section Summary\n");
-			md.append(generateSummary(s, breadcrumb)).append("\n\n");
+
+			String summary = generateSummary(s, breadcrumb);
+			if (summary.strip().equals("INSUFFICIENT_CONTENT")) {
+				md.append("No content in section.");
+			} else {
+				md.append(summary);
+			}
+			md.append("\n\n");
 		}
 
 		return md.toString();
@@ -184,6 +205,16 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 	}
 
 	private void saveSections(List<Section> sections) throws Exception {
+		try {
+			projectService.createFolder(userId, projectId, "/documents");
+		} catch (IllegalStateException e) {
+			// Nothing to do, this just means the folder already exists.
+		}
+		try {
+			projectService.createFolder(userId, projectId, documentFolder);
+		} catch (IllegalStateException e) {
+			// Nothing to do, this just means the folder already exists.
+		}
 		for (Section s : sections) {
 			String name = sectionFilename(s);
 			projectService.writeFile(userId, projectId, documentFolder + "/" + name, FileType.markdown, s.content);

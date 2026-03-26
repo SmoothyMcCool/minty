@@ -11,13 +11,13 @@ import tom.document.model.DocumentState;
 import tom.document.model.MintyDoc;
 import tom.document.service.DocumentServiceInternal;
 
-public class DocumentProcessingTask implements Runnable {
+public class EmbedDocumentTask implements Runnable {
 
-	private static final Logger logger = LogManager.getLogger(DocumentProcessingTask.class);
+	private static final Logger logger = LogManager.getLogger(EmbedDocumentTask.class);
 	private final File file;
 	private final DocumentServiceInternal documentService;
 
-	public DocumentProcessingTask(File file, DocumentServiceInternal documentService) {
+	public EmbedDocumentTask(File file, DocumentServiceInternal documentService) {
 		this.file = file;
 		this.documentService = documentService;
 	}
@@ -48,7 +48,7 @@ public class DocumentProcessingTask implements Runnable {
 
 			documentService.transformAndStore(file, doc);
 
-			synchronized (DocumentProcessingTask.class) {
+			synchronized (EmbedDocumentTask.class) {
 				String parent = file.getParent();
 				if (parent != null) {
 					File parentPath = new File(parent);

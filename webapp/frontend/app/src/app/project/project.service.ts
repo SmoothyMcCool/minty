@@ -24,7 +24,8 @@ export class ProjectService {
 	private static readonly ReadNode = 'api/project/node';
 	private static readonly WriteFile = 'api/project/node/file';
 	private static readonly ConvertToMarkdownAndAddFile = 'api/project/node/convert/markdown';
-	private static readonly ConvertToMarkdownDecomposeAndAddFile = 'api/project/node/convert/markdown/decompose';
+	private static readonly ConvertToMarkdownDecomposeFile = 'api/project/node/convert/markdown/decompose';
+	private static readonly ConvertToMarkdownDecomposeAndSummarizeFile = 'api/project/node/convert/markdown/summarize';
 	private static readonly ExportZip = 'api/project/node/export/zip';
 	private static readonly ImportZip = 'api/project/node/import/zip';
 	private static readonly CreateFolder = 'api/project/node/folder';
@@ -160,12 +161,29 @@ export class ProjectService {
 			);
 	}
 
-	decomposeAndAddMarkdown(projectId: string, doc: DocProperties): Observable<string> {
+	decomposeMarkdown(projectId: string, doc: DocProperties): Observable<string> {
 		const formData = new FormData();
 		formData.append('projectId', projectId);
 		formData.append('file', doc.file, doc.title);
 
-		return this.http.post<ApiResult>(ProjectService.ConvertToMarkdownDecomposeAndAddFile, formData)
+		return this.http.post<ApiResult>(ProjectService.ConvertToMarkdownDecomposeFile, formData)
+			.pipe(
+				catchError(error => {
+					this.alertService.postFailure(JSON.stringify(error));
+					return EMPTY;
+				}),
+				map((result: ApiResult) => {
+					return result.data as string;
+				})
+			);
+	}
+
+	decomposeAndSummarizeMarkdown(projectId: string, doc: DocProperties): Observable<string> {
+		const formData = new FormData();
+		formData.append('projectId', projectId);
+		formData.append('file', doc.file, doc.title);
+
+		return this.http.post<ApiResult>(ProjectService.ConvertToMarkdownDecomposeAndSummarizeFile, formData)
 			.pipe(
 				catchError(error => {
 					this.alertService.postFailure(JSON.stringify(error));
