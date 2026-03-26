@@ -306,28 +306,49 @@ public class ProjectController {
 			Files.createDirectories(file.toPath());
 			mpf.transferTo(file);
 
-			try {
-				logger.info("Markdown processing started for " + file.getName());
-				documentService.processFileToMarkdownAndDecompose(user.getId(), projectId, file, projectService);
+			logger.info("Markdown processing started for " + file.getName());
+			documentService.processFileToMarkdownAndDecompose(user.getId(), projectId, file, projectService, false);
 
-				ResponseWrapper<String> response = ResponseWrapper
-						.SuccessResponse("Markdown processing started for " + file.getName());
-				return new ResponseEntity<>(response, HttpStatus.OK);
+		} catch (Exception e) {
+			logger.error("Markdown processing failed: ", e);
+			ResponseWrapper<String> response = ResponseWrapper
+					.ApiFailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), List.of(ApiError.REQUEST_FAILED));
+			return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+		} finally {
+			file.delete();
+		}
 
-			} catch (Exception e) {
-				logger.error("Markdown processing failed: ", e);
-			}
+		ResponseWrapper<String> response = ResponseWrapper
+				.SuccessResponse("Markdown conversion and decomposing complete.");
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
 
-		} catch (IllegalStateException | IOException e) {
-			logger.error("Failed to store file: ", e);
+	@PostMapping(value = { "/node/convert/markdown/summarize" }, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<ResponseWrapper<String>> convertToMarkdownAndDecomposeSummarize(
+			@AuthenticationPrincipal UserDetailsUser user, @RequestParam("projectId") ProjectId projectId,
+			@RequestPart("file") MultipartFile mpf) {
+
+		File file = new File(tempFileStore + "/" + mpf.getOriginalFilename());
+
+		try {
+			Files.createDirectories(file.toPath());
+			mpf.transferTo(file);
+
+			logger.info("Markdown processing started for " + file.getName());
+			documentService.processFileToMarkdownAndDecompose(user.getId(), projectId, file, projectService, true);
+			// Don't delete the file. Processing task will do that when it completes.
+
+		} catch (Exception e) {
+			logger.error("Markdown processing failed: ", e);
 			ResponseWrapper<String> response = ResponseWrapper
 					.ApiFailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), List.of(ApiError.REQUEST_FAILED));
 			return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 
-		ResponseWrapper<String> response = ResponseWrapper
-				.SuccessResponse("You'll find your file in the active project.");
+		ResponseWrapper<String> response = ResponseWrapper.SuccessResponse(
+				"Markdown conversion and decomposing complete. Summarizing will take some time. Check back later.");
 		return new ResponseEntity<>(response, HttpStatus.OK);
+
 	}
 
 	@PostMapping(value = "/node/import/zip", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

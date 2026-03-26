@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -24,6 +23,9 @@ import tom.api.services.document.SpreadsheetFormat;
 import tom.api.services.document.extract.DocumentExtractorService;
 import tom.api.services.document.extract.Section;
 import tom.config.MintyConfiguration;
+import tom.config.model.PandocConfig;
+import tom.document.service.extract.pandoc.PandocConverter;
+import tom.document.service.extract.pandoc.markdown.MarkdownSectionSplitter;
 import tom.document.service.extract.pdf.PdfExtractor;
 import tom.document.service.extract.spreadsheet.SpreadsheetExtractor;
 
@@ -33,10 +35,13 @@ public class DocumentExtractorServiceImpl implements DocumentExtractorService {
 	private static final Logger logger = LogManager.getLogger(DocumentExtractorServiceImpl.class);
 
 	private static final Tika tika = new Tika();
-	private final MintyConfiguration config;
+	private final PandocConfig config;
+	private final PandocConverter pandoc;
 
 	public DocumentExtractorServiceImpl(MintyConfiguration configuration) {
-		this.config = configuration;
+		this.config = configuration.getConfig().pandoc();
+		this.pandoc = new PandocConverter(config.path(), config.outputFormat(), config.luaFilter(),
+				config.noHighlight(), config.stripComments(), config.wrap(), config.headingLevel(), config.extraArgs());
 	}
 
 	@Override
@@ -57,6 +62,21 @@ public class DocumentExtractorServiceImpl implements DocumentExtractorService {
 	}
 
 	@Override
+	public List<Section> extractAndSplit(File file) {
+		String markdown = extract(file);
+		return MarkdownSectionSplitter.split(markdown, config.headingLevel(), config.minimumSectionSize()).stream()
+				.map(section -> {
+					Section s = new Section();
+					s.content = section.content;
+					s.index = section.index;
+					s.level = section.level;
+					s.parentIndex = section.parentIndex;
+					s.title = section.title;
+					return s;
+				}).toList();
+	}
+
+	@Override
 	public String extract(File file) {
 		return extract(file, SpreadsheetFormat.MARKDOWN);
 	}
@@ -74,20 +94,21 @@ public class DocumentExtractorServiceImpl implements DocumentExtractorService {
 			boolean isTsv = name.endsWith(".tsv") || name.endsWith(".tab");
 			boolean isSpreadsheet = isCsv || isTsv || mime.contains("spreadsheet") || mime.contains("excel");
 			boolean isPdf = mime.equals("application/pdf");
-			boolean isPandocType = isPandocSupported(mime, name);
 
-			if (isPandocType) {
-				markdown = extractWithPandoc(file);
+			if (panDocSupports(mime, name)) {
+				markdown = pandoc.convert(file);
 			} else if (isSpreadsheet) {
-				markdown = SpreadsheetExtractor.extract(file, format);
+				markdown = SpreadsheetExtractor.extract(file,
+						format == SpreadsheetFormat.MARKDOWN ? tom.document.SpreadsheetFormat.MARKDOWN
+								: tom.document.SpreadsheetFormat.TSV);
 			} else if (isPdf) {
 				markdown = PdfExtractor.extract(file);
 			} else {
 				String html = parseWithTika(file);
-				markdown = HtmlToMarkdown.convert(html);
+				markdown = pandoc.convertHtmlToMarkdown(html);
 			}
 
-			return MarkdownNormalizer.normalize(markdown);
+			return normalize(markdown);
 
 		} catch (IOException | SAXException | TikaException | InterruptedException e) {
 			logger.error("Failed to extract file " + file.getName() + ". ", e);
@@ -95,85 +116,28 @@ public class DocumentExtractorServiceImpl implements DocumentExtractorService {
 		}
 	}
 
-	/**
-	 * Checks whether the file should be processed by Pandoc based on its MIME type
-	 * or file extension.
-	 */
-	private boolean isPandocSupported(String mime, String fileName) {
-		if (config.getConfig().pandoc().mimeTypes().contains(mime)) {
+	private boolean panDocSupports(String mime, String filename) {
+		/**
+		 * Checks whether the file should be processed by Pandoc based on its MIME type
+		 * or file extension.
+		 */
+		if (config.mimeTypes().contains(mime)) {
 			return true;
 		}
-		// Also match on extension for cases where MIME detection is ambiguous
-		for (String ext : config.getConfig().pandoc().extensions()) {
-			if (fileName.endsWith(ext)) {
+		for (String ext : config.extensions()) {
+			if (filename.endsWith(ext)) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	/**
-	 * Runs pandoc on the given file, converting it to Markdown (GitHub-flavoured).
-	 * Pandoc is invoked as an external process; stdout is captured as the result.
-	 * 
-	 * @throws IOException
-	 * @throws InterruptedException
-	 */
-	private String extractWithPandoc(File file) throws IOException, InterruptedException {
-		List<String> command = buildCommand(file);
-		ProcessBuilder pb = new ProcessBuilder(command);
+	private static String normalize(String markdown) {
 
-		pb.redirectErrorStream(false); // keep stderr separate so we can report it
+		// Render to HTML then convert back to markdown if desired
+		// but most pipelines simply accept normalized HTML or keep markdown.
 
-		String commandString = String.join(" ", pb.command());
-		logger.info("Executing command " + commandString);
-		Process process = pb.start();
-		process.toString();
-
-		// Read stdout (the converted Markdown)
-		String output;
-		try (InputStream stdout = process.getInputStream()) {
-			output = new String(stdout.readAllBytes(), StandardCharsets.UTF_8);
-		}
-
-		// Read stderr so we can surface any Pandoc warnings/errors
-		String errors;
-		try (InputStream stderr = process.getErrorStream()) {
-			errors = new String(stderr.readAllBytes(), StandardCharsets.UTF_8);
-		}
-
-		int exitCode = process.waitFor();
-		if (exitCode != 0) {
-			throw new RuntimeException(
-					"Pandoc failed (exit " + exitCode + ") for file: " + file.getName() + "\n" + errors);
-		}
-
-		return output;
-	}
-
-	private List<String> buildCommand(File file) {
-		List<String> cmd = new ArrayList<>();
-		cmd.add(config.getConfig().pandoc().path());
-		cmd.add("--to=" + config.getConfig().pandoc().outputFormat());
-		cmd.add("--wrap=" + config.getConfig().pandoc().wrap());
-
-		if (config.getConfig().pandoc().noHighlight()) {
-			cmd.add("--syntax-highlighting=none");
-		}
-		if (config.getConfig().pandoc().stripComments()) {
-			cmd.add("--strip-comments");
-		}
-		if (config.getConfig().pandoc().luaFilter() != null && !config.getConfig().pandoc().luaFilter().isBlank()) {
-			cmd.add("--lua-filter=" + config.getConfig().fileStores().scripts() + File.separator
-					+ config.getConfig().pandoc().luaFilter());
-		}
-
-		if (config.getConfig().pandoc().extraArgs() != null && !config.getConfig().pandoc().extraArgs().isEmpty()) {
-			cmd.addAll(config.getConfig().pandoc().extraArgs());
-		}
-		cmd.add(file.getAbsolutePath());
-
-		return cmd;
+		return markdown.replaceAll("[ \\t]+\\n", "\n").replaceAll("\\n{3,}", "\n\n").trim() + "\n";
 	}
 
 	private static String parseWithTika(File file) throws IOException, SAXException, TikaException {

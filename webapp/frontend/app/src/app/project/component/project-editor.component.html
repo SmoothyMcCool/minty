@@ -1,28 +1,31 @@
-<div class="container-fluid py-3">
-	<div class="row">
+<div class="container-fluid py-3 h-100">
+	<div class="row h-100">
 		<!-- Left pane - tree view -->
-		<div class="col-3 border-end">
+		<div class="col-3 border-end d-flex flex-column" style="max-height: 100%;">
 			<h5 class="mb-3">Files</h5>
 			<ul class="list-group">
+				<li class="list-group-item text-bg-light bg-opacity-75 d-flex justify-content-start align-items-center"
+					style="height: 2.5rem">
+					<button class="btn p-0 px-2" (click)="addFolder()">
+						<i class="bi bi-folder-plus"></i>
+					</button>
+					<button class="btn p-0 px-2" (click)="addFile()">
+						<i class="bi bi-file-earmark-plus"></i>
+					</button>
+					<button class="btn p-0 px-2" (click)="addAndConvertToMd()">
+						<i class="bi bi-filetype-md"></i>
+					</button>
+					<button class="btn p-0 px-2" (click)="addZipToProject()">
+						<i class="bi bi-file-earmark-zip"></i>
+					</button>
+				</li>
+			</ul>
+			<ul class="list-group flex-grow-1 overflow-y-auto">
 				<li class="list-group-item position-relative text-bg-light bg-opacity-75"
 					*ngFor="let node of rootNodes()">
 					<minty-project-node [node]="node" [selected]="selectedNode" [nodes]="nodes"
 						(nodeSelected)="onSelected($event)" (update)="onUpdateNode($event)"
 						(delete)="onDeleteNode($event)"></minty-project-node>
-				</li>
-				<li class="list-group-item position-relative text-bg-light bg-opacity-75" style="height: 2.5rem">
-					<button class="btn" (click)="addFolder()">
-						<i class="bi bi-folder-plus"></i>
-					</button>
-					<button class="btn" (click)="addFile()">
-						<i class="bi bi-file-earmark-plus"></i>
-					</button>
-					<button class="btn" (click)="addAndConvertToMd()">
-						<i class="bi bi-filetype-md"></i>
-					</button>
-					<button class="btn" (click)="addZipToProject()">
-						<i class="bi bi-file-earmark-zip"></i>
-					</button>
 				</li>
 			</ul>
 		</div>
@@ -72,10 +75,10 @@
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-secondary" (click)="mdFileDialogVisible = false">Cancel</button>
-				<button type="button" class="btn btn-primary"
-					(click)="addMarkdownFile()">Add</button>
-				<button type="button" class="btn btn-primary"
-					(click)="decomposeAndAddMarkdown()">Decompose and Add</button>
+				<button type="button" class="btn btn-primary" (click)="addMarkdownFile()">Add</button>
+				<button type="button" class="btn btn-primary" (click)="decomposeMarkdown()">Decompose</button>
+				<button type="button" class="btn btn-primary" (click)="decomposeAndSummarizeMarkdown()">Decompose and
+					Summarize</button>
 			</div>
 		</div>
 	</div>
@@ -97,8 +100,7 @@
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-secondary" (click)="zipFileDialogVisible = false">Cancel</button>
-				<button type="button" class="btn btn-primary"
-					(click)="addZip()">OK</button>
+				<button type="button" class="btn btn-primary" (click)="addZip()">OK</button>
 			</div>
 		</div>
 	</div>

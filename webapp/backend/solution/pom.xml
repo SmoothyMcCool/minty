@@ -26,6 +26,7 @@
 		<module>../api-openai</module>
 		<module>../app</module>
 		<module>../common</module>
+		<module>../documents</module>
 		<module>../llm</module>
 		<module>../plugins</module>
 		<module>../pug4j-shaded</module>

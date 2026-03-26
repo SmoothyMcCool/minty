@@ -44,8 +44,7 @@ import tom.document.model.DocumentState;
 import tom.document.model.MintyDoc;
 import tom.document.repository.DocumentRepository;
 import tom.document.service.tasks.DecomposedMarkdownDocumentProcessingTask;
-import tom.document.service.tasks.DocumentProcessingTask;
-import tom.document.service.tasks.MarkdownSectionSplitter;
+import tom.document.service.tasks.EmbedDocumentTask;
 import tom.llm.service.LlmService;
 
 @Service
@@ -145,17 +144,33 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 
 	@Override
 	public void processFileToMarkdownAndDecompose(UserId userId, ProjectId projectId, File file,
-			ProjectService projectService) {
+			ProjectService projectService, boolean summarize) throws Exception {
+
 		DecomposedMarkdownDocumentProcessingTask task = new DecomposedMarkdownDocumentProcessingTask(userId, projectId,
 				file, projectService, conversationService, assistantManagementService, assistantQueryService,
 				documentExtractorService, config);
-		fileProcessingExecutor.submit(task);
+
+		task.decompose();
+
+		if (summarize) {
+			fileProcessingExecutor.submit(task);
+		} else {
+			file.delete();
+		}
+
 	}
 
 	@Override
 	public void transformAndStore(File file, MintyDoc doc) {
 		FileSystemResource resource = new FileSystemResource(file);
-		List<Document> rawDocuments = read(resource.getFile());
+		List<Section> sections = documentExtractorService.extractAndSplit(resource.getFile());
+		List<Document> rawDocuments = sections.stream().filter(s -> !s.content.isBlank()).map(s -> {
+			Map<String, Object> metadata = new HashMap<>();
+			metadata.put("section_title", s.title);
+			metadata.put("section_level", s.level);
+			metadata.put("section_breadcrumb", documentExtractorService.buildBreadcrumb(sections, s));
+			return new Document(s.content, metadata);
+		}).toList();
 
 		// Summarize larger sections first
 		List<Document> macroChunks = split(rawDocuments, macroTargetChunkSize);
@@ -179,19 +194,6 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 								+ batchStr);
 			}
 		}
-	}
-
-	private List<Document> read(File file) {
-		String markdown = documentExtractorService.extract(file);
-		List<Section> sections = MarkdownSectionSplitter.split(markdown, config.getConfig().pandoc().headingLevel());
-
-		return sections.stream().filter(s -> !s.content.isBlank()).map(s -> {
-			Map<String, Object> metadata = new HashMap<>();
-			metadata.put("section_title", s.title);
-			metadata.put("section_level", s.level);
-			metadata.put("section_breadcrumb", documentExtractorService.buildBreadcrumb(sections, s));
-			return new Document(s.content, metadata);
-		}).toList();
 	}
 
 	private List<Document> split(List<Document> documents, int targetChunkSize) {
@@ -257,7 +259,7 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 		}
 
 		try {
-			DocumentProcessingTask dpt = new DocumentProcessingTask(file.toFile(), this);
+			EmbedDocumentTask dpt = new EmbedDocumentTask(file.toFile(), this);
 			fileProcessingExecutor.submit(dpt);
 		} catch (NumberFormatException e) {
 			logger.error("DocumentServiceImpl: Found a file with a bad filename. Cannot process: " + filename);

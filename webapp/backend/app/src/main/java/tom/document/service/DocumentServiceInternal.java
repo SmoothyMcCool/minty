@@ -14,8 +14,8 @@ public interface DocumentServiceInternal extends DocumentService {
 
 	void processFile(File file);
 
-	void processFileToMarkdownAndDecompose(UserId userId, ProjectId projectId, File file,
-			ProjectService projectService);
+	void processFileToMarkdownAndDecompose(UserId id, ProjectId projectId, File file, ProjectService projectService,
+			boolean summarize) throws Exception;
 
 	void transformAndStore(File file, MintyDoc doc);
 

@@ -73,6 +73,14 @@ assistants:
         Section Title: ${SECTION_TITLE}
         Section Location: ${SECTION_BREADCRUMB}
 
+        If the text below is too short, too generic, or lacks meaningful engineering
+        content to summarize (e.g. blank, a single word, boilerplate, or a heading
+        only), respond with exactly:
+
+        INSUFFICIENT_CONTENT
+
+        and nothing else.
+
         Output format:
 
         TYPE:

@@ -98,6 +98,7 @@ pandoc:
   stripComments: true
   wrap: none
   headingLevel: 3
+  minimumSectionSize: 500
   extraArgs: # list format
   mimeTypes:
     - application/vnd.openxmlformats-officedocument.wordprocessingml.document

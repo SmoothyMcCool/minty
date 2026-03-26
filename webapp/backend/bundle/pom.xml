@@ -163,9 +163,10 @@
 							<outputDirectory>${output.directory}/working/scripts</outputDirectory>
 							<resources>
 								<resource>
-									<directory>${basedir}/src/main/resources</directory>
+									<directory>${basedir}/src/main/resources/scripts</directory>
 									<includes>
 										<include>**/*.lua</include>
+										<include>**/*.py</include>
 									</includes>
 								</resource>
 							</resources>
