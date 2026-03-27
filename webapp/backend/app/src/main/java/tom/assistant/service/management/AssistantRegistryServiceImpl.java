@@ -40,4 +40,9 @@ public class AssistantRegistryServiceImpl implements AssistantRegistryService {
 	public Assistant createSummarizingAssistant() {
 		return assistantRegistry.get("Summarizer Bot");
 	}
+
+	@Override
+	public Assistant createMermaidConversionAssistant() {
+		return assistantRegistry.get("EA to Mermaid Conversion Bot");
+	}
 }

@@ -24,10 +24,10 @@ import tom.api.services.document.extract.DocumentExtractorService;
 import tom.api.services.document.extract.Section;
 import tom.config.MintyConfiguration;
 import tom.config.model.PandocConfig;
-import tom.document.service.extract.pandoc.PandocConverter;
-import tom.document.service.extract.pandoc.markdown.MarkdownSectionSplitter;
-import tom.document.service.extract.pdf.PdfExtractor;
-import tom.document.service.extract.spreadsheet.SpreadsheetExtractor;
+import tom.document.extract.pandoc.PandocConverter;
+import tom.document.extract.pdf.PdfExtractor;
+import tom.document.extract.spreadsheet.SpreadsheetExtractor;
+import tom.document.markdown.MarkdownSectionSplitter;
 
 @Service
 public class DocumentExtractorServiceImpl implements DocumentExtractorService {
@@ -41,7 +41,7 @@ public class DocumentExtractorServiceImpl implements DocumentExtractorService {
 	public DocumentExtractorServiceImpl(MintyConfiguration configuration) {
 		this.config = configuration.getConfig().pandoc();
 		this.pandoc = new PandocConverter(config.path(), config.outputFormat(), config.luaFilter(),
-				config.noHighlight(), config.stripComments(), config.wrap(), config.headingLevel(), config.extraArgs());
+				config.noHighlight(), config.stripComments(), config.wrap(), config.extraArgs());
 	}
 
 	@Override

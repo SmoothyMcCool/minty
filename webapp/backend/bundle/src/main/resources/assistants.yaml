@@ -66,37 +66,72 @@ assistants:
       shared: false
       hasMemory: false
       prompt: |
-        Task: Create an index entry to help an AI assistant find relevant sections
-        when extracting requirements and design information from engineering documents.
+          You are an indexing assistant for a systems engineering document retrieval system.
+          Your output will be embedded and stored as metadata to help an AI assistant find
+          relevant sections when answering requirements and design questions.
 
-        Document: ${DOCUMENT_NAME}
-        Section Title: ${SECTION_TITLE}
-        Section Location: ${SECTION_BREADCRUMB}
+          Document: ${DOCUMENT_NAME}
+          Section Title: ${SECTION_TITLE}
+          Section Location: ${SECTION_BREADCRUMB}
 
-        If the text below is too short, too generic, or lacks meaningful engineering
-        content to summarize (e.g. blank, a single word, boilerplate, or a heading
-        only), respond with exactly:
+          Analyze the section text below. If it is too short, too generic, or lacks
+          meaningful engineering content (e.g. blank, a single heading, boilerplate),
+          return exactly this JSON and nothing else:
 
-        INSUFFICIENT_CONTENT
+          {"insufficient": true}
 
-        and nothing else.
+          Otherwise, return a single JSON object — no markdown, no explanation — using
+          this schema:
 
-        Output format:
+          {
+            "insufficient": false,
+            "type": "<one of: Requirements | Design | Interface | Configuration | Overview | Reference>",
+            "summary": "<1-2 sentences. Mention specific requirements, constraints, interfaces, or design decisions present in this section>",
+            "keywords": ["<domain terms, identifiers, acronyms, subsystem names found in this section>"],
+            "entities": {
+              "requirements": ["<requirement IDs if present, e.g. REQ-1042>"],
+              "interfaces": ["<interface names or ICD references>"],
+              "components": ["<subsystems, hardware, or software components mentioned>"],
+              "parameters": ["<specific values, thresholds, or constraints, e.g. '28V nominal', '<5ms latency'>"]
+            },
+            "queries": [
+              "<a natural language question this section directly answers>",
+              "<a second question>",
+              "<a third question>",
+              "<optional fourth question>"
+            ]
+          }
 
-        TYPE:
-        (one of: Requirements, Design, Interface, Configuration, Overview, Reference)
+          Return only valid JSON. The section text follows.
+          ---------
+      tools: []
 
-        SUMMARY:
-        1-2 sentences. Explicitly mention any requirements, constraints, interfaces,
-        or design decisions described in this section.
+    - name: EA to Mermaid Conversion Bot
+      model: gpt-oss:120b
+      contextSize: 128000
+      temperature: 0.2
+      topK: 5
+      shared: false
+      hasMemory: false
+      prompt: |
+          Convert this UML use case model into a Mermaid sequence diagram.
 
-        QUESTIONS:
-        (2-4 questions this section could answer, framed in terms of requirements
-        and design. e.g. "What are the constraints on X?", "How is Y designed?",
-        "What are the requirements for Z?")
-        - question
-        - question
+          STRICT RULES:
+          - Output ONLY Mermaid
+          - No explanations
+          - No markdown fences
+          - Actors must be "actor"
+          - System must be "participant System"
 
-        Text to summarize will follow.
-        ---------
+          MAPPING:
+          - Actor → System: UseCase
+          - include → nested System->>System
+          - extend → opt block
+
+          INPUT JSON:
+          ${JSON}
+
+          TASK:
+          Generate a readable sequence diagram representing the use case flows.
+          Group related interactions logically.
       tools: []
