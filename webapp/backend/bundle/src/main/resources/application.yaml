@@ -93,7 +93,7 @@ llm:
 pandoc:
   path: D:\Applications\pandoc\pandoc.exe
   outputFormat: gfm
-  luaFilter: # flatten.lua
+  luaFilter: pandoc-clean.lua
   noHighlight: true
   stripComments: true
   wrap: none

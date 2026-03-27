@@ -1,4 +1,4 @@
-package tom.document.service.extract.pandoc.markdown;
+package tom.document.markdown;
 
 import java.util.ArrayList;
 import java.util.List;

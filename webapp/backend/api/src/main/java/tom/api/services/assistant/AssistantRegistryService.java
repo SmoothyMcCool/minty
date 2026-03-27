@@ -12,4 +12,6 @@ public interface AssistantRegistryService {
 
 	Assistant createSummarizingAssistant();
 
+	Assistant createMermaidConversionAssistant();
+
 }

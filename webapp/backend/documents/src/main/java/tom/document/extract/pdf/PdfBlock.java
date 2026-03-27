@@ -1,4 +1,4 @@
-package tom.document.service.extract.pdf;
+package tom.document.extract.pdf;
 
 import java.util.List;
 

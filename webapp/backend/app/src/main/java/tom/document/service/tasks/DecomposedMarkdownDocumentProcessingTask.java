@@ -9,6 +9,11 @@ import org.apache.commons.text.StringSubstitutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import tom.api.ConversationId;
 import tom.api.ProjectId;
 import tom.api.UserId;
@@ -29,7 +34,7 @@ import tom.api.services.document.extract.DocumentExtractorService;
 import tom.api.services.document.extract.Section;
 import tom.config.MintyConfiguration;
 import tom.conversation.service.ConversationServiceInternal;
-import tom.document.service.extract.pandoc.markdown.MarkdownSectionSplitter;
+import tom.document.markdown.MarkdownSectionSplitter;
 
 public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 
@@ -108,31 +113,37 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 	}
 
 	private String writeSummary(List<Section> sections) throws Exception {
-		StringBuilder md = new StringBuilder();
-
-		md.append("# Document Index\n\n");
-		md.append("This document lists the sections extracted from the original document.\n\n");
-		md.append("## Sections\n\n");
+		ObjectMapper mapper = new ObjectMapper();
+		ArrayNode resultArray = mapper.createArrayNode();
 
 		for (Section s : sections) {
 			String filename = sectionFilename(s);
 			String breadcrumb = documentExtractorService.buildBreadcrumb(sections, s);
 
-			md.append("### ").append(s.index).append(". ").append(s.title).append("\n");
-			md.append("   File: `").append(filename).append("`\n");
-			md.append("   Path: `").append(breadcrumb).append("`\n\n");
-			md.append("#### Section Summary\n");
+			String summaryStr = generateSummary(s, breadcrumb);
 
-			String summary = generateSummary(s, breadcrumb);
-			if (summary.strip().equals("INSUFFICIENT_CONTENT")) {
-				md.append("No content in section.");
+			ObjectNode sectionNode = mapper.createObjectNode();
+			sectionNode.put("index", s.index);
+			sectionNode.put("title", s.title);
+			sectionNode.put("file", filename);
+			sectionNode.put("path", breadcrumb);
+
+			if (summaryStr.strip().equals("{\"insufficient\": true}")) {
+				sectionNode.put("summary", "{\"insufficient\": true}");
 			} else {
-				md.append(summary);
+				try {
+					JsonNode summaryJson = mapper.readTree(summaryStr);
+					sectionNode.set("summary", summaryJson);
+				} catch (Exception e) {
+					// fallback if summary isn't valid JSON
+					sectionNode.put("summary", summaryStr);
+				}
 			}
-			md.append("\n\n");
+
+			resultArray.add(sectionNode);
 		}
 
-		return md.toString();
+		return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(resultArray);
 	}
 
 	private String generateSummary(Section s, String breadcrumb) {
