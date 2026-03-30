@@ -19,6 +19,7 @@ export class UserService {
 	private static readonly Update = 'api/user/update';
 	private static readonly GetSystemDefaults = 'api/user/defaults/system';
 	private static readonly GetUser = 'api/user';
+	private static readonly ListUsers = 'api/user/list';
 
 	private user: User = null;
 	private userDefaults: AttributeMap;
@@ -57,6 +58,15 @@ export class UserService {
 				);
 		}
 		return of(this.user);
+	}
+
+	listUsers(): Observable<string[]> {
+		return this.http.get<ApiResult>(UserService.ListUsers)
+			.pipe(
+				map((result: ApiResult) => {
+					return result.data as string[];
+				})
+			);
 	}
 
 	login(account: string, password: string): Observable<User> {

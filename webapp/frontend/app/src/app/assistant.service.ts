@@ -8,6 +8,7 @@ import { Assistant } from './model/assistant';
 import { AssistantSpec } from './model/workflow/assistant-spec';
 import { Model } from './model/model';
 import { StreamingResponse } from './model/conversation/streaming-response';
+import { UserSelection } from './app/component/user-select-dialog.component';
 
 @Injectable({
 	providedIn: 'root'
@@ -18,6 +19,8 @@ export class AssistantService {
 	private static readonly CreateAssistant = 'api/assistant/new';
 	private static readonly EditAssistant = 'api/assistant/edit';
 	private static readonly ListAssistants = 'api/assistant/list';
+	private static readonly ShareAssistant = 'api/assistant/share';
+	private static readonly ListSharedUsers = 'api/assistant/getsharing';
 	private static readonly AskAssistant = 'api/assistant/ask';
 	private static readonly GetResponseStream = 'api/assistant/response';
 	private static readonly GetAssistant = 'api/assistant/get';
@@ -89,6 +92,39 @@ export class AssistantService {
 				}),
 				map((result: ApiResult) => {
 					return result.data as Assistant[];
+				})
+			);
+	}
+
+	share(name: string, userSelection: UserSelection): Observable<string> {
+		const body = {
+			resource: name,
+			userSelection: userSelection
+		}
+		return this.http.post<ApiResult>(AssistantService.ShareAssistant, body)
+			.pipe(
+				catchError(error => {
+					this.alertService.postFailure(JSON.stringify(error));
+					return EMPTY;
+				}),
+				map((result: ApiResult) => {
+					return result.data as string;
+				})
+			);
+	}
+
+	getSharingList(assistantId: string): Observable<UserSelection> {
+		let params: HttpParams = new HttpParams();
+		params = params.append('assistantId', assistantId);
+
+		return this.http.get<ApiResult>(AssistantService.ListSharedUsers, { params: params })
+			.pipe(
+				catchError(error => {
+					this.alertService.postFailure(JSON.stringify(error));
+					return EMPTY;
+				}),
+				map((result: ApiResult) => {
+					return result.data as UserSelection;
 				})
 			);
 	}

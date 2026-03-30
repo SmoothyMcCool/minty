@@ -1,5 +1,5 @@
 package tom.api.skill;
 
-public record SkillMetadata(String name, String description) {
+public record SkillMetadata(String name, String description, boolean owned) {
 
 }

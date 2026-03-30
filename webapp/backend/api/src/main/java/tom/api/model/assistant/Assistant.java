@@ -5,10 +5,9 @@ import java.util.Objects;
 
 import tom.api.AssistantId;
 import tom.api.DocumentId;
-import tom.api.UserId;
 
 public record Assistant(AssistantId id, String name, String model, Integer contextSize, Double temperature,
-		Integer topK, String prompt, List<DocumentId> documentIds, List<String> tools, UserId ownerId, Boolean shared,
+		Integer topK, String prompt, List<DocumentId> documentIds, List<String> tools, Boolean owned,
 		Boolean hasMemory) {
 
 	public Assistant {
@@ -20,8 +19,7 @@ public record Assistant(AssistantId id, String name, String model, Integer conte
 		Objects.requireNonNull(prompt, "prompt cannot be null");
 		Objects.requireNonNull(documentIds, "documentIds cannot be null");
 		Objects.requireNonNull(tools, "tools cannot be null");
-		Objects.requireNonNull(ownerId, "ownerId cannot be null");
-		Objects.requireNonNull(shared, "shared cannot be null");
+		Objects.requireNonNull(owned, "owned cannot be null");
 		Objects.requireNonNull(hasMemory, "hasMemory cannot be null");
 	}
 

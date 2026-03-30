@@ -26,6 +26,7 @@ export class ProjectService {
 	private static readonly ConvertToMarkdownAndAddFile = 'api/project/node/convert/markdown';
 	private static readonly ConvertToMarkdownDecomposeFile = 'api/project/node/convert/markdown/decompose';
 	private static readonly ConvertToMarkdownDecomposeAndSummarizeFile = 'api/project/node/convert/markdown/summarize';
+	private static readonly ConvertToMermaid = 'api/project/node/convert/mermaid';
 	private static readonly ExportZip = 'api/project/node/export/zip';
 	private static readonly ImportZip = 'api/project/node/import/zip';
 	private static readonly CreateFolder = 'api/project/node/folder';
@@ -201,6 +202,23 @@ export class ProjectService {
 		formData.append('file', file.file, file.title);
 
 		return this.http.post<ApiResult>(ProjectService.ImportZip, formData)
+			.pipe(
+				catchError(error => {
+					this.alertService.postFailure(JSON.stringify(error));
+					return EMPTY;
+				}),
+				map((result: ApiResult) => {
+					return result.data as string;
+				})
+			);
+	}
+
+	convertToMermaid(projectId: string, file: DocProperties): Observable<string> {
+		const formData = new FormData();
+		formData.append('projectId', projectId);
+		formData.append('file', file.file, file.title);
+
+		return this.http.post<ApiResult>(ProjectService.ConvertToMermaid, formData)
 			.pipe(
 				catchError(error => {
 					this.alertService.postFailure(JSON.stringify(error));

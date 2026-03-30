@@ -11,10 +11,12 @@ import { Conversation } from 'src/app/model/conversation/conversation';
 import { FilterPipe } from 'src/app/pipe/filter-pipe';
 import { User } from 'src/app/model/user';
 import { PredicatePipe } from 'src/app/pipe/predicate-pipe';
+import { UserSelectDialogComponent, UserSelection } from 'src/app/app/component/user-select-dialog.component';
+import { AlertService } from 'src/app/alert.service';
 
 @Component({
 	selector: 'minty-assistants-list',
-	imports: [CommonModule, FormsModule, RouterModule, FilterPipe, ConfirmationDialogComponent, PredicatePipe],
+	imports: [CommonModule, FormsModule, RouterModule, FilterPipe, ConfirmationDialogComponent, PredicatePipe, UserSelectDialogComponent],
 	templateUrl: 'assistants-list.component.html'
 })
 export class AssistantsListComponent implements OnInit {
@@ -41,11 +43,18 @@ export class AssistantsListComponent implements OnInit {
 	renamedConversationTitle: string;
 	renameConversationVisible = false;
 
+	userSelectDialogVisible = false;
+	assistantToShare: string;
+	sharingSelection: UserSelection;
+
+	onlyOwnedAssistants = false;
+
 	user: User;
 
 	constructor(
 		private assistantService: AssistantService,
 		private conversationService: ConversationService,
+		private alertService: AlertService,
 		private userService: UserService,
 		private router: Router) {
 	}
@@ -58,7 +67,7 @@ export class AssistantsListComponent implements OnInit {
 				setTimeout(() => {
 					this.sortAssistants(assistants);
 					this.assistants = assistants;
-					this.sharedAssistants = assistants.filter(assistant => assistant.shared === true);
+					this.sharedAssistants = assistants.filter(assistant => assistant.owned === false);
 				}, 0);
 			});
 
@@ -70,9 +79,9 @@ export class AssistantsListComponent implements OnInit {
 		});
 	}
 
-	assistantPassesFilter(shared: boolean) {
+	filteredAssistants() {
 		return this.assistants.filter(a => {
-			if (a.shared != shared) {
+			if (this.onlyOwnedAssistants && !a.owned) {
 				return false;
 			}
 
@@ -149,7 +158,7 @@ export class AssistantsListComponent implements OnInit {
 			this.assistantService.list().subscribe(assistants => {
 				this.assistants = assistants;
 				this.sortAssistants(this.assistants);
-				this.sharedAssistants = this.assistants.filter(assistant => assistant.shared === true);
+				this.sharedAssistants = this.assistants.filter(assistant => assistant.owned === false);
 				this.deleteInProgress = false;
 			});
 			this.conversationService.list().subscribe(conversations => {
@@ -160,7 +169,7 @@ export class AssistantsListComponent implements OnInit {
 
 		this.sortAssistants(this.assistants);
 		this.assistants = this.assistants.filter(item => item.id === this.assistantPendingDeletion.id);
-		this.sharedAssistants = this.assistants.filter(assistant => assistant.shared === true);
+		this.sharedAssistants = this.assistants.filter(assistant => assistant.owned === false);
 
 	}
 
@@ -185,7 +194,7 @@ export class AssistantsListComponent implements OnInit {
 			this.assistantService.list().subscribe(assistants => {
 				this.sortAssistants(assistants);
 				this.assistants = assistants;
-				this.sharedAssistants = this.assistants.filter(assistant => assistant.shared === true);
+				this.sharedAssistants = this.assistants.filter(assistant => assistant.owned === false);
 			});
 			this.conversationService.list().subscribe(conversations => {
 				this.conversations = conversations;
@@ -208,7 +217,7 @@ export class AssistantsListComponent implements OnInit {
 	}
 
 	isOwned(assistant: Assistant): boolean {
-		return assistant.ownerId === this.user.id;
+		return assistant.owned;
 	}
 
 	getConversationTitle(conversation: Conversation): string {
@@ -241,5 +250,21 @@ export class AssistantsListComponent implements OnInit {
 
 	onCancelConversationRename() {
 		this.renameConversationVisible = false;
+	}
+
+	shareAssistant(assistant: Assistant) {
+		this.userSelectDialogVisible = true;
+		this.assistantToShare = assistant.id
+		this.assistantService.getSharingList(assistant.id).subscribe(userSelection => {
+			this.sharingSelection = userSelection;
+		});
+	}
+
+	onUsersConfirmed(selection: UserSelection): void {
+		this.userSelectDialogVisible = false;
+		this.assistantService.share(this.assistantToShare, selection).subscribe(response => {
+			this.alertService.postSuccess(response);
+			this.assistantToShare = null;
+		});
 	}
 }

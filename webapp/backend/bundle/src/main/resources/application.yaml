@@ -13,7 +13,6 @@ fileStores:
   plugins: ${output.directory}/working/plugins
   workflowLogs: ${output.directory}/working/logs
   pug: ${output.directory}/working/pug
-  skills: ${output.directory}/working/skills
   scripts: ${output.directory}/working/scripts
 
 # Database configuration

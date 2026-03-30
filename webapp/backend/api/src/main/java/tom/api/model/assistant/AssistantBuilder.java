@@ -5,7 +5,6 @@ import java.util.Objects;
 
 import tom.api.AssistantId;
 import tom.api.DocumentId;
-import tom.api.UserId;
 
 public class AssistantBuilder {
 	private AssistantId id;
@@ -15,8 +14,7 @@ public class AssistantBuilder {
 	private Double temperature;
 	private Integer topK;
 	private String prompt;
-	private UserId ownerId;
-	private boolean shared;
+	private boolean owned;
 	private boolean hasMemory;
 	private List<DocumentId> documentIds;
 	private List<String> tools;
@@ -33,8 +31,7 @@ public class AssistantBuilder {
 		temperature = assistant.temperature();
 		topK = assistant.topK();
 		prompt = assistant.prompt();
-		ownerId = assistant.ownerId();
-		shared = assistant.shared();
+		owned = assistant.owned();
 		hasMemory = assistant.hasMemory();
 		documentIds = assistant.documentIds();
 		tools = assistant.tools();
@@ -85,13 +82,8 @@ public class AssistantBuilder {
 		return this;
 	}
 
-	public AssistantBuilder ownerId(UserId ownerId) {
-		this.ownerId = ownerId;
-		return this;
-	}
-
-	public AssistantBuilder shared(boolean shared) {
-		this.shared = shared;
+	public AssistantBuilder owned(boolean owned) {
+		this.owned = owned;
 		return this;
 	}
 
@@ -110,7 +102,7 @@ public class AssistantBuilder {
 				Objects.requireNonNull(prompt, "prompt must not be null"),
 				Objects.requireNonNull(documentIds, "documentIds must not be null"),
 				Objects.requireNonNull(tools, "tools must not be null"),
-				Objects.requireNonNull(ownerId, "ownerId must not be null"), shared, hasMemory);
+				Objects.requireNonNull(owned, "ownerId must not be null"), hasMemory);
 	}
 
 }

@@ -7,7 +7,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
-import tom.assistant.repository.Assistant;
+import tom.assistant.model.Assistant;
 import tom.document.model.MintyDoc;
 
 @Entity

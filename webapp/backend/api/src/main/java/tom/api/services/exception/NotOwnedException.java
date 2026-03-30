@@ -1,6 +1,6 @@
-package tom;
+package tom.api.services.exception;
 
-public class NotOwnedException extends RuntimeException {
+public class NotOwnedException extends Exception {
 
 	private static final long serialVersionUID = 7322543864612352169L;
 

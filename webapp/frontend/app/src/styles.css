@@ -54,7 +54,7 @@ button:disabled {
 }
 
 .well {
-	background-color: rgba(245, 245, 245, 0.66);
+	background-color: rgb(206, 206, 206);
 	border-radius: 10px;
 }
 

@@ -16,8 +16,8 @@ end
 -- (prevents pandoc guessing wrong styles from Word e.g. OneParen).
 -- This is the primary fix for broken "1 text" list output.
 function OrderedList(el)
-    el.listAttributes.numberStyle = "DefaultStyle"
-    el.listAttributes.numberDelim = "DefaultDelim"
+    el.listAttributes.syler = "DefaultStyle"
+    el.listAttributes.delimiter = "DefaultDelim"
     return el
 end
 

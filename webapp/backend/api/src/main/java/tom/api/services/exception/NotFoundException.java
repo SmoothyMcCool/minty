@@ -1,6 +1,6 @@
-package tom;
+package tom.api.services.exception;
 
-public class NotFoundException extends RuntimeException {
+public class NotFoundException extends Exception {
 
 	private static final long serialVersionUID = 7322543864612352169L;
 

@@ -26,7 +26,6 @@ public class Workflow {
 	private String description;
 	@Convert(converter = UserIdConverter.class)
 	private UserId ownerId;
-	private boolean shared;
 	@Column(columnDefinition = "json")
 	@Convert(converter = TaskRequestConverter.class)
 	private List<TaskRequest> steps;
@@ -42,8 +41,6 @@ public class Workflow {
 		this.id = workflow.getId();
 		this.name = workflow.getName();
 		this.description = workflow.getDescription();
-		this.ownerId = workflow.getOwnerId();
-		this.shared = workflow.isShared();
 		this.connections = workflow.getConnections();
 		this.steps = workflow.getSteps();
 		this.outputStep = workflow.getOutputStep();
@@ -81,14 +78,6 @@ public class Workflow {
 		this.ownerId = ownerId;
 	}
 
-	public boolean isShared() {
-		return shared;
-	}
-
-	public void setShared(boolean shared) {
-		this.shared = shared;
-	}
-
 	public List<TaskRequest> getSteps() {
 		return steps;
 	}
@@ -113,14 +102,13 @@ public class Workflow {
 		this.connections = connections;
 	}
 
-	public tom.workflow.model.Workflow toModelWorkflow() {
+	public tom.workflow.model.Workflow toModelWorkflow(UserId userId) {
 		tom.workflow.model.Workflow workflow = new tom.workflow.model.Workflow();
 		workflow.setConnections(getConnections());
 		workflow.setDescription(getDescription());
 		workflow.setId(getId());
 		workflow.setName(getName());
-		workflow.setOwnerId(getOwnerId());
-		workflow.setShared(isShared());
+		workflow.setOwned(getOwnerId().equals(userId));
 		workflow.setOutputStep(getOutputStep());
 		workflow.setSteps(getSteps());
 		return workflow;

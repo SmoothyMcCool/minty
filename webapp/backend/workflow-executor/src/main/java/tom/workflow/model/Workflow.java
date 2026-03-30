@@ -3,13 +3,12 @@ package tom.workflow.model;
 import java.util.List;
 import java.util.UUID;
 
-import tom.api.UserId;
 import tom.task.model.TaskRequest;
 
 public class Workflow {
 
 	private UUID id;
-	private UserId ownerId;
+	private boolean owned;
 	private String name;
 	private String description;
 	private List<TaskRequest> steps;
@@ -25,7 +24,7 @@ public class Workflow {
 		connections = List.of();
 		outputStep = null;
 		description = "";
-		ownerId = new UserId(UUID.randomUUID());
+		owned = false;
 		shared = false;
 	}
 
@@ -77,12 +76,12 @@ public class Workflow {
 		this.description = description;
 	}
 
-	public UserId getOwnerId() {
-		return ownerId;
+	public boolean isOwned() {
+		return owned;
 	}
 
-	public void setOwnerId(UserId ownerId) {
-		this.ownerId = ownerId;
+	public void setOwned(boolean owned) {
+		this.owned = owned;
 	}
 
 	public boolean isShared() {

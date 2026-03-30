@@ -44,7 +44,7 @@ public class SkillTools implements MintyTool, ServiceConsumer {
 			Each skill has a name (used to load it) and a description (tells you what it does and when to use it).
 			""")
 	public List<SkillMetadata> listSkills() {
-		return pluginServices.getSkillsService().listSkills();
+		return pluginServices.getSkillsService().listSkills(userId);
 	}
 
 	@Tool(name = "get_skill", description = """
@@ -55,7 +55,7 @@ public class SkillTools implements MintyTool, ServiceConsumer {
 			""")
 	public String getSkill(
 			@ToolParam(description = "The exact skill name as returned by list_skills.") String skillName) {
-		return pluginServices.getSkillsService().getFile(skillName, "SKILL.md");
+		return pluginServices.getSkillsService().getFile(userId, skillName, "SKILL.md");
 	}
 
 	@Tool(name = "get_skill_file", description = """
@@ -67,7 +67,7 @@ public class SkillTools implements MintyTool, ServiceConsumer {
 	public String getSkillFile(
 			@ToolParam(description = "The exact skill name as returned by list_skills.") String skillName,
 			@ToolParam(description = "The relative file path exactly as referenced in SKILL.md, for example: steps/step-1-collect.md") String filename) {
-		return pluginServices.getSkillsService().getFile(skillName, filename);
+		return pluginServices.getSkillsService().getFile(userId, skillName, filename);
 	}
 
 	@Override

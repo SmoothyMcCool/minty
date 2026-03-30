@@ -44,19 +44,29 @@
 				<form>
 					<div class="form-group well mb-2 p-2">
 						<label class="" for="assistantFilter">Filter</label>
-						<input type="text" class="form-control" id="assistantFilter" name="assistantFilter"
+						<input type="text" class="form-control mb-2" id="assistantFilter" name="assistantFilter"
 							[(ngModel)]="assistantFilter">
+						<div class="form-check form-switch">
+							<input class="form-check-input" type="checkbox" id="ownedAssistantsSwitch" name="ownedAssistantsSwitch" [(ngModel)]="onlyOwnedAssistants">
+							<label class="form-check-label" for="ownedAssistantsSwitch">Show only my assistants</label>
+						</div>
 					</div>
 				</form>
-				<h4>My Assistants</h4>
+				<h4>Assistants</h4>
 				<ng-container *ngIf="assistants.length > 0; else noAssistants">
 					<ul class="list-group">
 						<li class="list-group-item list-group-item-action position-relative text-bg-light bg-opacity-75"
-							*ngFor="let assistant of assistantPassesFilter(false)" style="height: 2.5rem">
+							style="height: 2.5rem" *ngFor="let assistant of filteredAssistants()">
 							<div class="position-absolute top-0 end-0" *ngIf="isOwned(assistant)">
 								<button class="btn btn-sm" style="font-size: 14px;"
 									(click)="editAssistant(assistant.id)">
 									<i class="bi bi-pencil-square"></i>
+								</button>
+								<button
+									class="btn btn-sm"
+									style="font-size: 14px;"
+									(click)="shareAssistant(assistant)">
+									<i class="bi bi-share"></i>
 								</button>
 								<button class="btn btn-sm" style="font-size: 14px; color: red;"
 									[disabled]="deleteInProgress" (click)="deleteAssistant(assistant)">
@@ -76,40 +86,6 @@
 				</ng-container>
 				<ng-template #noAssistants>
 					<p class="font-monospace ms-4">If you had any assistants they would be listed here.</p>
-				</ng-template>
-			</div>
-			<div class="row">
-				<h4>Shared Assistants</h4>
-				<ng-container *ngIf="sharedAssistants.length > 0; else noSharedAssistants">
-					<ul class="list-group">
-						<li class="list-group-item list-group-item-action position-relative text-bg-light bg-opacity-75"
-							*ngFor="let assistant of assistantPassesFilter(true)" style="height: 2.5rem">
-							<div class="position-absolute top-0 end-0" *ngIf="isOwned(assistant)">
-								<button class="btn btn-sm" style="font-size: 14px;"
-									(click)="editAssistant(assistant.id)">
-									<i class="bi bi-pencil-square"></i>
-								</button>
-								<button class="btn btn-sm" style="font-size: 14px; color: red;"
-									[disabled]="deleteInProgress" (click)="deleteAssistant(assistant)">
-									<i class="bi bi-trash3"></i>
-								</button>
-							</div>
-							<div class="row align-items-center g-2">
-								<span class="text-truncate clickable-text col-auto" (click)="startConversation(assistant)">
-									{{assistant.name}}
-								</span>
-								<div class="col-auto">
-									<span class="badge text-bg-secondary mx-2">{{assistant.model}}</span>
-								</div>
-							</div>
-						</li>
-					</ul>
-				</ng-container>
-				<ng-template #noSharedAssistants>
-					<p class="font-monospace ms-4">If any assistants had been shared with you they'd be listed
-						here.<br>
-						I guess you have no friends 😢
-					</p>
 				</ng-template>
 			</div>
 		</div>
@@ -144,3 +120,6 @@
 		</div>
 	</div>
 </div>
+
+<minty-user-select-dialog [visible]="userSelectDialogVisible" (confirm)="onUsersConfirmed($event)" [initialSelection]="sharingSelection" (cancel)="userSelectDialogVisible = false">
+</minty-user-select-dialog>

@@ -5,10 +5,12 @@ import { SkillService } from '../skill.service';
 import { MarkdownModule } from 'ngx-markdown';
 import { MermaidClipboardDirective } from 'src/app/assistant/component/mermaid-clipboard.directive';
 import { AlertService } from 'src/app/alert.service';
+import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
+import { UserSelectDialogComponent, UserSelection } from 'src/app/app/component/user-select-dialog.component';
 
 @Component({
 	selector: 'minty-skill-viewer',
-	imports: [CommonModule, MarkdownModule, MermaidClipboardDirective],
+	imports: [CommonModule, MarkdownModule, MermaidClipboardDirective, ConfirmationDialogComponent, UserSelectDialogComponent],
 	templateUrl: 'skill-viewer.component.html',
 })
 export class SkillViewerComponent {
@@ -19,6 +21,13 @@ export class SkillViewerComponent {
 
 	skillFileDialogVisible = false;
 	skillFile: File;
+
+	deleteSkillDialogVisible = false;
+	skillToDelete: string;
+
+	userSelectDialogVisible = false;
+	skillToShare: string;
+	sharingSelection: UserSelection;
 
 	constructor(private skillService: SkillService, private alertService: AlertService) { }
 
@@ -53,6 +62,38 @@ export class SkillViewerComponent {
 		});
 	}
 
+	deleteSkill(name: string) {
+		this.deleteSkillDialogVisible = true;
+		this.skillToDelete = name;
+	}
+
+	confirmDeleteSkill() {
+		this.deleteSkillDialogVisible = false;
+		this.skillService.deleteSkill(this.skillToDelete).subscribe(response => {
+			this.alertService.postSuccess(response);
+			this.refreshSkillList();
+			this.skillToDelete = null;
+		});
+	}
+
+	shareSkill(name: string): void {
+		this.userSelectDialogVisible = true;
+		this.skillToShare = name;
+		this.skillService.getSharingList(name).subscribe(selection => {
+			this.sharingSelection = selection;
+		});
+	}
+
+	onUsersConfirmed(selection: UserSelection): void {
+		this.userSelectDialogVisible = false;
+		this.skillService.shareSkill(this.skillToShare, selection).subscribe(response => {
+			this.alertService.postSuccess(response);
+			this.refreshSkillList();
+			this.skillToShare = null;
+		});
+	}
+
+
 	extractFrontmatter(content: string): string {
 		const match = content.match(/^---\n([\s\S]*?)\n---/);
 		return match ? match[1].trim() : '';
@@ -64,6 +105,7 @@ export class SkillViewerComponent {
 
 	private refreshSkillList() {
 		this.skillService.listSkills().subscribe(skills => {
+			this.selectedSkill = null;
 			this.skills = skills;
 		});
 	}

@@ -1,5 +1,5 @@
 <div class="container">
-	<h2 class="text-secondary">Runnable Workflows</h2>
+	<h2>Runnable Workflows</h2>
 	<div class="row" style="column-count: 3; display: block;">
 		<div class="col-12" *ngFor="let workflow of workflows" style="break-inside: avoid;">
 			<div class="card">
@@ -16,11 +16,16 @@
 								<i class="bi bi-download"></i>
 							</button>
 							<button
-								*ngIf="isOwned(workflow)"
 								class="btn btn-sm"
 								style="font-size: 14px;"
 								(click)="duplicateWorkflow(workflow)">
 								<i class="bi bi-copy"></i>
+							</button>
+							<button *ngIf="isOwned(workflow)"
+								class="btn btn-sm"
+								style="font-size: 14px;"
+								(click)="shareWorkflow(workflow)">
+								<i class="bi bi-share"></i>
 							</button>
 							<button *ngIf="isOwned(workflow)"
 								type="button"
@@ -52,7 +57,7 @@
 			<ul class="list-group">
 				<li class="list-group-item list-group-item-action position-relative text-bg-light bg-opacity-75" *ngFor="let result of displayResults">
 					<div class="d-flex align-items-center h-100">
-						<!-- If the ID is null, the task is still in progress-->
+						<!-- If the ID is null, the task is still in progress -->
 						<span
 							class="text-truncate clickable-text pe-3"
 							(click)="result.id && displayResultsFor(result)">
@@ -148,3 +153,5 @@
 <minty-confirmation-dialog [title]="'Cancel Workflow'" [message]="'This will cancel and delete the workflow. Are you sure?'"
 	[visible]="confirmCancelWorkflowVisible" (confirm)="confirmCancelWorkflow()"
 	(cancel)="confirmCancelWorkflowVisible = false"></minty-confirmation-dialog>
+<minty-user-select-dialog [visible]="userSelectDialogVisible" (confirm)="onUsersConfirmed($event)" [initialSelection]="sharingSelection" (cancel)="userSelectDialogVisible = false">
+</minty-user-select-dialog>

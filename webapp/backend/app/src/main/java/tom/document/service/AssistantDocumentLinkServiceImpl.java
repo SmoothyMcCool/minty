@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 import tom.api.AssistantId;
 import tom.api.DocumentId;
-import tom.assistant.repository.Assistant;
+import tom.assistant.model.Assistant;
 import tom.assistant.repository.AssistantRepository;
 import tom.document.model.MintyDoc;
 import tom.document.model.joins.AssistantDocumentId;
