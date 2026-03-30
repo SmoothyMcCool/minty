@@ -33,18 +33,21 @@ import tom.api.ConversationId;
 import tom.api.model.assistant.Assistant;
 import tom.api.model.assistant.AssistantQuery;
 import tom.api.model.assistant.AssistantSpec;
-import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
 import tom.api.services.assistant.LlmResult;
 import tom.api.services.assistant.LlmResultState;
 import tom.api.services.assistant.QueueFullException;
 import tom.api.services.assistant.StreamResult;
+import tom.api.services.exception.NotOwnedException;
+import tom.assistant.service.management.AssistantManagementServiceInternal;
 import tom.config.model.ChatModelConfig;
 import tom.controller.ResponseWrapper;
 import tom.conversation.service.ConversationServiceInternal;
 import tom.llm.service.LlmService;
 import tom.meta.service.MetadataService;
 import tom.model.security.UserDetailsUser;
+import tom.user.model.ResourceSharingSelection;
+import tom.user.model.UserSelection;
 
 @Controller
 @RequestMapping("/api/assistant")
@@ -53,13 +56,13 @@ public class AssistantController {
 	private static final Logger logger = LogManager.getLogger(AssistantController.class);
 
 	private final MetadataService metadataService;
-	private final AssistantManagementService assistantManagementService;
+	private final AssistantManagementServiceInternal assistantManagementService;
 	private final LlmService llmService;
 	private final ConversationServiceInternal conversationService;
 	private final AssistantQueryService assistantQueryService;
 	private final ObjectMapper mapper;
 
-	public AssistantController(AssistantManagementService assistantManagementService,
+	public AssistantController(AssistantManagementServiceInternal assistantManagementService,
 			AssistantQueryService assistantQueryService, MetadataService metadataService, LlmService llmService,
 			ConversationServiceInternal conversationService) {
 		this.assistantManagementService = assistantManagementService;
@@ -74,7 +77,14 @@ public class AssistantController {
 	public ResponseEntity<ResponseWrapper<Assistant>> addAssistant(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestBody Assistant assistant) {
 
-		Assistant newAssistant = assistantManagementService.createAssistant(user.getId(), assistant);
+		Assistant newAssistant;
+		try {
+			newAssistant = assistantManagementService.createAssistant(user.getId(), assistant);
+		} catch (NotOwnedException e) {
+			ResponseWrapper<Assistant> response = ResponseWrapper.ApiFailureResponse(HttpStatus.BAD_REQUEST.value(),
+					List.of(ApiError.NOT_OWNED));
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
 		metadataService.newAssistant(user.getId());
 
 		ResponseWrapper<Assistant> response = ResponseWrapper.SuccessResponse(newAssistant);
@@ -153,6 +163,40 @@ public class AssistantController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
+	@PostMapping(value = { "/share" })
+	public ResponseEntity<ResponseWrapper<String>> shareSkill(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestBody() ResourceSharingSelection selection) {
+		try {
+			assistantManagementService.shareAssistant(user.getId(), selection);
+
+		} catch (Exception e) {
+			logger.error("Failed to share assistant: ", e);
+			ResponseWrapper<String> response = ResponseWrapper.FailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+					e.getMessage());
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
+		ResponseWrapper<String> response = ResponseWrapper.SuccessResponse("Assistant shared.");
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@GetMapping(value = { "/getsharing" })
+	public ResponseEntity<ResponseWrapper<UserSelection>> getSharing(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("assistantId") String assistantId) {
+		try {
+			UserSelection selection = assistantManagementService.getSharingFor(user.getId(),
+					new AssistantId(assistantId));
+			ResponseWrapper<UserSelection> response = ResponseWrapper.SuccessResponse(selection);
+			return new ResponseEntity<>(response, HttpStatus.OK);
+
+		} catch (Exception e) {
+			logger.error("Failed to list users for assistant sharing: ", e);
+			ResponseWrapper<UserSelection> response = ResponseWrapper
+					.FailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+	}
+
 	@PostMapping(value = "/ask", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<ResponseWrapper<ConversationId>> ask(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestParam("conversationId") String conversationId,
@@ -170,11 +214,8 @@ public class AssistantController {
 				return new ResponseEntity<>(response, HttpStatus.OK);
 			}
 
-			if (!assistant.ownerId().equals(user.getId()) && !assistant.shared()) {
-				ResponseWrapper<ConversationId> response = ResponseWrapper
-						.ApiFailureResponse(HttpStatus.FORBIDDEN.value(), List.of(ApiError.NOT_OWNED));
-				return new ResponseEntity<>(response, HttpStatus.OK);
-			}
+			// If we got an assistant, we're allowed to run it. The service enforces access
+			// rules.
 
 		} else {
 			assistant = assistantSpec.getAssistant();

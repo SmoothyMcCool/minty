@@ -7,6 +7,7 @@ import { EnumList } from '../model/workflow/enum-list';
 import { OutputTaskSpecification, AttributeMap, TaskRequest, TaskSpecification } from '../model/workflow/task-specification';
 import { Workflow } from '../model/workflow/workflow';
 import { UserService } from '../user.service';
+import { UserSelection } from '../app/component/user-select-dialog.component';
 
 @Injectable({
 	providedIn: 'root'
@@ -20,6 +21,8 @@ export class WorkflowService {
 	private static readonly ExecuteWorkflow = 'api/workflow/execute'; // Run a workflow
 	private static readonly NewWorkflow = 'api/workflow/new'; // Create a new workflow
 	private static readonly UpdateWorkflow = 'api/workflow/update'; // Update an existing workflow
+	private static readonly ShareWorkflow = 'api/workflow/share';
+	private static readonly ListSharedUsers = 'api/workflow/getsharing';
 	private static readonly ListTaskSpecifications = 'api/workflow/specification/list';
 	private static readonly ListOutputTaskSpecifications = 'api/workflow/output/specification/list';
 	private static readonly ListEnumLists = 'api/workflow/enum';
@@ -253,6 +256,39 @@ export class WorkflowService {
 			);
 	}
 
+	shareWorkflow(name: string, userSelection: UserSelection): Observable<string> {
+		const body = {
+			resource: name,
+			userSelection: userSelection
+		}
+		return this.http.post<ApiResult>(WorkflowService.ShareWorkflow, body)
+			.pipe(
+				catchError(error => {
+					this.alertService.postFailure(JSON.stringify(error));
+					return EMPTY;
+				}),
+				map((result: ApiResult) => {
+					return result.data as string;
+				})
+			);
+	}
+
+	getSharingList(name: string): Observable<UserSelection> {
+		let params: HttpParams = new HttpParams();
+		params = params.append('name', name);
+
+		return this.http.get<ApiResult>(WorkflowService.ListSharedUsers, { params: params })
+			.pipe(
+				catchError(error => {
+					this.alertService.postFailure(JSON.stringify(error));
+					return EMPTY;
+				}),
+				map((result: ApiResult) => {
+					return result.data as UserSelection;
+				})
+			);
+	}
+
 	execute(workflow: Workflow, logLevel: string): Observable<string> {
 		const body = {
 			id: workflow.id,
@@ -343,7 +379,7 @@ export class WorkflowService {
 	private objectify(workflow: any): Workflow {
 		const w: Workflow = {
 			id: workflow.id,
-			ownerId: workflow.ownerId,
+			owned: workflow.owned,
 			name: workflow.name,
 			shared: workflow.shared,
 			description: workflow.description,

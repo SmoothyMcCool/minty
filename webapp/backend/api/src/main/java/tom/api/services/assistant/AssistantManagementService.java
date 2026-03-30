@@ -6,6 +6,7 @@ import java.util.UUID;
 import tom.api.AssistantId;
 import tom.api.UserId;
 import tom.api.model.assistant.Assistant;
+import tom.api.services.exception.NotOwnedException;
 
 public interface AssistantManagementService {
 
@@ -16,7 +17,7 @@ public interface AssistantManagementService {
 	final AssistantId DocumentSummarizingAssistantId = new AssistantId(
 			UUID.fromString("00000000-0000-0000-0000-000000000003"));
 
-	Assistant createAssistant(UserId userId, Assistant assistant);
+	Assistant createAssistant(UserId userId, Assistant assistant) throws NotOwnedException;
 
 	List<Assistant> listAssistants(UserId userId);
 

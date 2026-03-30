@@ -31,7 +31,6 @@
 		<module>../plugins</module>
 		<module>../pug4j-shaded</module>
 		<module>../plugin-library</module>
-		<module>../skills</module>
 		<module>../workflow-executor</module>
 		<module>../bundle</module>
 	</modules>

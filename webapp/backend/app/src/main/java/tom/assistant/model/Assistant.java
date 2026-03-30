@@ -1,4 +1,4 @@
-package tom.assistant.repository;
+package tom.assistant.model;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +28,6 @@ public class Assistant {
 	private Double temperature;
 	private Integer topK;
 	private UserId ownerId;
-	private boolean shared;
 	private boolean hasMemory;
 	@Transient
 	private List<DocumentId> associatedDocumentIds;
@@ -47,16 +46,14 @@ public class Assistant {
 		this.contextSize = assistant.contextSize();
 		this.temperature = assistant.temperature();
 		this.topK = assistant.topK();
-		this.ownerId = assistant.ownerId();
-		this.shared = assistant.shared();
 		this.hasMemory = assistant.hasMemory();
 		this.associatedDocumentIds = new ArrayList<>();
 		this.tools = assistant.tools();
 	}
 
-	public tom.api.model.assistant.Assistant toTaskAssistant() {
+	public tom.api.model.assistant.Assistant toTaskAssistant(UserId userId) {
 		return new tom.api.model.assistant.Assistant(new AssistantId(id), name, model.toString(), contextSize,
-				temperature, topK, prompt, associatedDocumentIds, tools, ownerId, shared, hasMemory);
+				temperature, topK, prompt, associatedDocumentIds, tools, ownerId.equals(userId), hasMemory);
 	}
 
 	public Assistant updateWith(tom.api.model.assistant.Assistant assistant) {
@@ -66,7 +63,6 @@ public class Assistant {
 		setContextSize(assistant.contextSize());
 		setTemperature(assistant.temperature());
 		setTopK(assistant.topK());
-		setShared(assistant.shared());
 		setHasMemory(assistant.hasMemory());
 		setAssociatedDocuments(assistant.documentIds());
 		setTools(assistant.tools());
@@ -135,14 +131,6 @@ public class Assistant {
 
 	public void setOwnerId(UserId ownerId) {
 		this.ownerId = ownerId;
-	}
-
-	public boolean isShared() {
-		return shared;
-	}
-
-	public void setShared(boolean shared) {
-		this.shared = shared;
 	}
 
 	public boolean isHasMemory() {

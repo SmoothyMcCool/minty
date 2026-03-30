@@ -1,21 +1,24 @@
 package tom.api.services;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.List;
 
+import tom.api.UserId;
+import tom.api.services.exception.NotFoundException;
+import tom.api.services.exception.NotOwnedException;
 import tom.api.skill.Skill;
 import tom.api.skill.SkillMetadata;
 
 public interface SkillService {
 
-	List<SkillMetadata> listSkills();
+	List<SkillMetadata> listSkills(UserId userId);
 
-	String getFile(String skillName, String filename);
+	String getFile(UserId userId, String skillName, String filename);
 
-	Skill getSkill(String name);
+	Skill getSkill(UserId userId, String name);
 
-	boolean validate(Path skillFile) throws IOException;
+	void removeSkill(UserId userId, String name) throws IOException, NotFoundException, NotOwnedException;
 
-	void addSkill(Path skillFile) throws IOException;
+	Skill addSkill(UserId userId, byte[] file) throws IOException, NotOwnedException;
+
 }

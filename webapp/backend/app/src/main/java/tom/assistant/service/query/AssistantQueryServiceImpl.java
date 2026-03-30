@@ -282,14 +282,17 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 					return;
 				}
 
-				AssistantMessage chunk = chatResponse.getResult().getOutput();
-				if (chunk != null && chunk.getText() != null) {
-					sr.addChunk(chunk.getText());
+				if (chatResponse.getResult() != null) {
+					AssistantMessage chunk = chatResponse.getResult().getOutput();
+					if (chunk != null && chunk.getText() != null) {
+						sr.addChunk(chunk.getText());
+					}
+
+					if (chatResponse.hasToolCalls()) {
+						toolCalls.addAll(chatResponse.getResult().getOutput().getToolCalls());
+					}
 				}
 
-				if (chatResponse.hasToolCalls()) {
-					toolCalls.addAll(chatResponse.getResult().getOutput().getToolCalls());
-				}
 				@SuppressWarnings("unchecked")
 				List<Document> docs = (List<Document>) chatClientResponse.context()
 						.get(QuestionAnswerAdvisor.RETRIEVED_DOCUMENTS);
@@ -302,6 +305,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 				usage.set(chatResponse.getMetadata().getUsage());
 
 			}).onErrorResume(e -> {
+				logger.warn("askStreamingInternal caught an error: ", e);
 				failed.set(true);
 				return Flux.empty();
 			}).doFinally(signalType -> {

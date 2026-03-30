@@ -15,10 +15,11 @@ import { AlertService } from 'src/app/alert.service';
 import { Workflow } from 'src/app/model/workflow/workflow';
 import { WorkflowService } from '../workflow.service';
 import * as bootstrap from 'bootstrap';
+import { UserSelectDialogComponent, UserSelection } from 'src/app/app/component/user-select-dialog.component';
 
 @Component({
 	selector: 'minty-workflow-list',
-	imports: [CommonModule, FormsModule, RouterModule, ConfirmationDialogComponent],
+	imports: [CommonModule, FormsModule, RouterModule, ConfirmationDialogComponent, UserSelectDialogComponent],
 	templateUrl: 'workflow-list.component.html',
 	styleUrls: ['workflow.component.css'],
 	animations: [
@@ -56,6 +57,10 @@ export class WorkflowListComponent implements AfterViewChecked, OnInit, OnDestro
 
 	filter: string;
 	displayResults: WorkflowState[] = [];
+
+	userSelectDialogVisible = false;
+	workflowToShare: Workflow;
+	sharingSelection: UserSelection;
 
 	constructor(private router: Router,
 		private alertService: AlertService,
@@ -188,6 +193,22 @@ export class WorkflowListComponent implements AfterViewChecked, OnInit, OnDestro
 		}
 	}
 
+	shareWorkflow(workflow: Workflow): void {
+		this.userSelectDialogVisible = true;
+		this.workflowToShare = workflow;
+		this.workflowService.getSharingList(workflow.name).subscribe(selection => {
+			this.sharingSelection = selection;
+		});
+	}
+
+	onUsersConfirmed(selection: UserSelection): void {
+		this.userSelectDialogVisible = false;
+		this.workflowService.shareWorkflow(this.workflowToShare.name, selection).subscribe(response => {
+			this.alertService.postSuccess(response);
+			this.workflowToShare = null;
+		});
+	}
+
 	copyToClipboard() {
 		navigator.clipboard.writeText(this.currentResult.output as string).then(() => {
 			console.log('Copied: ' + this.currentResult.output as string);
@@ -199,7 +220,7 @@ export class WorkflowListComponent implements AfterViewChecked, OnInit, OnDestro
 	}
 
 	isOwned(workflow: Workflow): boolean {
-		return workflow.ownerId === this.user.id;
+		return workflow.owned;
 	}
 
 	navigateTo(url: string) {
@@ -235,7 +256,7 @@ export class WorkflowListComponent implements AfterViewChecked, OnInit, OnDestro
 	downloadWorkflow(workflow: Workflow) {
 		const workflowToDownload: Workflow = JSON.parse(JSON.stringify(workflow));
 		workflowToDownload.id = '';
-		workflowToDownload.ownerId = '';
+		workflowToDownload.owned = true;
 		const blob = new Blob([JSON.stringify(workflowToDownload, undefined, 2)], { type: 'application/json' });
 		const url = URL.createObjectURL(blob);
 		const link = document.createElement('a');

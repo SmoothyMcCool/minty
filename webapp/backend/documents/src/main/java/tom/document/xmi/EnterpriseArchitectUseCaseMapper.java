@@ -157,20 +157,22 @@ public class EnterpriseArchitectUseCaseMapper {
 		return result;
 	}
 
-	@SuppressWarnings("unchecked")
 	private void traverse(JsonNode node, JsonNode parent, String name, List<?> result, boolean includeParent) {
 		if (node.isObject()) {
-			node.fields().forEachRemaining(e -> {
-				if (e.getKey().equals(name)) {
-					if (e.getValue().isArray()) {
-						for (JsonNode child : e.getValue()) {
+			node.properties().forEach(entry -> {
+				String key = entry.getKey();
+				JsonNode value = entry.getValue();
+
+				if (key.equals(name)) {
+					if (value.isArray()) {
+						for (JsonNode child : value) {
 							addResult(result, child, node, includeParent);
 						}
 					} else {
-						addResult(result, e.getValue(), node, includeParent);
+						addResult(result, value, node, includeParent);
 					}
 				}
-				traverse(e.getValue(), node, name, result, includeParent);
+				traverse(value, node, name, result, includeParent);
 			});
 		} else if (node.isArray()) {
 			for (JsonNode child : node) {

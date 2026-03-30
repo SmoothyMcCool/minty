@@ -10,14 +10,16 @@ import tom.api.model.project.FileType;
 import tom.api.model.project.NodeContent;
 import tom.api.model.project.NodeInfo;
 import tom.api.model.project.Project;
+import tom.api.services.exception.NotFoundException;
+import tom.api.services.exception.NotOwnedException;
 
 public interface ProjectService {
 
 	Project createProject(UserId userId, String name);
 
-	void deleteProject(UserId userId, ProjectId projectId);
+	void deleteProject(UserId userId, ProjectId projectId) throws NotFoundException, NotOwnedException;
 
-	Project getProject(UserId userId, ProjectId projectId);
+	Project getProject(UserId userId, ProjectId projectId) throws NotFoundException;
 
 	List<Project> listProjects(UserId id);
 
@@ -39,5 +41,6 @@ public interface ProjectService {
 
 	List<NodeInfo> listChildren(UserId userId, ProjectId projectId, String path);
 
-	void importZip(UserId userId, ProjectId projectId, InputStream zipStream) throws IOException;
+	void importZip(UserId userId, ProjectId projectId, InputStream zipStream)
+			throws IOException, NotFoundException, NotOwnedException;
 }

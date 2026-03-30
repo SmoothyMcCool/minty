@@ -1,8 +1,11 @@
 package tom.assistant.service.management;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,11 +18,19 @@ import tom.api.UserId;
 import tom.api.model.assistant.Assistant;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantRegistryService;
+import tom.api.services.exception.NotFoundException;
+import tom.api.services.exception.NotOwnedException;
+import tom.assistant.model.joins.UserAssistantId;
+import tom.assistant.model.joins.UserAssistantLink;
 import tom.assistant.repository.AssistantRepository;
+import tom.assistant.repository.UserAssistantLinkRepository;
 import tom.config.MintyConfiguration;
 import tom.conversation.service.ConversationServiceInternal;
 import tom.document.service.AssistantDocumentLinkService;
 import tom.llm.service.LlmService;
+import tom.user.model.ResourceSharingSelection;
+import tom.user.model.UserSelection;
+import tom.user.service.UserServiceInternal;
 
 @Service
 public class AssistantManagementServiceImpl implements AssistantManagementServiceInternal {
@@ -27,41 +38,59 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 	private static final Logger logger = LogManager.getLogger(AssistantManagementServiceImpl.class);
 
 	private final AssistantRepository assistantRepository;
+	private final UserAssistantLinkRepository linkRepository;
 	private final AssistantDocumentLinkService assistantDocumentLinkService;
 	private final AssistantRegistryService assistantRegistryService;
+	private final UserServiceInternal userService;
 	private final LlmService llmService;
 	private ConversationServiceInternal conversationService;
 
 	public AssistantManagementServiceImpl(AssistantRepository assistantRepository,
-			AssistantDocumentLinkService assistantDocumentLinkService,
-			AssistantRegistryService assistantRegistryService, LlmService llmService, MintyConfiguration properties) {
+			UserAssistantLinkRepository linkRepository, AssistantDocumentLinkService assistantDocumentLinkService,
+			AssistantRegistryService assistantRegistryService, UserServiceInternal userService, LlmService llmService,
+			MintyConfiguration properties) {
 		this.assistantRepository = assistantRepository;
+		this.linkRepository = linkRepository;
 		this.assistantDocumentLinkService = assistantDocumentLinkService;
 		this.assistantRegistryService = assistantRegistryService;
+		this.userService = userService;
 		this.llmService = llmService;
 	}
 
 	@Override
-	public Assistant createAssistant(UserId userId, Assistant assistant) {
-		tom.assistant.repository.Assistant repoAsst = new tom.assistant.repository.Assistant(assistant);
+	@Transactional
+	public Assistant createAssistant(UserId userId, Assistant assistant) throws NotOwnedException {
+		if (assistantRepository.findByName(assistant.name()).isEmpty()) {
+			throw new NotOwnedException(assistant.name());
+		}
+
+		tom.assistant.model.Assistant repoAsst = new tom.assistant.model.Assistant(assistant);
 		repoAsst.setOwnerId(userId);
 		repoAsst.setId(null);
+		repoAsst = assistantRepository.save(repoAsst);
 
-		return assistantRepository.save(repoAsst).toTaskAssistant();
+		UserAssistantLink ual = new UserAssistantLink();
+		UserAssistantId uai = new UserAssistantId();
+		uai.setUserId(userId.getValue());
+		uai.setAssistantId(repoAsst.getId().getValue());
+		ual.setId(uai);
+		ual.setAssistant(repoAsst);
+		linkRepository.save(ual);
+
+		return repoAsst.toTaskAssistant(userId);
 	}
 
 	@Override
 	@Transactional
 	public Assistant updateAssistant(UserId userId, Assistant assistant) {
-		Optional<tom.assistant.repository.Assistant> maybeAssistant = assistantRepository
-				.findById(assistant.id().value());
+		Optional<tom.assistant.model.Assistant> maybeAssistant = assistantRepository.findById(assistant.id().value());
 
 		if (maybeAssistant.isEmpty()) {
 			logger.warn("No assistant with id " + assistant.id() + " exists.");
 			return null;
 		}
 
-		tom.assistant.repository.Assistant repoAssistant = maybeAssistant.get();
+		tom.assistant.model.Assistant repoAssistant = maybeAssistant.get();
 		if (!repoAssistant.getOwnerId().equals(userId)) {
 			logger.warn("Assistant Id " + assistant.id() + " not owned by user id " + userId);
 			return null;
@@ -74,28 +103,29 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 		List<DocumentId> docs = assistantDocumentLinkService.getDocumentIdsForAssistant(repoAssistant.getId());
 		repoAssistant.setAssociatedDocuments(docs);
 
-		return repoAssistant.toTaskAssistant();
+		return repoAssistant.toTaskAssistant(userId);
 	}
 
 	@Override
+	@Transactional
 	public List<Assistant> listAssistants(UserId userId) {
-		List<tom.assistant.repository.Assistant> asstList = assistantRepository.findAllByOwnerIdOrSharedTrue(userId);
+		List<tom.assistant.model.Assistant> asstList = linkRepository
+				.findById_UserIdIn(List.of(userId.getValue(), ResourceSharingSelection.AllUsersId.getValue())).stream()
+				.map(link -> link.getAssistant()).collect(Collectors.toMap(tom.assistant.model.Assistant::getId,
+						assistant -> assistant, (a, b) -> a, LinkedHashMap::new))
+				.values().stream().toList();
 
 		if (asstList == null || asstList.size() == 0) {
 			return new ArrayList<>();
 		}
 
 		asstList = asstList.stream().map(assistant -> {
-			if (assistant.getOwnerId().equals(userId)) {
-				// Don't mark this as shared since it's owned by the current user.
-				assistant.setShared(false);
-			}
 			List<DocumentId> documentIds = assistantDocumentLinkService.getDocumentIdsForAssistant(assistant.getId());
 			assistant.setAssociatedDocuments(documentIds);
 			return assistant;
 		}).toList();
 
-		return asstList.stream().map(asst -> asst.toTaskAssistant()).toList();
+		return asstList.stream().map(asst -> asst.toTaskAssistant(userId)).toList();
 	}
 
 	@Override
@@ -112,34 +142,123 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 		}
 
 		try {
-			tom.assistant.repository.Assistant assistant = assistantRepository.findById(assistantId.getValue()).get();
-			if (assistant.isShared() || assistant.getOwnerId().equals(userId)) {
-				List<DocumentId> docIds = assistantDocumentLinkService.getDocumentIdsForAssistant(assistant.getId());
-				assistant.setAssociatedDocuments(docIds);
-				return assistant.toTaskAssistant();
-			}
+			tom.assistant.model.Assistant assistant = linkRepository
+					.findFirstById_AssistantIdAndId_UserIdIn(assistantId.getValue(),
+							List.of(userId.getValue(), ResourceSharingSelection.AllUsersId.getValue()))
+					.orElseThrow().getAssistant();
+
+			List<DocumentId> docIds = assistantDocumentLinkService.getDocumentIdsForAssistant(assistant.getId());
+			assistant.setAssociatedDocuments(docIds);
+			return assistant.toTaskAssistant(userId);
+
 		} catch (Exception e) {
 			logger.warn("Could not find assistant: " + assistantId);
 			return null;
 		}
 
-		return null;
 	}
 
 	@Override
-	public Assistant unrestrictedFindAssistant(AssistantId assistantId) {
-		tom.assistant.repository.Assistant assistant = assistantRepository.findById(assistantId.value()).get();
-		assistant.setAssociatedDocuments(assistantDocumentLinkService.getDocumentIdsForAssistant(assistantId));
-		return assistant.toTaskAssistant();
+	@Transactional
+	public void shareAssistant(UserId userId, ResourceSharingSelection selection)
+			throws NotFoundException, NotOwnedException {
+		Optional<tom.assistant.model.Assistant> maybeAssistant = assistantRepository
+				.findById(UUID.fromString(selection.getResource()));
+
+		if (maybeAssistant.isEmpty()) {
+			throw new NotFoundException(selection.getResource());
+		}
+
+		tom.assistant.model.Assistant assistant = maybeAssistant.get();
+
+		if (!assistant.getOwnerId().equals(userId)) {
+			throw new NotOwnedException(selection.getResource());
+		}
+
+		UserAssistantLink ual = new UserAssistantLink();
+		ual.setAssistant(assistant);
+
+		// Remove any other sharing first.
+		List<UserAssistantLink> assistants = linkRepository
+				.findById_AssistantId(UUID.fromString(selection.getResource()));
+		assistants = assistants.stream().filter(link -> !link.getUserId().equals(userId.getValue())).toList();
+		assistants.forEach(link -> {
+			linkRepository.delete(link);
+		});
+
+		// Now share to those that should get it.
+		if (selection.getUserSelection().isAllUsers()) {
+			UserId sharingTargetUser = ResourceSharingSelection.AllUsersId;
+			UserAssistantId uai = new UserAssistantId();
+			uai.setAssistantId(assistant.getId().getValue());
+			uai.setUserId(sharingTargetUser.getValue());
+			ual.setId(uai);
+			linkRepository.save(ual);
+
+		} else {
+			for (String username : selection.getUserSelection().getSelectedUsers()) {
+				try {
+					UserId sharingTargetUser = userService.getUserFromName(username).orElseThrow().getId();
+					UserAssistantId uai = new UserAssistantId();
+					uai.setAssistantId(assistant.getId().getValue());
+					uai.setUserId(sharingTargetUser.getValue());
+					ual.setId(uai);
+					linkRepository.save(ual);
+				} catch (Exception e) {
+					// oh well. sharing failed to that user.
+				}
+			}
+		}
+	}
+
+	@Override
+	@Transactional
+	public UserSelection getSharingFor(UserId userId, AssistantId assistantId)
+			throws NotOwnedException, NotFoundException {
+		Optional<tom.assistant.model.Assistant> maybeAssistant = assistantRepository.findById(assistantId.getValue());
+		if (maybeAssistant.isEmpty()) {
+			throw new NotFoundException(assistantId.toString());
+		}
+
+		tom.assistant.model.Assistant assistant = maybeAssistant.get();
+
+		if (!assistant.getOwnerId().equals(userId)) {
+			throw new NotOwnedException(assistant.getName());
+		}
+
+		List<UserAssistantLink> sharedWith = linkRepository.findById_AssistantId(assistant.getId().getValue());
+
+		UserSelection selection = new UserSelection();
+		selection.setAllUsers(false);
+		selection.setSelectedUsers(new ArrayList<>());
+
+		for (UserAssistantLink share : sharedWith) {
+			try {
+				if (share.getUserId().equals(ResourceSharingSelection.AllUsersId.getValue())) {
+					selection.setAllUsers(true);
+					selection.setSelectedUsers(null);
+					return selection;
+				}
+				selection.getSelectedUsers()
+						.add(userService.getUserFromId(new UserId(share.getUserId())).orElseThrow().getName());
+			} catch (Exception e) {
+				// Just ignore. Bad name in given list.
+			}
+		}
+
+		return selection;
 	}
 
 	@Override
 	@Transactional
 	public boolean deleteAssistant(UserId userId, AssistantId assistantId) {
-		Assistant assistant = findAssistant(userId, assistantId);
+		UserAssistantLink ual = linkRepository
+				.findById_AssistantIdAndId_UserId(assistantId.getValue(), userId.getValue()).orElseThrow();
 
-		if (assistant == null) {
-			logger.warn("Tried to delete an assistant that doesn't exist or user cannot access. User: " + userId
+		tom.assistant.model.Assistant assistant = ual.getAssistant();
+
+		if (assistant == null || !assistant.getOwnerId().equals(userId)) {
+			logger.warn("Tried to delete an assistant that doesn't exist or user doesn't own. User: " + userId
 					+ ", assistant: " + assistantId);
 			return false;
 		}
@@ -177,7 +296,7 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 
 	@Override
 	public boolean isAssistantConversational(AssistantId assistantId) {
-		tom.assistant.repository.Assistant assistant = assistantRepository.findById(assistantId.value()).get();
+		tom.assistant.model.Assistant assistant = assistantRepository.findById(assistantId.value()).get();
 		return assistant.isHasMemory();
 	}
 }

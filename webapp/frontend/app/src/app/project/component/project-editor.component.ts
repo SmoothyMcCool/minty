@@ -14,6 +14,7 @@ import { AlertService } from 'src/app/alert.service';
 	selector: 'minty-project-editor',
 	imports: [CommonModule, FormsModule, ProjectNodeComponent, NodeViewerComponent, ConfirmationDialogComponent],
 	templateUrl: 'project-editor.component.html',
+	styleUrl: 'project-editor.component.css'
 })
 export class ProjectEditorComponent {
 
@@ -43,6 +44,7 @@ export class ProjectEditorComponent {
 
 	mdFileDialogVisible = false;
 	zipFileDialogVisible = false
+	mermaidFileDialogVisible = false;
 	document: DocProperties = {
 		title: '',
 		file: undefined
@@ -136,11 +138,16 @@ export class ProjectEditorComponent {
 
 		this.projectService.writeFile(this.project.id, node).subscribe(() => {
 			this.refresh();
+			this.alertService.postSuccess('Added file ' + node.path);
 		});
 	}
 
 	addAndConvertToMd() {
 		this.mdFileDialogVisible = true;
+	}
+
+	addAndConvertToMermaid() {
+		this.mermaidFileDialogVisible = true;
 	}
 
 	addMarkdownFile() {
@@ -179,6 +186,14 @@ export class ProjectEditorComponent {
 		});
 	}
 
+	convertToMermaid() {
+		this.mermaidFileDialogVisible = false;
+		this.projectService.convertToMermaid(this.project.id, this.document).subscribe((result: string) => {
+			this.alertService.postSuccess(result);
+			this.refresh();
+		});
+	}
+
 	fileSelected(event: Event) {
 		const newFiles = (event.target as HTMLInputElement).files;
 		if (newFiles && newFiles.length > 0) {
@@ -187,8 +202,10 @@ export class ProjectEditorComponent {
 	}
 
 	addFolder() {
-		this.projectService.createFolder(this.project.id, `/new-folder-${this.randomId(6)}`).subscribe(() => {
+		const folderName = `/new-folder-${this.randomId(6)}`;
+		this.projectService.createFolder(this.project.id, folderName).subscribe(() => {
 			this.refresh();
+			this.alertService.postSuccess('Added folder ' + folderName);
 		});
 	}
 

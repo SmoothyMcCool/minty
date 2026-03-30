@@ -1,6 +1,7 @@
 package tom.user.service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -29,10 +30,12 @@ public class UserServiceImpl implements UserServiceInternal {
 
 	private final String secret;
 	private final UserRepository userRepository;
+	private List<String> userNames;
 
 	public UserServiceImpl(UserRepository userRepository, MintyConfiguration properties) {
 		this.userRepository = userRepository;
 		secret = properties.getConfig().secret();
+		userNames = null;
 	}
 
 	@Override
@@ -121,5 +124,22 @@ public class UserServiceImpl implements UserServiceInternal {
 		}
 
 		return null;
+	}
+
+	@Override
+	public List<String> listUsers() {
+		if (userNames != null) {
+			return userNames;
+		}
+
+		List<EncryptedUser> encryptedUsers = userRepository.findAll();
+		List<String> userNames = encryptedUsers.stream().map(user -> user.getAccount()).toList();
+		this.userNames = userNames;
+		return userNames;
+	}
+
+	@Override
+	public void invalidateUserList() {
+		this.userNames = null;
 	}
 }

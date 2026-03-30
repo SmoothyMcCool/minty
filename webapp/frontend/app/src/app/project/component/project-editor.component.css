@@ -1,0 +1,14 @@
+.menu-btn {
+	font-size: 0.8rem;
+	background: transparent;
+	border: none;
+	color: inherit;
+}
+
+.menu-btn:hover {
+	background-color: rgba(0, 0, 0, 0.08);
+}
+
+.dropdown.show .menu-btn {
+	background-color: rgba(0, 0, 0, 0.08);
+}

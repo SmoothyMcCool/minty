@@ -95,11 +95,6 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 		this.onTouched();
 		this.onChange(createAssistant(this.assistant));
 	}
-	sharedChanged(shared: boolean) {
-		this.assistant.shared = shared;
-		this.onTouched();
-		this.onChange(createAssistant(this.assistant));
-	}
 	hasMemoryChanged(hasMemory: boolean) {
 		this.assistant.hasMemory = hasMemory;
 		this.onTouched();

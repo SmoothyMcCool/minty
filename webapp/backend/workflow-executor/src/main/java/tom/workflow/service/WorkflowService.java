@@ -4,6 +4,10 @@ import java.util.List;
 import java.util.UUID;
 
 import tom.api.UserId;
+import tom.api.services.exception.NotFoundException;
+import tom.api.services.exception.NotOwnedException;
+import tom.user.model.ResourceSharingSelection;
+import tom.user.model.UserSelection;
 import tom.workflow.controller.WorkflowRequest;
 import tom.workflow.model.Workflow;
 
@@ -11,7 +15,7 @@ public interface WorkflowService {
 
 	String executeWorkflow(UserId userId, WorkflowRequest request);
 
-	Workflow createWorkflow(UserId userId, Workflow workflow);
+	Workflow createWorkflow(UserId userId, Workflow workflow) throws NotOwnedException;
 
 	Workflow updateWorkflow(UserId userId, Workflow workflow);
 
@@ -25,8 +29,12 @@ public interface WorkflowService {
 
 	boolean isWorkflowOwned(UUID workflowId, UserId userId);
 
-	boolean isWorkflowOwned(UserId userId, String name);
+	boolean isRunningWorkflowOwned(UserId userId, String name);
 
-	void cancelWorkflow(UserId userId, String name);
+	void cancelWorkflow(UserId userId, String name) throws NotOwnedException;
+
+	void shareWorkflow(UserId userId, ResourceSharingSelection selection) throws NotFoundException;
+
+	UserSelection getSharingFor(UserId userId, String name) throws NotOwnedException, NotFoundException;
 
 }

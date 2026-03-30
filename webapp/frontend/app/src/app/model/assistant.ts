@@ -7,8 +7,7 @@ export interface Assistant {
 	temperature: number;
 	topK: number;
 	tools: string[];
-	ownerId: string;
-	shared: boolean;
+	owned: boolean;
 	hasMemory: boolean;
 	documentIds: string[];
 }
@@ -23,8 +22,7 @@ export function createAssistant(overrides: Partial<Assistant> = {}): Assistant {
 		temperature: 0,
 		topK: 5,
 		tools: [],
-		ownerId: '',
-		shared: false,
+		owned: false,
 		hasMemory: false,
 		documentIds: [],
 		...overrides

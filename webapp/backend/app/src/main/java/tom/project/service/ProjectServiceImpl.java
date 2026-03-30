@@ -16,8 +16,6 @@ import java.util.zip.ZipInputStream;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import tom.NotFoundException;
-import tom.NotOwnedException;
 import tom.api.ProjectId;
 import tom.api.UserId;
 import tom.api.model.project.FileType;
@@ -26,6 +24,8 @@ import tom.api.model.project.NodeInfo;
 import tom.api.model.project.NodeType;
 import tom.api.model.project.Project;
 import tom.api.services.ProjectService;
+import tom.api.services.exception.NotFoundException;
+import tom.api.services.exception.NotOwnedException;
 import tom.project.repository.ProjectEntity;
 import tom.project.repository.ProjectFileContent;
 import tom.project.repository.ProjectFileContentRepository;
@@ -76,14 +76,14 @@ public class ProjectServiceImpl implements ProjectService {
 
 	@Override
 	@Transactional
-	public void deleteProject(UserId userId, ProjectId projectId) {
+	public void deleteProject(UserId userId, ProjectId projectId) throws NotFoundException, NotOwnedException {
 		validateProjectAccess(userId, projectId);
 
 		projectRepository.deleteById(projectId.value());
 	}
 
 	@Override
-	public Project getProject(UserId userId, ProjectId projectId) {
+	public Project getProject(UserId userId, ProjectId projectId) throws NotFoundException {
 		Optional<ProjectEntity> maybeProject = projectRepository.findById(projectId.getValue());
 
 		if (maybeProject.isPresent() && maybeProject.get().getOwnerId().equals(userId)) {
@@ -97,7 +97,7 @@ public class ProjectServiceImpl implements ProjectService {
 		return projectRepository.findByOwnerId(id).stream().map(project -> project.toModel()).toList();
 	}
 
-	private void validateProjectAccess(UserId userId, ProjectId projectId) {
+	private void validateProjectAccess(UserId userId, ProjectId projectId) throws NotFoundException, NotOwnedException {
 		Optional<ProjectEntity> project = projectRepository.findById(projectId.getValue());
 
 		if (project.isEmpty()) {
@@ -294,7 +294,8 @@ public class ProjectServiceImpl implements ProjectService {
 
 	@Override
 	@Transactional
-	public void importZip(UserId userId, ProjectId projectId, InputStream zipStream) throws IOException {
+	public void importZip(UserId userId, ProjectId projectId, InputStream zipStream)
+			throws IOException, NotFoundException, NotOwnedException {
 		validateProjectAccess(userId, projectId);
 
 		try (ZipInputStream zis = new ZipInputStream(zipStream, StandardCharsets.UTF_8)) {

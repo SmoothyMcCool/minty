@@ -50,7 +50,8 @@ public class MarkdownCleaner {
 	 * Groups: 1 — leading indent (may be empty) 2 — number (discarded; we renumber)
 	 * 3 — item text
 	 */
-	private static final Pattern BROKEN_ITEM = Pattern.compile("^([ \\t]*)(\\d+)[ \\t]+(?!\\.)(.+)$");
+	private static final Pattern LIST_ITEM = Pattern.compile("^([ \\t]*)(\\d+)(?:\\.|[ \\t]+)(.+)$");
+	private static final Pattern LIST_SEPARATOR = Pattern.compile("^\\s*<!--.*?-->\\s*$");
 
 	// -------------------------------------------------------------------------
 	// Pass 6 — Heading spacing
@@ -73,6 +74,7 @@ public class MarkdownCleaner {
 		s = fixNonBreakingSpaces(s);
 		s = fixSoftHyphens(s);
 		s = fixBrokenLists(s);
+		s = removeHtmlComments(s);
 		s = fixHeadingSpacing(s);
 		s = normalize(s);
 		return s;
@@ -83,11 +85,11 @@ public class MarkdownCleaner {
 	// -------------------------------------------------------------------------
 
 	static String fixSmartQuotes(String s) {
-		s = OPEN_DOUBLE_QUOTE.matcher(s).replaceAll("\"");
-		s = CLOSE_DOUBLE_QUOTE.matcher(s).replaceAll("\"");
-		s = OPEN_SINGLE_QUOTE.matcher(s).replaceAll("'");
-		s = CLOSE_SINGLE_QUOTE.matcher(s).replaceAll("'");
-		return s;
+		String ret = OPEN_DOUBLE_QUOTE.matcher(s).replaceAll("\"");
+		ret = CLOSE_DOUBLE_QUOTE.matcher(ret).replaceAll("\"");
+		ret = OPEN_SINGLE_QUOTE.matcher(ret).replaceAll("'");
+		ret = CLOSE_SINGLE_QUOTE.matcher(ret).replaceAll("'");
+		return ret;
 	}
 
 	// -------------------------------------------------------------------------
@@ -95,9 +97,9 @@ public class MarkdownCleaner {
 	// -------------------------------------------------------------------------
 
 	static String fixDashes(String s) {
-		s = EM_DASH.matcher(s).replaceAll("-");
-		s = EN_DASH.matcher(s).replaceAll("-");
-		return s;
+		String ret = EM_DASH.matcher(s).replaceAll("-");
+		ret = EN_DASH.matcher(ret).replaceAll("-");
+		return ret;
 	}
 
 	// -------------------------------------------------------------------------
@@ -140,7 +142,7 @@ public class MarkdownCleaner {
 		int blankBuffer = 0;
 
 		for (String line : lines) {
-			Matcher m = BROKEN_ITEM.matcher(line);
+			Matcher m = LIST_ITEM.matcher(line);
 
 			if (m.matches()) {
 				String indent = m.group(1);
@@ -158,13 +160,14 @@ public class MarkdownCleaner {
 				}
 				pendingItems.add(text);
 
-			} else if (line.isBlank()) {
+			} else if (line.isBlank() || LIST_SEPARATOR.matcher(line).matches()) {
 				if (!pendingItems.isEmpty()) {
+					// treat separator as intra-list spacing
 					blankBuffer++;
 				} else {
+					// outside a list, preserve as normal blank line
 					out.append("\n");
 				}
-
 			} else {
 				if (!pendingItems.isEmpty()) {
 					flushBlock(out, pendingItems, pendingIndent);
@@ -189,6 +192,11 @@ public class MarkdownCleaner {
 		}
 
 		return out.toString();
+	}
+
+	static String removeHtmlComments(String s) {
+		// Remove standalone HTML comment lines (like <!-- -->)
+		return s.replaceAll("(?m)^\\s*<!--.*?-->\\s*\\n?", "");
 	}
 
 	private static void flushBlock(StringBuilder out, List<String> items, String indent) {

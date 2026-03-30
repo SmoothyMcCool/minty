@@ -109,6 +109,7 @@ public class UserController {
 		try {
 			User savedUser = userService.decrypt(userRepository.save(userService.encrypt(user)));
 			savedUser.setPassword("");
+			userService.invalidateUserList();
 
 			metadataService.addUser(savedUser.getId());
 
@@ -192,6 +193,15 @@ public class UserController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
+	@GetMapping({ "/list" })
+	public ResponseEntity<ResponseWrapper<List<String>>> listUsers(
+			@AuthenticationPrincipal UserDetailsUser userDetails) {
+		List<String> users = userService.listUsers().stream().filter(name -> !name.equals(userDetails.getUsername()))
+				.toList();
+		ResponseWrapper<List<String>> response = ResponseWrapper.SuccessResponse(users);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
 	@ExceptionHandler(ApiException.class)
 	public ResponseEntity<ResponseWrapper<String>> badUserExceptionHandler(HttpServletRequest req, ApiException e) {
 		logger.error("UserController: Caught ApiException: ", e);
@@ -199,4 +209,5 @@ public class UserController {
 				e.getApiErrors());
 		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 	}
+
 }

@@ -8,10 +8,16 @@
 		<div class="col-3 border-end">
 			<h5 class="mb-3">Skills</h5>
 			<ul class="list-group">
-				<li class="list-group-item list-group-item-action position-relative text-bg-light bg-opacity-75"
+				<li class="list-group-item list-group-item-action d-flex position-relative text-bg-light bg-opacity-75"
 					*ngFor="let skill of skills" [class.active]="skill.name === selectedSkill?.metadata?.name"
 					(click)="onSelectSkill(skill)" style="cursor: pointer">
 					{{skill.name}}
+					<button class="ms-auto me-3" (click)="shareSkill(skill.name)" *ngIf="skill.owned">
+						<i class="bi bi-share"></i>
+					</button>
+					<button (click)="deleteSkill(skill.name)" *ngIf="skill.owned">
+						<i class="bi bi-trash3" style="font-size: 14px; color: red"></i>
+					</button>
 				</li>
 			</ul>
 		</div>
@@ -73,9 +79,15 @@
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-secondary" (click)="skillFileDialogVisible = false">Cancel</button>
-				<button type="button" class="btn btn-primary"
-					(click)="addSkill()">OK</button>
+				<button type="button" class="btn btn-primary" (click)="addSkill()">OK</button>
 			</div>
 		</div>
 	</div>
 </div>
+
+<minty-confirmation-dialog [title]="'Delete Skill'" [message]="'Are you sure you want to delete this Skill?'"
+	[visible]="deleteSkillDialogVisible" (confirm)="confirmDeleteSkill()" (cancel)="deleteSkillDialogVisible = false">
+</minty-confirmation-dialog>
+
+<minty-user-select-dialog [visible]="userSelectDialogVisible" (confirm)="onUsersConfirmed($event)" [initialSelection]="sharingSelection" (cancel)="userSelectDialogVisible = false">
+</minty-user-select-dialog>

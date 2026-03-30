@@ -8,13 +8,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import tom.ApiError;
+import tom.api.services.exception.NotOwnedException;
 import tom.api.task.enumspec.EnumSpec;
 import tom.controller.ResponseWrapper;
 import tom.meta.service.MetadataService;
@@ -22,6 +24,8 @@ import tom.model.security.UserDetailsUser;
 import tom.task.model.OutputTaskSpecDescription;
 import tom.task.model.TaskSpecDescription;
 import tom.task.registry.TaskRegistryService;
+import tom.user.model.ResourceSharingSelection;
+import tom.user.model.UserSelection;
 import tom.workflow.model.Workflow;
 import tom.workflow.service.WorkflowService;
 
@@ -40,7 +44,7 @@ public class WorkflowController {
 		this.metadataService = metadataService;
 	}
 
-	@RequestMapping(value = { "" }, method = RequestMethod.GET)
+	@GetMapping(value = { "" })
 	public ResponseEntity<ResponseWrapper<Workflow>> getWorkflow(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestParam("workflowId") UUID workflowId) {
 
@@ -55,7 +59,7 @@ public class WorkflowController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "" }, method = RequestMethod.DELETE)
+	@DeleteMapping(value = { "" })
 	public ResponseEntity<ResponseWrapper<Boolean>> deleteWorkflow(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestParam("workflowId") UUID workflowId) {
 
@@ -70,22 +74,59 @@ public class WorkflowController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "cancel" }, method = RequestMethod.DELETE)
+	@PostMapping(value = { "/share" })
+	public ResponseEntity<ResponseWrapper<String>> shareWorkflow(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestBody() ResourceSharingSelection selection) {
+		try {
+			workflowService.shareWorkflow(user.getId(), selection);
+
+		} catch (Exception e) {
+			ResponseWrapper<String> response = ResponseWrapper.FailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+					e.getMessage());
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
+		ResponseWrapper<String> response = ResponseWrapper.SuccessResponse("Workflow shared.");
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@GetMapping(value = { "/getsharing" })
+	public ResponseEntity<ResponseWrapper<UserSelection>> getSharing(@AuthenticationPrincipal UserDetailsUser user,
+			@RequestParam("name") String name) {
+		try {
+			UserSelection selection = workflowService.getSharingFor(user.getId(), name);
+			ResponseWrapper<UserSelection> response = ResponseWrapper.SuccessResponse(selection);
+			return new ResponseEntity<>(response, HttpStatus.OK);
+
+		} catch (Exception e) {
+			ResponseWrapper<UserSelection> response = ResponseWrapper
+					.FailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+	}
+
+	@DeleteMapping(value = { "cancel" })
 	public ResponseEntity<ResponseWrapper<Boolean>> cancelWorkflow(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestParam("name") String name) {
 
-		if (!workflowService.isWorkflowOwned(user.getId(), name)) {
+		if (!workflowService.isRunningWorkflowOwned(user.getId(), name)) {
 			ResponseWrapper<Boolean> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
 					List.of(ApiError.NOT_OWNED));
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
-		workflowService.cancelWorkflow(user.getId(), name);
+		try {
+			workflowService.cancelWorkflow(user.getId(), name);
+		} catch (NotOwnedException e) {
+			ResponseWrapper<Boolean> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
+					List.of(ApiError.NOT_OWNED));
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
 		ResponseWrapper<Boolean> response = ResponseWrapper.SuccessResponse(true);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "/execute" }, method = RequestMethod.POST)
+	@PostMapping(value = { "/execute" })
 	public ResponseEntity<ResponseWrapper<String>> executeWorkflow(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestBody WorkflowRequest request) {
 
@@ -109,19 +150,25 @@ public class WorkflowController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "/new" }, method = RequestMethod.POST)
+	@PostMapping(value = { "/new" })
 	public ResponseEntity<ResponseWrapper<Workflow>> newWorkflow(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestBody Workflow workflow) {
 
-		workflow.setOwnerId(user.getId());
-		Workflow createdWorkflow = workflowService.createWorkflow(user.getId(), workflow);
+		Workflow createdWorkflow;
+		try {
+			createdWorkflow = workflowService.createWorkflow(user.getId(), workflow);
+		} catch (NotOwnedException e) {
+			ResponseWrapper<Workflow> response = ResponseWrapper.ApiFailureResponse(HttpStatus.BAD_REQUEST.value(),
+					List.of(ApiError.NOT_OWNED));
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
 		metadataService.workflowCreated(user.getId());
 
 		ResponseWrapper<Workflow> response = ResponseWrapper.SuccessResponse(createdWorkflow);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "/update" }, method = RequestMethod.POST)
+	@PostMapping(value = { "/update" })
 	public ResponseEntity<ResponseWrapper<Workflow>> updateWorkflow(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestBody Workflow workflow) {
 

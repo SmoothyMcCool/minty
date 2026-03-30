@@ -1,5 +1,6 @@
 package tom.user.service;
 
+import java.util.List;
 import java.util.Optional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -19,4 +20,8 @@ public interface UserServiceInternal extends UserService {
 	public Optional<User> getUserFromName(String userName);
 
 	public Optional<User> getUserFromId(UserId userId);
+
+	public List<String> listUsers();
+
+	public void invalidateUserList();
 }
