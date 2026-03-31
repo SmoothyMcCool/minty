@@ -1,34 +1,43 @@
-h2, h3 {
-	color: #444;
-	font-family: Arial, Helvetica, sans-serif;
-	font-weight: lighter;
+h1, h2, h3, h4, h5, h6 {
+  color: #1a5c35;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-weight: 300;
 }
+
 body {
-	font-family: Arial, Helvetica, sans-serif;
+	font-family: system-ui, -apple-system, sans-serif;
+	background-color: #f0f2f1;
+	color: #1a2620;
 }
-input[text], button {
-	color: #888;
-	font-family: Cambria, Georgia;
+
+input[text],
+button {
+	color: #3d6b52;
+	font-family: system-ui, -apple-system, sans-serif;
 }
+
 a {
 	cursor: pointer;
-	cursor: hand;
+	color: #2e7d52;
 }
+
 button {
-	font-family: Arial;
-	background-color: #eee;
+	font-family: system-ui, -apple-system, sans-serif;
+	background-color: #eef3f0;
 	border: none;
 	padding: 5px 10px;
 	border-radius: 4px;
 	cursor: pointer;
-	cursor: hand;
+	color: #1a2620;
 }
+
 button:hover {
-	background-color: #cfd8dc;
+	background-color: #dde8e1;
 }
+
 button:disabled {
-	background-color: #eee;
-	color: #aaa;
+	background-color: #f0f2f1;
+	color: #a0b8a8;
 	cursor: auto;
 }
 
@@ -45,22 +54,24 @@ button:disabled {
 
 .clickable-text {
 	cursor: pointer;
-	color: var(--bs-link-color, #0d6efd);
+	color: #2e7d52;
 	transition: color 0.15s ease-in-out;
 }
+
 .clickable-text:hover {
-	color: var(--bs-link-hover-color, #0a58ca);
+	color: #1a5c35;
 	text-decoration: underline;
 }
 
 .well {
-	background-color: rgb(206, 206, 206);
+	background-color: rgba(196, 218, 204, 0.6);
 	border-radius: 10px;
+	border: 0.5px solid #c5d4cb;
 }
 
 .bg-opacity-75 {
-	background-color: rgba(255, 255, 255, 0.75) !important;
-	color: #000 !important;
+	background-color: rgba(255, 255, 255, 0.85) !important;
+	color: #1a2620 !important;
 }
 
 .mermaid {
@@ -72,7 +83,7 @@ button:disabled {
 [cdk-drag-preview] {
 	z-index: 9999 !important;
 	pointer-events: none;
-	box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+	box-shadow: 0 5px 15px rgba(26, 46, 34, 0.2);
 	opacity: 0.9;
 }
 
@@ -85,6 +96,7 @@ button:disabled {
 	word-wrap: break-word;
 }
 
+/* Base table styles */
 markdown table {
 	width: 100%;
 	border-collapse: collapse;
@@ -93,11 +105,46 @@ markdown table {
 
 markdown th,
 markdown td {
-	border: 1px solid #a0a0a0;
+	border: 1px solid #c5d4cb;
 	padding: 0.5rem;
 }
 
 markdown th {
-	background-color: #73d2e5;
+	background-color: #d4e8dc;
+	color: #1a5c35;
 	font-weight: 600;
+}
+
+/* Overrides inside chat bubbles */
+.well-bot markdown th {
+	background-color: #3d6b52;
+	color: #fff;
+}
+
+.well-bot markdown th,
+.well-bot markdown td {
+	border-color: #b8cfc0;
+}
+
+.well-user markdown th {
+	background-color: #4a6b57;
+	color: #fff;
+}
+
+.well-user markdown th,
+.well-user markdown td {
+	border-color: #dde3df;
+}
+
+.card {
+	border: 1px solid #a8c0b0 !important;
+}
+
+.list-group {
+	border-radius: var(--bs-border-radius);
+}
+
+.list-group-item {
+	border-color: #a8c0b0;
+	background-color: #ffffff;
 }

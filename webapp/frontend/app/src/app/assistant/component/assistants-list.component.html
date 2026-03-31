@@ -19,7 +19,7 @@
 				</div>
 			</form>
 			<ul class="list-group">
-				<li class="list-group-item list-group-item-action position-relative text-bg-light bg-opacity-75"
+				<li class="list-group-item list-group-item-action position-relative text-bg-light"
 					*ngFor="let conversation of conversations" style="height: 2.5rem">
 					<div class="d-flex align-items-center h-100">
 						<span class="text-truncate clickable-text" (click)="selectConversation(conversation)">
@@ -55,7 +55,7 @@
 				<h4>Assistants</h4>
 				<ng-container *ngIf="assistants.length > 0; else noAssistants">
 					<ul class="list-group">
-						<li class="list-group-item list-group-item-action position-relative text-bg-light bg-opacity-75"
+						<li class="list-group-item list-group-item-action position-relative text-bg-light"
 							style="height: 2.5rem" *ngFor="let assistant of filteredAssistants()">
 							<div class="position-absolute top-0 end-0" *ngIf="isOwned(assistant)">
 								<button class="btn btn-sm" style="font-size: 14px;"

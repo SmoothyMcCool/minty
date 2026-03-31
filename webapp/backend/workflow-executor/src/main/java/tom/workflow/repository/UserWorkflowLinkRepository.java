@@ -6,7 +6,6 @@ import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import tom.api.UserId;
 import tom.workflow.model.joins.UserWorkflowId;
 import tom.workflow.model.joins.UserWorkflowLink;
 
@@ -22,7 +21,7 @@ public interface UserWorkflowLinkRepository extends JpaRepository<UserWorkflowLi
 
 	void deleteById_WorkflowId(UUID workflowId);
 
-	Optional<UserWorkflowLink> findById_WorkflowIdAndId_UserIdIn(UUID workflowId, List<UserId> userIds);
+	Optional<UserWorkflowLink> findById_WorkflowIdAndId_UserIdIn(UUID workflowId, List<UUID> userIds);
 
-	Optional<UserWorkflowLink> findById_WorkflowIdAndId_UserId(UUID workflowId, UserId userId);
+	Optional<UserWorkflowLink> findById_WorkflowIdAndId_UserId(UUID workflowId, UUID userId);
 }

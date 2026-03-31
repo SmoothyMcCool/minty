@@ -1,0 +1,173 @@
+:root,
+[data-bs-theme="light"] {
+
+	/* Palette */
+	--mint-50: #f7f9f8;
+	--mint-100: #f0f5f2;
+	--mint-200: #dde8e1;
+	/* was dde3df */
+	--mint-300: #c5d4cb;
+	--mint-500: #4a9966;
+	--mint-600: #2e7d52;
+	--mint-700: #1a5c35;
+	--mint-900: #1a2620;
+
+	/* Bootstrap core */
+	--bs-primary: #2e7d52;
+	--bs-primary-rgb: 46, 125, 82;
+	--bs-primary-bg-subtle: #e4f0e9;
+	--bs-primary-border-subtle: #c5d4cb;
+	--bs-primary-text-emphasis: #1a5c35;
+
+	--bs-body-bg: #f0f2f1;
+	--bs-body-color: #1a2620;
+	--bs-secondary-color: #4a6b57;
+
+	--bs-tertiary-bg: #f7f9f8;
+	--bs-secondary-bg: #fff;
+
+	--bs-border-color: #dde3df;
+	--bs-border-color-translucent: rgba(46, 125, 82, 0.12);
+
+	--bs-link-color: #2e7d52;
+	--bs-link-color-rgb: 46, 125, 82;
+	--bs-link-hover-color: #1a5c35;
+
+	--bs-focus-ring-color: rgba(46, 125, 82, 0.22);
+
+	/* Success = mint (they're the same thing here) */
+	--bs-success: #2e7d52;
+	--bs-success-rgb: 46, 125, 82;
+	--bs-success-bg-subtle: #e4f0e9;
+	--bs-success-border-subtle: #c5d4cb;
+	--bs-success-text-emphasis: #1a5c35;
+}
+
+/* Buttons */
+.btn-primary {
+	--bs-btn-bg: #2e7d52;
+	--bs-btn-border-color: #2e7d52;
+	--bs-btn-color: #fff;
+	--bs-btn-hover-bg: #266b46;
+	--bs-btn-hover-border-color: #266b46;
+	--bs-btn-hover-color: #fff;
+	--bs-btn-active-bg: #1a5c35;
+	--bs-btn-active-color: #fff;
+}
+
+.btn-outline-primary {
+	--bs-btn-color: #2e7d52;
+	--bs-btn-border-color: #2e7d52;
+	--bs-btn-hover-bg: #2e7d52;
+	--bs-btn-hover-border-color: #2e7d52;
+	--bs-btn-hover-color: #fff;
+}
+
+.btn-success {
+	--bs-btn-bg: #2e7d52;
+	--bs-btn-border-color: #2e7d52;
+	--bs-btn-color: #fff;
+	--bs-btn-hover-bg: #266b46;
+	--bs-btn-hover-color: #fff;
+}
+
+/* Forms */
+.form-control:focus,
+.form-select:focus {
+	border-color: #c5d4cb;
+	box-shadow: 0 0 0 0.25rem rgba(46, 125, 82, 0.18);
+}
+
+/* Nav links */
+.nav-link {
+	color: #4a6b57;
+}
+
+.nav-link:hover,
+.nav-link:focus {
+	color: #1a5c35;
+}
+
+.nav-link.active {
+	color: #2e7d52;
+	font-weight: 500;
+}
+
+/* List group selected state */
+.list-group-item.active {
+	background-color: #e4f0e9;
+	border-color: #c5d4cb;
+	color: #1a5c35;
+}
+
+/* Navbar */
+.navbar-light .navbar-brand,
+.navbar-light .navbar-nav .nav-link {
+	color: #1a2620;
+}
+
+/* Status bar / dark mint surface */
+.bg-primary {
+	background-color: #2e7d52 !important;
+}
+
+.text-primary {
+	color: #2e7d52 !important;
+}
+
+.border-primary {
+	border-color: #2e7d52 !important;
+}
+
+/* Badges */
+.badge.bg-primary {
+	background-color: #2e7d52 !important;
+}
+
+.badge.bg-success {
+	background-color: #2e7d52 !important;
+}
+
+/* Scrollbar (webkit) — optional, matches the theme */
+::-webkit-scrollbar {
+	width: 6px;
+	height: 6px;
+}
+
+::-webkit-scrollbar-track {
+	background: #f0f2f1;
+}
+
+::-webkit-scrollbar-thumb {
+	background: #c5d4cb;
+	border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: #4a9966;
+}
+
+/* Navbar */
+.minty-navbar {
+	background-color: #1a2e22;
+}
+
+.minty-navbar .nav-link {
+	color: #8ec4a0;
+}
+
+.minty-navbar .nav-link:hover,
+.minty-navbar .nav-link:focus {
+	color: #fff;
+}
+
+.minty-navbar .btn-outline-secondary {
+	color: #8ec4a0;
+	border-color: #3d6652;
+}
+
+.minty-navbar .btn-outline-secondary:hover {
+	background-color: #2e7d52;
+	border-color: #2e7d52;
+	color: #fff;
+}

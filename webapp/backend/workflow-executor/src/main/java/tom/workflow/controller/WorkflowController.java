@@ -159,7 +159,7 @@ public class WorkflowController {
 			createdWorkflow = workflowService.createWorkflow(user.getId(), workflow);
 		} catch (NotOwnedException e) {
 			ResponseWrapper<Workflow> response = ResponseWrapper.ApiFailureResponse(HttpStatus.BAD_REQUEST.value(),
-					List.of(ApiError.NOT_OWNED));
+					List.of(ApiError.WORKFLOW_NAME_ALREADY_EXISTS));
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 		metadataService.workflowCreated(user.getId());
@@ -172,7 +172,8 @@ public class WorkflowController {
 	public ResponseEntity<ResponseWrapper<Workflow>> updateWorkflow(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestBody Workflow workflow) {
 
-		if (!workflowService.isWorkflowOwned(workflow.getId(), user.getId())) {
+		if (workflowService.workflowExists(workflow.getId())
+				&& !workflowService.isWorkflowOwned(workflow.getId(), user.getId())) {
 			ResponseWrapper<Workflow> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
 					List.of(ApiError.NOT_OWNED));
 			return new ResponseEntity<>(response, HttpStatus.OK);
