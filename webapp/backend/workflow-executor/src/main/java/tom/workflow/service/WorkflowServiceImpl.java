@@ -127,7 +127,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 	@Override
 	@Transactional
 	public Workflow createWorkflow(UserId userId, Workflow workflow) throws NotOwnedException {
-		if (workflowRepository.findByName(workflow.getName()) != null) {
+		if (workflowRepository.findByName(workflow.getName()).isPresent()) {
 			throw new NotOwnedException(workflow.getName());
 		}
 
@@ -167,6 +167,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 	}
 
 	@Override
+	@Transactional
 	public void shareWorkflow(UserId userId, ResourceSharingSelection selection) throws NotFoundException {
 
 		Optional<tom.workflow.repository.Workflow> maybeWorkflow = workflowRepository
@@ -257,9 +258,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 	}
 
 	@Override
+	@Transactional
 	public Workflow getWorkflow(UserId userId, UUID workflowId) {
 		Optional<UserWorkflowLink> maybeWorkflow = linkRepository.findById_WorkflowIdAndId_UserIdIn(workflowId,
-				List.of(userId, ResourceSharingSelection.AllUsersId));
+				List.of(userId.getValue(), ResourceSharingSelection.AllUsersId.getValue()));
 
 		if (maybeWorkflow.isEmpty()) {
 			logger.warn("Did not find workflow for ID " + workflowId);
@@ -289,9 +291,19 @@ public class WorkflowServiceImpl implements WorkflowService {
 	}
 
 	@Override
+	public boolean workflowExists(UUID workflowId) {
+
+		List<UserWorkflowLink> workflow = linkRepository.findById_WorkflowId(workflowId);
+
+		return !workflow.isEmpty();
+	}
+
+	@Override
+	@Transactional
 	public boolean isWorkflowOwned(UUID workflowId, UserId userId) {
 
-		Optional<UserWorkflowLink> workflow = linkRepository.findById_WorkflowIdAndId_UserId(workflowId, userId);
+		Optional<UserWorkflowLink> workflow = linkRepository.findById_WorkflowIdAndId_UserId(workflowId,
+				userId.getValue());
 
 		if (workflow.isEmpty()) {
 			return false;

@@ -65,10 +65,18 @@ export class EditWorkflowComponent implements OnInit {
 	updateWorkflow() {
 		this.workflowService.sanitize(this.workflow);
 
-		this.workflowService.updateWorkflow(this.workflow).subscribe(() => {
-			this.alertService.postSuccess('Workflow Updated!');
-			this.unsavedChanges = false;
-		});
+		if (this.isNew) {
+			this.workflowService.newWorkflow(this.workflow).subscribe(() => {
+				this.alertService.postSuccess('Workflow Created!');
+				this.unsavedChanges = false;
+				this.isNew = false;
+			});
+		} else {
+			this.workflowService.updateWorkflow(this.workflow).subscribe(() => {
+				this.alertService.postSuccess('Workflow Updated!');
+				this.unsavedChanges = false;
+			});
+		}
 	}
 
 	runWorkflow() {

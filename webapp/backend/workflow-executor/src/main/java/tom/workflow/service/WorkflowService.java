@@ -37,4 +37,6 @@ public interface WorkflowService {
 
 	UserSelection getSharingFor(UserId userId, String name) throws NotOwnedException, NotFoundException;
 
+	boolean workflowExists(UUID workflowId);
+
 }
