@@ -7,6 +7,8 @@ import tom.tasks.transform.pipeline.model.PipelineOperationConfiguration;
 
 public class RemoveEmptyOperation implements TransformOperation {
 
+	public static final String OperationName = "Remove Empty Records";
+
 	@Override
 	public void execute(Packet packet, PipelineOperationConfiguration config) {
 		// Clean text entries
@@ -34,6 +36,6 @@ public class RemoveEmptyOperation implements TransformOperation {
 
 	@Override
 	public String getName() {
-		return "Remove Empty Records";
+		return OperationName;
 	}
 }

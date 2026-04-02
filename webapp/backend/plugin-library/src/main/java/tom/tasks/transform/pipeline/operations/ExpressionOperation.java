@@ -18,6 +18,8 @@ import tom.tasks.transform.pipeline.model.PipelineOperationConfiguration;
 @RunnableTask
 public class ExpressionOperation implements TransformOperation {
 
+	public static final String OperationName = "SpEL Expression";
+
 	@Override
 	public void execute(Packet packet, PipelineOperationConfiguration config) {
 		String expression = config.getString()
@@ -90,6 +92,6 @@ public class ExpressionOperation implements TransformOperation {
 
 	@Override
 	public String getName() {
-		return "SpEL Expression";
+		return OperationName;
 	}
 }

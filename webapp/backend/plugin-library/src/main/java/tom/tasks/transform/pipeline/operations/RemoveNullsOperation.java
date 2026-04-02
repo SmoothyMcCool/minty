@@ -7,6 +7,8 @@ import tom.tasks.transform.pipeline.model.PipelineOperationConfiguration;
 
 public class RemoveNullsOperation implements TransformOperation {
 
+	public static final String OperationName = "Remove Null Fields";
+
 	@Override
 	public void execute(Packet packet, PipelineOperationConfiguration config) {
 		for (Map<String, Object> row : packet.getData()) {
@@ -18,6 +20,6 @@ public class RemoveNullsOperation implements TransformOperation {
 
 	@Override
 	public String getName() {
-		return "Remove Null Fields";
+		return OperationName;
 	}
 }

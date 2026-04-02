@@ -7,6 +7,8 @@ import tom.tasks.transform.pipeline.model.PipelineOperationConfiguration;
 
 public class RenameFieldsOperation implements TransformOperation {
 
+	public static final String OperationName = "Rename Fields";
+
 	@Override
 	public void execute(Packet packet, PipelineOperationConfiguration config) {
 		Map<String, Object> renameMap = config.getMap()
@@ -29,6 +31,6 @@ public class RenameFieldsOperation implements TransformOperation {
 
 	@Override
 	public String getName() {
-		return "Rename Fields";
+		return OperationName;
 	}
 }

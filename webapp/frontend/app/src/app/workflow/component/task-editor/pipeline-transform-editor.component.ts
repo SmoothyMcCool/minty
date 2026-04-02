@@ -162,6 +162,8 @@ export class PipelineTransformEditorComponent implements ControlValueAccessor {
 
 	onOperationChange(op: PipelineOperation) {
 		op.configuration = null;
+		this.onTouched();
+		this.onChange(JSON.stringify(this.pipeline));
 	}
 
 	writeValue(_obj: string): void {

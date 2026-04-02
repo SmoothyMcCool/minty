@@ -7,6 +7,8 @@ import tom.tasks.transform.pipeline.model.PipelineOperationConfiguration;
 
 public class SetFieldOperation implements TransformOperation {
 
+	public static final String OperationName = "Set Field";
+
 	@Override
 	public void execute(Packet packet, PipelineOperationConfiguration config) {
 		Map<String, Object> map = config.getMap()
@@ -22,7 +24,7 @@ public class SetFieldOperation implements TransformOperation {
 
 	@Override
 	public String getName() {
-		return "Set Field";
+		return OperationName;
 	}
 
 }

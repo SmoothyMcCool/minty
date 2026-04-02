@@ -10,6 +10,8 @@ import tom.tasks.transform.pipeline.model.PipelineOperationConfiguration;
 
 public class KeepFieldsOperation implements TransformOperation {
 
+	public static final String OperationName = "Keep Fields";
+
 	@Override
 	public void execute(Packet packet, PipelineOperationConfiguration config) {
 		if (!config.isList()) {
@@ -30,7 +32,7 @@ public class KeepFieldsOperation implements TransformOperation {
 
 	@Override
 	public String getName() {
-		return "Keep Fields";
+		return OperationName;
 	}
 
 }

@@ -171,3 +171,24 @@
 	border-color: #2e7d52;
 	color: #fff;
 }
+
+.minty-table thead th {
+  background-color: #3d6b52;
+  color: #fff;
+  font-weight: 500;
+  border-color: #2e5c45;
+}
+
+.minty-table td,
+.minty-table th {
+  border-color: #a8c0b0;
+}
+
+.minty-table.table-hover tbody tr:hover td {
+  background-color: #eaf0ec;
+}
+
+.minty-badge-success {
+  background-color: #2e7d52;
+  color: #fff;
+}

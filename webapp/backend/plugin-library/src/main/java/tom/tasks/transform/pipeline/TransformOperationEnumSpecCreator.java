@@ -7,43 +7,39 @@ import tom.api.UserId;
 import tom.api.task.enumspec.EnumSpec;
 import tom.api.task.enumspec.EnumSpecCreator;
 import tom.api.task.enumspec.NameValuePair;
+import tom.tasks.transform.pipeline.operations.KeepFieldsOperation;
+import tom.tasks.transform.pipeline.operations.RemoveEmptyOperation;
+import tom.tasks.transform.pipeline.operations.RemoveFieldsOperation;
+import tom.tasks.transform.pipeline.operations.RemoveNullsOperation;
 
 public class TransformOperationEnumSpecCreator implements EnumSpecCreator {
 
 	public static final String EnumName = "Transform Operation";
 
-	public static final String RemoveNulls = "Remove Nulls";
-	public static final String RemoveEmpty = "Remove Empty Elements";
-	public static final String RemoveFields = "Remove Fields";
-	public static final String KeepFields = "Keep Fields";
-
 	public static final String NoParams = "";
 	public static final String ListParam = "List";
 
-	private final String enumName;
-
 	public TransformOperationEnumSpecCreator() {
-		enumName = EnumName;
 	}
 
 	@Override
 	public EnumSpec getEnumList(UserId userId) {
 
 		List<NameValuePair> pairs = new ArrayList<>();
-		pairs.add(new NameValuePair(RemoveNulls, NoParams));
-		pairs.add(new NameValuePair(RemoveEmpty, NoParams));
-		pairs.add(new NameValuePair(RemoveFields, ListParam));
-		pairs.add(new NameValuePair(KeepFields, ListParam));
+		pairs.add(new NameValuePair(RemoveNullsOperation.OperationName, NoParams));
+		pairs.add(new NameValuePair(RemoveEmptyOperation.OperationName, NoParams));
+		pairs.add(new NameValuePair(RemoveFieldsOperation.OperationName, ListParam));
+		pairs.add(new NameValuePair(KeepFieldsOperation.OperationName, ListParam));
 
 		EnumSpec spec = new EnumSpec();
-		spec.setName(enumName);
+		spec.setName(EnumName);
 		spec.setValues(pairs);
 		return spec;
 	}
 
 	@Override
 	public String getName() {
-		return enumName;
+		return EnumName;
 	}
 
 }
