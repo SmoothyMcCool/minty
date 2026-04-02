@@ -7,6 +7,7 @@ import java.util.UUID;
 import java.util.concurrent.CancellationException;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.core.tools.picocli.CommandLine.TypeConversionException;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -246,13 +247,21 @@ public class AiQuery extends MintyTask implements ServiceConsumer {
 
 			@Override
 			public TaskConfigSpec taskConfiguration() {
-				return new AiQueryConfig(Map.of(AssistantListEnumSpecCreator.EnumName,
-						AssistantManagementService.DefaultAssistantId.getValue().toString()));
+				try {
+					return new AiQueryConfig(Map.of(AssistantListEnumSpecCreator.EnumName,
+							AssistantManagementService.DefaultAssistantId.getValue().toString()));
+				} catch (TypeConversionException e) {
+					return null;
+				}
 			}
 
 			@Override
 			public TaskConfigSpec taskConfiguration(Map<String, Object> configuration) {
-				return new AiQueryConfig(configuration);
+				try {
+					return new AiQueryConfig(configuration);
+				} catch (TypeConversionException e) {
+					return null;
+				}
 			}
 
 			@Override

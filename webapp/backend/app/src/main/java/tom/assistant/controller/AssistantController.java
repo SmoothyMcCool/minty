@@ -259,7 +259,7 @@ public class AssistantController {
 	}
 
 	@PostMapping(value = "/response", produces = MediaType.APPLICATION_NDJSON_VALUE)
-	public Callable<ResponseEntity<StreamingResponseBody>> ask(@AuthenticationPrincipal UserDetailsUser user,
+	public Callable<ResponseEntity<StreamingResponseBody>> getResponse(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestBody ConversationId streamId) {
 
 		return () -> {

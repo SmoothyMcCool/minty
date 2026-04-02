@@ -9,6 +9,8 @@ import tom.tasks.transform.pipeline.model.PipelineOperationConfiguration;
 
 public class FlattenOperation implements TransformOperation {
 
+	public static final String OperationName = "Flatten Lists";
+
 	@Override
 	public void execute(Packet packet, PipelineOperationConfiguration config) {
 		Map<String, Object> cfg = config.getMap()
@@ -48,6 +50,6 @@ public class FlattenOperation implements TransformOperation {
 
 	@Override
 	public String getName() {
-		return "Flatten Lists";
+		return OperationName;
 	}
 }

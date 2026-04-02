@@ -76,6 +76,10 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 	}
 
 	modelChanged(model: string) {
+		if (!this.models) {
+			return;
+		}
+
 		this.assistant = { ...this.assistant, model, documentIds: this.assistant.documentIds, contextSize: this.assistant.contextSize };
 
 		this.minContext = this.models.find(m => m.name === model)?.defaultContext;
