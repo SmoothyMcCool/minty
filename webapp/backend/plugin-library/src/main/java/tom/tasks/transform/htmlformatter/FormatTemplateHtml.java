@@ -138,7 +138,7 @@ public class FormatTemplateHtml extends MintyTask implements ServiceConsumer {
 
 			@Override
 			public String taskName() {
-				return "Format Template Html";
+				return "Format Html (Template)";
 			}
 
 			@Override

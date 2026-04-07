@@ -1,14 +1,14 @@
 import { CommonModule } from "@angular/common";
 import { Component, Input, Output, EventEmitter } from "@angular/core";
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from "@angular/forms";
-import { TaskEditorComponent } from "src/app/workflow/component/task-editor/task-editor.component";
-import { TaskRequest, TaskSpecification, AttributeMap } from "src/app/model/workflow/task-specification";
-import { EnumList } from "src/app/model/workflow/enum-list";
-import { Model } from "src/app/model/model";
-import { MintyDoc } from "src/app/model/minty-doc";
-import { MintyTool } from "src/app/model/minty-tool";
-import { ConfirmationDialogComponent } from "src/app/app/component/confirmation-dialog.component";
 import { WorkflowStateService } from "./services/workflow-state.service";
+import { ConfirmationDialogComponent } from "../../../app/component/confirmation-dialog.component";
+import { MintyDoc } from "../../../model/minty-doc";
+import { MintyTool } from "../../../model/minty-tool";
+import { Model } from "../../../model/model";
+import { EnumList } from "../../../model/workflow/enum-list";
+import { TaskSpecification, AttributeMap, TaskRequest } from "../../../model/workflow/task-specification";
+import { TaskEditorComponent } from "../task-editor/task-editor.component";
 
 @Component({
 	selector: 'minty-workflow-task-editor-modal',
@@ -34,7 +34,7 @@ export class WorkflowTaskEditorModalComponent implements ControlValueAccessor {
 	models: Model[] = [];
 	tools: MintyTool[] = [];
 	documents: MintyDoc[] = [];
-	defaults: AttributeMap;
+	defaults: AttributeMap | undefined = undefined;
 
 	// -------- Outputs --------
 
@@ -85,7 +85,7 @@ export class WorkflowTaskEditorModalComponent implements ControlValueAccessor {
 	}
 
 	onTaskNameChanged(event: { oldId: string; newId: string }) {
-		this.workflowStateService.updateWorkflow(w => {
+		this.workflowStateService.updateWorkflow((w) => {
 			w.connections.forEach(connection => {
 				if (connection.readerId === event.oldId) {
 					connection.readerId = event.newId;

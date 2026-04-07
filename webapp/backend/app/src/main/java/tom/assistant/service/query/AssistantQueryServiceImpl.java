@@ -163,6 +163,18 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	}
 
 	@Override
+	public String runSingleLlmCallStreaming(UserId userId, AssistantQuery query, StreamResult sr) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String runSingleLlmCall(UserId userId, AssistantQuery synthQuery) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
 	public synchronized ConversationId askStreaming(UserId userId, AssistantQuery query) throws QueueFullException {
 
 		try {
@@ -437,4 +449,5 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 				.orElse(baseSize);
 
 	}
+
 }

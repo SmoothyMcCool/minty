@@ -1,5 +1,8 @@
 package tom.render.service;
 
+import java.util.Map;
+import java.util.Set;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.safety.Safelist;
@@ -52,4 +55,40 @@ public class HelperFunctions {
 		// Still nothing – return null so the caller can fall back to plain text
 		return null;
 	}
+
+	// Returns true if the string is non-null and not blank/whitespace-only
+	public boolean isNotBlank(Object val) {
+		if (val == null) {
+			return false;
+		}
+		return !val.toString().trim().isEmpty();
+	}
+
+	// Returns true if the map contains at least one non-null value
+	public boolean hasAnyValue(Map<?, ?> row) {
+		if (row == null) {
+			return false;
+		}
+		for (Object v : row.values()) {
+			if (v != null) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	// Returns true if the map contains at least one non-null value for the given
+	// keys
+	public boolean hasAnyValueForKeys(Map<?, ?> row, Set<?> keys) {
+		if (row == null) {
+			return false;
+		}
+		for (Object key : keys) {
+			if (row.get(key) != null) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 }

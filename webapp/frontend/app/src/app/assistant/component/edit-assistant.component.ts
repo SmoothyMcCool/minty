@@ -5,12 +5,12 @@ import { Assistant, createAssistant } from '../../model/assistant';
 import { AssistantService } from '../../assistant.service';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FilterPipe } from '../../pipe/filter-pipe';
-import { MintyDoc } from 'src/app/model/minty-doc';
-import { DocumentService } from 'src/app/document.service';
 import { AssistantEditorComponent } from './assistant-editor.component';
-import { MintyTool } from 'src/app/model/minty-tool';
-import { ToolService } from 'src/app/tool.service';
-import { Model } from 'src/app/model/model';
+import { DocumentService } from '../../document.service';
+import { MintyDoc } from '../../model/minty-doc';
+import { MintyTool } from '../../model/minty-tool';
+import { Model } from '../../model/model';
+import { ToolService } from '../../tool.service';
 
 @Component({
 	selector: 'minty-edit-assistant',

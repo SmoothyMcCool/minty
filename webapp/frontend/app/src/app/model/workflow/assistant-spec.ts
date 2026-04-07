@@ -1,6 +1,6 @@
 import { Assistant } from "../assistant";
 
 export interface AssistantSpec {
-	assistantId: string;
-	assistant: Assistant;
+	assistantId: string | null;
+	assistant: Assistant | null;
 }

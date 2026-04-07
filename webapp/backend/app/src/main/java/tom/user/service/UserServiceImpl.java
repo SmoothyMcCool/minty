@@ -109,7 +109,7 @@ public class UserServiceImpl implements UserServiceInternal {
 		}
 		try {
 			return Optional.of(decrypt(userRepository.findById(userId.value()).get()));
-		} catch (JsonProcessingException e) {
+		} catch (Exception e) {
 			logger.warn("Failed to get user for user ID " + userId);
 			return Optional.empty();
 		}

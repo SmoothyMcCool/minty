@@ -2,18 +2,18 @@ import { CommonModule } from '@angular/common';
 import { Component, ElementRef, forwardRef, HostListener, ViewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { Connection, OutputTaskSpecification, TaskRequest, TaskSpecification } from 'src/app/model/workflow/task-specification';
-import { Workflow } from 'src/app/model/workflow/workflow';
-import { CdkDragMove, DragDropModule } from '@angular/cdk/drag-drop';
-import { FilterPipe } from 'src/app/pipe/filter-pipe';
-import { TaskEditorComponent } from 'src/app/workflow/component/task-editor/task-editor.component';
-import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
-import { AutoResizeDirective } from 'src/app/pipe/auto-resize-directive';
 import { WorkflowGeometryService } from './services/workflow-geometry.service';
 import { WorkflowNodePaletteComponent } from './workflow-node-palette.component';
 import { WorkflowTaskEditorModalComponent } from './workflow-task-editor-modal.component';
 import { WorkflowStateService } from './services/workflow-state.service';
 import { WorkflowCanvasComponent } from './workflow-canvas.component';
+import { DragDropModule } from '@angular/cdk/drag-drop';
+import { ConfirmationDialogComponent } from '../../../app/component/confirmation-dialog.component';
+import { TaskRequest, TaskSpecification, OutputTaskSpecification } from '../../../model/workflow/task-specification';
+import { Workflow } from '../../../model/workflow/workflow';
+import { AutoResizeDirective } from '../../../pipe/auto-resize-directive';
+import { FilterPipe } from '../../../pipe/filter-pipe';
+import { TaskEditorComponent } from '../task-editor/task-editor.component';
 
 @Component({
 	selector: 'minty-workflow-editor',
@@ -36,7 +36,7 @@ export class WorkflowEditorComponent implements ControlValueAccessor {
 	onChange = (_: any) => { };
 	onTouched: any = () => { };
 
-	editTask: TaskRequest = undefined;
+	editTask: TaskRequest | undefined = undefined;
 	workflow: Workflow | null = null;
 	private changeFromWriteValue = false;
 
@@ -203,8 +203,12 @@ export class WorkflowEditorComponent implements ControlValueAccessor {
 	}
 
 	onDisplayTask(taskId: string) {
-		let step: TaskRequest;
+		let step: TaskRequest | undefined;
 		const workflow = this.workflowStateService.workflow;
+
+		if (!workflow) {
+			return;
+		}
 
 		if (taskId === workflow.outputStep?.id) {
 			step = this.cloneTask(workflow.outputStep);
@@ -229,6 +233,7 @@ export class WorkflowEditorComponent implements ControlValueAccessor {
 
 	doneEditingStep() {
 		if (!this.editTask) {
+			console.error('doneEditingStep: editTask not set');
 			return;
 		}
 
@@ -247,11 +252,11 @@ export class WorkflowEditorComponent implements ControlValueAccessor {
 			}
 
 			// If the number of inputs or outputs changed, we need to remove any invalid connections now.
-			w.connections = this.workflowGeometryService.validateConnectionsForTask(this.editTask, w.connections);
+			w.connections = this.workflowGeometryService.validateConnectionsForTask(this.editTask!, w.connections);
 
 		});
 
-		this.editTask = null;
+		this.editTask = undefined;
 	}
 
 	deleteStep() {
@@ -259,11 +264,16 @@ export class WorkflowEditorComponent implements ControlValueAccessor {
 	}
 
 	confirmDeleteStep() {
+		if (!this.editTask) {
+			console.error('confirmDeleteStep: editTask not set');
+			return;
+		}
+
 		this.workflowStateService.updateWorkflow(w => {
-			w.connections = w.connections.filter(conn => conn.readerId !== this.editTask.id && conn.writerId != this.editTask.id);
-			w.steps = w.steps.filter(step => step.id !== this.editTask.id)
-			if (w.outputStep?.id === this.editTask.id) {
-				w.outputStep = null;
+			w.connections = w.connections.filter(conn => conn.readerId !== this.editTask!.id && conn.writerId != this.editTask!.id);
+			w.steps = w.steps.filter(step => step.id !== this.editTask!.id)
+			if (w.outputStep?.id === this.editTask!.id) {
+				w.outputStep = undefined;
 			}
 		});
 
@@ -271,7 +281,7 @@ export class WorkflowEditorComponent implements ControlValueAccessor {
 		this.doneEditingStep();
 	}
 
-	specFor(task: TaskRequest): TaskSpecification | OutputTaskSpecification {
+	specFor(task: TaskRequest): TaskSpecification | OutputTaskSpecification | undefined {
 		let result = this.workflowStateService.taskSpecifications.find(spec => spec.taskName === task.taskName);
 		if (!result) {
 			return this.workflowStateService.outputTaskSpecifications.find(spec => spec.taskName === task.taskName);
@@ -295,7 +305,11 @@ export class WorkflowEditorComponent implements ControlValueAccessor {
 		// Nah.
 	}
 
-	private cloneTask(task: TaskRequest): TaskRequest {
+	private cloneTask(task: TaskRequest | undefined): TaskRequest | undefined {
+		if (!task) {
+			return undefined;
+		}
+
 		return {
 			...task,
 			configuration: { ...task.configuration },
@@ -304,7 +318,7 @@ export class WorkflowEditorComponent implements ControlValueAccessor {
 	}
 
 	cancelEdit() {
-		this.editTask = null;
+		this.editTask = undefined;
 	}
 
 	onAddStepClicked() {

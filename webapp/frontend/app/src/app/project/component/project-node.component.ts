@@ -1,7 +1,7 @@
 import { CommonModule } from "@angular/common";
 import { Component, EventEmitter, Input, Output } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { ProjectNode } from "src/app/model/project/project-node";
+import { ProjectNode } from "../../model/project/project-node";
 
 @Component({
 	selector: 'minty-project-node',
@@ -19,10 +19,10 @@ export class ProjectNodeComponent {
 	@Output() delete = new EventEmitter<ProjectNode>();
 
 	editNodeInfoVisible = false;
-	editName: string;
-	editNodeType: 'Folder' | 'File';
-	editFileType: 'code' | 'markdown' | 'json' | 'text' | 'diagram';
-	editParent: string;
+	editName: string | undefined = undefined;
+	editNodeType: 'Folder' | 'File' = 'File';
+	editFileType: 'code' | 'markdown' | 'json' | 'text' | 'diagram' = 'code';
+	editParent: string | undefined = undefined;
 	isExpanded = true;
 
 	getParentPath(input: string): string {
@@ -52,7 +52,11 @@ export class ProjectNodeComponent {
 		event?.stopPropagation();
 
 		this.editName = this.getFileName(this.node.path);
-		this.editFileType = this.node.fileType
+		if (this.node.fileType) {
+			this.editFileType = this.node.fileType;
+		} else {
+			console.error('editNodeInfo: node.fileType not set');
+		}
 		this.editNodeType = this.node.type;
 		this.editParent = this.getParentPath(this.node.path);
 		this.editNodeInfoVisible = true;

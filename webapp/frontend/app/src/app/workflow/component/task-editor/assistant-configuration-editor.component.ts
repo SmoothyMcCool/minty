@@ -1,15 +1,15 @@
 import { CommonModule } from "@angular/common";
-import { Component, forwardRef, Input } from "@angular/core";
+import { Component, forwardRef, Input, OnInit } from "@angular/core";
 import { FormsModule, NG_VALUE_ACCESSOR, ControlValueAccessor } from "@angular/forms";
-import { AssistantEditorComponent } from "src/app/assistant/component/assistant-editor.component";
-import { Assistant, createAssistant } from "src/app/model/assistant";
-import { AssistantSpec } from "src/app/model/workflow/assistant-spec";
-import { EnumList } from "src/app/model/workflow/enum-list";
 import { EnumListEditorComponent } from "./enumlist-editor.component";
-import { Model } from "src/app/model/model";
-import { MintyDoc } from "src/app/model/minty-doc";
-import { MintyTool } from "src/app/model/minty-tool";
 import { WorkflowStateService } from "../workflow-editor/services/workflow-state.service";
+import { AssistantEditorComponent } from "../../../assistant/component/assistant-editor.component";
+import { Assistant, createAssistant } from "../../../model/assistant";
+import { MintyDoc } from "../../../model/minty-doc";
+import { MintyTool } from "../../../model/minty-tool";
+import { Model } from "../../../model/model";
+import { AssistantSpec } from "../../../model/workflow/assistant-spec";
+import { EnumList } from "../../../model/workflow/enum-list";
 
 @Component({
 	selector: 'minty-assistant-configuration-editor',
@@ -23,32 +23,34 @@ import { WorkflowStateService } from "../workflow-editor/services/workflow-state
 		}
 	]
 })
-export class AssistantConfigurationEditorComponent implements ControlValueAccessor {
+export class AssistantConfigurationEditorComponent implements ControlValueAccessor, OnInit {
 
-	@Input() choices: EnumList;
-	models: Model[];
-	documents: MintyDoc[];
-	tools: MintyTool[];
+	@Input() choices: EnumList | undefined = undefined;
+	models: Model[] = [];
+	documents: MintyDoc[]  = [];
+	tools: MintyTool[] = [];
 
-	assistantSpec: AssistantSpec | null = null;
+	assistantSpec: AssistantSpec | undefined = undefined;
 	useCustomAssistant: boolean = true;
 
 	onChange = (_: any) => { };
 	onTouched: () => void = () => { };
 
 	assistantId: string | null = null;
-	assistant: Assistant = createAssistant();
+	assistant: Assistant | undefined = undefined;
 
 	public constructor(private workflowStateService: WorkflowStateService) {}
+
+	ngOnInit() {
+		this.models = this.workflowStateService.models;
+		this.documents = this.workflowStateService.documents;
+		this.tools = this.workflowStateService.tools;
+	}
 
 	writeValue(value: AssistantSpec | null): void {
 		if (!value) {
 			return;
 		}
-
-		this.models = this.workflowStateService.models;
-		this.documents = this.workflowStateService.documents;
-		this.tools = this.workflowStateService.tools;
 
 		const spec: AssistantSpec = typeof value === 'string' ? JSON.parse(value) : value;
 
@@ -110,8 +112,8 @@ export class AssistantConfigurationEditorComponent implements ControlValueAccess
 	}
 
 	private updateValueAndNotify(): void {
-		const newSpec = this.useCustomAssistant
-			? { assistantId: null, assistant: this.assistant }
+		const newSpec: AssistantSpec = this.useCustomAssistant
+			? { assistantId: null, assistant: this.assistant ? this.assistant : null }
 			: { assistantId: this.assistantId, assistant: null };
 
 		this.assistantSpec = newSpec;

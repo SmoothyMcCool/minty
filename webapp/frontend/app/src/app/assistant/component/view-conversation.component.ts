@@ -8,16 +8,17 @@ import { Assistant, createAssistant } from '../../model/assistant';
 import { ConversationService } from '../../conversation.service';
 import { ConversationComponent } from './conversation.component';
 import { ChatMessage } from '../../model/conversation/chat-message';
-import { UserService } from 'src/app/user.service';
-import { User } from 'src/app/model/user';
-import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
-import { Conversation } from 'src/app/model/conversation/conversation';
 import { ImageInputComponent } from './image-input.component';
-import { LlmMetric } from 'src/app/model/conversation/llm-metric';
-import { StreamingResponse } from 'src/app/model/conversation/streaming-response';
-import { Model } from 'src/app/model/model';
 import { SliderComponent } from './slider.component';
-import { AutoResizeDirective } from 'src/app/pipe/auto-resize-directive';
+import { ConfirmationDialogComponent } from '../../app/component/confirmation-dialog.component';
+import { Conversation } from '../../model/conversation/conversation';
+import { LlmMetric } from '../../model/conversation/llm-metric';
+import { StreamingResponse } from '../../model/conversation/streaming-response';
+import { Model } from '../../model/model';
+import { User } from '../../model/user';
+import { AutoResizeDirective } from '../../pipe/auto-resize-directive';
+import { UserService } from '../../user.service';
+
 
 @Component({
 	selector: 'minty-view-conversation',
@@ -26,27 +27,28 @@ import { AutoResizeDirective } from 'src/app/pipe/auto-resize-directive';
 })
 export class ViewConversationComponent implements OnInit, OnDestroy {
 
-	user: User;
+	user!: User;
 
 	userText: string = '';
 	chatHistory: ChatMessage[] = [];
 	waitingForResponse = false;
-	queueDepth: number = undefined;
-	image: File = undefined;
+	responseComplete = true;
+	queueDepth: number | undefined = undefined;
+	image: File | undefined = undefined;
 	shouldReset: boolean = false;
 
 	assistant: Assistant = createAssistant();
 	private conversationId: string = '';
-	conversation: Conversation = null;
+	conversation: Conversation | undefined = undefined;
 	showChatOptions = false;
 	newestMessagesFirst = true;
 	reverseButtons = false;
-	metrics: LlmMetric;
-	sources: Set<string>;
-	model: Model;
-	contextSize: number;
+	metrics: LlmMetric | undefined = undefined;
+	sources: Set<string> | undefined = undefined;
+	model: Model | undefined = undefined;
+	contextSize: number = 16384;
 
-	private conversationTimeoutId: NodeJS.Timeout;
+	private conversationTimeoutId: NodeJS.Timeout | undefined = undefined;
 	confirmRestartConversationVisible: boolean = false;
 
 	constructor(private route: ActivatedRoute,
@@ -112,8 +114,9 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 	submit(text: string) {
 		this.chatHistory.unshift({ user: true, message: text });
 
-		this.assistantService.ask(this.conversationId, this.assistant.id, text, this.image, this.contextSize).subscribe(streamId => {
+		this.assistantService.ask(this.conversationId, this.assistant.id, text, this.image ?? null, this.contextSize).subscribe(streamId => {
 			this.waitingForResponse = true;
+			this.responseComplete = false;
 			this.userText = '';
 			this.shouldReset = true;
 			setTimeout(() => {
@@ -121,7 +124,6 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 				this.shouldReset = false;
 			}, 0);
 		});
-
 	}
 
 	stream(streamId: string) {
@@ -146,7 +148,7 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 						if (!this.sources) {
 							this.sources = new Set<string>();
 						}
-						responseChunk.sources.forEach(source => this.sources.add(source));
+						responseChunk.sources.forEach(source => this.sources!.add(source));
 					}
 					if (responseChunk.content) {
 						response += responseChunk.content;
@@ -162,6 +164,7 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 			},
 			complete: () => {
 				this.waitingForResponse = false;
+				this.responseComplete = true;
 				if (response == '') {
 					this.chatHistory[0] = { user: false, message: '<em>No response from server. Your request likely failed.</em>' };
 				}

@@ -24,24 +24,31 @@ table.table.table-hover.table-sm
           th(scope="col") #{entry.getKey()}
 
   tbody
-    // --- Text rows ---
+    // --- Text rows (skip null/blank entries) ---
     if text != null
-      each t, idx in text
-        tr
-          td #{idx + 1}
-          +safeCell(t)
-          if firstRow != null
-            each entry in firstRow.entrySet()
-              td
+      - var textIdx = 0
+      each t in text
+        if helpers.isNotBlank(t)
+          - textIdx = textIdx + 1
+          tr
+            td #{textIdx}
+            +safeCell(t)
+            if firstRow != null
+              each entry in firstRow.entrySet()
+                td
 
-    // --- Data rows ---
+    // --- Data rows (skip rows where all values are null) ---
     if data != null
-      each d, idx in data
-        tr
-          td #{idx + 1}
-          td
-          if firstRow != null
-            each entry in firstRow.entrySet()
-              - var key = entry.getKey()
-              - var val = d.get(key)
-              +safeCell(val)
+      - var dataIdx = 0
+      each d in data
+        - var shouldRender = firstRow == null || helpers.hasAnyValueForKeys(d, firstRow.keySet())
+        if shouldRender
+          - dataIdx = dataIdx + 1
+          tr
+            td #{dataIdx}
+            td
+            if firstRow != null
+              each entry in firstRow.entrySet()
+                - var key = entry.getKey()
+                - var val = d.get(key)
+                +safeCell(val)

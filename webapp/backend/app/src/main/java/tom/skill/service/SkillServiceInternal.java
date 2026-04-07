@@ -1,11 +1,11 @@
 package tom.skill.service;
 
 import tom.api.UserId;
+import tom.api.model.user.ResourceSharingSelection;
+import tom.api.model.user.UserSelection;
 import tom.api.services.SkillService;
 import tom.api.services.exception.NotFoundException;
 import tom.api.services.exception.NotOwnedException;
-import tom.user.model.ResourceSharingSelection;
-import tom.user.model.UserSelection;
 
 public interface SkillServiceInternal extends SkillService {
 

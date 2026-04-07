@@ -1,12 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { Skill, SkillFile, SkillMetadata } from 'src/app/model/skills/skill';
 import { SkillService } from '../skill.service';
 import { MarkdownModule } from 'ngx-markdown';
-import { MermaidClipboardDirective } from 'src/app/assistant/component/mermaid-clipboard.directive';
-import { AlertService } from 'src/app/alert.service';
-import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
-import { UserSelectDialogComponent, UserSelection } from 'src/app/app/component/user-select-dialog.component';
+import { AlertService } from '../../alert.service';
+import { ConfirmationDialogComponent } from '../../app/component/confirmation-dialog.component';
+import { UserSelectDialogComponent, UserSelection } from '../../app/component/user-select-dialog.component';
+import { MermaidClipboardDirective } from '../../assistant/component/mermaid-clipboard.directive';
+import { SkillMetadata, Skill, SkillFile } from '../../model/skills/skill';
 
 @Component({
 	selector: 'minty-skill-viewer',
@@ -20,14 +20,14 @@ export class SkillViewerComponent {
 	selectedFile: SkillFile | null = null;
 
 	skillFileDialogVisible = false;
-	skillFile: File;
+	skillFile: File | undefined = undefined;
 
 	deleteSkillDialogVisible = false;
-	skillToDelete: string;
+	skillToDelete: string | undefined = undefined;
 
 	userSelectDialogVisible = false;
-	skillToShare: string;
-	sharingSelection: UserSelection;
+	skillToShare: string | undefined = undefined;
+	sharingSelection: UserSelection | undefined = undefined;
 
 	constructor(private skillService: SkillService, private alertService: AlertService) { }
 
@@ -55,10 +55,10 @@ export class SkillViewerComponent {
 
 	addSkill() {
 		this.skillFileDialogVisible = false;
-		this.skillService.uploadSkill(this.skillFile).subscribe(response => {
+		this.skillService.uploadSkill(this.skillFile!).subscribe(response => {
 			this.alertService.postSuccess(response);
 			this.refreshSkillList();
-			this.skillFile = null;
+			this.skillFile = undefined;
 		});
 	}
 
@@ -69,10 +69,10 @@ export class SkillViewerComponent {
 
 	confirmDeleteSkill() {
 		this.deleteSkillDialogVisible = false;
-		this.skillService.deleteSkill(this.skillToDelete).subscribe(response => {
+		this.skillService.deleteSkill(this.skillToDelete!).subscribe(response => {
 			this.alertService.postSuccess(response);
 			this.refreshSkillList();
-			this.skillToDelete = null;
+			this.skillToDelete = undefined;
 		});
 	}
 
@@ -86,10 +86,10 @@ export class SkillViewerComponent {
 
 	onUsersConfirmed(selection: UserSelection): void {
 		this.userSelectDialogVisible = false;
-		this.skillService.shareSkill(this.skillToShare, selection).subscribe(response => {
+		this.skillService.shareSkill(this.skillToShare!, selection).subscribe(response => {
 			this.alertService.postSuccess(response);
 			this.refreshSkillList();
-			this.skillToShare = null;
+			this.skillToShare = undefined;
 		});
 	}
 
@@ -106,7 +106,7 @@ export class SkillViewerComponent {
 	private refreshSkillList() {
 		this.skillService.listSkills().subscribe(skills => {
 			this.selectedSkill = null;
-			this.skills = skills;
+			this.skills = skills.sort((a, b) => a.name.localeCompare(b.name));
 		});
 	}
 }

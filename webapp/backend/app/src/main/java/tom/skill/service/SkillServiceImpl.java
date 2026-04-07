@@ -25,6 +25,8 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import tom.api.UserId;
+import tom.api.model.user.ResourceSharingSelection;
+import tom.api.model.user.UserSelection;
 import tom.api.services.exception.NotFoundException;
 import tom.api.services.exception.NotOwnedException;
 import tom.api.skill.SkillFile;
@@ -34,8 +36,6 @@ import tom.skill.model.joins.UserSkillId;
 import tom.skill.model.joins.UserSkillLink;
 import tom.skill.repository.SkillRepository;
 import tom.skill.repository.UserSkillLinkRepository;
-import tom.user.model.ResourceSharingSelection;
-import tom.user.model.UserSelection;
 import tom.user.service.UserServiceInternal;
 
 @Service

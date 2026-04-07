@@ -100,17 +100,25 @@ public class Loop extends MintyTask {
 
 			@Override
 			public String description() {
-				return "Evaluate a condition. If the condition is not met, packet is emitted on output 0. If it is met, it is emitted on output 1, and the loop terminates. If you want to evaluate a conditoin without looping, use Branch instead.";
+				return "Evaluate a SpEL condition on each incoming packet and route it to one of two outputs. "
+						+ "While the condition is true the packet continues looping on output 0; "
+						+ "when false the loop exits on output 1. "
+						+ "Loop is the only task designed for cycles in the workflow graph. "
+						+ "For a one-time conditional fork without looping, use Branch instead.";
 			}
 
 			@Override
 			public String expects() {
-				return "Any packet, against which an expression is evaluated to determine the output port.";
+				return "Accepts: any packet. The SpEL expression is evaluated against the packet on each "
+						+ "iteration and must return a boolean. Connect output 0 back to an earlier step "
+						+ "to form the cycle.";
 			}
 
 			@Override
 			public String produces() {
-				return "Each input is sent unmodified to output 0 if the condition evaluates to true, or 1 if the condition is false. Once a packet is sent on output 1, the task terminates.";
+				return "Emits: the packet unchanged to output 0 while the condition is true (keep looping), "
+						+ "or to output 1 when the condition is false (exit loop). "
+						+ "Once a packet exits on output 1 the task terminates.";
 			}
 
 			@Override

@@ -93,17 +93,24 @@ public class Collect extends MintyTask {
 
 			@Override
 			public String description() {
-				return "Collect multiple packets into a single packet by appending contents together in a list.";
+				return "Accumulate a stream of incoming packets into a single combined packet. "
+						+ "Use Collect to reassemble packets after a Split fan-out — "
+						+ "it is the natural pair to Split.";
 			}
 
 			@Override
 			public String expects() {
-				return "Any packet.";
+				return "Accepts: a stream of packets on a single input. "
+						+ "In All mode, collects every packet until the stream ends then emits once. "
+						+ "In ById mode, collects packets sharing the same ID and emits a combined packet "
+						+ "each time the ID changes — input must be sorted by ID for this mode to work correctly.";
 			}
 
 			@Override
 			public String produces() {
-				return "A single packet containing a list of all packets received as input.";
+				return "Emits: a single packet whose text and data lists are the concatenation of all "
+						+ "received packets. The output packet ID is set to the ID of the first received packet. "
+						+ "In ById mode, one combined packet is emitted per distinct ID group.";
 			}
 
 			@Override

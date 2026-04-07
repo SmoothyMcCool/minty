@@ -161,7 +161,7 @@ export class AssistantService {
 			);
 	}
 
-	ask(conversationId: string, assistantId: string, query: string, image: File, contextSize: number): Observable<string> {
+	ask(conversationId: string, assistantId: string, query: string, image: File | null, contextSize: number): Observable<string> {
 		
 		const form = new FormData();
 		form.append('conversationId', conversationId);
@@ -192,15 +192,21 @@ export class AssistantService {
 
 	getStream(streamId: string): Observable<StreamingResponse> {
 
+		const headers: Record<string, string> = {
+			'Content-Type': 'application/json',
+			'X-Requested-With': 'XMLHttpRequest',
+		};
+
+		const token = sessionStorage.getItem('x-auth-token');
+		if (token) {
+			headers['x-auth-token'] = token;
+		}
+
 		// Hideous, but it works?!?!?!
 		return new Observable<StreamingResponse>(observer => {
 			fetch(AssistantService.GetResponseStream, {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'X-Requested-With': 'XMLHttpRequest',
-					'x-auth-token': sessionStorage.getItem('x-auth-token')
-				},
+				headers: headers,
 				body: JSON.stringify(streamId)
 
 			}).then(response => {
@@ -211,7 +217,12 @@ export class AssistantService {
 					return;
 				}
 
-				const reader = response.body!.getReader();
+				if (!response.body) {
+					console.log('getStream: no response body!');
+					return;
+				}
+
+				const reader = response.body.getReader();
 				const streamState = {
 					buffer: '',
 					decoder: new TextDecoder()

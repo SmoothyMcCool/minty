@@ -186,7 +186,7 @@ public final class TsvExtractor {
 		// LocalDate
 		for (DateTimeFormatter fmt : DATE_FORMATTERS) {
 			try {
-				return LocalDate.parse(raw, fmt);
+				return LocalDate.parse(raw, fmt).format(DateTimeFormatter.ISO_LOCAL_DATE);
 			} catch (DateTimeParseException ignored) {
 			}
 		}

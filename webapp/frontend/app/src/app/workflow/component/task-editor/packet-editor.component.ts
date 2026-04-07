@@ -2,7 +2,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, forwardRef } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { Packet } from 'src/app/model/workflow/packet';
+import { Packet } from '../../../model/workflow/packet';
 
 @Component({
 	selector: 'minty-packet-editor',
@@ -100,7 +100,7 @@ export class PacketEditorComponent implements ControlValueAccessor {
 		return JSON.stringify(packet, undefined, 2);
 	}
 
-	packetTextChanged($event) {
+	packetTextChanged($event: string) {
 		try {
 			this.packets = this.packets = JSON.parse($event) as Packet[];
 			this.valid = true;

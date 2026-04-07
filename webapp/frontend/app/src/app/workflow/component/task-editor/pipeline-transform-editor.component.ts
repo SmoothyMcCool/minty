@@ -2,7 +2,7 @@ import { CdkDragDrop, moveItemInArray } from "@angular/cdk/drag-drop";
 import { CommonModule } from "@angular/common";
 import { Component, forwardRef } from "@angular/core";
 import { FormsModule, NG_VALUE_ACCESSOR, ControlValueAccessor } from "@angular/forms";
-import { PipelineDefinition, PipelineOperation } from "src/app/model/workflow/pipeline-transform";
+import { PipelineDefinition, PipelineOperation } from "../../../model/workflow/pipeline-transform";
 
 @Component({
 	selector: 'minty-pipeline-transform-editor',
@@ -21,7 +21,7 @@ export class PipelineTransformEditorComponent implements ControlValueAccessor {
 	onChange = (_: any) => { };
 	onTouched: any = () => { };
 
-	pipeline: PipelineDefinition | null = null;
+	pipeline: PipelineDefinition | undefined = undefined;
 
 	showDescriptions: boolean[] = [];
 	jsonErrors: boolean[] = [];
@@ -136,7 +136,7 @@ export class PipelineTransformEditorComponent implements ControlValueAccessor {
 		}
 
 		try {
-			const configType = this.operations.find(operation => operation.op.localeCompare(op.name) === 0).configType
+			const configType = this.operations.find(operation => operation.op.localeCompare(op.name) === 0)?.configType
 			if (configType === 'text') {
 				op.configuration = value;
 			} else {

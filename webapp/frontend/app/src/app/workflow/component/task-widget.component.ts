@@ -1,8 +1,8 @@
 import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, SimpleChanges, OnChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TaskRequest } from 'src/app/model/workflow/task-specification';
 import { WorkflowGeometryService } from './workflow-editor/services/workflow-geometry.service';
+import { TaskRequest } from '../../model/workflow/task-specification';
 
 @Component({
 	selector: 'minty-task-widget',
@@ -15,11 +15,11 @@ import { WorkflowGeometryService } from './workflow-editor/services/workflow-geo
 })
 export class TaskWidgetComponent implements OnChanges {
 
-	@Input() task: TaskRequest = null;
+	@Input() task!: TaskRequest;
 	private numInputs = 0;
 	private numOutputs = 0;
-	inputPorts: { x: number; y: number; size: number }[];
-	outputPorts: { x: number; y: number; size: number }[];
+	inputPorts: { x: number; y: number; size: number }[] = [];
+	outputPorts: { x: number; y: number; size: number }[] = [];
 
 	@Output() startConnection = new EventEmitter<{ portIndex: number; isInput: boolean; event: MouseEvent }>();
 	@Output() endConnection = new EventEmitter<{ portIndex: number; isInput: boolean; event: MouseEvent }>();

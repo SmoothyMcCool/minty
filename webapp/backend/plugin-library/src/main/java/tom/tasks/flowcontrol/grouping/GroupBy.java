@@ -111,17 +111,25 @@ public class GroupBy extends MintyTask {
 
 			@Override
 			public String description() {
-				return "Match up Packets based on ID and combine them into one.";
+				return "Join two sorted streams on a shared packet ID, grouping matching detail records "
+						+ "under each key. Input 0 receives key packets one at a time; "
+						+ "input 1 receives a sorted stream of detail packets. "
+						+ "For each key, all matching detail packets are combined into one output packet.";
 			}
 
 			@Override
 			public String expects() {
-				return "One packet on input 1, multiple sorted packets on input two. For each packet on input two, where IDs match, they are grouped into a single output packet.";
+				return "Accepts: input 0 — a single key packet whose ID defines the grouping key. "
+						+ "Input 1 — a stream of detail packets sorted by ID. "
+						+ "Detail packets whose ID matches the current key are accumulated; "
+						+ "when the ID changes the result is emitted and the next key packet is read. "
+						+ "Both streams must be sorted by ID — add Sort and SetId steps upstream if needed.";
 			}
 
 			@Override
 			public String produces() {
-				return "For each input on port 2 that matches the id of the packet received on port 1, it is aggregated into a single output packet with a list of the data.";
+				return "Emits: one output packet per key, containing the key packet's ID and the "
+						+ "concatenated text and data from all matching detail packets.";
 			}
 
 			@Override

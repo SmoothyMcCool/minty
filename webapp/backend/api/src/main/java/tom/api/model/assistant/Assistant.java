@@ -23,4 +23,11 @@ public record Assistant(AssistantId id, String name, String model, Integer conte
 		Objects.requireNonNull(hasMemory, "hasMemory cannot be null");
 	}
 
+	public AssistantBuilder toBuilder() {
+		AssistantBuilder builder = new AssistantBuilder();
+		return builder.contextSize(contextSize).documentIds(documentIds).hasMemory(hasMemory).id(id).model(model)
+				.name(name).owned(owned).prompt(prompt).temperature(temperature).tools(tools).topK(topK);
+
+	}
+
 }

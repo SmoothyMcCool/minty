@@ -20,6 +20,11 @@
 
 		<dependency>
 			<groupId>tom.minty</groupId>
+			<artifactId>api</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>tom.minty</groupId>
 			<artifactId>common</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>

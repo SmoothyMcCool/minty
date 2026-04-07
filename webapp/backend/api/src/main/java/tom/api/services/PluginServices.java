@@ -32,4 +32,6 @@ public interface PluginServices {
 	DocumentExtractorService getDocumentExtractorService();
 
 	SkillService getSkillsService();
+
+	WorkflowService getWorkflowService();
 }

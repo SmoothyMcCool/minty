@@ -45,4 +45,14 @@ public class AssistantRegistryServiceImpl implements AssistantRegistryService {
 	public Assistant createMermaidConversionAssistant() {
 		return assistantRegistry.get("EA to Mermaid Conversion Bot");
 	}
+
+	@Override
+	public Assistant createConversationPlannerAssistant() {
+		return assistantRegistry.get("Planner");
+	}
+
+	@Override
+	public Assistant createConversationSynthesizerAssistant() {
+		return assistantRegistry.get("Synthesizer");
+	}
 }

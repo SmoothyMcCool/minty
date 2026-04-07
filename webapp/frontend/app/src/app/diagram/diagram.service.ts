@@ -2,7 +2,6 @@ import { HttpClient, HttpParams } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { AlertService } from "../alert.service";
 import { catchError, EMPTY, map, Observable, of, switchMap, timer } from "rxjs";
-import { Diagram } from "../model/diagram/diagram";
 import { ApiResult } from "../model/api-result";
 
 @Injectable({

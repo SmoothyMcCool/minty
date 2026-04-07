@@ -1,11 +1,17 @@
 <div *ngIf="task" class="mb-2">
-	<h5>{{task.taskName}}
-		<button class="btn btn-outline"
-		type="button"
-		#popoverButton>
-		<i class="bi bi-question-circle"></i>
-	</button>
-	</h5>
+	<div class="row">
+		<div class="col-auto">
+			<h5>{{task.taskName}}
+				<button class="btn btn-outline"
+				type="button"
+				(click)="showTaskDescription()">
+				<i class="bi bi-question-circle"></i>
+			</button>
+			</h5>
+		</div>
+		<div *ngIf="taskDescription" class="col" [innerHTML]="taskDescription">
+		</div>
+	</div>
 
 </div>
 <ng-container *ngIf="task">

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { WorkflowService } from 'src/app/workflow/workflow.service';
+import { WorkflowService } from '../../workflow/workflow.service';
 
 
 @Component({
@@ -13,7 +13,7 @@ export class WorkflowsTasksHelpComponent implements OnInit {
 
 	taskHelpFiles: Map<string, string> = new Map();
 	outputHelpFiles: Map<string, string> = new Map();
-	content: string;
+	content: string | undefined = undefined;
 
 	constructor(private workflowService: WorkflowService) {
 	}

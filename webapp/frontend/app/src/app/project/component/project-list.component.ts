@@ -3,10 +3,10 @@ import { Component, OnInit } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { Router, RouterModule } from "@angular/router";
 import { ProjectService } from "../project.service";
-import { Project } from "src/app/model/project/project";
-import { ConfirmationDialogComponent } from "src/app/app/component/confirmation-dialog.component";
-import { UserService } from "src/app/user.service";
-import { User } from "src/app/model/user";
+import { Project } from "../../model/project/project";
+import { ConfirmationDialogComponent } from "../../app/component/confirmation-dialog.component";
+import { User } from "../../model/user";
+import { UserService } from "../../user.service";
 
 @Component({
 	selector: 'minty-project-list',
@@ -20,12 +20,12 @@ export class ProjectListComponent implements OnInit {
 	projects: Project[] = [];
 
 	confirmDeleteProjectVisible = false;
-	projectPendingDeletion: Project;
+	projectPendingDeletion: Project | undefined = undefined;
 
 	newProjectVisible = false;
 	newProjectName = '';
 
-	activeProject: string;
+	activeProject: string | undefined = undefined;
 
 	constructor(private router: Router,
 		private userService: UserService,
@@ -68,7 +68,7 @@ export class ProjectListComponent implements OnInit {
 
 	confirmDeleteProject() {
 		this.confirmDeleteProjectVisible = false;
-		this.projectService.deleteProject(this.projectPendingDeletion.id).subscribe(() => {
+		this.projectService.deleteProject(this.projectPendingDeletion!.id).subscribe(() => {
 			this.projectService.listProjects().subscribe((projects: Project[]) => {
 				this.projects = projects;
 			});

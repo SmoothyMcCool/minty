@@ -1,9 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, EventEmitter, forwardRef, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
+import { Component, EventEmitter, forwardRef, Input, OnInit, Output } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { Popover } from 'bootstrap';
-import { AttributeMap, TaskRequest, TaskSpecification } from 'src/app/model/workflow/task-specification';
 import { AttributeMapEditorComponent } from './attribute-map-editor.component';
+import { TaskSpecification, TaskRequest, AttributeMap } from '../../../model/workflow/task-specification';
 
 @Component({
 	selector: 'minty-task-editor',
@@ -16,27 +15,15 @@ import { AttributeMapEditorComponent } from './attribute-map-editor.component';
 		multi: true
 	}]
 })
-export class TaskEditorComponent implements OnInit, ControlValueAccessor, OnDestroy {
+export class TaskEditorComponent implements OnInit, ControlValueAccessor {
 
-	@ViewChild('popoverButton', { static: false }) popoverButton !: ElementRef;
-
-	@Input() name: string;
-	private _taskSpecification: TaskSpecification ;
-	@Input()
-	set taskSpecification(value: TaskSpecification){
-		this.destroyPopover();
-		this._taskSpecification = value;
-		this.createPopover();
-	}
-	get taskSpecification(): TaskSpecification {
-		return this._taskSpecification;
-	}
+	@Input() name!: string;
+	@Input() taskSpecification!: TaskSpecification;
 
 	@Output() taskNameChanged = new EventEmitter<{ oldName: string, newName: string }>();
 
-	task: TaskRequest;
-
-	popoverInstance !: Popover;
+	task: TaskRequest | undefined = undefined;
+	taskDescription: string | undefined = undefined;
 
 	onChange = (_: any) => { };
 	onTouched: any = () => {};
@@ -50,28 +37,31 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor, OnDest
 		return this.task?.configuration ?? {};
 	}
 
-	createPopover() {
-		if (!this.taskSpecification || !this.task || !this.popoverButton) {
+	showTaskDescription() {
+		if (this.taskDescription) {
+			this.taskDescription = undefined;
+			return;
+		}
+
+		if (!this.taskSpecification || !this.task) {
 			return;
 		}
 		const description = this.taskSpecification.description;
 		const inputs = this.taskSpecification.expects ? this.escapeHtml(this.taskSpecification.expects) : 'No inputs';
 		const outputs = this.taskSpecification.produces ? this.escapeHtml(this.taskSpecification.produces) : 'No outputs';
 		const html = `
-${description}
-<br>
-<br>
-<strong>Inputs:</strong> ${inputs}
-<br>
-<br>
-<strong>Outputs:</strong> ${outputs}`;
+<div class="card">
+	<div class="card-body">
+		<strong>Description:</strong>${description}
+		<br>
+		<strong>Inputs:</strong> ${inputs}
+		<br>
+		<strong>Outputs:</strong> ${outputs}
+	</div>
+</div>
+`;
+		this.taskDescription = html;
 
-		this.popoverInstance = new Popover(this.popoverButton.nativeElement, {
-			content: html,
-			html: true,
-			trigger: 'click',
-			placement: 'auto'
-		});
 	}
 
 	escapeHtml(str: string): string {
@@ -86,16 +76,6 @@ ${description}
 			.replace(/'/g, '&#039;');
 	}
 
-	ngOnDestroy(): void {
-		this.destroyPopover();
-	}
-
-	destroyPopover() {
-		if (this.popoverInstance) {
-			this.popoverInstance.dispose();
-		}
-	}
-
 	writeValue(obj: any): void {
 		if (!obj) {
 			return;
@@ -106,8 +86,6 @@ ${description}
 				configuration: obj.configuration,
 				layout: { ...obj.layout }
 			};
-			// Need a refresh for task to be valid.
-			setTimeout(() => this.createPopover(), 0);
 		}
 	}
 	registerOnChange(fn: any): void {
@@ -121,11 +99,11 @@ ${description}
 	}
 
 	onStepNameChanged(name: string) {
-		if (this.task.stepName === name) {
+		if (this.task && this.task.stepName === name) {
 			return;
 		}
 
-		const updatedTask = { ...this.task, stepName: name };
+		const updatedTask: TaskRequest = { ...this.task!, stepName: name };
 		this.task = updatedTask;
 		this.taskNameChanged.emit({ oldName: this.task.stepName, newName: name });
 		this.onChange(this.task);
@@ -133,11 +111,11 @@ ${description}
 	}
 
 	onConfigurationChanged(config: AttributeMap) {
-		const same = Object.keys(config).every(k => this.task.configuration[k] === config[k]);
+		const same = Object.keys(config).every(k => this.task!.configuration[k] === config[k]);
 
 		if (!same) {
 			this.task = {
-				...this.task,
+				...this.task!,
 				configuration: { ...config }
 			}
 			this.onChange(this.task);
@@ -147,7 +125,7 @@ ${description}
 
 	onLoggingActiveChange(active: boolean) {
 		this.task = {
-				...this.task,
+				...this.task!,
 				loggingActive: active
 		}
 		this.onChange(this.task);

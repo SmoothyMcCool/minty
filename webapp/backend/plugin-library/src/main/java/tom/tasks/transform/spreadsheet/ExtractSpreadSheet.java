@@ -85,18 +85,23 @@ public class ExtractSpreadSheet extends MintyTask {
 
 			@Override
 			public String description() {
-				return "Transform a spreadsheet in TSV format into a sequence of Packets.";
+				return "Parse TSV (tab-separated values) text from the input packet into structured data records. "
+						+ "Pair with Emit Document to process uploaded spreadsheets: Emit Document converts the file "
+						+ "to Markdown containing a TSV table, then Read TSV Data turns those rows into data records.";
 			}
 
 			@Override
 			public String expects() {
-				return "This task produces packets from the provided TSV input. There will be one packet per row. "
-						+ "The first row is used as a header row, defining the keys in the data section of the emitted Packets.";
+				return "Accepts: a packet with one or more items in the text list, each containing TSV-formatted "
+						+ "content. The first row of each TSV block is the header row — its values become the "
+						+ "field names in the output data records.";
 			}
 
 			@Override
 			public String produces() {
-				return "A list of packets in Data.";
+				return "Emits: a single packet whose data list contains one record per non-header row across "
+						+ "all input text items. Each record is a map of column header to cell value. "
+						+ "The output packet ID is copied from the input.";
 			}
 
 			@Override

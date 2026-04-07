@@ -1,14 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Project } from 'src/app/model/project/project';
 import { ProjectService } from '../project.service';
 import { ProjectNodeComponent } from './project-node.component';
 import { NodeViewerComponent } from './project-node-viewer.component';
-import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
-import { ProjectNode } from 'src/app/model/project/project-node';
-import { DocProperties } from 'src/app/document/document-editor.component';
-import { AlertService } from 'src/app/alert.service';
+import { AlertService } from '../../alert.service';
+import { ConfirmationDialogComponent } from '../../app/component/confirmation-dialog.component';
+import { DocProperties } from '../../document/document-editor.component';
+import { ProjectNode } from '../../model/project/project-node';
+import { Project } from '../../model/project/project';
 
 @Component({
 	selector: 'minty-project-editor',
@@ -18,7 +18,7 @@ import { AlertService } from 'src/app/alert.service';
 })
 export class ProjectEditorComponent {
 
-	private _project: Project;
+	private _project!: Project;
 	@Input()
 		set project(value: Project) {
 			if (value) {
@@ -33,14 +33,14 @@ export class ProjectEditorComponent {
 	onChange = (_: any) => { };
 	onTouched: any = () => { };
 
-	nodes: ProjectNode[];
+	nodes: ProjectNode[] = [];
 
-	selectedNode: ProjectNode;
+	selectedNode: ProjectNode | undefined = undefined;
 	editFile: boolean = false;
-	currentFileContents: string;
+	currentFileContents: string | undefined = undefined;
 
 	confirmDeleteNodeVisible = false;
-	nodeToDelete: ProjectNode;
+	nodeToDelete: ProjectNode | undefined = undefined;
 
 	mdFileDialogVisible = false;
 	zipFileDialogVisible = false
@@ -55,7 +55,7 @@ export class ProjectEditorComponent {
 
 	refresh() {
 		this.nodes = [];
-		this.selectedNode = null;
+		this.selectedNode = undefined;
 		this.editFile = false;
 		if (this.project) {
 			this.projectService.describeTree(this.project.id).subscribe((nodes: ProjectNode[]) => {
@@ -96,6 +96,10 @@ export class ProjectEditorComponent {
 
 	confirmDeleteNode() {
 		this.confirmDeleteNodeVisible = false;
+		if (!this.nodeToDelete) {
+			console.error('confirmDeleteNode: nodeToDelete not set');
+			return;
+		}
 		this.projectService.deleteNode(this.project.id, this.nodeToDelete.path).subscribe(() => {
 			this.refresh();
 		});
@@ -103,6 +107,10 @@ export class ProjectEditorComponent {
 
 	editCurrentFile() {
 		this.editFile = true;
+		if (!this.selectedNode) {
+			console.error('editCurrentFile: selectedNode not set');
+			return;
+		}
 		this.currentFileContents = this.selectedNode.content;
 	}
 

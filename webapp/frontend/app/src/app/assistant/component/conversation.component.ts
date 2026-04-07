@@ -6,7 +6,7 @@ import { FormsModule } from '@angular/forms';
 
 @Component({
 	selector: 'minty-conversation',
-	imports: [CommonModule, FormsModule, ChatMessageComponent],
+	imports: [CommonModule, FormsModule, ChatMessageComponent, ],
 	templateUrl: 'conversation.component.html',
 	styleUrls: ['conversation.component.css'],
 })
@@ -14,11 +14,12 @@ export class ConversationComponent {
 	useMermaid = true;
 	useMarkdown = true;
 
-	@Input() messages: ChatMessage[];
-	@Input() responsePending: boolean;
-	@Input() queueDepth: number;
-	@Input() oldestMessagesFirst: boolean;
-	@Input() showChatOptions: boolean;
+	@Input() messages!: ChatMessage[];
+	@Input() responsePending!: boolean;
+	@Input() responseComplete!: boolean;
+	@Input() queueDepth!: number;
+	@Input() oldestMessagesFirst!: boolean;
+	@Input() showChatOptions!: boolean;
 
 	trackByMessage(index: number, message: ChatMessage) {
 		return index;

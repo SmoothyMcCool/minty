@@ -3,19 +3,19 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { Router, RouterModule } from '@angular/router';
-import { ResultService } from 'src/app/workflow/result.service';
-import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
-import { UserService } from 'src/app/user.service';
-import { WorkflowState } from 'src/app/model/workflow/workflow-state';
-import { WorkflowResult } from 'src/app/model/workflow/workflow-result';
-import { WorkflowExecutionState } from 'src/app/model/workflow/workflow-execution-state';
 import { animate, style, transition, trigger } from '@angular/animations';
-import { User } from 'src/app/model/user';
-import { AlertService } from 'src/app/alert.service';
-import { Workflow } from 'src/app/model/workflow/workflow';
 import { WorkflowService } from '../workflow.service';
 import * as bootstrap from 'bootstrap';
-import { UserSelectDialogComponent, UserSelection } from 'src/app/app/component/user-select-dialog.component';
+import { AlertService } from '../../alert.service';
+import { ConfirmationDialogComponent } from '../../app/component/confirmation-dialog.component';
+import { UserSelectDialogComponent, UserSelection } from '../../app/component/user-select-dialog.component';
+import { User } from '../../model/user';
+import { Workflow, WorkflowDescription } from '../../model/workflow/workflow';
+import { WorkflowExecutionState } from '../../model/workflow/workflow-execution-state';
+import { WorkflowResult } from '../../model/workflow/workflow-result';
+import { WorkflowState } from '../../model/workflow/workflow-state';
+import { UserService } from '../../user.service';
+import { ResultService } from '../result.service';
 
 @Component({
 	selector: 'minty-workflow-list',
@@ -37,30 +37,30 @@ import { UserSelectDialogComponent, UserSelection } from 'src/app/app/component/
 })
 export class WorkflowListComponent implements AfterViewChecked, OnInit, OnDestroy {
 
-	responseType: string;
-	currentResult: WorkflowResult = null;
-	workflowStatus: WorkflowExecutionState;
+	responseType: string | undefined = undefined;
+	currentResult: WorkflowResult  | undefined = undefined;
+	workflowStatus: WorkflowExecutionState | undefined = undefined;
 	results: WorkflowState[] = [];
-	workflows: Workflow[] = [];
-	private subscription: Subscription;
+	workflows: WorkflowDescription[] = [];
+	private subscription: Subscription | undefined = undefined;
 
-	pendingWorkflow: Workflow;
+	pendingWorkflow: Workflow | undefined = undefined;
 	confirmWorkflowDeleteVisible = false;
 	confirmResultDeleteVisible = false;
-	resultPendingDeletionId: string;
+	resultPendingDeletionId: string | undefined = undefined;
 	confirmResultDuplicateWorkflowVisible = false;
 	confirmCancelWorkflowVisible = false;
 	confirmDeleteAllResultsVisible = false;
 	sortOrder: string = 'alpha';
 
-	user: User;
+	user!: User;
 
-	filter: string;
+	filter: string | undefined = undefined;
 	displayResults: WorkflowState[] = [];
 
 	userSelectDialogVisible = false;
-	workflowToShare: Workflow;
-	sharingSelection: UserSelection;
+	workflowToShare: Workflow | undefined = undefined;
+	sharingSelection: UserSelection | undefined = undefined;
 
 	constructor(private router: Router,
 		private alertService: AlertService,
@@ -113,17 +113,17 @@ export class WorkflowListComponent implements AfterViewChecked, OnInit, OnDestro
 	}
 
 	displayResultsFor(result: WorkflowState) {
-		this.currentResult = null;
+		this.currentResult = undefined;
 		this.resultService.openWorkflowOutput(result.id);
 	}
 
 	downloadResultsFor(result:WorkflowState) {
-		this.currentResult = null;
+		this.currentResult = undefined;
 		this.resultService.downloadWorkflowOutput(result.id);
 	}
 
 	downloadLogsFor(result: WorkflowState) {
-		this.currentResult = null;
+		this.currentResult = undefined;
 		this.resultService.downloadWorkflowLog(result.id);
 	}
 
@@ -133,13 +133,17 @@ export class WorkflowListComponent implements AfterViewChecked, OnInit, OnDestro
 	}
 
 	confirmDeleteWorkflow() {
-		this.confirmWorkflowDeleteVisible = false;
-		this.workflowService.deleteWorkflow(this.pendingWorkflow.id).subscribe(() => {
-			this.workflowService.listWorkflows().subscribe((workflows) => {
-				this.workflows = workflows;
+		if (this.pendingWorkflow) {
+			this.confirmWorkflowDeleteVisible = false;
+			this.workflowService.deleteWorkflow(this.pendingWorkflow.id!).subscribe(() => {
+				this.workflowService.listWorkflows().subscribe((workflows) => {
+					this.workflows = workflows;
+				});
 			});
-		});
-		this.workflows = this.workflows.filter(item => item.id === this.pendingWorkflow.id);
+			this.workflows = this.workflows.filter(item => item.id === this.pendingWorkflow!.id);
+		} else {
+			console.error('confirmDeleteWorkflow: pendingWorkflow not set');
+		}
 	}
 
 	displayProgress(result: WorkflowState) {
@@ -152,16 +156,20 @@ export class WorkflowListComponent implements AfterViewChecked, OnInit, OnDestro
 	}
 
 	confirmCancelWorkflow() {
-		this.confirmCancelWorkflowVisible = false;
-		this.workflowService.cancelWorkflow(this.pendingWorkflow.name).subscribe(() => {
-			this.workflowService.listWorkflows().subscribe((workflows) => {
-				this.workflows = workflows;
+		if (this.pendingWorkflow) {
+			this.confirmCancelWorkflowVisible = false;
+			this.workflowService.cancelWorkflow(this.pendingWorkflow.name).subscribe(() => {
+				this.workflowService.listWorkflows().subscribe((workflows) => {
+					this.workflows = workflows;
+				});
 			});
-		});
+		} else {
+			console.error('confirmCancelWorkflow: pendingWorkflow not set');
+		}
 	}
 
 	hideProgress() {
-		this.workflowStatus = null;
+		this.workflowStatus = undefined;
 	}
 
 	deleteResult(event: MouseEvent, result: WorkflowState) {
@@ -171,10 +179,14 @@ export class WorkflowListComponent implements AfterViewChecked, OnInit, OnDestro
 	}
 
 	confirmDeleteResult() {
-		this.confirmResultDeleteVisible = false;
-		this.resultService.deleteWorkflowResult(this.resultPendingDeletionId).subscribe();
-		this.results = this.results.filter(item => item.id != this.resultPendingDeletionId);
-		this.filterChanged(this.filter);
+		if (this.resultPendingDeletionId) {
+			this.confirmResultDeleteVisible = false;
+			this.resultService.deleteWorkflowResult(this.resultPendingDeletionId).subscribe();
+			this.results = this.results.filter(item => item.id != this.resultPendingDeletionId);
+			this.filterChanged(this.filter);
+		} else {
+			console.error('resultPendingDeletionId not set');
+		}
 	}
 
 	deleteAllVisibleResults(event: MouseEvent) {
@@ -202,24 +214,36 @@ export class WorkflowListComponent implements AfterViewChecked, OnInit, OnDestro
 	}
 
 	onUsersConfirmed(selection: UserSelection): void {
-		this.userSelectDialogVisible = false;
-		this.workflowService.shareWorkflow(this.workflowToShare.name, selection).subscribe(response => {
-			this.alertService.postSuccess(response);
-			this.workflowToShare = null;
-		});
+		if (this.workflowToShare) {
+			this.userSelectDialogVisible = false;
+			this.workflowService.shareWorkflow(this.workflowToShare.name, selection).subscribe(response => {
+				this.alertService.postSuccess(response);
+				this.workflowToShare = undefined;
+			});
+		} else {
+			console.log('workflowToShare is undefined');
+		}
 	}
 
 	copyToClipboard() {
-		navigator.clipboard.writeText(this.currentResult.output as string).then(() => {
-			console.log('Copied: ' + this.currentResult.output as string);
-		});
+		if (this.currentResult) {
+			navigator.clipboard.writeText(this.currentResult.output as string).then(() => {
+				console.log('Copied: ' + this.currentResult!.output as string);
+			});
+		} else {
+			console.log('curerntResult is undefined')
+		}
 	}
 
 	viewFullscreen() {
+		if (this.currentResult) {
 		this.router.navigate(['/workflow/result', this.currentResult.id]);
+		} else {
+			console.log('curerntResult is undefined')
+		}
 	}
 
-	isOwned(workflow: Workflow): boolean {
+	isOwned(workflow: WorkflowDescription): boolean {
 		return workflow.owned;
 	}
 
@@ -242,12 +266,14 @@ export class WorkflowListComponent implements AfterViewChecked, OnInit, OnDestro
 
 	confirmDuplicateWorkflow() {
 		this.confirmResultDuplicateWorkflowVisible = false;
-		let w = this.workflows.find(w => w.id === this.pendingWorkflow.id);
-		if (w) {
-			w.id = null;
-			this.workflowService.newWorkflow(w).subscribe(workflow => {
-				this.router.navigate(['/workflow/edit', workflow.id]);
-			});
+		let w = this.workflows.find(w => w.id === this.pendingWorkflow!.id);
+		if (w && w.id) {
+			this.workflowService.getWorkflow(w.id).subscribe(workflow => {
+				workflow.id = null;
+				this.workflowService.newWorkflow(workflow).subscribe(workflow => {
+					this.router.navigate(['/workflow/edit', workflow.id]);
+				});
+			})
 		} else {
 			this.alertService.postFailure("Failed to duplicate workflow.");
 		}
@@ -269,10 +295,10 @@ export class WorkflowListComponent implements AfterViewChecked, OnInit, OnDestro
 		window.URL.revokeObjectURL(url);
 	}
 
-	filterChanged(filter: string) {
+	filterChanged(filter: string | undefined) {
 		this.filter = filter;
 		if (this.filter) {
-			this.displayResults = this.results.filter(result => result.name.includes(filter));
+			this.displayResults = this.results.filter(result => result.name.includes(filter!));
 		} else {
 			this.displayResults = this.results;
 		}

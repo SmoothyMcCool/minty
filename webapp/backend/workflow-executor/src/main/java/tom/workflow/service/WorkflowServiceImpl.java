@@ -2,12 +2,10 @@ package tom.workflow.service;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,18 +16,21 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import tom.api.UserId;
+import tom.api.WorkflowId;
+import tom.api.model.user.ResourceSharingSelection;
+import tom.api.model.user.UserSelection;
+import tom.api.services.WorkflowService;
 import tom.api.services.exception.NotFoundException;
 import tom.api.services.exception.NotOwnedException;
+import tom.api.services.workflow.TaskRequest;
+import tom.api.services.workflow.Workflow;
+import tom.api.services.workflow.WorkflowDescription;
+import tom.api.services.workflow.WorkflowRequest;
 import tom.api.task.TaskLogger;
 import tom.config.MintyConfiguration;
-import tom.task.model.TaskRequest;
 import tom.task.registry.TaskRegistryService;
-import tom.user.model.ResourceSharingSelection;
-import tom.user.model.UserSelection;
 import tom.user.service.UserServiceInternal;
-import tom.workflow.controller.WorkflowRequest;
 import tom.workflow.executor.WorkflowRunner;
-import tom.workflow.model.Workflow;
 import tom.workflow.model.joins.UserWorkflowId;
 import tom.workflow.model.joins.UserWorkflowLink;
 import tom.workflow.repository.UserWorkflowLinkRepository;
@@ -70,8 +71,13 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public String executeWorkflow(UserId userId, WorkflowRequest request) {
-		Optional<tom.workflow.repository.Workflow> maybeWorkflow = workflowRepository.findById(request.getId());
+	public String executeWorkflow(UserId userId, WorkflowRequest request) throws NotOwnedException {
+		if (!isAllowedToExecute(request.getId(), userId)) {
+			throw new NotOwnedException("no permission to execute workflow");
+		}
+
+		Optional<tom.workflow.repository.Workflow> maybeWorkflow = workflowRepository
+				.findById(request.getId().getValue());
 		if (maybeWorkflow.isEmpty()) {
 			logger.warn("Did not find workflow for ID " + request.getId() + ". Cannot run.");
 			return null;
@@ -157,26 +163,30 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 	@Override
 	@Transactional
-	public Workflow updateWorkflow(UserId userId, Workflow workflow) {
-		tom.workflow.repository.Workflow dbWorkflow = new tom.workflow.repository.Workflow(workflow);
-		dbWorkflow.setOwnerId(userId);
-		return workflowRepository.save(dbWorkflow).toModelWorkflow(userId);
+	public Workflow updateWorkflow(UserId userId, Workflow workflow) throws NotOwnedException {
+
+		if (isOwned(workflow.getId(), userId)) {
+			tom.workflow.repository.Workflow dbWorkflow = new tom.workflow.repository.Workflow(workflow);
+			dbWorkflow.setOwnerId(userId);
+			return workflowRepository.save(dbWorkflow).toModelWorkflow(userId);
+		}
+		throw new NotOwnedException("User doesn't own workflow.");
 	}
 
 	@Override
 	@Transactional(readOnly = true)
-	public List<Workflow> listWorkflows(UserId userId) {
+	public List<WorkflowDescription> listWorkflows(UserId userId) {
 		List<UserWorkflowLink> workflows = linkRepository
 				.findById_UserIdIn(List.of(userId.getValue(), ResourceSharingSelection.AllUsersId.getValue()));
 
-		return workflows.stream().map(link -> link.getWorkflow().toModelWorkflow(userId))
-				.collect(Collectors.toMap(Workflow::getId, w -> w, (a, b) -> a, LinkedHashMap::new)).values().stream()
+		return workflows.stream().map(link -> link.getWorkflow().toModelWorkflow(userId).generateDescription())
 				.toList();
 	}
 
 	@Override
 	@Transactional
-	public void shareWorkflow(UserId userId, ResourceSharingSelection selection) throws NotFoundException {
+	public void shareWorkflow(UserId userId, ResourceSharingSelection selection)
+			throws NotFoundException, NotOwnedException {
 
 		Optional<tom.workflow.repository.Workflow> maybeWorkflow = workflowRepository
 				.findByName(selection.getResource());
@@ -188,7 +198,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		tom.workflow.repository.Workflow workflow = maybeWorkflow.get();
 
 		if (!workflow.getOwnerId().equals(userId)) {
-			throw new NotFoundException(selection.getResource());
+			throw new NotOwnedException(selection.getResource());
 		}
 
 		UserWorkflowLink uwl = new UserWorkflowLink();
@@ -267,9 +277,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public Workflow getWorkflow(UserId userId, UUID workflowId) {
-		Optional<UserWorkflowLink> maybeWorkflow = linkRepository.findById_WorkflowIdAndId_UserIdIn(workflowId,
-				List.of(userId.getValue(), ResourceSharingSelection.AllUsersId.getValue()));
+	public Workflow getWorkflow(UserId userId, WorkflowId workflowId) {
+		Optional<UserWorkflowLink> maybeWorkflow = linkRepository.findById_WorkflowIdAndId_UserIdIn(
+				workflowId.getValue(), List.of(userId.getValue(), ResourceSharingSelection.AllUsersId.getValue()));
 
 		if (maybeWorkflow.isEmpty()) {
 			logger.warn("Did not find workflow for ID " + workflowId);
@@ -281,8 +291,12 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 	@Override
 	@Transactional
-	public void deleteWorkflow(UserId userId, UUID workflowId) {
-		workflowRepository.deleteById(workflowId);
+	public void deleteWorkflow(UserId userId, WorkflowId workflowId) throws NotOwnedException {
+		if (isOwned(workflowId, userId)) {
+			workflowRepository.deleteById(workflowId.getValue());
+		} else {
+			throw new NotOwnedException("no permission to delete");
+		}
 	}
 
 	@Override
@@ -294,26 +308,23 @@ public class WorkflowServiceImpl implements WorkflowService {
 		workflowTrackingService.cancelWorkflow(userId, name);
 	}
 
-	@Override
 	@Transactional(readOnly = true)
-	public boolean isAllowedToExecute(UUID workflowId, UserId userId) {
+	private boolean isAllowedToExecute(WorkflowId workflowId, UserId userId) {
 		return getWorkflow(userId, workflowId) != null;
 	}
 
-	@Override
 	@Transactional(readOnly = true)
-	public boolean workflowExists(UUID workflowId) {
+	private boolean workflowExists(UUID workflowId) {
 
 		List<UserWorkflowLink> workflow = linkRepository.findById_WorkflowId(workflowId);
 
 		return !workflow.isEmpty();
 	}
 
-	@Override
 	@Transactional(readOnly = true)
-	public boolean isWorkflowOwned(UUID workflowId, UserId userId) {
+	private boolean isOwned(WorkflowId workflowId, UserId userId) {
 
-		Optional<UserWorkflowLink> workflow = linkRepository.findById_WorkflowIdAndId_UserId(workflowId,
+		Optional<UserWorkflowLink> workflow = linkRepository.findById_WorkflowIdAndId_UserId(workflowId.getValue(),
 				userId.getValue());
 
 		if (workflow.isEmpty()) {
@@ -323,9 +334,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 		return workflow.get().getWorkflow().getOwnerId().equals(userId);
 	}
 
-	@Override
 	@Transactional(readOnly = true)
-	public boolean isRunningWorkflowOwned(UserId userId, String name) {
+	private boolean isRunningWorkflowOwned(UserId userId, String name) {
 		List<WorkflowState> runningWorkflows = workflowTrackingService.getWorkflowList(userId);
 		boolean found = false;
 		for (WorkflowState workflow : runningWorkflows) {

@@ -16,6 +16,8 @@ import tom.api.AssistantId;
 import tom.api.DocumentId;
 import tom.api.UserId;
 import tom.api.model.assistant.Assistant;
+import tom.api.model.user.ResourceSharingSelection;
+import tom.api.model.user.UserSelection;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantRegistryService;
 import tom.api.services.exception.NotFoundException;
@@ -28,8 +30,6 @@ import tom.config.MintyConfiguration;
 import tom.conversation.service.ConversationServiceInternal;
 import tom.document.service.AssistantDocumentLinkService;
 import tom.llm.service.LlmService;
-import tom.user.model.ResourceSharingSelection;
-import tom.user.model.UserSelection;
 import tom.user.service.UserServiceInternal;
 
 @Service
@@ -60,7 +60,7 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 	@Override
 	@Transactional
 	public Assistant createAssistant(UserId userId, Assistant assistant) throws NotOwnedException {
-		if (assistantRepository.findByName(assistant.name()).isEmpty()) {
+		if (assistantRepository.findByName(assistant.name()).isPresent()) {
 			throw new NotOwnedException(assistant.name());
 		}
 
