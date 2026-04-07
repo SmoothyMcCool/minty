@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Connection, TaskRequest } from 'src/app/model/workflow/task-specification';
-import { TaskWidgetComponent } from '../../task-widget.component';
+import { TaskRequest, Connection } from '../../../../model/workflow/task-specification';
 
 @Injectable({
 	providedIn: 'root'
@@ -140,7 +139,7 @@ export class WorkflowGeometryService {
 		};
 	}
 
-	getSnappedPortPosition(hoveredPort: { task: TaskRequest; portIndex: number; isInput: boolean }, tempConnection: any, taskResolver: (taskId: string) => TaskRequest | undefined) {
+	getSnappedPortPosition(hoveredPort: { task: TaskRequest; portIndex: number; isInput: boolean } | null, tempConnection: any, taskResolver: (taskId: string) => TaskRequest | undefined) {
 		if (!hoveredPort || !tempConnection) {
 			return null;
 		}

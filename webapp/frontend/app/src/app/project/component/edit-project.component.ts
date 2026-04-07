@@ -2,9 +2,9 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Project } from 'src/app/model/project/project';
-import { ProjectService } from 'src/app/project/project.service';
 import { ProjectEditorComponent } from './project-editor.component';
+import { Project } from '@playwright/test';
+import { ProjectService } from '../project.service';
 
 @Component({
 	selector: 'minty-edit-project',
@@ -14,7 +14,7 @@ import { ProjectEditorComponent } from './project-editor.component';
 })
 export class EditProjectComponent implements OnInit {
 
-	project: Project;
+	project!: Project;
 
 	constructor(private route: ActivatedRoute,
 		private router: Router,

@@ -19,10 +19,10 @@ import { FilterPipe } from '../../pipe/filter-pipe';
 })
 export class SliderComponent implements ControlValueAccessor {
 
-	@Input() min: number;
-	@Input() max: number;
-	@Input() label: string;
-	value: number;
+	@Input() min!: number;
+	@Input() max!: number;
+	@Input() label!: string;
+	value!: number;
 
 	onChange = (_: any) => { };
 	onTouched: any = () => { };

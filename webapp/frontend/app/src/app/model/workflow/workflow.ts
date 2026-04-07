@@ -1,12 +1,18 @@
 import { TaskRequest, Connection } from './task-specification';
 
 export interface Workflow {
-	id: string;
+	id: string | null;
 	owned: boolean;
 	name: string;
-	shared: boolean;
 	description: string;
 	steps: TaskRequest[];
 	connections: Connection[];
-	outputStep: TaskRequest;
+	outputStep: TaskRequest | undefined;
+}
+
+export interface WorkflowDescription {
+	id: string | null;
+	name: string;
+	description: string;
+	owned: boolean;
 }

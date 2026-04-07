@@ -2,13 +2,13 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { UserService } from 'src/app/user.service';
-import { Workflow } from 'src/app/model/workflow/workflow';
 import { WorkflowService } from '../workflow.service';
-import { AttributeMap } from 'src/app/model/workflow/task-specification';
-import { AlertService } from 'src/app/alert.service';
 import { WorkflowEditorComponent } from './workflow-editor/workflow-editor.component';
-import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
+import { AlertService } from '../../alert.service';
+import { ConfirmationDialogComponent } from '../../app/component/confirmation-dialog.component';
+import { AttributeMap } from '../../model/workflow/task-specification';
+import { Workflow } from '../../model/workflow/workflow';
+import { UserService } from '../../user.service';
 
 @Component({
 	selector: 'minty-edit-workflow',
@@ -18,13 +18,13 @@ import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-
 })
 export class EditWorkflowComponent implements OnInit {
 
-	defaults: AttributeMap;
-	workflow: Workflow;
+	defaults!: AttributeMap;
+	workflow: Workflow | undefined;
 	logLevel: string = "Debug";
 	unsavedChanges = false;
 	isNew = false;
 	uploadDialogVisible = false;
-	uploadedWorkflow: Workflow;
+	uploadedWorkflow: Workflow | undefined;
 
 	confirmCancelVisible = false;
 
@@ -57,18 +57,35 @@ export class EditWorkflowComponent implements OnInit {
 				});
 			}
 			this.isNew = this.route.snapshot.queryParamMap.get('new') === 'true';
+			if (this.isNew) {
+				this.workflow = {
+					id: null,
+					owned: true,
+					name: '',
+					description: '',
+					steps: [],
+					connections: [],
+					outputStep: undefined
+				};
+			}
 
 		});
 	}
 
 	updateWorkflow() {
+		if (!this.workflow) {
+			console.error('updateWorkflow: workflow not set');
+			return;
+		}
+
 		this.workflowService.sanitize(this.workflow);
 
 		if (this.isNew) {
-			this.workflowService.newWorkflow(this.workflow).subscribe(() => {
+			this.workflowService.newWorkflow(this.workflow).subscribe((w: Workflow) => {
 				this.alertService.postSuccess('Workflow Created!');
 				this.unsavedChanges = false;
 				this.isNew = false;
+				this.workflow = w;
 			});
 		} else {
 			this.workflowService.updateWorkflow(this.workflow).subscribe(() => {
@@ -79,6 +96,11 @@ export class EditWorkflowComponent implements OnInit {
 	}
 
 	runWorkflow() {
+		if (!this.workflow) {
+			console.error('runWorkflow: workflow not set');
+			return;
+		}
+
 		this.workflowService.sanitize(this.workflow);
 
 		this.workflowService.execute(this.workflow, this.logLevel).subscribe((result: string) => {
@@ -122,7 +144,7 @@ export class EditWorkflowComponent implements OnInit {
 			const file = fileList[0];
 			const reader = new FileReader();
 			reader.onload = (e) => {
-				this.uploadedWorkflow = JSON.parse(e.target.result as string);
+				this.uploadedWorkflow = JSON.parse(e.target?.result as string);
 				console.log(this.uploadedWorkflow);
 			};
 			reader.readAsText(file);
@@ -130,7 +152,11 @@ export class EditWorkflowComponent implements OnInit {
 	}
 
 	uploadWorkflow() {
-		this.workflow = this.uploadedWorkflow;
+		if (this.uploadedWorkflow) {
+			this.workflow = this.uploadedWorkflow;
+		} else {
+			console.error('uploadWorkflow: uploadedWorkflow not set');
+		}
 		this.uploadedWorkflow = undefined;
 		this.uploadDialogVisible = false;
 	}

@@ -5,7 +5,7 @@ import { catchError, EMPTY, map, Observable, ReplaySubject, take } from 'rxjs';
 import { ApiResult } from '../model/api-result';
 import { EnumList } from '../model/workflow/enum-list';
 import { OutputTaskSpecification, AttributeMap, TaskRequest, TaskSpecification } from '../model/workflow/task-specification';
-import { Workflow } from '../model/workflow/workflow';
+import { Workflow, WorkflowDescription } from '../model/workflow/workflow';
 import { UserService } from '../user.service';
 import { UserSelection } from '../app/component/user-select-dialog.component';
 
@@ -30,7 +30,7 @@ export class WorkflowService {
 	private static readonly GetOutputHelpFiles = 'api/workflow/help/output';
 
 	private taskSpecifications$ = new ReplaySubject<TaskSpecification[]>(1);
-	private taskSpecificationsSnapshot: TaskSpecification[];
+	private taskSpecificationsSnapshot: TaskSpecification[] = [];
 	private outputTaskSpecifications$ = new ReplaySubject<OutputTaskSpecification[]>(1);
 	private enumLists$ = new ReplaySubject<EnumList[]>(1);
 
@@ -120,7 +120,7 @@ export class WorkflowService {
 					return EMPTY;
 				}),
 				map((result: ApiResult) => {
-					return this.sortWorkflows(Array.from(result.data as any[]).map(element => this.objectify(element)));
+					return this.sortWorkflows(Array.from(result.data as any[]).map(element => this.objectify(element))) as Workflow[];
 				})
 			);
 	}
@@ -142,6 +142,23 @@ export class WorkflowService {
 	}
 
 	newWorkflow(workflow: Workflow): Observable<Workflow> {
+		let outputStep = null;
+		if (workflow.outputStep) {
+			outputStep = {
+				taskName: workflow.outputStep.taskName,
+				stepName: workflow.outputStep.stepName,
+				id: workflow.outputStep.id,
+				loggingActive: workflow.outputStep.loggingActive,
+				configuration: { ...workflow.outputStep.configuration },
+				layout: {
+					x: workflow.outputStep.layout.x,
+					y: workflow.outputStep.layout.y,
+					numInputs: workflow.outputStep.layout.numInputs,
+					numOutputs: workflow.outputStep.layout.numOutputs
+				}
+			}
+		}
+
 		const body = {
 			id: workflow.id,
 			name: workflow.name,
@@ -162,23 +179,8 @@ export class WorkflowService {
 					}
 				};
 			}),
-			outputStep: null
+			outputStep: outputStep
 		};
-		if (workflow.outputStep) {
-			body.outputStep = {
-				taskName: workflow.outputStep.taskName,
-				stepName: workflow.outputStep.stepName,
-				id: workflow.outputStep.id,
-				loggingActive: workflow.outputStep.loggingActive,
-				configuration: { ...workflow.outputStep.configuration },
-				layout: {
-					x: workflow.outputStep.layout.x,
-					y: workflow.outputStep.layout.y,
-					numInputs: workflow.outputStep.layout.numInputs,
-					numOutputs: workflow.outputStep.layout.numOutputs
-				}
-			}
-		}
 
 		return this.http.post<ApiResult>(WorkflowService.NewWorkflow, body)
 			.pipe(
@@ -193,6 +195,23 @@ export class WorkflowService {
 	}
 
 	updateWorkflow(workflow: Workflow): Observable<Workflow> {
+		let outputStep = null;
+		if (workflow.outputStep) {
+			outputStep = {
+				taskName: workflow.outputStep.taskName,
+				stepName: workflow.outputStep.stepName,
+				id: workflow.outputStep.id,
+				loggingActive: workflow.outputStep.loggingActive,
+				configuration: { ...workflow.outputStep.configuration },
+				layout: {
+					x: workflow.outputStep.layout.x,
+					y: workflow.outputStep.layout.y,
+					numInputs: workflow.outputStep.layout.numInputs,
+					numOutputs: workflow.outputStep.layout.numOutputs
+				}
+			}
+		}
+
 		const body = {
 			id: workflow.id,
 			name: workflow.name,
@@ -213,23 +232,8 @@ export class WorkflowService {
 					}
 				};
 			}),
-			outputStep: null
+			outputStep: outputStep
 		};
-		if (workflow.outputStep) {
-			body.outputStep = {
-				taskName: workflow.outputStep.taskName,
-				stepName: workflow.outputStep.stepName,
-				id: workflow.outputStep.id,
-				loggingActive: workflow.outputStep.loggingActive,
-				configuration: { ...workflow.outputStep.configuration },
-				layout: {
-					x: workflow.outputStep.layout.x,
-					y: workflow.outputStep.layout.y,
-					numInputs: workflow.outputStep.layout.numInputs,
-					numOutputs: workflow.outputStep.layout.numOutputs
-				}
-			}
-		}
 
 		return this.http.post<ApiResult>(WorkflowService.UpdateWorkflow, body)
 			.pipe(
@@ -243,7 +247,7 @@ export class WorkflowService {
 			);
 	}
 
-	listWorkflows(): Observable<Workflow[]> {
+	listWorkflows(): Observable<WorkflowDescription[]> {
 		return this.http.get<ApiResult>(WorkflowService.ListWorkflows)
 			.pipe(
 				catchError(error => {
@@ -251,7 +255,7 @@ export class WorkflowService {
 					return EMPTY;
 				}),
 				map((result: ApiResult) => {
-					return this.sortWorkflows(Array.from(result.data as any[]).map(element => this.objectify(element)));
+					return this.sortWorkflows(Array.from(result.data as WorkflowDescription[]));
 				})
 			);
 	}
@@ -321,7 +325,7 @@ export class WorkflowService {
 					return EMPTY;
 				}),
 				map((result: ApiResult) => {
-					return new Map(Object.entries(result.data));
+					return new Map(Object.entries(result.data as any));
 				})
 			);
 	}
@@ -334,7 +338,7 @@ export class WorkflowService {
 					return EMPTY;
 				}),
 				map((result: ApiResult) => {
-					return new Map(Object.entries(result.data));
+					return new Map(Object.entries(result.data as any));
 				})
 			);
 	}
@@ -377,11 +381,27 @@ export class WorkflowService {
 	}
 
 	private objectify(workflow: any): Workflow {
+		let outputStep = undefined;
+		if (workflow.outputStep) {
+			outputStep = {
+				taskName: workflow.outputStep.taskName,
+				stepName: workflow.outputStep.stepName,
+				id: workflow.outputStep.id,
+				loggingActive: workflow.outputStep.loggingActive,
+				configuration: workflow.outputStep.configuration,
+				layout: {
+					x: workflow.outputStep.layout.x,
+					y: workflow.outputStep.layout.y,
+					numInputs: workflow.outputStep.layout.numInputs,
+					numOutputs: workflow.outputStep.layout.numOutputs
+				}
+			}
+		}
+
 		const w: Workflow = {
 			id: workflow.id,
 			owned: workflow.owned,
 			name: workflow.name,
-			shared: workflow.shared,
 			description: workflow.description,
 			steps: (workflow.steps as any[]).map((element: TaskRequest) => {
 				return {
@@ -406,29 +426,21 @@ export class WorkflowService {
 					writerPort: element.writerPort
 				};
 			}),
-			outputStep: null
+			outputStep: outputStep
 		};
-		if (workflow.outputStep) {
-			w.outputStep = {
-				taskName: workflow.outputStep.taskName,
-				stepName: workflow.outputStep.stepName,
-				id: workflow.outputStep.id,
-				loggingActive: workflow.outputStep.loggingActive,
-				configuration: workflow.outputStep.configuration,
-				layout: {
-					x: workflow.outputStep.layout.x,
-					y: workflow.outputStep.layout.y,
-					numInputs: workflow.outputStep.layout.numInputs,
-					numOutputs: workflow.outputStep.layout.numOutputs
-				}
-			}
-		}
+
 		return w;
 	}
 
-	private sortWorkflows(workflows: Workflow[]): Workflow[] {
+	private sortWorkflows(workflows: Workflow[] | WorkflowDescription[]) : Workflow[] | WorkflowDescription[] {
 		return workflows.sort((left, right) => {
 			if (!left.name && !right.name) {
+				if (!left.id) {
+					return 1;
+				}
+				if (!right.id) {
+					return -1;
+				}
 				return left.id.localeCompare(right.id);
 			}
 			if (!left.name) {

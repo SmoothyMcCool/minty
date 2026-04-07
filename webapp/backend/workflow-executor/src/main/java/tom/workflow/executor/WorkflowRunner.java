@@ -18,16 +18,16 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.core.task.AsyncTaskExecutor;
 
 import tom.api.UserId;
+import tom.api.services.workflow.Connection;
+import tom.api.services.workflow.TaskRequest;
+import tom.api.services.workflow.Workflow;
 import tom.api.task.ExecutionResult;
 import tom.api.task.OutputTask;
 import tom.api.task.TaskLogger;
 import tom.api.task.TaskSpec;
-import tom.task.model.TaskRequest;
 import tom.task.registry.TaskRegistryService;
 import tom.util.StackTraceUtilities;
 import tom.workflow.futureutil.FutureUtils;
-import tom.workflow.model.Connection;
-import tom.workflow.model.Workflow;
 import tom.workflow.tracking.model.WorkflowExecution;
 import tom.workflow.tracking.service.WorkflowTrackingService;
 
@@ -213,16 +213,21 @@ public class WorkflowRunner {
 				tasks.add(future);
 			}
 
-			CompletableFuture<Void> allDone = FutureUtils.allOfFailFast(tasks, logger);
-			allDone.whenComplete((r, ex) -> {
-				if (ex != null) {
-					executionState.setFailed(true);
-					logger.warn("A task failed with exception: ", ex);
-				} else {
-					logger.info("Workflow complete.");
-				}
+			if (tasks.size() > 0) {
+				CompletableFuture<Void> allDone = FutureUtils.allOfFailFast(tasks, logger);
+				allDone.whenComplete((r, ex) -> {
+					if (ex != null) {
+						executionState.setFailed(true);
+						logger.warn("A task failed with exception: ", ex);
+					} else {
+						logger.info("Workflow complete.");
+					}
+					workflowComplete();
+				});
+			} else {
+				logger.info("Workflow complete, but there were no tasks.");
 				workflowComplete();
-			});
+			}
 		} catch (Exception e) {
 			stdLogger.warn("Workflow failed with exception: ", e);
 			logger.warn("Workflow failed with exception: ", e);

@@ -4,13 +4,13 @@ import { CommonModule } from '@angular/common';
 import { MapEditorComponent } from './map-editor.component';
 import { StringListEditorComponent } from './stringlist-editor.component';
 import { EnumListEditorComponent } from './enumlist-editor.component';
-import { AttributeMap, TaskSpecification } from 'src/app/model/workflow/task-specification';
-import { EnumList } from 'src/app/model/workflow/enum-list';
 import { PacketEditorComponent } from './packet-editor.component';
 import { DocumentEditorComponent } from './document-editor.component';
 import { AssistantConfigurationEditorComponent } from './assistant-configuration-editor.component';
 import { PipelineTransformEditorComponent } from './pipeline-transform-editor.component';
 import { WorkflowStateService } from '../workflow-editor/services/workflow-state.service';
+import { EnumList } from '../../../model/workflow/enum-list';
+import { TaskSpecification, AttributeMap } from '../../../model/workflow/task-specification';
 
 
 @Component({
@@ -27,9 +27,9 @@ import { WorkflowStateService } from '../workflow-editor/services/workflow-state
 })
 export class AttributeMapEditorComponent implements ControlValueAccessor {
 
-	@Input() taskSpecification: TaskSpecification;
-	defaults: AttributeMap;
-	enumLists: EnumList[];
+	@Input() taskSpecification!: TaskSpecification;
+	defaults: AttributeMap | undefined = undefined;
+	enumLists: EnumList[] = [];
 	initialized = false;
 
 	config: AttributeMap = {};
@@ -60,7 +60,11 @@ export class AttributeMapEditorComponent implements ControlValueAccessor {
 	}
 
 	getChoicesFor(param: string): EnumList {
-		return this.enumLists.find(el => el.name === param);
+		const ret = this.enumLists.find(el => el.name === param);
+		if (!ret) {
+			throw new Error('getChoicesFor: param ' + param + ' not found');
+		}
+		return ret;
 	}
 
 	writeValue(obj: any): void {

@@ -99,17 +99,21 @@ public class EmitPacket extends MintyTask {
 
 			@Override
 			public String description() {
-				return "Emit packets, mostly to control the start state of a workflow.";
+				return "Emit one or more hardcoded packets as structured data at workflow start. "
+						+ "Use Emit Packet as a source step when data is known at design time. "
+						+ "For plain text use Emit Text; for uploaded files use Emit Document.";
 			}
 
 			@Override
 			public String expects() {
-				return "This task does not receive any data. It runs once when the workflow starts, emitting Packet as specified.";
+				return "Accepts: no input. This task starts immediately when the workflow runs.";
 			}
 
 			@Override
 			public String produces() {
-				return "An array of the items set in the configuration. Format the data as follows: [ { \"id\": \"string ID\", \"text\": \"Any text\", \"data\": [ {arbitrary JSON data} ] ]";
+				return "Emits: one packet per element in the configured JSON array, in order. "
+						+ "Format the Data to Emit as a JSON array of Packet objects: "
+						+ "[ { \"id\": \"string\", \"text\": [\"...\"], \"data\": [ {arbitrary fields} ] } ]";
 			}
 
 			@Override

@@ -1,6 +1,6 @@
 <div class="p-2 text-dark">
 	<div class="row">
-		<h2 class="col">Edit Workflow</h2>
+		<h2 class="col">Edit or Run Workflow</h2>
 		<form class="col-auto d-flex justify-content-end mb-2">
 			<label *ngIf="!isNew" for="logLevel" class="col-form-label me-3">Log at</label>
 			<div *ngIf="!isNew" class="me-5">
@@ -14,7 +14,7 @@
 			</div>
 			<button *ngIf="!isNew" type="button" id="submitButton" class="btn btn-success me-2 px-4" (click)="runWorkflow()"><i class="bi bi-play"></i></button>
 			<button *ngIf="isNew" type="button" id="submitButton" class="btn btn-primary me-2" (click)="showUploadWorkflowDialog()"><i class="bi bi-upload"></i></button>
-			<button type="button" id="submitButton" class="btn btn-primary me-2" (click)="updateWorkflow()"><i class="bi bi-floppy"></i></button>
+			<button type="button" id="submitButton" class="btn btn-primary me-2" (click)="updateWorkflow()" [disabled]="!isNew && (!workflow || !workflow.owned)"><i class="bi bi-floppy"></i></button>
 			<button type="button" id="cancelButton" class="btn btn-danger" (click)="cancel()"><i class="bi bi-x-lg"></i></button>
 		</form>
 	</div>

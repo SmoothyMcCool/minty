@@ -10,11 +10,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import tom.api.UserId;
+import tom.api.WorkflowId;
+import tom.api.services.workflow.Connection;
+import tom.api.services.workflow.TaskRequest;
 import tom.repository.converter.UserIdConverter;
-import tom.task.model.TaskRequest;
 import tom.workflow.converters.ConnectionConverter;
 import tom.workflow.converters.TaskRequestConverter;
-import tom.workflow.model.Connection;
 
 @Entity
 public class Workflow {
@@ -37,8 +38,8 @@ public class Workflow {
 	public Workflow() {
 	}
 
-	public Workflow(tom.workflow.model.Workflow workflow) {
-		this.id = workflow.getId();
+	public Workflow(tom.api.services.workflow.Workflow workflow) {
+		this.id = workflow.getId().getValue();
 		this.name = workflow.getName();
 		this.description = workflow.getDescription();
 		this.connections = workflow.getConnections();
@@ -102,11 +103,11 @@ public class Workflow {
 		this.connections = connections;
 	}
 
-	public tom.workflow.model.Workflow toModelWorkflow(UserId userId) {
-		tom.workflow.model.Workflow workflow = new tom.workflow.model.Workflow();
+	public tom.api.services.workflow.Workflow toModelWorkflow(UserId userId) {
+		tom.api.services.workflow.Workflow workflow = new tom.api.services.workflow.Workflow();
 		workflow.setConnections(getConnections());
 		workflow.setDescription(getDescription());
-		workflow.setId(getId());
+		workflow.setId(new WorkflowId(getId()));
 		workflow.setName(getName());
 		workflow.setOwned(getOwnerId().equals(userId));
 		workflow.setOutputStep(getOutputStep());

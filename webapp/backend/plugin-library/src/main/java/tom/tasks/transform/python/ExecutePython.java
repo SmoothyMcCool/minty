@@ -47,9 +47,44 @@ if __name__ == "__main__":
 @RunnableTask
 public class ExecutePython extends MintyTask implements ServiceConsumer {
 
+	private static final String PythonTemplate = """
+			import json
+			import sys
+
+			def read_dict(inFile):
+			    try:
+			        with open(inFile, 'r') as f:
+			            return json.load(f)
+			    except FileNotFoundError:
+			        exit(-1)
+			    except json.JSONDecodeError:
+			        exit(-1)
+
+			def double_values(data):
+			    return {key: value * 2 for key, value in data.items()}
+
+			def write_to_file(data, outFile):
+			    with open(outFile, "w") as file:
+			        json.dump(data, file, indent=4)
+
+			def process_data(data):
+			    <your_code_here>
+
+			def main():
+			    if len(sys.argv) == 3:
+			        data = read_dict(sys.argv[1])
+
+			        result = process_data(data)
+
+			        write_to_file(result, sys.argv[2])
+
+			if __name__ == "__main__":
+			    main()
+						""";
+
 	private List<? extends OutputPort> outputs;
 
-	private ExecutePythonConfig configuration;
+	private String python;
 	private Packet result;
 	private PluginServices pluginServices;
 	private String error;
@@ -67,7 +102,11 @@ public class ExecutePython extends MintyTask implements ServiceConsumer {
 
 	public ExecutePython(ExecutePythonConfig configuration) {
 		this();
-		this.configuration = configuration;
+		if (configuration != null && !configuration.getPython().isBlank()) {
+			python = configuration.getPython();
+		} else {
+			python = PythonTemplate;
+		}
 	}
 
 	@Override
@@ -92,17 +131,16 @@ public class ExecutePython extends MintyTask implements ServiceConsumer {
 		result.setId(input.getId());
 
 		try {
-			if (StringUtils.isBlank(configuration.getPython())) {
+			if (StringUtils.isBlank(python)) {
 				warn("No python code provided to task!");
 				error = "No python code provided to task.";
 				failed = true;
 				return;
 			}
 
-			debug("Executing " + configuration.getPython());
+			debug("Executing " + python);
 
-			PythonResult pyResult = pluginServices.getPythonService().executeCodeString(configuration.getPython(),
-					input);
+			PythonResult pyResult = pluginServices.getPythonService().executeCodeString(python, input);
 
 			info("Python complete. Logs:");
 			pyResult.logs().forEach(log -> info(log));

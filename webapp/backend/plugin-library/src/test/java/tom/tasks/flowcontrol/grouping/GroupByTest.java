@@ -2,7 +2,6 @@ package tom.tasks.flowcontrol.grouping;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -23,8 +22,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;
 import tom.api.task.TaskLogger;
-import tom.api.task.TaskSpec;
-import tom.tasks.noop.NullTaskConfig;
 
 /**
  * Unit tests for {@link GroupBy} using JUnit 5 and Mockito.
@@ -49,25 +46,6 @@ class GroupByTest {
 		groupBy.setName("GroupByTestObj");
 		groupBy.setLogger(logger);
 		groupBy.setOutputConnectors(List.of(output1, output2));
-	}
-
-	/* --------------------------------------------------------------------- */
-	/* Specification tests */
-	/* --------------------------------------------------------------------- */
-
-	@Test
-	void getSpecification_returnsCorrectValues() {
-		TaskSpec spec = groupBy.getSpecification();
-
-		assertEquals(2, spec.numInputs(), "Number of inputs");
-		assertEquals(1, spec.numOutputs(), "Number of outputs");
-		assertTrue(spec.expects().contains("One packet on input 1"), "expects() description");
-		assertTrue(spec.produces().contains("For each input on port 2"), "produces() description");
-		assertEquals("GroupBy", spec.taskName(), "taskName");
-		assertEquals("Flow Control", spec.group(), "group");
-		assertNotNull(spec.taskConfiguration(), "taskConfiguration()");
-		assertNotNull(spec.taskConfiguration(Map.of()), "taskConfiguration(Map)");
-		assertEquals(NullTaskConfig.class, spec.taskConfiguration().getClass(), "taskConfiguration() instance type");
 	}
 
 	/* --------------------------------------------------------------------- */

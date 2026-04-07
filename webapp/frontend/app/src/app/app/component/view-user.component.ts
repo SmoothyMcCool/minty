@@ -11,7 +11,7 @@ import { UserService } from '../../user.service';
 	templateUrl: 'view-user.component.html'
 })
 export class ViewUserComponent implements OnInit {
-	user: User;
+	user!: User;
 	repeatPassword = '';
 	passwordMismatch = true;
 	updatePassword = false;
@@ -70,7 +70,7 @@ export class ViewUserComponent implements OnInit {
 				});
 			return false;
 		} else {
-			this.messages = [ 'Hey! There\'s invalid crap!.' ];
+			this.messages = [ 'Uh oh! Something you entered is invalid!' ];
 			return false;
 		}
 	}

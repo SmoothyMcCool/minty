@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 
 export interface DocProperties {
 	title: string,
-	file: File
+	file: File | undefined
 }
 
 @Component({

@@ -216,23 +216,25 @@ public class AiQuery extends MintyTask implements ServiceConsumer {
 
 			@Override
 			public String description() {
-				return "Perform a query to the LLM, either based on the input received, or the configuration of the task.";
+				return "Send a prompt to an AI assistant and emit the response as a packet. "
+						+ "The system prompt is set in the Assistant configuration. "
+						+ "The Query field is the first user message — leave it empty when text is fed from an upstream step.";
 			}
 
 			@Override
 			public String expects() {
-				return "This task appends the contents of \"text\" to the provided prompt. It will use the conversation defined by "
-						+ "the input \"data.Conversation ID\", provided by the workflow runner, that is used to continue an AI conversation. "
-						+ "NOTE!!! For this to work, you MUST choose an Assistant that has memory enabled!\n\nThe input to this task must "
-						+ "not contain a list of data items (0 or 1 items in the data list).";
+				return "Accepts: a packet whose text items are each appended to the Query and sent to the model — "
+						+ "one LLM call is made per text item. "
+						+ "The input data array must contain 0 or 1 objects; multiple records are not supported. "
+						+ "Both text and data must be arrays even when empty. "
+						+ "To continue a conversation across calls, choose an assistant with memory enabled; "
+						+ "the task carries the Conversation ID automatically through the packet.";
 			}
 
 			@Override
 			public String produces() {
-				return "This task produces the response from the AI as an output to the next task, "
-						+ "in the form defined by the AI assistant. The response will be emitted in the \"Text\" "
-						+ "field, with the value set to the response from the LLM. If the response can be mapped to "
-						+ "Map<String, Object> (e.g. JSON), that will be returned in \"Data\"";
+				return "Emits: a packet with the LLM response in data if the response is a valid JSON array of objects, "
+						+ "or in text otherwise. " + "The output packet ID is copied from the input packet.";
 			}
 
 			@Override

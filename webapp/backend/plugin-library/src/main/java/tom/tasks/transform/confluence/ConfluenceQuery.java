@@ -165,18 +165,26 @@ public class ConfluenceQuery extends MintyTask implements ServiceConsumer {
 
 			@Override
 			public String description() {
-				return "Retreive the contents of a page on Confluence. Uses Confluence Page IDs.";
+				return "Fetch the body text of one or more Confluence pages by page ID. "
+						+ "Pages are cached to avoid repeated requests. Page IDs can be fixed in "
+						+ "configuration or supplied at runtime from the input packet.";
 			}
 
 			@Override
 			public String expects() {
-				return "If the \"Data\" contains a \"Pages\" key consisting of a list of pageIds, those Page IDs "
-						+ "will be used instead of those provided in the config.\n\nData must contain exactly one element.";
+				return "Accepts: a packet containing exactly one data record — this is required. "
+						+ "If data[0] contains a 'Page IDs' key (a JSON array of page ID strings), "
+						+ "those IDs are used in addition to any configured in the task settings, "
+						+ "allowing page IDs to be determined dynamically by an upstream step.";
 			}
 
 			@Override
 			public String produces() {
-				return "For each URL processed, emits a Packet with the \"Text\" set to the HTML body of the page.";
+				return "Emits: page content according to the concatenation strategy. "
+						+ "Concatenated: one packet with all pages joined as a single text string. "
+						+ "Array: one packet with each page as a separate text entry. "
+						+ "MultiPacket: one packet per page. "
+						+ "In all cases the input packet's ID and data are preserved in the output.";
 			}
 
 			@Override

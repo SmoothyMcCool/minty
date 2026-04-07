@@ -5,14 +5,14 @@ import { Assistant, createAssistant } from '../../model/assistant';
 import { AssistantService } from '../../assistant.service';
 import { Router, RouterModule } from '@angular/router';
 import { ConversationService } from '../../conversation.service';
-import { ConfirmationDialogComponent } from 'src/app/app/component/confirmation-dialog.component';
-import { UserService } from 'src/app/user.service';
-import { Conversation } from 'src/app/model/conversation/conversation';
-import { FilterPipe } from 'src/app/pipe/filter-pipe';
-import { User } from 'src/app/model/user';
-import { PredicatePipe } from 'src/app/pipe/predicate-pipe';
-import { UserSelectDialogComponent, UserSelection } from 'src/app/app/component/user-select-dialog.component';
-import { AlertService } from 'src/app/alert.service';
+import { AlertService } from '../../alert.service';
+import { ConfirmationDialogComponent } from '../../app/component/confirmation-dialog.component';
+import { UserSelectDialogComponent, UserSelection } from '../../app/component/user-select-dialog.component';
+import { Conversation } from '../../model/conversation/conversation';
+import { User } from '../../model/user';
+import { FilterPipe } from '../../pipe/filter-pipe';
+import { PredicatePipe } from '../../pipe/predicate-pipe';
+import { UserService } from '../../user.service';
 
 @Component({
 	selector: 'minty-assistants-list',
@@ -35,21 +35,21 @@ export class AssistantsListComponent implements OnInit {
 	deleteInProgress = false;
 
 	confirmDeleteAssistantVisible = false;
-	assistantPendingDeletion: Assistant;
+	assistantPendingDeletion!: Assistant;
 	confirmDeleteConversationVisible = false;
-	conversationPendingDeletionId: string;
+	conversationPendingDeletionId: string  | undefined = undefined;
 
-	conversationToRename: Conversation = null;
-	renamedConversationTitle: string;
+	conversationToRename: Conversation | undefined = undefined;
+	renamedConversationTitle: string  | undefined = undefined;
 	renameConversationVisible = false;
 
 	userSelectDialogVisible = false;
-	assistantToShare: string;
-	sharingSelection: UserSelection;
+	assistantToShare: string | undefined = undefined;
+	sharingSelection: UserSelection | undefined = undefined;
 
 	onlyOwnedAssistants = false;
 
-	user: User;
+	user!: User;
 
 	constructor(
 		private assistantService: AssistantService,
@@ -190,7 +190,7 @@ export class AssistantsListComponent implements OnInit {
 
 	confirmDeleteConversation() {
 		this.confirmDeleteConversationVisible = false;
-		this.conversationService.delete(this.conversationPendingDeletionId).subscribe(() => {
+		this.conversationService.delete(this.conversationPendingDeletionId!).subscribe(() => {
 			this.assistantService.list().subscribe(assistants => {
 				this.sortAssistants(assistants);
 				this.assistants = assistants;
@@ -242,10 +242,14 @@ export class AssistantsListComponent implements OnInit {
 	}
 
 	onConfirmConversationRename() {
-		this.conversationToRename.title = this.renamedConversationTitle;
-		this.renameConversationVisible = false;
-		this.conversationService.rename(this.conversationToRename).subscribe(conversation => {
-		});
+		if (this.conversationToRename) {
+			this.conversationToRename.title = this.renamedConversationTitle!;
+			this.renameConversationVisible = false;
+			this.conversationService.rename(this.conversationToRename!).subscribe(conversation => {
+			});
+		} else {
+			console.log('onConfirmConversationRename: no conversation to rename set');
+		}
 	}
 
 	onCancelConversationRename() {
@@ -262,9 +266,9 @@ export class AssistantsListComponent implements OnInit {
 
 	onUsersConfirmed(selection: UserSelection): void {
 		this.userSelectDialogVisible = false;
-		this.assistantService.share(this.assistantToShare, selection).subscribe(response => {
+		this.assistantService.share(this.assistantToShare!, selection).subscribe(response => {
 			this.alertService.postSuccess(response);
-			this.assistantToShare = null;
+			this.assistantToShare = undefined;
 		});
 	}
 }

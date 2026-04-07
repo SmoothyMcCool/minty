@@ -2,7 +2,7 @@ import { CommonModule } from "@angular/common";
 import { Component, forwardRef, Input } from "@angular/core";
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from "@angular/forms";
 import { MarkdownModule } from "ngx-markdown";
-import { MermaidClipboardDirective } from "src/app/assistant/component/mermaid-clipboard.directive";
+import { MermaidClipboardDirective } from "../../assistant/component/mermaid-clipboard.directive";
 
 @Component({
 	selector: 'minty-project-node-viewer',
@@ -18,16 +18,16 @@ import { MermaidClipboardDirective } from "src/app/assistant/component/mermaid-c
 })
 export class NodeViewerComponent implements ControlValueAccessor {
 
-	@Input() edit: boolean;
+	@Input() edit: boolean = false;
 
-	text: string;
+	text: string | undefined = undefined;
 
 	onChange = (_: any) => { };
 	onTouched: () => void = () => { };
 
-	private debounceTimer: ReturnType<typeof setTimeout> | null = null;
+	private debounceTimer: ReturnType<typeof setTimeout> | undefined = undefined;
 
-	writeValue(value: string | null): void {
+	writeValue(value: string | undefined): void {
 		this.text = value;
 	}
 	registerOnChange(fn: any): void {

@@ -16,4 +16,8 @@ public interface AssistantQueryService {
 
 	LlmResult peekLlmResult(ConversationId conversationId);
 
+	String runSingleLlmCallStreaming(UserId userId, AssistantQuery query, StreamResult sr);
+
+	String runSingleLlmCall(UserId userId, AssistantQuery synthQuery);
+
 }

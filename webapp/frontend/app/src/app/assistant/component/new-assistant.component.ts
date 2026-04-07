@@ -6,11 +6,11 @@ import { AssistantService } from '../../assistant.service';
 import { Router, RouterModule } from '@angular/router';
 import { DocumentService } from '../../document.service';
 import { FilterPipe } from '../../pipe/filter-pipe';
-import { MintyDoc } from 'src/app/model/minty-doc';
 import { AssistantEditorComponent } from './assistant-editor.component';
-import { MintyTool } from 'src/app/model/minty-tool';
-import { ToolService } from 'src/app/tool.service';
-import { Model } from 'src/app/model/model';
+import { MintyDoc } from '../../model/minty-doc';
+import { MintyTool } from '../../model/minty-tool';
+import { Model } from '../../model/model';
+import { ToolService } from '../../tool.service';
 
 @Component({
 	selector: 'minty-new-assistant',
@@ -30,6 +30,7 @@ export class NewAssistantComponent implements OnInit {
 		private documentService: DocumentService,
 		private toolService: ToolService,
 		private router: Router) {
+		this.assistant.hasMemory = true;
 	}
 
 	ngOnInit(): void {

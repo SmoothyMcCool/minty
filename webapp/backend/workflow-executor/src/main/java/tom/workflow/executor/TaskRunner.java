@@ -9,10 +9,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.task.AsyncTaskExecutor;
 
 import tom.api.UserId;
+import tom.api.services.workflow.TaskRequest;
 import tom.api.task.MintyTask;
 import tom.api.task.Packet;
 import tom.api.task.TaskLogger;
-import tom.task.model.TaskRequest;
 import tom.task.registry.TaskRegistryService;
 import tom.workflow.futureutil.FutureUtils;
 import tom.workflow.tracking.model.ExecutionStepState;

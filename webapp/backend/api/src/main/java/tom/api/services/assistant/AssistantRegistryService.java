@@ -14,4 +14,8 @@ public interface AssistantRegistryService {
 
 	Assistant createMermaidConversionAssistant();
 
+	Assistant createConversationPlannerAssistant();
+
+	Assistant createConversationSynthesizerAssistant();
+
 }

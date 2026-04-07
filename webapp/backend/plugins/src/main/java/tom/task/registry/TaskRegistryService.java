@@ -4,12 +4,12 @@ import java.util.List;
 import java.util.Map;
 
 import tom.api.UserId;
+import tom.api.services.workflow.TaskRequest;
 import tom.api.task.MintyTask;
 import tom.api.task.OutputTask;
 import tom.api.task.TaskSpec;
 import tom.api.task.enumspec.EnumSpec;
 import tom.task.model.OutputTaskSpecDescription;
-import tom.task.model.TaskRequest;
 import tom.task.model.TaskSpecDescription;
 
 public interface TaskRegistryService {

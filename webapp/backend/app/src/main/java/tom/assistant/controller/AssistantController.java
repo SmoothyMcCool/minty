@@ -33,6 +33,8 @@ import tom.api.ConversationId;
 import tom.api.model.assistant.Assistant;
 import tom.api.model.assistant.AssistantQuery;
 import tom.api.model.assistant.AssistantSpec;
+import tom.api.model.user.ResourceSharingSelection;
+import tom.api.model.user.UserSelection;
 import tom.api.services.assistant.AssistantQueryService;
 import tom.api.services.assistant.LlmResult;
 import tom.api.services.assistant.LlmResultState;
@@ -46,8 +48,6 @@ import tom.conversation.service.ConversationServiceInternal;
 import tom.llm.service.LlmService;
 import tom.meta.service.MetadataService;
 import tom.model.security.UserDetailsUser;
-import tom.user.model.ResourceSharingSelection;
-import tom.user.model.UserSelection;
 
 @Controller
 @RequestMapping("/api/assistant")

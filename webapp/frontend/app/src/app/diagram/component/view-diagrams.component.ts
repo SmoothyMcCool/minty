@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { UserService } from 'src/app/user.service';
 import { DiagramService } from '../diagram.service';
-import { Diagram } from 'src/app/model/diagram/diagram';
 import { MarkdownModule } from 'ngx-markdown';
+import { Diagram } from '../../model/diagram/diagram';
+import { UserService } from '../../user.service';
 
 
 @Component({
@@ -13,8 +13,8 @@ import { MarkdownModule } from 'ngx-markdown';
 })
 export class ViewDiagramsComponent implements OnInit {
 
-	conversation: string;
-	response: string;
+	conversation: string | undefined = undefined;
+	response: string | undefined = undefined;
 	diagram: Diagram = {
 		id: '',
 		title: '',

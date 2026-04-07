@@ -1,7 +1,7 @@
 import { Component, forwardRef, Input } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { EnumList } from 'src/app/model/workflow/enum-list';
+import { EnumList } from '../../../model/workflow/enum-list';
 
 @Component({
 	selector: 'minty-enumlist-editor',
@@ -17,11 +17,11 @@ import { EnumList } from 'src/app/model/workflow/enum-list';
 })
 export class EnumListEditorComponent implements ControlValueAccessor {
 
-	selection: string;
+	selection: string | undefined = undefined;
 	onChange = (_: any) => { };
 	onTouched: any = () => {};
 
-	@Input() choices: EnumList;
+	@Input() choices!: EnumList;
 
 	constructor() {
 	}

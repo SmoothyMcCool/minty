@@ -2,8 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, ElementRef, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TaskSpecification, OutputTaskSpecification } from '../../../model/workflow/task-specification';
-import { PaletteNodeEntry } from 'src/app/model/workflow/palette-node-entry';
 import { WorkflowStateService } from './services/workflow-state.service';
+import { PaletteNodeEntry } from '../../../model/workflow/palette-node-entry';
 
 @Component({
 	selector: 'minty-workflow-node-palette',

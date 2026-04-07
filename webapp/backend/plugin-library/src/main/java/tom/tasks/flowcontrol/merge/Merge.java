@@ -90,17 +90,24 @@ public class Merge extends MintyTask {
 
 			@Override
 			public String description() {
-				return "Merge packets. One packet is taken from each input (if not completed), and merges the contents of the text and data arrays.";
+				return "Wait for one packet from each input, then combine their text and data arrays "
+						+ "into a single output packet. Use Merge to reunite parallel branches that each "
+						+ "produce one packet — for example after a Broadcast where different branches "
+						+ "transform the same data.";
 			}
 
 			@Override
 			public String expects() {
-				return "One packet on each input.";
+				return "Accepts: exactly one packet per input. Merge is synchronised — it waits until "
+						+ "every connected input has delivered a packet before running. If an upstream branch "
+						+ "completes without sending a packet, that input contributes empty text and data.";
 			}
 
 			@Override
 			public String produces() {
-				return "A packet that contains a unified list of text and data from each input.";
+				return "Emits: a single packet whose text list is the concatenation of all input text lists, "
+						+ "and whose data list is the concatenation of all input data lists. "
+						+ "The output packet ID is taken from the first non-empty input.";
 			}
 
 			@Override

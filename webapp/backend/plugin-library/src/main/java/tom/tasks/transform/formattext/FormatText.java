@@ -84,20 +84,24 @@ public class FormatText extends MintyTask {
 
 			@Override
 			public String description() {
-				return "Format Packet Data into Text.";
+				return "Render a template string with values substituted from the input packet, "
+						+ "appending the result to the output packet's text list. "
+						+ "Use Format Text to construct a prompt before Query LLM, or to produce a "
+						+ "formatted summary from structured data fields.";
 			}
 
 			@Override
 			public String expects() {
-				return "This task produces text output based on the configuration provided. "
-						+ "It scans for text in the form {path.to.json[1].element} and make appropriate "
-						+ "substitutions from the input JSON object.";
+				return "Accepts: any packet whose fields are referenced in the Format template. "
+						+ "Placeholders use the syntax {path} — for example {data[0].name} or {text[0]}. "
+						+ "Reference specific array indices to pull values from multi-record packets.";
 			}
 
 			@Override
 			public String produces() {
-				return "The provided config template with substitutions made from the received input. The result is returned in \"Text\".\n"
-						+ "Even if data contains an array, the output \"Text\" element will contain only one element, but substitutions can refer to different array elements.";
+				return "Emits: a copy of the input packet with one additional entry appended to the text list "
+						+ "containing the rendered template string. Even if data contains multiple records, "
+						+ "only one rendered string is produced per packet.";
 			}
 
 			@Override

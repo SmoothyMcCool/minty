@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
-import { UserService } from 'src/app/user.service';
+import { UserService } from '../../user.service';
 
 export interface UserSelection {
 	allUsers: boolean;

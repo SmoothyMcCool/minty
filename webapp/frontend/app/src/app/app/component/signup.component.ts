@@ -3,8 +3,8 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { UserService } from '../../user.service';
-import { environment } from 'src/environments/environment';
-import { User } from 'src/app/model/user';
+import { environment } from '../../../environments/environment';
+import { User } from '../../model/user';
 
 @Component({
 	selector: 'minty-signup',
@@ -50,7 +50,7 @@ export class SignupComponent {
 				});
 			return false;
 		} else {
-			this.messages = [ 'Hey! There\'s invalid crap!.' ];
+			this.messages = [ 'Uh oh! Something you entered is invalid!' ];
 			return false;
 		}
 	}

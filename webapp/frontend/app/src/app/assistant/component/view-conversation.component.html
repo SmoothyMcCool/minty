@@ -77,11 +77,11 @@
 		</div>
 
 		<div class="form-group mb-2" *ngIf="model && showChatOptions">
-			<minty-slider [min]="model.defaultContext" [max]="model.maximumContext" [label]="'Context Size (Smaller is sometimes faster)'" [(ngModel)]="contextSize"></minty-slider>
+			<minty-slider [min]="0" [max]="model.maximumContext" [label]="'Context Size'" [(ngModel)]="contextSize"></minty-slider>
 		</div>
 
 		<div class="overflow-auto" *ngIf="user && newestMessagesFirst">
-			<minty-conversation [messages]="chatHistory" [responsePending]="waitingForResponse"
+			<minty-conversation [messages]="chatHistory" [responsePending]="waitingForResponse" [responseComplete]="responseComplete"
 				[queueDepth]="queueDepth" [oldestMessagesFirst]="!newestMessagesFirst" [showChatOptions]="showChatOptions"></minty-conversation>
 		</div>
 

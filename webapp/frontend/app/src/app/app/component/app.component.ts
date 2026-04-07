@@ -5,7 +5,7 @@ import { filter } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { UserService } from '../../user.service';
 import { Popover } from 'bootstrap';
-import { User } from 'src/app/model/user';
+import { User } from '../../model/user';
 
 
 @Component({
@@ -22,7 +22,7 @@ export class AppComponent implements OnInit {
 	syncCounterDisplayed = false;
 	sessionActive = false;
 	connectionActive = true;
-	user: User;
+	user!: User;
 
 	constructor(private router: Router,
 		private userService: UserService,

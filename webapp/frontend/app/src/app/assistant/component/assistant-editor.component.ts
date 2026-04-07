@@ -4,11 +4,11 @@ import { CommonModule } from '@angular/common';
 import { Assistant, createAssistant } from '../../model/assistant';
 import { RouterModule } from '@angular/router';
 import { FilterPipe } from '../../pipe/filter-pipe';
-import { MintyDoc } from 'src/app/model/minty-doc';
-import { MintyTool } from 'src/app/model/minty-tool';
-import { Model } from 'src/app/model/model';
 import { SliderComponent } from './slider.component';
-import { AutoResizeDirective } from 'src/app/pipe/auto-resize-directive';
+import { MintyDoc } from '../../model/minty-doc';
+import { MintyTool } from '../../model/minty-tool';
+import { Model } from '../../model/model';
+import { AutoResizeDirective } from '../../pipe/auto-resize-directive';
 
 @Component({
 	selector: 'minty-assistant-editor',
@@ -50,9 +50,9 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 
 	usedDocs: MintyDoc[] = [];
 	unusedDocs: MintyDoc[] = [];
-	assistant: Assistant | null = null;
-	minContext: number;
-	maxContext: number;
+	assistant!: Assistant;
+	minContext: number = 0;
+	maxContext: number = 0;
 
 	usedTools: MintyTool[] = [];
 	unusedTools: MintyTool[] = [];
@@ -64,31 +64,40 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 	}
 
 	update() {
+
 		if (this.assistant) {
 			this.modelChanged(this.assistant.model);
+		}
 
+		if (this.documents && this.assistant) {
 			this.usedDocs = this.documents.filter(doc => this.assistant.documentIds.find(id => id === doc.documentId) != undefined);
 			this.unusedDocs = this.documents.filter(doc => this.usedDocs.find(asstDoc => asstDoc.documentId === doc.documentId) == undefined);
+		}
 
+		if (this.tools && this.assistant) {
 			this.usedTools = this.tools.filter(tool => this.assistant.tools.find(name => name.localeCompare(tool.name) === 0) != undefined);
 			this.unusedTools = this.tools.filter(tool => this.usedTools.find(asstTool => asstTool.name.localeCompare(tool.name) === 0) == undefined);
 		}
 	}
 
-	modelChanged(model: string) {
+	modelChanged(modelName: string) {
 		if (!this.models) {
 			return;
 		}
 
-		this.assistant = { ...this.assistant, model, documentIds: this.assistant.documentIds, contextSize: this.assistant.contextSize };
+		this.assistant = { ...this.assistant, model: modelName, documentIds: this.assistant.documentIds, contextSize: this.assistant.contextSize };
 
-		this.minContext = this.models.find(m => m.name === model)?.defaultContext;
-		this.maxContext = this.models.find(m => m.name === model)?.maximumContext;
+		const model = this.models.find(m => m.name === modelName);
 
-		if (this.assistant.contextSize < this.minContext) {
-			this.assistant.contextSize = this.minContext;
-		} else if (this.assistant.contextSize > this.maxContext) {
-			this.assistant.contextSize = this.maxContext;
+		if (model) {
+			this.minContext = 0;
+			this.maxContext = model.maximumContext;
+
+			if (this.assistant.contextSize < this.minContext) {
+				this.assistant.contextSize = this.minContext;
+			} else if (this.assistant.contextSize > this.maxContext) {
+				this.assistant.contextSize = this.maxContext;
+			}
 		}
 
 		this.onTouched();

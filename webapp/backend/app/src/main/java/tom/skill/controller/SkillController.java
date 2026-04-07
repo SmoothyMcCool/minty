@@ -21,13 +21,13 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
 import tom.ApiError;
+import tom.api.model.user.ResourceSharingSelection;
+import tom.api.model.user.UserSelection;
 import tom.api.skill.Skill;
 import tom.api.skill.SkillMetadata;
 import tom.controller.ResponseWrapper;
 import tom.model.security.UserDetailsUser;
 import tom.skill.service.SkillServiceInternal;
-import tom.user.model.ResourceSharingSelection;
-import tom.user.model.UserSelection;
 
 @Controller
 @RequestMapping("/api/skills")

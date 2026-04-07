@@ -5,9 +5,9 @@ import { NG_VALUE_ACCESSOR } from "@angular/forms";
 import { TaskWidgetComponent } from "../task-widget.component";
 import { WorkflowStateService } from "./services/workflow-state.service";
 import { WorkflowGeometryService } from "./services/workflow-geometry.service";
-import { Connection, TaskRequest } from "src/app/model/workflow/task-specification";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { Workflow } from "src/app/model/workflow/workflow";
+import { TaskRequest, Connection } from "../../../model/workflow/task-specification";
+import { Workflow } from "../../../model/workflow/workflow";
 
 @Component({
 	selector: 'minty-canvas',
@@ -48,12 +48,21 @@ export class WorkflowCanvasComponent {
 		const { x, y } = this.workflowGeometryService.getPortCenter(task, data.portIndex, data.isInput);
 		const workflow = this.workflowStateService.workflow;
 
+		if (!workflow) {
+			console.error('onStartConnection: workflow not set');
+			return;
+		}
+
 		// If there is already an existing connection here, remove it from the connections list and make it the "temp" connection.
 		const conIndex = workflow.connections.findIndex(conn => (data.isInput && conn.readerId === task.id && conn.readerPort === data.portIndex) ||
 			(!data.isInput && conn.writerId === task.id && conn.writerPort === data.portIndex));
 
 		if (conIndex != -1) {
 			const connection = workflow.connections.at(conIndex);
+			if (!connection) {
+				console.error('onStartConnection: connection not set');
+				return;
+			}
 			const originatingStepId = data.isInput ? connection.writerId : connection.readerId;
 			const originatingStep = this.workflowStateService.getTaskById(originatingStepId);
 			const ogPos: { x: number, y: number } = this.workflowGeometryService.getPortCenter(originatingStep, data.isInput ? connection.writerPort : connection.readerPort, !data.isInput);

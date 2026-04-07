@@ -20,14 +20,14 @@ import { User } from '../model/user';
 })
 export class ViewDocumentsComponent implements OnInit, OnDestroy {
 
-	user: User;
+	user!: User;
 
 	documents: MintyDoc[] = [];
 	displayDocuments: MintyDoc[] = [];
 
 	deleteInProgress = false;
 	confirmDeleteDocumentDialogVisible = false;
-	documentToDelete: MintyDoc = null;
+	documentToDelete: MintyDoc | undefined = undefined;
 
 	assistants: Assistant[] = [];
 	addingDocument = false;
@@ -43,8 +43,8 @@ export class ViewDocumentsComponent implements OnInit, OnDestroy {
 		file: undefined
 	};
 
-	private subscription: Subscription;
-	private filter: string;
+	private subscription: Subscription | undefined = undefined;
+	private filter: string | undefined = undefined;
 
 	constructor(private documentService: DocumentService,
 		private userService: UserService,
@@ -58,14 +58,14 @@ export class ViewDocumentsComponent implements OnInit, OnDestroy {
 		});
 		this.documentService.list().subscribe(documents => {
 			this.documents = documents;
-			this.filterChanged(this.filter);
+			this.filterChanged(this.filter!);
 		});
 		this.assistantService.list().subscribe(assistants => {
 			this.assistants = assistants;
 		});
 		this.subscription = this.documentService.mintyDocListList$.subscribe((value: MintyDoc[]) => {
 			this.documents = value;
-			this.filterChanged(this.filter);
+			this.filterChanged(this.filter!);
 		});
 	}
 
@@ -104,12 +104,12 @@ export class ViewDocumentsComponent implements OnInit, OnDestroy {
 		}
 
 		this.documentService.add(this.newDocument).subscribe(newDoc => {
-			this.documentService.upload(newDoc.documentId, this.docProperties.file).subscribe(() => {
+			this.documentService.upload(newDoc.documentId, this.docProperties.file!).subscribe(() => {
 				// Calling this now just cleans things up for the next go-around.
 				this.cancelNewDocument();
 				this.documentService.list().subscribe(documents => {
 					this.documents = documents;
-					this.filterChanged(this.filter);
+					this.filterChanged(this.filter!);
 				});
 			});
 		});
@@ -124,12 +124,12 @@ export class ViewDocumentsComponent implements OnInit, OnDestroy {
 		this.deleteInProgress = true;
 		this.confirmDeleteDocumentDialogVisible = false;
 
-		this.documentService.delete(this.documentToDelete).subscribe(() => {
+		this.documentService.delete(this.documentToDelete!).subscribe(() => {
 			this.deleteInProgress = false;
 
 			this.documentService.list().subscribe(documents => {
 				this.documents = documents;
-				this.filterChanged(this.filter); // Rerun the filter to trigger a screen refresh.
+				this.filterChanged(this.filter!); // Rerun the filter to trigger a screen refresh.
 			});
 		});
 	}
@@ -138,7 +138,7 @@ export class ViewDocumentsComponent implements OnInit, OnDestroy {
 		return this.user?.id == ownerId;
 	}
 
-	findAssistant(assistantId: string): Assistant {
+	findAssistant(assistantId: string): Assistant | undefined {
 		const assistant = this.assistants.find(assistant => assistant.id === assistantId);
 		if (assistant != undefined) {
 			return assistant;
