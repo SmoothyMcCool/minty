@@ -18,6 +18,7 @@ import tom.api.ConversationId;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.LlmResult;
 import tom.api.services.assistant.StringResult;
+import tom.assistant.service.agent.AgentOrchestratorService;
 import tom.config.MintyConfiguration;
 import tom.config.model.ChatModelConfig;
 import tom.config.model.LlmConfig;
@@ -44,6 +45,7 @@ class AssistantQueryServiceImplTest {
 	private final LlmService llmService = mock(LlmService.class);
 	private final UserServiceInternal userService = mock(UserServiceInternal.class);
 	private final ToolRegistryService toolRegistryService = mock(ToolRegistryService.class);
+	private final AgentOrchestratorService agentOrchestratorService = mock(AgentOrchestratorService.class);
 	private MintyConfiguration mintyConfiguration = mock(MintyConfiguration.class);
 	private final PriorityThreadPoolTaskExecutor llmExecutor = mock(PriorityThreadPoolTaskExecutor.class);
 
@@ -65,7 +67,7 @@ class AssistantQueryServiceImplTest {
 
 		when(llmMock.modelDefinitions()).thenReturn(List.of(modelMock));
 		service = new AssistantQueryServiceImpl(assistantManagementService, llmService, userService,
-				toolRegistryService, mintyConfiguration, llmExecutor);
+				toolRegistryService, agentOrchestratorService, mintyConfiguration, llmExecutor);
 	}
 
 	/* --------------------------------------------------------------------- */

@@ -14,6 +14,7 @@ fileStores:
   workflowLogs: ${output.directory}/working/logs
   pug: ${output.directory}/working/pug
   scripts: ${output.directory}/working/scripts
+  agents: ${output.directory}/working/agents
 
 # Database configuration
 db:

@@ -3,6 +3,7 @@ import { Component, EventEmitter, forwardRef, Input, OnInit, Output } from '@ang
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { AttributeMapEditorComponent } from './attribute-map-editor.component';
 import { TaskSpecification, TaskRequest, AttributeMap } from '../../../model/workflow/task-specification';
+import { WorkflowService } from '../../workflow.service';
 
 @Component({
 	selector: 'minty-task-editor',
@@ -18,19 +19,22 @@ import { TaskSpecification, TaskRequest, AttributeMap } from '../../../model/wor
 export class TaskEditorComponent implements OnInit, ControlValueAccessor {
 
 	@Input() name!: string;
-	@Input() taskSpecification!: TaskSpecification;
 
 	@Output() taskNameChanged = new EventEmitter<{ oldName: string, newName: string }>();
 
 	task: TaskRequest | undefined = undefined;
 	taskDescription: string | undefined = undefined;
+	taskSpecification: TaskSpecification | undefined = undefined;
+	taskNames: string[] = [];
 
 	onChange = (_: any) => { };
 	onTouched: any = () => {};
 
-	constructor() {	}
+	constructor(private workflowService: WorkflowService) {
+	}
 
 	ngOnInit() {
+		this.taskNames = this.workflowService.listTaskNames();
 	}
 
 	get configForEditor() {
@@ -64,6 +68,17 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor {
 
 	}
 
+	changeTask(taskName: string) {
+		this.task = {
+			...this.task!,
+			configuration: this.task!.configuration,
+			layout: { ...this.task!.layout },
+			taskName: taskName
+		};
+		this.taskSpecification = this.workflowService.getTaskSpecification(this.task!.taskName);
+		console.log(this.taskSpecification);
+	}
+
 	escapeHtml(str: string): string {
 		if (!str) {
 			return '';
@@ -86,6 +101,7 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor {
 				configuration: obj.configuration,
 				layout: { ...obj.layout }
 			};
+			this.taskSpecification = this.workflowService.getTaskSpecification(this.task!.taskName);
 		}
 	}
 	registerOnChange(fn: any): void {

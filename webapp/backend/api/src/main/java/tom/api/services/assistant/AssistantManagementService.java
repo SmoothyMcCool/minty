@@ -16,6 +16,7 @@ public interface AssistantManagementService {
 	final AssistantId DiagrammingAssistantId = new AssistantId(UUID.fromString("00000000-0000-0000-0000-000000000002"));
 	final AssistantId DocumentSummarizingAssistantId = new AssistantId(
 			UUID.fromString("00000000-0000-0000-0000-000000000003"));
+	final AssistantId AgenticAssistantId = new AssistantId(UUID.fromString("00000000-0000-0000-0000-000000000004"));
 
 	Assistant createAssistant(UserId userId, Assistant assistant) throws NotOwnedException;
 

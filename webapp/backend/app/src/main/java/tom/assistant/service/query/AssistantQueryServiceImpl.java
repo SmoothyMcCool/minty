@@ -23,12 +23,10 @@ import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.messages.AssistantMessage.ToolCall;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.content.Media;
-import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.SearchRequest.Builder;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -37,6 +35,7 @@ import org.springframework.core.task.TaskRejectedException;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
@@ -55,6 +54,7 @@ import tom.api.services.assistant.QueueFullException;
 import tom.api.services.assistant.StreamResult;
 import tom.api.services.assistant.StringResult;
 import tom.api.tool.MintyTool;
+import tom.assistant.service.agent.AgentOrchestratorService;
 import tom.config.MintyConfiguration;
 import tom.config.model.ChatModelConfig;
 import tom.llm.service.LlmService;
@@ -75,13 +75,15 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	private final LlmService llmService;
 	private final UserServiceInternal userService;
 	private final AssistantManagementService assistantManagementService;
+	private final AgentOrchestratorService agentOrchestratorService;
 	private final ToolRegistryService toolRegistryService;
 	private final PriorityThreadPoolTaskExecutor llmExecutor;
 	private final Map<ConversationId, LlmResult> results;
 	private final List<ChatModelConfig> modelConfigs;
 
 	public AssistantQueryServiceImpl(AssistantManagementService assistantManagementService, LlmService llmService,
-			UserServiceInternal userService, ToolRegistryService toolRegistryService, MintyConfiguration properties,
+			UserServiceInternal userService, ToolRegistryService toolRegistryService,
+			AgentOrchestratorService agentOrchestratorService, MintyConfiguration properties,
 			@Qualifier("llmExecutor") PriorityThreadPoolTaskExecutor llmExecutor) {
 		this.llmService = llmService;
 		this.userService = userService;
@@ -89,7 +91,13 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		this.toolRegistryService = toolRegistryService;
 		this.llmExecutor = llmExecutor;
 		this.results = new ConcurrentHashMap<>();
+		this.agentOrchestratorService = agentOrchestratorService;
 		this.modelConfigs = properties.getConfig().llm().modelDefinitions();
+	}
+
+	@PostConstruct
+	void init() {
+		agentOrchestratorService.setAssistantQueryService(this);
 	}
 
 	@PreDestroy
@@ -128,34 +136,11 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		sr.setState(LlmResultState.IN_PROGRESS);
 
 		try {
-			String result = "";
-
-			User user = userService.getUserFromId(request.getUserId()).orElseThrow();
-
-			ChatClientRequestSpec spec = prepareFromQuery(user, request.getQuery());
-
-			if (spec == null) {
-				logger.warn("askStreaming: failed to generate chat request");
-				result = "Failed to generate chat request. Requested assistant doesn't exist or isn't shared with you.";
-
-			} else {
-
-				ChatResponse chatResponse = spec.call().chatResponse();
-
-				if (chatResponse != null) {
-					result = chatResponse.getResult().getOutput().getText();
-				} else {
-					result = "Oh no! The LLM returned a blank result. Try again later.";
-				}
-			}
-
+			String result = runSingleLlmCall(request.getUserId(), request.getQuery());
 			sr.setValue(result);
-
 		} catch (Exception e) {
-			logger.warn("Caught exception while waiting for LLM response: ", e);
-			if (results.containsKey(request.getQuery().getConversationId())) {
-				sr.setValue("Failed to generate response." + StackTraceUtilities.StackTrace(e));
-			}
+			logger.warn("askInternal failed", e);
+			sr.setValue("Failed to generate response." + StackTraceUtilities.StackTrace(e));
 		} finally {
 			sr.setState(LlmResultState.COMPLETE);
 			results.put(request.getQuery().getConversationId(), sr);
@@ -164,14 +149,128 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 
 	@Override
 	public String runSingleLlmCallStreaming(UserId userId, AssistantQuery query, StreamResult sr) {
-		// TODO Auto-generated method stub
-		return null;
+
+		StringBuilder finalText = new StringBuilder();
+		Set<String> docsUsed = new HashSet<>();
+
+		String contextKey = query.getConversationId().getValue().toString();
+
+		try {
+
+			Map<String, String> params = Map.of(ToolExecutionContext.ASSISTANT_ID,
+					query.getAssistantSpec().getAssistantId() != null
+							? query.getAssistantSpec().getAssistantId().getValue().toString()
+							: "worker",
+					ToolExecutionContext.REQUEST_ID, query.getConversationId().getValue().toString(),
+					ToolExecutionContext.USER_ID, userId.getValue().toString());
+
+			ToolExecutionContext.set(contextKey, params);
+
+			User user = userService.getUserFromId(userId).orElseThrow();
+
+			ChatClientRequestSpec spec = prepareFromQuery(user, query);
+
+			if (spec == null) {
+				logger.warn("runSingleLlmCallStreaming: failed to generate chat request");
+				sr.addChunk("Failed to generate response.");
+				return "";
+			}
+
+			Flux<ChatClientResponse> responses = spec.stream().chatClientResponse();
+
+			AtomicReference<Usage> usage = new AtomicReference<>();
+			AtomicBoolean failed = new AtomicBoolean(false);
+
+			responses.publishOn(Schedulers.immediate()).doOnNext(chatClientResponse -> {
+
+				@SuppressWarnings("unchecked")
+				List<org.springframework.ai.document.Document> docs = (List<org.springframework.ai.document.Document>) chatClientResponse
+						.context().get(QuestionAnswerAdvisor.RETRIEVED_DOCUMENTS);
+
+				if (docs != null && !docs.isEmpty()) {
+					docs.forEach(doc -> docsUsed.add((String) doc.getMetadata().get("source")));
+				}
+
+				ChatResponse chatResponse = chatClientResponse.chatResponse();
+				if (chatResponse == null || chatResponse.getResult() == null) {
+					return;
+				}
+
+				AssistantMessage chunk = chatResponse.getResult().getOutput();
+
+				if (chunk != null && chunk.getText() != null) {
+					String text = chunk.getText();
+					sr.addChunk(text);
+					finalText.append(text);
+				}
+
+				usage.set(chatResponse.getMetadata().getUsage());
+			}).onErrorResume(e -> {
+				logger.warn("runSingleLlmCallStreaming error", e);
+				failed.set(true);
+				return Flux.empty();
+			}).doFinally(signalType -> {
+				if (failed.get()) {
+					sr.addChunk("Failed to generate response.");
+				}
+
+				if (usage.get() != null) {
+					sr.addUsage(new LlmMetric(usage.get().getPromptTokens(), usage.get().getCompletionTokens()));
+				}
+
+				if (!docsUsed.isEmpty()) {
+					sr.addSources(new ArrayList<>(docsUsed));
+				}
+
+				ToolExecutionContext.getAndClear(contextKey);
+			}).blockLast();
+
+		} catch (Exception e) {
+			logger.warn("runSingleLlmCallStreaming failed", e);
+			sr.addChunk("Failed to generate response.");
+		}
+
+		return finalText.toString();
 	}
 
 	@Override
-	public String runSingleLlmCall(UserId userId, AssistantQuery synthQuery) {
-		// TODO Auto-generated method stub
-		return null;
+	public String runSingleLlmCall(UserId userId, AssistantQuery query) {
+
+		String contextKey = query.getConversationId().getValue().toString();
+
+		try {
+			Map<String, String> params = Map.of(ToolExecutionContext.ASSISTANT_ID,
+					query.getAssistantSpec().getAssistantId() != null
+							? query.getAssistantSpec().getAssistantId().getValue().toString()
+							: "worker",
+					ToolExecutionContext.REQUEST_ID, query.getConversationId().getValue().toString(),
+					ToolExecutionContext.USER_ID, userId.getValue().toString());
+
+			ToolExecutionContext.set(contextKey, params);
+
+			User user = userService.getUserFromId(userId).orElseThrow();
+
+			ChatClientRequestSpec spec = prepareFromQuery(user, query);
+
+			if (spec == null) {
+				logger.warn("runSingleLlmCall: failed to generate chat request");
+				return "Failed to generate response.";
+			}
+
+			ChatResponse chatResponse = spec.call().chatResponse();
+
+			if (chatResponse != null && chatResponse.getResult() != null) {
+				return chatResponse.getResult().getOutput().getText();
+			}
+
+			return "LLM returned empty response.";
+
+		} catch (Exception e) {
+			logger.warn("runSingleLlmCall failed", e);
+			return "Failed to generate response: " + e.getMessage();
+		} finally {
+			ToolExecutionContext.getAndClear(contextKey);
+		}
 	}
 
 	@Override
@@ -180,11 +279,30 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		try {
 			LlmRequest request = new LlmRequest(userId, query, Instant.now());
 
-			StreamResult sr = new StreamResult(query.getQuery());
-			sr.setState(LlmResultState.QUEUED);
-			results.put(request.getQuery().getConversationId(), sr);
-			llmExecutor.execute(() -> askStreamingInternal(request), request.getQuery().getConversationId(),
-					TaskPriority.High);
+			StreamResult initialStreamResult = new StreamResult(query.getQuery());
+			initialStreamResult.setState(LlmResultState.QUEUED);
+			results.put(request.getQuery().getConversationId(), initialStreamResult);
+
+			llmExecutor.execute(() -> {
+				StreamResult sr = (StreamResult) getResult(request.getQuery().getConversationId());
+				sr.setState(LlmResultState.IN_PROGRESS);
+
+				try {
+					if (query.getAssistantSpec().getAssistantId()
+							.equals(AssistantManagementService.AgenticAssistantId)) {
+						agentOrchestratorService.execute(userId, query, sr);
+					} else {
+						runSingleLlmCallStreaming(userId, query, sr);
+					}
+				} catch (Exception e) {
+					logger.warn("Agent orchestration failed", e);
+					sr.addChunk("Failed to generate response.");
+				} finally {
+					sr.markComplete();
+					results.remove(request.getQuery().getConversationId());
+				}
+
+			}, request.getQuery().getConversationId(), TaskPriority.High);
 
 			return request.getQuery().getConversationId();
 
@@ -250,105 +368,6 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			return 0;
 		}
 		return -1;
-	}
-
-	private void askStreamingInternal(LlmRequest request) {
-		StreamResult sr = (StreamResult) getResult(request.getQuery().getConversationId());
-		sr.setState(LlmResultState.IN_PROGRESS);
-
-		String contextKey = request.getQuery().getConversationId().getValue().toString();
-
-		try {
-
-			Map<String, String> params = Map.of(ToolExecutionContext.ASSISTANT_ID,
-					request.getQuery().getAssistantSpec().getAssistantId().getValue().toString(),
-					ToolExecutionContext.REQUEST_ID,
-					request.getQuery().getConversationId() == null ? null
-							: request.getQuery().getConversationId().getValue().toString(),
-					ToolExecutionContext.USER_ID, request.getUserId().getValue().toString());
-			ToolExecutionContext.set(contextKey, params);
-
-			User user = userService.getUserFromId(request.getUserId()).get();
-
-			results.put(request.getQuery().getConversationId(), sr);
-
-			ChatClientRequestSpec spec = prepareFromQuery(user, request.getQuery());
-			if (spec == null) {
-				logger.warn("askStreaming: failed to generate chat request");
-				sr.addChunk("Failed to generate response.");
-				sr.markComplete();
-				return;
-			}
-
-			Flux<ChatClientResponse> responses = spec.stream().chatClientResponse();
-			AtomicReference<Usage> usage = new AtomicReference<>();
-			List<ToolCall> toolCalls = new ArrayList<>();
-			Set<String> docsUsed = new HashSet<>();
-
-			AtomicBoolean failed = new AtomicBoolean(false);
-
-			responses.publishOn(Schedulers.immediate()).doOnNext(chatClientResponse -> {
-
-				ChatResponse chatResponse = chatClientResponse.chatResponse();
-				if (chatResponse == null) {
-					return;
-				}
-
-				if (chatResponse.getResult() != null) {
-					AssistantMessage chunk = chatResponse.getResult().getOutput();
-					if (chunk != null && chunk.getText() != null) {
-						sr.addChunk(chunk.getText());
-					}
-
-					if (chatResponse.hasToolCalls()) {
-						toolCalls.addAll(chatResponse.getResult().getOutput().getToolCalls());
-					}
-				}
-
-				@SuppressWarnings("unchecked")
-				List<Document> docs = (List<Document>) chatClientResponse.context()
-						.get(QuestionAnswerAdvisor.RETRIEVED_DOCUMENTS);
-				if (docs != null && !docs.isEmpty()) {
-					docs.forEach(doc -> {
-						docsUsed.add((String) doc.getMetadata().get("source"));
-					});
-				}
-
-				usage.set(chatResponse.getMetadata().getUsage());
-
-			}).onErrorResume(e -> {
-				logger.warn("askStreamingInternal caught an error: ", e);
-				failed.set(true);
-				return Flux.empty();
-			}).doFinally(signalType -> {
-				try {
-					if (failed.get()) {
-						sr.addChunk("Failed to generate response.");
-					}
-
-					if (usage.get() != null) {
-						sr.addUsage(new LlmMetric(usage.get().getPromptTokens(), usage.get().getCompletionTokens()));
-					}
-
-					if (!docsUsed.isEmpty()) {
-						sr.addSources(new ArrayList<>(docsUsed));
-					}
-
-				} finally {
-					sr.markComplete();
-					results.remove(request.getQuery().getConversationId());
-					ToolExecutionContext.getAndClear(contextKey);
-				}
-			}).blockLast();
-
-		} catch (Exception e) {
-			if (results.containsKey(request.getQuery().getConversationId())) {
-				logger.warn("Caught exception while attempting to stream response: ", e);
-				sr.addChunk("Failed to generate response.");
-				sr.markComplete();
-				return;
-			}
-		}
 	}
 
 	private ChatClientRequestSpec prepareFromQuery(User user, AssistantQuery query) {

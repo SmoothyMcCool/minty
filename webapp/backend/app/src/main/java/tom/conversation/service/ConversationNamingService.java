@@ -17,10 +17,10 @@ import tom.api.model.conversation.Conversation;
 import tom.api.services.UserService;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
-import tom.api.services.assistant.AssistantRegistryService;
 import tom.api.services.assistant.ConversationInUseException;
 import tom.api.services.assistant.QueueFullException;
 import tom.api.services.assistant.StringResult;
+import tom.assistant.service.management.AssistantRegistry;
 import tom.config.MintyConfiguration;
 import tom.conversation.model.ConversationEntity;
 import tom.conversation.repository.ConversationRepository;
@@ -33,16 +33,14 @@ public class ConversationNamingService {
 
 	private final ConversationRepository conversationRepository;
 	private final AssistantQueryService assistantQueryService;
-	private final AssistantRegistryService assistantRegistryService;
 	private final LlmService llmService;
 	private final ConversationServiceInternal conversationService;
 
 	public ConversationNamingService(ConversationRepository conversationRepository,
-			AssistantQueryService assistantQueryService, AssistantRegistryService assistantRegistryService,
+			AssistantQueryService assistantQueryService, AssistantRegistry assistantRegistry,
 			ConversationServiceInternal conversationService, LlmService llmService, MintyConfiguration properties) {
 		this.conversationRepository = conversationRepository;
 		this.assistantQueryService = assistantQueryService;
-		this.assistantRegistryService = assistantRegistryService;
 		this.llmService = llmService;
 		this.conversationService = conversationService;
 	}
@@ -50,7 +48,6 @@ public class ConversationNamingService {
 	@Scheduled(fixedDelay = 5000)
 	@Transactional
 	void nameConversations() {
-		assistantRegistryService.createConversationNamingAssistant();
 		List<ConversationEntity> conversations = conversationRepository.findAllByTitle(null);
 
 		// Ignore all conversations internal to workflows.

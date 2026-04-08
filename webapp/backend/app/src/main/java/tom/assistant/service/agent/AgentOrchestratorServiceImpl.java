@@ -10,22 +10,22 @@ import tom.api.UserId;
 import tom.api.model.assistant.AssistantQuery;
 import tom.api.services.assistant.AssistantQueryService;
 import tom.api.services.assistant.StreamResult;
-import tom.user.service.UserServiceInternal;
 
 @Service
 public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 
-	private final UserServiceInternal userService;
-	private final AssistantQueryService assistantQueryService;
+	private AssistantQueryService assistantQueryService;
 	private final WorkerQueryFactoryService workerQueryFactoryService;
 	private final AgentPlanner planner;
 
-	public AgentOrchestratorServiceImpl(UserServiceInternal userService, AssistantQueryService assistantQueryService,
-			WorkerQueryFactoryService workerQueryFactoryService, AgentPlanner planner) {
-		this.userService = userService;
-		this.assistantQueryService = assistantQueryService;
+	public AgentOrchestratorServiceImpl(WorkerQueryFactoryService workerQueryFactoryService, AgentPlanner planner) {
 		this.workerQueryFactoryService = workerQueryFactoryService;
 		this.planner = planner;
+	}
+
+	public void setAssistantQueryService(AssistantQueryService assistantQueryService) {
+		this.assistantQueryService = assistantQueryService;
+		planner.setAssistantQueryService(assistantQueryService);
 	}
 
 	public void execute(UserId userId, AssistantQuery query, StreamResult sr) {
@@ -43,9 +43,13 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 			return;
 		}
 
+		emit(sr, "Steps planned. Running" + steps.size() + " steps.");
+		for (AgentStep step : steps) {
+			emit(sr, step.getName());
+		}
 		for (AgentStep step : steps) {
 
-			emit(sr, "Running step: " + step.getWorker());
+			emit(sr, "Running step: " + step.getName());
 
 			try {
 				Object result = runStep(userId, query, step, state, sr);
@@ -73,11 +77,13 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 
 		case "general" -> runGeneralWorker(userId, originalQuery, sr);
 
-		case "diagram_parser" -> runDiagramParser(userId, step, sr);
+		// case "diagram_parser" -> runDiagramParser(userId, step, sr);
 
-		case "mermaid_generator" -> runMermaidGenerator(userId, step, state, sr);
+		// case "mermaid_generator" -> runMermaidGenerator(userId, step, state, sr);
 
-		case "mermaid_validator" -> runValidator(step, state, sr);
+		// case "mermaid_validator" -> runValidator(step, state, sr);
+
+		case "workflowPlanner" -> runWorkflowPlanner(step, state, sr);
 
 		default -> throw new IllegalArgumentException("Unknown worker: " + step.getWorker());
 		};
@@ -90,12 +96,12 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 	}
 
 	private Object runDiagramParser(UserId userId, AgentStep step, StreamResult sr) {
-		AssistantQuery workerQuery = WorkerQueryFactoryService.diagramParser(step);
+		AssistantQuery workerQuery = workerQueryFactoryService.diagramParser(step);
 		return assistantQueryService.runSingleLlmCall(userId, workerQuery);
 	}
 
 	private Object runMermaidGenerator(UserId userId, AgentStep step, Map<String, Object> state, StreamResult sr) {
-		AssistantQuery workerQuery = WorkerQueryFactoryService.mermaidGenerator(step, state);
+		AssistantQuery workerQuery = workerQueryFactoryService.mermaidGenerator(step, state);
 		return assistantQueryService.runSingleLlmCall(userId, workerQuery);
 	}
 
@@ -105,14 +111,19 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 		return Map.of("valid", true, "errors", List.of());
 	}
 
+	private Object runWorkflowPlanner(AgentStep step, Map<String, Object> state, StreamResult sr) {
+		AssistantQuery workflow = workerQueryFactoryService.workflowPlanner(step, state);
+
+		// TODO: plug real validator
+		return Map.of("valid", true, "errors", List.of());
+	}
+
 	private String synthesize(UserId userId, AssistantQuery query, Map<String, Object> state) {
-
 		AssistantQuery synthQuery = workerQueryFactoryService.synthesizer(query, state);
-
 		return assistantQueryService.runSingleLlmCall(userId, synthQuery);
 	}
 
 	private void emit(StreamResult sr, String msg) {
-		sr.addChunk("\n[STATUS] " + msg + "\n");
+		sr.addChunk("[STATUS] " + msg + "\n\n");
 	}
 }

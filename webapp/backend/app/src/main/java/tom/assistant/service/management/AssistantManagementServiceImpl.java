@@ -19,7 +19,6 @@ import tom.api.model.assistant.Assistant;
 import tom.api.model.user.ResourceSharingSelection;
 import tom.api.model.user.UserSelection;
 import tom.api.services.assistant.AssistantManagementService;
-import tom.api.services.assistant.AssistantRegistryService;
 import tom.api.services.exception.NotFoundException;
 import tom.api.services.exception.NotOwnedException;
 import tom.assistant.model.joins.UserAssistantId;
@@ -40,19 +39,19 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 	private final AssistantRepository assistantRepository;
 	private final UserAssistantLinkRepository linkRepository;
 	private final AssistantDocumentLinkService assistantDocumentLinkService;
-	private final AssistantRegistryService assistantRegistryService;
+	private final AssistantRegistry assistantRegistry;
 	private final UserServiceInternal userService;
 	private final LlmService llmService;
 	private ConversationServiceInternal conversationService;
 
 	public AssistantManagementServiceImpl(AssistantRepository assistantRepository,
 			UserAssistantLinkRepository linkRepository, AssistantDocumentLinkService assistantDocumentLinkService,
-			AssistantRegistryService assistantRegistryService, UserServiceInternal userService, LlmService llmService,
+			AssistantRegistry assistantRegistry, UserServiceInternal userService, LlmService llmService,
 			MintyConfiguration properties) {
 		this.assistantRepository = assistantRepository;
 		this.linkRepository = linkRepository;
 		this.assistantDocumentLinkService = assistantDocumentLinkService;
-		this.assistantRegistryService = assistantRegistryService;
+		this.assistantRegistry = assistantRegistry;
 		this.userService = userService;
 		this.llmService = llmService;
 	}
@@ -125,20 +124,30 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 			return assistant;
 		}).toList();
 
-		return asstList.stream().map(asst -> asst.toTaskAssistant(userId)).toList();
+		List<Assistant> result = asstList.stream().map(asst -> asst.toTaskAssistant(userId))
+				.collect(Collectors.toCollection(ArrayList::new));
+		result.add(findAssistant(null, AssistantManagementService.AgenticAssistantId));
+		return result;
 	}
 
 	@Override
 	@Transactional
 	public Assistant findAssistant(UserId userId, AssistantId assistantId) {
 		if (assistantId.equals(AssistantManagementService.DefaultAssistantId)) {
-			return assistantRegistryService.createDefaultAssistant();
+			Assistant assistant = assistantRegistry.getHelper("default");
+			return assistant.toBuilder().id(AssistantManagementService.DefaultAssistantId).build();
 		} else if (assistantId.equals(AssistantManagementService.ConversationNamingAssistantId)) {
-			return assistantRegistryService.createConversationNamingAssistant();
+			Assistant assistant = assistantRegistry.getHelper("conversation-namer");
+			return assistant.toBuilder().id(AssistantManagementService.ConversationNamingAssistantId).build();
 		} else if (assistantId.equals(AssistantManagementService.DiagrammingAssistantId)) {
-			return assistantRegistryService.createDiagrammingAssistant();
+			Assistant assistant = assistantRegistry.getHelper("mermaid-creator");
+			return assistant.toBuilder().id(AssistantManagementService.DiagrammingAssistantId).build();
 		} else if (assistantId.equals(AssistantManagementService.DocumentSummarizingAssistantId)) {
-			return assistantRegistryService.createSummarizingAssistant();
+			Assistant assistant = assistantRegistry.getHelper("summarizer");
+			return assistant.toBuilder().id(AssistantManagementService.DocumentSummarizingAssistantId).build();
+		} else if (assistantId.equals(AssistantManagementService.AgenticAssistantId)) {
+			Assistant assistant = assistantRegistry.getHelper("AgentChat");
+			return assistant.toBuilder().id(AssistantManagementService.AgenticAssistantId).build();
 		}
 
 		try {

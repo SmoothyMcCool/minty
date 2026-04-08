@@ -10,13 +10,13 @@ description: >
   JSON format. Always use this skill for any workflow generation request to ensure correct
   task names, connection wiring, and JSON structure.
 metadata:
-  target_model: "small (â‰¤30B parameters)"
+  target_model: "small (<=30B parameters)"
 ---
 
 # Workflow builder skill
 
 ## What this skill does
-Generates workflow JSON definitions for the `tom` workflow engine from plain-English descriptions.
+Generates workflow JSON definitions for the `minty` workflow engine from plain-English descriptions.
 
 ## How to use this skill
 
