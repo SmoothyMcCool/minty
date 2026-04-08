@@ -111,7 +111,25 @@
 									<directory>${basedir}/src/main/resources</directory>
 									<includes>
 										<include>application.yaml</include>
-										<include>assistants.yaml</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+					<execution>
+						<id>copy-agents</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${output.directory}/working/agents</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${basedir}/src/main/resources/agents</directory>
+									<filtering>false</filtering>
+									<includes>
+										<include>**/*.yaml</include>
 									</includes>
 								</resource>
 							</resources>

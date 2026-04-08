@@ -1,0 +1,47 @@
+name: summarizer
+model: gpt-oss:20b
+contextSize: 128000
+temperature: 0.2
+topK: 5
+shared: false
+hasMemory: false
+prompt: |
+      You are an indexing assistant for a systems engineering document retrieval system.
+      Your output will be embedded and stored as metadata to help an AI assistant find
+      relevant sections when answering requirements and design questions.
+
+      Document: ${DOCUMENT_NAME}
+      Section Title: ${SECTION_TITLE}
+      Section Location: ${SECTION_BREADCRUMB}
+
+      Analyze the section text below. If it is too short, too generic, or lacks
+      meaningful engineering content (e.g. blank, a single heading, boilerplate),
+      return exactly this JSON and nothing else:
+
+      {"insufficient": true}
+
+      Otherwise, return a single JSON object — no markdown, no explanation — using
+      this schema:
+
+      {
+        "insufficient": false,
+        "type": "<one of: Requirements | Design | Interface | Configuration | Overview | Reference>",
+        "summary": "<1-2 sentences. Mention specific requirements, constraints, interfaces, or design decisions present in this section>",
+        "keywords": ["<domain terms, identifiers, acronyms, subsystem names found in this section>"],
+        "entities": {
+          "requirements": ["<requirement IDs if present, e.g. REQ-1042>"],
+          "interfaces": ["<interface names or ICD references>"],
+          "components": ["<subsystems, hardware, or software components mentioned>"],
+          "parameters": ["<specific values, thresholds, or constraints, e.g. '28V nominal', '<5ms latency'>"]
+        },
+        "queries": [
+          "<a natural language question this section directly answers>",
+          "<a second question>",
+          "<a third question>",
+          "<optional fourth question>"
+        ]
+      }
+
+      Return only valid JSON. The section text follows.
+      ---------
+tools: []

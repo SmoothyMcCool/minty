@@ -4,6 +4,9 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import tom.api.UserId;
 import tom.api.model.assistant.AssistantQuery;
 import tom.api.services.assistant.AssistantQueryService;
@@ -11,18 +14,42 @@ import tom.api.services.assistant.AssistantQueryService;
 @Service
 public class AgentPlannerImpl implements AgentPlanner {
 
-	private final AssistantQueryService assistantQueryService;
+	private AssistantQueryService assistantQueryService;
+	private final WorkerQueryFactoryService workerQueryFactoryService;
 
-	public AgentPlannerImpl(AssistantQueryService assistantQueryService) {
+	private static final ObjectMapper Mapper = new ObjectMapper();
+
+	public AgentPlannerImpl(WorkerQueryFactoryService workerQueryFactoryService) {
+
+		this.workerQueryFactoryService = workerQueryFactoryService;
+	}
+
+	@Override
+	public void setAssistantQueryService(AssistantQueryService assistantQueryService) {
 		this.assistantQueryService = assistantQueryService;
 	}
 
+	@Override
 	public List<AgentStep> plan(UserId userId, AssistantQuery query) {
-		return null;
-		// AssistantQuery plannerQuery = PlannerPrompts.buildPlannerQuery(query);
+		AssistantQuery plannerQuery = buildPlannerQuery(query);
 
-		// String json = assistantQueryService.runSingleLlmCall(userId, plannerQuery);
+		String json = assistantQueryService.runSingleLlmCall(userId, plannerQuery);
 
-		// return PlannerPrompts.parse(json);
+		return parse(json);
 	}
+
+	private AssistantQuery buildPlannerQuery(AssistantQuery original) {
+		return workerQueryFactoryService.planner(original.getQuery(), original.getConversationId(),
+				original.getContextSize());
+	}
+
+	private static List<AgentStep> parse(String json) {
+		try {
+			return Mapper.readValue(json, new TypeReference<List<AgentStep>>() {
+			});
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to parse planner output: " + json, e);
+		}
+	}
+
 }

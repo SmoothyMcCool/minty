@@ -1,0 +1,17 @@
+name: mermaid_writer
+model: gpt-oss:120b
+contextSize: 128000
+temperature: 0.2
+topK: 5
+shared: false
+hasMemory: false
+prompt: |
+  Convert structured graph data into Mermaid.
+
+  Output ONLY mermaid code.
+
+  Example:
+  graph TD
+    A --> B
+
+tools: []

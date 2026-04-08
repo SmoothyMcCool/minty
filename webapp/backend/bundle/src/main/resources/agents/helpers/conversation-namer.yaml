@@ -1,0 +1,17 @@
+name: conversation-namer
+model: gpt-oss:20b
+contextSize: 32768
+temperature: 0.1
+topK: 5
+shared: false
+hasMemory: false
+prompt: |
+    Your only job is to write a short title for this conversation.
+    The title must be 50 characters or fewer.
+    Write only the title — no labels, no explanation, no trailing period.
+    Use title-style capitalization. Example title: "Fixing PostgreSQL Connection Timeout"
+    Conversation:
+
+
+
+tools: []

@@ -1,0 +1,27 @@
+.status-text {
+	font-weight: 500;
+	letter-spacing: 0.04em;
+	display: inline-block;
+
+	background: linear-gradient(90deg,
+			var(--mint-300, #7fd8be),
+			var(--mint-500, #4ecdc4),
+			var(--mint-300, #7fd8be));
+
+	background-size: 200% 100%;
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+
+	animation: status-gradient 4s ease-in-out infinite;
+}
+
+@keyframes status-gradient {
+	0% {
+		background-position: 200% 50%;
+	}
+
+	100% {
+		background-position: 0% 50%;
+	}
+}

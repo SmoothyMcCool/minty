@@ -7,40 +7,35 @@ import org.springframework.stereotype.Service;
 
 import tom.api.ConversationId;
 import tom.api.model.assistant.Assistant;
-import tom.api.model.assistant.AssistantBuilder;
 import tom.api.model.assistant.AssistantQuery;
 import tom.api.model.assistant.AssistantSpec;
-import tom.api.services.assistant.AssistantRegistryService;
+import tom.assistant.service.management.AssistantRegistry;
 
 @Service
 public class WorkerQueryFactoryService {
 
-	private final AssistantRegistryService assistantRegistryService;
+	private final AssistantRegistry assistantRegistry;
 
-	public WorkerQueryFactoryService(AssistantRegistryService assistantRegistryService) {
-		this.assistantRegistryService = assistantRegistryService;
+	public WorkerQueryFactoryService(AssistantRegistry assistantRegistry) {
+		this.assistantRegistry = assistantRegistry;
 	}
 
-	private static AssistantQuery baseQuery(Assistant assistant, String query) {
+	private static AssistantQuery baseQuery(Assistant assistant, ConversationId conversationId, String query) {
 		AssistantQuery assistantQuery = new AssistantQuery();
 		AssistantSpec spec = new AssistantSpec(null, assistant);
 		assistantQuery.setAssistantSpec(spec);
 		assistantQuery.setContextSize(assistant.contextSize());
-		assistantQuery.setConversationId(new ConversationId(UUID.randomUUID()));
+		assistantQuery.setConversationId(conversationId);
 		assistantQuery.setQuery(query);
 		return assistantQuery;
 	}
 
 	// --- WORKERS ---
 
-	public AssistantQuery planner(String userQuery, int contextSize) {
+	public AssistantQuery planner(String userQuery, ConversationId conversationId, int contextSize) {
 
-		Assistant assistant = assistantRegistryService.createConversationPlannerAssistant();
-		AssistantBuilder builder = assistant.toBuilder();
-		builder.prompt(null);
-		String query = assistant.prompt().replace("{{USER_QUERY}}", userQuery);
-
-		return baseQuery(builder.build(), query);
+		Assistant assistant = assistantRegistry.getOrchestrator("planner");
+		return baseQuery(assistant, conversationId, userQuery);
 	}
 
 	public static AssistantQuery diagramParser(AgentStep step) {
@@ -62,12 +57,25 @@ public class WorkerQueryFactoryService {
 
 	public AssistantQuery synthesizer(AssistantQuery original, Map<String, Object> state) {
 
-		Assistant assistant = assistantRegistryService.createConversationPlannerAssistant();
-		AssistantBuilder builder = assistant.toBuilder();
-		builder.prompt(null);
-		String query = assistant.prompt().replace("{{STATE}}", state.toString()).replace("{{USER_QUERY}}",
-				original.getQuery());
+		Assistant assistant = assistantRegistry.getWorker("synthesizer");
+		String query = """
+				State:
+				{{STATE}}
 
-		return baseQuery(builder.build(), query);
+				User request:
+				{{USER_QUERY}}
+				""";
+		query = query.replace("{{STATE}}", state.toString()).replace("{{USER_QUERY}}", original.getQuery());
+
+		return baseQuery(assistant, original.getConversationId(), query);
+	}
+
+	public AssistantQuery workflowPlanner(AgentStep step, Map<String, Object> state) {
+		Assistant assistant = assistantRegistry.getWorker("workflow_planner");
+
+		Object input = state.get(step.getInput().get("fromStep"));
+		String query = String.valueOf(input);
+
+		return baseQuery(assistant, new ConversationId(UUID.randomUUID()), query);
 	}
 }

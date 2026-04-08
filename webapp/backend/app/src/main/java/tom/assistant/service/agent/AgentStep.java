@@ -5,18 +5,21 @@ import java.util.Map;
 public class AgentStep {
 
 	private String id;
+	private String name;
 	private String worker;
 	private Map<String, Object> input;
 
 	public AgentStep() {
 		id = "";
+		name = "";
 		worker = "";
 		input = null;
 	}
 
-	public AgentStep(String id, String worker, Map<String, Object> input) {
+	public AgentStep(String id, String name, String worker, Map<String, Object> input) {
 		super();
 		this.id = id;
+		this.name = name;
 		this.worker = worker;
 		this.input = input;
 	}
@@ -27,6 +30,14 @@ public class AgentStep {
 
 	public void setId(String id) {
 		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	public String getWorker() {

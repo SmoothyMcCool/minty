@@ -32,6 +32,7 @@ export class WorkflowService {
 	private taskSpecifications$ = new ReplaySubject<TaskSpecification[]>(1);
 	private taskSpecificationsSnapshot: TaskSpecification[] = [];
 	private outputTaskSpecifications$ = new ReplaySubject<OutputTaskSpecification[]>(1);
+	private outputTaskSpecificationsSnapshot: OutputTaskSpecification[] = [];
 	private enumLists$ = new ReplaySubject<EnumList[]>(1);
 
 	constructor(private http: HttpClient, private alertService: AlertService, private userService: UserService) {
@@ -90,6 +91,18 @@ export class WorkflowService {
 
 	listOutputTaskSpecifications(): Observable<OutputTaskSpecification[]> {
 		return this.outputTaskSpecifications$.pipe(take(1));
+	}
+
+	listTaskNames(): string[] {
+		return this.taskSpecificationsSnapshot.map(item => item.taskName);
+	}
+
+	getTaskSpecification(name: string): TaskSpecification | undefined {
+		return this.taskSpecificationsSnapshot.find(item => item.taskName.localeCompare(name) === 0);
+	}
+
+	getOutputTaskSpecification(name: string): OutputTaskSpecification | undefined {
+		return this.outputTaskSpecificationsSnapshot.find(item => item.taskName.localeCompare(name) === 0);
 	}
 
 	getWorkflow(workflowId: string): Observable<Workflow> {
