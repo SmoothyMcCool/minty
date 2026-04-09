@@ -6,10 +6,18 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+
 import tom.api.UserId;
 import tom.api.model.assistant.AssistantQuery;
 import tom.api.services.assistant.AssistantQueryService;
 import tom.api.services.assistant.StreamResult;
+import tom.assistant.service.agent.model.AgentAction;
+import tom.assistant.service.agent.model.AgentResponse;
+import tom.assistant.service.agent.model.AgentResponseDeserializer;
+import tom.assistant.service.agent.model.AgentResponseTypeRegistry;
+import tom.assistant.service.agent.model.AskUserResponse;
 
 @Service
 public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
@@ -17,10 +25,22 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 	private AssistantQueryService assistantQueryService;
 	private final WorkerQueryFactoryService workerQueryFactoryService;
 	private final AgentPlanner planner;
+	private final ObjectMapper mapper;
 
 	public AgentOrchestratorServiceImpl(WorkerQueryFactoryService workerQueryFactoryService, AgentPlanner planner) {
 		this.workerQueryFactoryService = workerQueryFactoryService;
 		this.planner = planner;
+
+		AgentResponseTypeRegistry registry = new AgentResponseTypeRegistry();
+		registry.register(AgentAction.ASK_USER, AskUserResponse.class);
+		// registry.register("delete_user", DeleteUserPayload.class);
+
+		SimpleModule module = new SimpleModule();
+		module.addDeserializer(AgentResponse.class, new AgentResponseDeserializer(registry));
+
+		mapper = new ObjectMapper();
+		mapper.registerModule(module);
+
 	}
 
 	public void setAssistantQueryService(AssistantQueryService assistantQueryService) {
@@ -43,10 +63,13 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 			return;
 		}
 
-		emit(sr, "Steps planned. Running" + steps.size() + " steps.");
+		emit(sr, "Running plan (" + steps.size() + " steps):");
+		StringBuilder plan = new StringBuilder();
 		for (AgentStep step : steps) {
-			emit(sr, step.getName());
+			plan.append("\t").append(step.getName()).append("\n");
 		}
+		emit(sr, plan.toString());
+
 		for (AgentStep step : steps) {
 
 			emit(sr, "Running step: " + step.getName());

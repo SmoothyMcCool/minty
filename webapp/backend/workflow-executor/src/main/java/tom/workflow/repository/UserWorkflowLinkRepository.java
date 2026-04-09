@@ -21,7 +21,7 @@ public interface UserWorkflowLinkRepository extends JpaRepository<UserWorkflowLi
 
 	void deleteById_WorkflowId(UUID workflowId);
 
-	Optional<UserWorkflowLink> findById_WorkflowIdAndId_UserIdIn(UUID workflowId, List<UUID> userIds);
-
 	Optional<UserWorkflowLink> findById_WorkflowIdAndId_UserId(UUID workflowId, UUID userId);
+
+	Optional<UserWorkflowLink> findFirstById_WorkflowIdAndId_UserIdIn(UUID value, List<UUID> of);
 }

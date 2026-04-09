@@ -2,10 +2,12 @@ package tom.workflow.service;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -177,7 +179,13 @@ public class WorkflowServiceImpl implements WorkflowService {
 	@Transactional(readOnly = true)
 	public List<WorkflowDescription> listWorkflows(UserId userId) {
 		List<UserWorkflowLink> workflows = linkRepository
-				.findById_UserIdIn(List.of(userId.getValue(), ResourceSharingSelection.AllUsersId.getValue()));
+				.findById_UserIdIn(List.of(userId.getValue(), ResourceSharingSelection.AllUsersId.getValue())).stream()
+				.collect(Collectors.toMap(el -> el.getId().getWorkflowId(), obj -> obj,
+						(existing,
+								replacement) -> existing.getId().getUserId().equals(
+										ResourceSharingSelection.AllUsersId.getValue()) ? replacement : existing,
+						LinkedHashMap::new))
+				.values().stream().toList();
 
 		return workflows.stream().map(link -> link.getWorkflow().toModelWorkflow(userId).generateDescription())
 				.toList();
@@ -189,7 +197,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 			throws NotFoundException, NotOwnedException {
 
 		Optional<tom.workflow.repository.Workflow> maybeWorkflow = workflowRepository
-				.findByName(selection.getResource());
+				.findById(UUID.fromString(selection.getResource()));
 
 		if (maybeWorkflow.isEmpty()) {
 			throw new NotFoundException(selection.getResource());
@@ -278,7 +286,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 	@Override
 	@Transactional(readOnly = true)
 	public Workflow getWorkflow(UserId userId, WorkflowId workflowId) {
-		Optional<UserWorkflowLink> maybeWorkflow = linkRepository.findById_WorkflowIdAndId_UserIdIn(
+		Optional<UserWorkflowLink> maybeWorkflow = linkRepository.findFirstById_WorkflowIdAndId_UserIdIn(
 				workflowId.getValue(), List.of(userId.getValue(), ResourceSharingSelection.AllUsersId.getValue()));
 
 		if (maybeWorkflow.isEmpty()) {

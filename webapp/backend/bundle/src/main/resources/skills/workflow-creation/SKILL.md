@@ -20,6 +20,32 @@ Generates workflow JSON definitions for the `minty` workflow engine from plain-E
 
 ## How to use this skill
 
+You have access to three specialist agents for workflow tasks: Design, Build, and Validate.
+Use them in order whenever the user wants to create or modify a workflow.
+
+### When planning
+Use the `workflow_design` agent to perform step 1: the user describes
+something they want a workflow to do, asks to modify an existing workflow, or asks for 
+advice on how to structure a workflow.
+
+Use the `workflow_build` agent to perform step 2: when the `workflow_design`
+agent has produced a plan.
+
+Use the `workflow_validate` agent to perform step 3: when the `workflow_build`
+agent has produced workflow JSON.
+
+Use the `workflow_submit` agent to perform step 4: when the `workflow_validate`
+agent has validated the workflow JSON.
+
+**Workflow Submit agent**
+Hand off to this agent when: the Validate agent has validated the workflow JSON.
+Give it: the workflow JSON exactly as returned by the Validate agent.
+It returns: the workflow JSON, and information on where the workflow is stored.
+
+**Submission**
+Only call create_workflow or update_workflow after the Validate agent has confirmed the JSON is valid.
+Never submit workflow JSON that has not passed validation.
+
 ### Step 1 — identify which tasks are needed
 Read the user's request and decide which tasks are required.
 Available tasks are listed in the TASK INDEX below.
@@ -35,11 +61,13 @@ Load only the task files you need:
 
 Do not load task files you will not use. Keep context small.
 
-### Step 3 — generate the workflow JSON
 Follow the instructions in `workflow-schema.md`.
 Use the loaded task files for exact taskName values, numInputs, numOutputs, and configuration format.
 
----
+### Step 4
+
+
+
 
 ## Task index
 
