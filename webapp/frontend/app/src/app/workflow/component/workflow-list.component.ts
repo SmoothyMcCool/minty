@@ -216,7 +216,7 @@ export class WorkflowListComponent implements AfterViewChecked, OnInit, OnDestro
 	onUsersConfirmed(selection: UserSelection): void {
 		if (this.workflowToShare) {
 			this.userSelectDialogVisible = false;
-			this.workflowService.shareWorkflow(this.workflowToShare.name, selection).subscribe(response => {
+			this.workflowService.shareWorkflow(this.workflowToShare.id!, selection).subscribe(response => {
 				this.alertService.postSuccess(response);
 				this.workflowToShare = undefined;
 			});
@@ -269,7 +269,6 @@ export class WorkflowListComponent implements AfterViewChecked, OnInit, OnDestro
 		let w = this.workflows.find(w => w.id === this.pendingWorkflow!.id);
 		if (w && w.id) {
 			this.workflowService.getWorkflow(w.id).subscribe(workflow => {
-				workflow.id = null;
 				this.workflowService.newWorkflow(workflow).subscribe(workflow => {
 					this.router.navigate(['/workflow/edit', workflow.id]);
 				});

@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, forwardRef, Input, OnInit, Output } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { AttributeMapEditorComponent } from './attribute-map-editor.component';
-import { TaskSpecification, TaskRequest, AttributeMap } from '../../../model/workflow/task-specification';
+import { TaskSpecification, TaskRequest, AttributeMap, OutputTaskSpecification } from '../../../model/workflow/task-specification';
 import { WorkflowService } from '../../workflow.service';
 
 @Component({
@@ -16,15 +16,16 @@ import { WorkflowService } from '../../workflow.service';
 		multi: true
 	}]
 })
-export class TaskEditorComponent implements OnInit, ControlValueAccessor {
+export class TaskEditorComponent implements ControlValueAccessor {
 
 	@Input() name!: string;
 
 	@Output() taskNameChanged = new EventEmitter<{ oldName: string, newName: string }>();
 
 	task: TaskRequest | undefined = undefined;
+	isOutputTask = false;
 	taskDescription: string | undefined = undefined;
-	taskSpecification: TaskSpecification | undefined = undefined;
+	taskSpecification: TaskSpecification | OutputTaskSpecification| undefined = undefined;
 	taskNames: string[] = [];
 
 	onChange = (_: any) => { };
@@ -33,15 +34,14 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor {
 	constructor(private workflowService: WorkflowService) {
 	}
 
-	ngOnInit() {
-		this.taskNames = this.workflowService.listTaskNames();
-	}
-
 	get configForEditor() {
 		return this.task?.configuration ?? {};
 	}
 
 	showTaskDescription() {
+		if (this.isOutputTask) {
+			return;
+		}
 		if (this.taskDescription) {
 			this.taskDescription = undefined;
 			return;
@@ -50,9 +50,10 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor {
 		if (!this.taskSpecification || !this.task) {
 			return;
 		}
-		const description = this.taskSpecification.description;
-		const inputs = this.taskSpecification.expects ? this.escapeHtml(this.taskSpecification.expects) : 'No inputs';
-		const outputs = this.taskSpecification.produces ? this.escapeHtml(this.taskSpecification.produces) : 'No outputs';
+		const taskSpec = this.taskSpecification as TaskSpecification;
+		const description = taskSpec.description;
+		const inputs = taskSpec.expects ? this.escapeHtml(taskSpec.expects) : 'No inputs';
+		const outputs = taskSpec.produces ? this.escapeHtml(taskSpec.produces) : 'No outputs';
 		const html = `
 <div class="card">
 	<div class="card-body">
@@ -69,14 +70,10 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor {
 	}
 
 	changeTask(taskName: string) {
-		this.task = {
-			...this.task!,
-			configuration: this.task!.configuration,
-			layout: { ...this.task!.layout },
-			taskName: taskName
-		};
-		this.taskSpecification = this.workflowService.getTaskSpecification(this.task!.taskName);
-		console.log(this.taskSpecification);
+		this.task!.taskName = taskName;
+		this.assignTask(this.task!);
+		this.onChange(this.task);
+		this.onTouched();
 	}
 
 	escapeHtml(str: string): string {
@@ -95,14 +92,7 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor {
 		if (!obj) {
 			return;
 		}
-		if (this.task !== obj) {
-			this.task = {
-				...obj,
-				configuration: obj.configuration,
-				layout: { ...obj.layout }
-			};
-			this.taskSpecification = this.workflowService.getTaskSpecification(this.task!.taskName);
-		}
+		this.assignTask(obj);
 	}
 	registerOnChange(fn: any): void {
 		this.onChange = fn;
@@ -112,6 +102,24 @@ export class TaskEditorComponent implements OnInit, ControlValueAccessor {
 	}
 	setDisabledState(isDisabled: boolean): void {
 		// Ignored.
+	}
+
+	private assignTask(task: TaskRequest) {
+		if (this.task !== task) {
+			this.task = {
+				...task,
+				configuration: task.configuration,
+				layout: { ...task.layout }
+			};
+			this.taskSpecification = this.workflowService.getTaskSpecification(this.task!.taskName);
+			this.taskNames = this.workflowService.listTaskNames();
+			this.isOutputTask = false;
+			if (!this.taskSpecification) {
+				this.taskSpecification = this.workflowService.getOutputTaskSpecification(this.task!.taskName);
+				this.taskNames = this.workflowService.listOutputTaskNames();
+				this.isOutputTask = true;
+			}
+		}
 	}
 
 	onStepNameChanged(name: string) {

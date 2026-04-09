@@ -39,7 +39,7 @@ public class Workflow {
 	}
 
 	public Workflow(tom.api.services.workflow.Workflow workflow) {
-		this.id = workflow.getId().getValue();
+		this.id = workflow.getId() != null ? workflow.getId().getValue() : null;
 		this.name = workflow.getName();
 		this.description = workflow.getDescription();
 		this.connections = workflow.getConnections();

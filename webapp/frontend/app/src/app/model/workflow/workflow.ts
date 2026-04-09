@@ -1,7 +1,7 @@
 import { TaskRequest, Connection } from './task-specification';
 
 export interface Workflow {
-	id: string | null;
+	id: string;
 	owned: boolean;
 	name: string;
 	description: string;

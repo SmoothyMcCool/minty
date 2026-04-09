@@ -19,6 +19,7 @@ import tom.api.WorkflowId;
 import tom.api.model.user.ResourceSharingSelection;
 import tom.api.model.user.UserSelection;
 import tom.api.services.WorkflowService;
+import tom.api.services.exception.NotFoundException;
 import tom.api.services.exception.NotOwnedException;
 import tom.api.services.workflow.Workflow;
 import tom.api.services.workflow.WorkflowDescription;
@@ -84,9 +85,13 @@ public class WorkflowController {
 			workflowService.shareWorkflow(user.getId(), selection);
 			ResponseWrapper<String> response = ResponseWrapper.SuccessResponse("Workflow shared.");
 			return new ResponseEntity<>(response, HttpStatus.OK);
-		} catch (Exception e) {
-			ResponseWrapper<String> response = ResponseWrapper.FailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-					e.getMessage());
+		} catch (NotFoundException e) {
+			ResponseWrapper<String> response = ResponseWrapper
+					.ApiFailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), List.of(ApiError.NOT_FOUND));
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		} catch (NotOwnedException e) {
+			ResponseWrapper<String> response = ResponseWrapper
+					.ApiFailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), List.of(ApiError.NOT_OWNED));
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}
@@ -99,9 +104,13 @@ public class WorkflowController {
 			ResponseWrapper<UserSelection> response = ResponseWrapper.SuccessResponse(selection);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 
-		} catch (Exception e) {
+		} catch (NotFoundException e) {
 			ResponseWrapper<UserSelection> response = ResponseWrapper
-					.FailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
+					.ApiFailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), List.of(ApiError.NOT_FOUND));
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		} catch (NotOwnedException e) {
+			ResponseWrapper<UserSelection> response = ResponseWrapper
+					.ApiFailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), List.of(ApiError.NOT_OWNED));
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 	}

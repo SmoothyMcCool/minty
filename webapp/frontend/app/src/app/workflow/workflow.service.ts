@@ -71,7 +71,10 @@ export class WorkflowService {
 
 					return returnValue;
 				})
-			).subscribe(specs => this.outputTaskSpecifications$.next(specs));
+			).subscribe(specs => {
+				this.outputTaskSpecifications$.next(specs);
+				this.outputTaskSpecificationsSnapshot = specs;
+			});
 
 		this.http.get<ApiResult>(WorkflowService.ListEnumLists)
 			.pipe(
@@ -95,6 +98,10 @@ export class WorkflowService {
 
 	listTaskNames(): string[] {
 		return this.taskSpecificationsSnapshot.map(item => item.taskName);
+	}
+
+	listOutputTaskNames(): string[] {
+		return this.outputTaskSpecificationsSnapshot.map(item => item.taskName);
 	}
 
 	getTaskSpecification(name: string): TaskSpecification | undefined {
