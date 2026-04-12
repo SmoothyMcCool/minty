@@ -229,11 +229,11 @@ public class WorkflowRunner {
 				workflowComplete();
 			}
 		} catch (Exception e) {
-			stdLogger.warn("Workflow failed with exception: ", e);
+			stdLogger.warn("Workflow failed with exception (see task log for stack trace): ", e.getMessage());
 			logger.warn("Workflow failed with exception: ", e);
-			cancel();
 			executionState.setFailed(true);
 			workflowComplete();
+			cancel();
 		}
 
 	}

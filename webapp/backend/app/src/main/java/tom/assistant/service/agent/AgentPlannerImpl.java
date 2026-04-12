@@ -31,14 +31,14 @@ public class AgentPlannerImpl implements AgentPlanner {
 
 	@Override
 	public List<AgentStep> plan(UserId userId, AssistantQuery query) {
-		AssistantQuery plannerQuery = buildPlannerQuery(query);
+		AgentQuery plannerQuery = buildPlannerQuery(query);
 
-		String json = assistantQueryService.runSingleLlmCall(userId, plannerQuery);
+		String json = assistantQueryService.runSingleLlmCall(userId, plannerQuery.query());
 
 		return parse(json);
 	}
 
-	private AssistantQuery buildPlannerQuery(AssistantQuery original) {
+	private AgentQuery buildPlannerQuery(AssistantQuery original) {
 		return workerQueryFactoryService.planner(original.getQuery(), original.getConversationId(),
 				original.getContextSize());
 	}

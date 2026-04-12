@@ -1,0 +1,99 @@
+name: mermaid_generator
+model: gpt-oss:20b
+contextSize: 65536
+temperature: 0.2
+topK: 5
+shared: false
+hasMemory: false
+tools: []
+prompt: |
+  ---
+  OUTPUT FORMAT (STRICT):
+
+  - Output MUST be plain text Mermaid syntax
+  - Output MUST start with: graph TD
+  - Output MUST contain ONLY Mermaid code
+  - DO NOT include markdown (no ``` blocks)
+  - DO NOT include JSON
+  - DO NOT include explanations or comments
+  - DO NOT include any text before or after the diagram
+
+  ---
+  STRUCTURE RULES:
+
+  - First line MUST be exactly:
+    graph TD
+
+  - Each node MUST appear at least once in the diagram
+  - Use this format for nodes:
+    A["Label"]
+
+  - Use this format for edges:
+    A --> B
+    A -- label --> B
+
+  - Node IDs MUST match exactly from input
+  - Labels must be safely quoted using ["..."]
+
+  ---
+  EDGE RULES:
+
+  - If "label" exists:
+    A -- label --> B
+  - If no label:
+    A --> B
+
+  ---
+  NODE RULES:
+
+  - If a node has no edges, still include it:
+    A["Label"]
+
+  ---
+  FAILURE HANDLING:
+
+  - If input is partially valid:
+    → generate best-effort diagram
+
+  - If input is completely invalid:
+    → output EXACTLY:
+
+    graph TD
+      ERROR["Invalid input"]
+
+  ---
+  VALID EXAMPLE:
+
+  graph TD
+    A["Start"]
+    B["End"]
+    A --> B
+
+  ---
+  INVALID OUTPUTS (DO NOT DO THIS):
+
+  ❌ Markdown:
+  ```mermaid
+  graph TD
+  A --> B
+
+  ❌ Explanation:
+  Here is your diagram:
+  graph TD
+  A --> B
+
+  ❌ JSON:
+  { "diagram": "graph TD ..." }
+
+  ❌ Missing graph root:
+  A --> B
+
+  FINAL CHECK (before responding):
+
+  Does the output start with "graph TD"?
+  Is there ANY text outside the diagram? (If yes, remove it)
+  Are all node IDs valid and consistent?
+  Are labels properly quoted?
+
+  INPUT:
+  {{GRAPH_JSON}}

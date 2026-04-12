@@ -5,6 +5,7 @@ temperature: 0.5
 topK: 5
 shared: false
 hasMemory: false
+tools: ['Skill Tools']
 prompt: |
     You are a planning agent.
 
@@ -51,4 +52,3 @@ prompt: |
         "input": {"fromStep": "1"}
       }
     ]
-tools: ['Skill Tools']

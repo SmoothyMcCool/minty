@@ -92,7 +92,10 @@ export class TaskEditorComponent implements ControlValueAccessor {
 		if (!obj) {
 			return;
 		}
-		this.assignTask(obj);
+
+		if (this.task !== obj) {
+			this.assignTask(obj);
+		}
 	}
 	registerOnChange(fn: any): void {
 		this.onChange = fn;
@@ -105,17 +108,17 @@ export class TaskEditorComponent implements ControlValueAccessor {
 	}
 
 	private assignTask(task: TaskRequest) {
-		if (this.task !== task) {
-			this.task = {
-				...task,
-				configuration: task.configuration,
-				layout: { ...task.layout }
-			};
-			this.taskSpecification = this.workflowService.getTaskSpecification(this.task!.taskName);
-			this.taskNames = this.workflowService.listTaskNames();
-			this.isOutputTask = false;
-			if (!this.taskSpecification) {
-				this.taskSpecification = this.workflowService.getOutputTaskSpecification(this.task!.taskName);
+		this.task = {
+			...task,
+			configuration: task.configuration,
+			layout: { ...task.layout }
+		};
+		this.taskSpecification = this.workflowService.getTaskSpecification(this.task!.taskName);
+		this.taskNames = this.workflowService.listTaskNames();
+		this.isOutputTask = false;
+		if (!this.taskSpecification) {
+			this.taskSpecification = this.workflowService.getOutputTaskSpecification(this.task!.taskName);
+			if (this.taskSpecification) {
 				this.taskNames = this.workflowService.listOutputTaskNames();
 				this.isOutputTask = true;
 			}

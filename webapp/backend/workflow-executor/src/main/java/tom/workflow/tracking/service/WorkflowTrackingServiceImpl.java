@@ -14,6 +14,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
+import jakarta.transaction.Transactional.TxType;
 import tom.api.UserId;
 import tom.config.MintyConfiguration;
 import tom.workflow.executor.WorkflowRunner;
@@ -42,7 +43,7 @@ public class WorkflowTrackingServiceImpl implements WorkflowTrackingService {
 	}
 
 	@Override
-	@Transactional
+	@Transactional(TxType.REQUIRES_NEW)
 	public synchronized void workflowCompleted(WorkflowRunner runner) {
 		workflowExecutionRepository.save(runner.getExecutionState());
 		runningWorkflows.removeIf(workflow -> workflow.getWorkflowName().compareTo(runner.getWorkflowName()) == 0);

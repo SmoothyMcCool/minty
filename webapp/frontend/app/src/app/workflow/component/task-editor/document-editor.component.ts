@@ -21,6 +21,7 @@ export class DocumentEditorComponent implements ControlValueAccessor {
 
 	fileSize = 0;
 	fileName = '';
+	saveDocument = false;
 
 	private reader?: FileReader;
 
@@ -32,7 +33,7 @@ export class DocumentEditorComponent implements ControlValueAccessor {
 			this.fileName = file.name;
 
 			this.readFileAsBase64(file).then(base64 => {
-				this.onChange(base64);
+				this.onChange({ file: base64, save: this.saveDocument });
 			});
 
 			this.onTouched();
@@ -45,12 +46,12 @@ export class DocumentEditorComponent implements ControlValueAccessor {
 			this.reader = new FileReader();
 
 			this.reader.onerror = () => {
-				this.reader.abort();
+				this.reader!.abort();
 				reject(new Error('Problem parsing file'));
 			};
 
 			this.reader.onload = () => {
-				const dataUrl = this.reader.result as string;
+				const dataUrl = this.reader!.result as string;
 				const base64 = dataUrl.split(',')[1];
 				resolve({ file: base64, name: file.name });
 			};
@@ -59,8 +60,16 @@ export class DocumentEditorComponent implements ControlValueAccessor {
 		});
 	}
 
-	writeValue(_obj: any): void {
-		// This component doesn't accept pre-existing input. Has to be set every time.
+	writeValue(obj: any): void {
+		if (obj == null) {
+			return;
+		}
+		if (obj?.file?.name) {
+			this.fileName = obj.file.name;
+			this.fileSize = atob(obj.file.file).length;
+		}
+		this.saveDocument = obj.save;
+
 	}
 	registerOnChange(fn: any): void {
 		this.onChange = fn;

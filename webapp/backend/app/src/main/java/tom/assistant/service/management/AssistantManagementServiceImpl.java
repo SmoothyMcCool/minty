@@ -114,18 +114,18 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 						assistant -> assistant, (a, b) -> a, LinkedHashMap::new))
 				.values().stream().toList();
 
-		if (asstList == null || asstList.size() == 0) {
-			return new ArrayList<>();
+		List<Assistant> result = new ArrayList<>();
+		if (asstList != null && asstList.size() > 0) {
+			asstList = asstList.stream().map(assistant -> {
+				List<DocumentId> documentIds = assistantDocumentLinkService
+						.getDocumentIdsForAssistant(assistant.getId());
+				assistant.setAssociatedDocuments(documentIds);
+				return assistant;
+			}).toList();
+			result = asstList.stream().map(asst -> asst.toTaskAssistant(userId))
+					.collect(Collectors.toCollection(ArrayList::new));
 		}
 
-		asstList = asstList.stream().map(assistant -> {
-			List<DocumentId> documentIds = assistantDocumentLinkService.getDocumentIdsForAssistant(assistant.getId());
-			assistant.setAssociatedDocuments(documentIds);
-			return assistant;
-		}).toList();
-
-		List<Assistant> result = asstList.stream().map(asst -> asst.toTaskAssistant(userId))
-				.collect(Collectors.toCollection(ArrayList::new));
 		result.add(findAssistant(null, AssistantManagementService.AgenticAssistantId));
 		return result;
 	}

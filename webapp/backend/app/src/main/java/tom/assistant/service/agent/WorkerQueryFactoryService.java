@@ -20,42 +20,71 @@ public class WorkerQueryFactoryService {
 		this.assistantRegistry = assistantRegistry;
 	}
 
-	private static AssistantQuery baseQuery(Assistant assistant, ConversationId conversationId, String query) {
+	private static AgentQuery baseQuery(AgentResponseType responseType, Assistant assistant,
+			ConversationId conversationId, String query) {
 		AssistantQuery assistantQuery = new AssistantQuery();
 		AssistantSpec spec = new AssistantSpec(null, assistant);
 		assistantQuery.setAssistantSpec(spec);
 		assistantQuery.setContextSize(assistant.contextSize());
 		assistantQuery.setConversationId(conversationId);
 		assistantQuery.setQuery(query);
-		return assistantQuery;
+		return new AgentQuery(responseType, assistantQuery);
 	}
 
 	// --- WORKERS ---
 
-	public AssistantQuery planner(String userQuery, ConversationId conversationId, int contextSize) {
-
+	public AgentQuery planner(String userQuery, ConversationId conversationId, int contextSize) {
 		Assistant assistant = assistantRegistry.getOrchestrator("planner");
-		return baseQuery(assistant, conversationId, userQuery);
+		return baseQuery(AgentResponseType.Structured, assistant, conversationId, userQuery);
 	}
 
-	public static AssistantQuery diagramParser(AgentStep step) {
-		return null;
-		// String prompt = WorkerPrompts.DIAGRAM_PARSER;
-
-		// return baseQuery(prompt);
+	public AgentQuery general(AssistantQuery userQuery) {
+		Assistant assistant = assistantRegistry.getWorker("general");
+		return baseQuery(AgentResponseType.RawText, assistant, userQuery.getConversationId(), userQuery.getQuery());
 	}
 
-	public static AssistantQuery mermaidGenerator(AgentStep step, Map<String, Object> state) {
-		return null;
-		// Object input = state.get(step.getInput().get("fromStep"));
+	public AgentQuery diagramParser(AssistantQuery original) {
+		Assistant assistant = assistantRegistry.getWorker("diagram_parser");
 
-		// String prompt = WorkerPrompts.MERMAID_GENERATOR.replace("{{INPUT}}",
-		// String.valueOf(input));
+		String query = """
+				Parse the following diagram into a structured JSON model.
 
-		// return baseQuery(prompt);
+				Input:
+				%s
+				""".formatted(original.getQuery());
+
+		return baseQuery(AgentResponseType.Structured, assistant, original.getConversationId(), query);
 	}
 
-	public AssistantQuery synthesizer(AssistantQuery original, Map<String, Object> state) {
+	public AgentQuery mermaidGenerator(AssistantQuery original, Map<String, Object> state) {
+		Assistant assistant = assistantRegistry.getWorker("mermaid_generator");
+
+		Object parsed = state.get("diagram_parser");
+
+		String query = """
+				Convert this structured diagram into Mermaid:
+
+				%s
+				""".formatted(parsed);
+
+		return baseQuery(AgentResponseType.RawText, assistant, original.getConversationId(), query);
+	}
+
+	public AgentQuery mermaidValidator(AssistantQuery original, Map<String, Object> state) {
+		Assistant assistant = assistantRegistry.getWorker("mermaid_validator");
+
+		Object parsed = state.get("mermaid_generator");
+
+		String query = """
+				Convert this structured diagram into Mermaid:
+
+				%s
+				""".formatted(parsed);
+
+		return baseQuery(AgentResponseType.Structured, assistant, original.getConversationId(), query);
+	}
+
+	public AgentQuery synthesizer(AssistantQuery original, Map<String, Object> state) {
 
 		Assistant assistant = assistantRegistry.getWorker("synthesizer");
 		String query = """
@@ -67,15 +96,15 @@ public class WorkerQueryFactoryService {
 				""";
 		query = query.replace("{{STATE}}", state.toString()).replace("{{USER_QUERY}}", original.getQuery());
 
-		return baseQuery(assistant, original.getConversationId(), query);
+		return baseQuery(AgentResponseType.RawText, assistant, original.getConversationId(), query);
 	}
 
-	public AssistantQuery workflowPlanner(AgentStep step, Map<String, Object> state) {
+	public AgentQuery workflowPlanner(AssistantQuery original, Map<String, Object> state) {
 		Assistant assistant = assistantRegistry.getWorker("workflow_planner");
 
-		Object input = state.get(step.getInput().get("fromStep"));
-		String query = String.valueOf(input);
+		// Object input = state.get(step.getInput().get("fromStep"));
+		String query = String.valueOf(state);
 
-		return baseQuery(assistant, new ConversationId(UUID.randomUUID()), query);
+		return baseQuery(AgentResponseType.Structured, assistant, new ConversationId(UUID.randomUUID()), query);
 	}
 }

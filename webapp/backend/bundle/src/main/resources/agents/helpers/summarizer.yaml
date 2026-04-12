@@ -5,6 +5,7 @@ temperature: 0.2
 topK: 5
 shared: false
 hasMemory: false
+tools: []
 prompt: |
       You are an indexing assistant for a systems engineering document retrieval system.
       Your output will be embedded and stored as metadata to help an AI assistant find
@@ -44,4 +45,4 @@ prompt: |
 
       Return only valid JSON. The section text follows.
       ---------
-tools: []
+
