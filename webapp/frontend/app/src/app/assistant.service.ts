@@ -239,6 +239,9 @@ export class AssistantService {
 							}
 
 							for (const message of messages) {
+								if (message.content.startsWith('[STATUS]')) {
+									console.log('got a status message ' + message.content);
+								}
 								observer.next(message);
 							}
 						}

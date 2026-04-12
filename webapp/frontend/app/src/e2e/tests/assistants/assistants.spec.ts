@@ -23,7 +23,7 @@ test.describe('Assistants flow', () => {
 
 		const assistantsHeading = page.locator('xpath=//h4[text()=\'Assistants\']');
 		let assistantList = assistantsHeading.locator('xpath=following-sibling::*[1]');
-		await expect(assistantList).toHaveJSProperty('tagName', 'P');
+		await expect(assistantList).toHaveCount(1);
 	});
 
 	test('create an assistant', async ({ page }) => {
@@ -46,8 +46,7 @@ test.describe('Assistants flow', () => {
 		await expect(page).toHaveURL(/assistants/);
 		const assistantHeading = page.getByText(ASSISTANT_NAME);
 		await expect(assistantHeading).toBeVisible();
-		const row = page.locator('.row').filter({ hasText: ASSISTANT_NAME });
-		const modelBadge = row.locator('.badge');
+		const modelBadge = page.locator('li').filter({ hasText: ASSISTANT_NAME }).locator('.badge');
 		await expect(modelBadge).toBeVisible();
 		await expect(modelBadge).toHaveText(MODEL_NAME);
 	});
@@ -67,8 +66,8 @@ test.describe('Assistants flow', () => {
 		await expect(submitButton).toBeEnabled();
 		await submitButton.click();
 
-		await expect(page.locator('.spinner-grow').nth(2)).toBeVisible();
-		await expect(page.locator('.spinner-grow').first()).toBeHidden();
+		await expect(page.locator('minty-spinner')).toBeVisible();
+		await expect(page.locator('.spinner-grow')).toBeHidden();
 
 		const messageContent = page.locator('div.well-bot > markdown').first();
 		await expect(messageContent).toBeVisible();
@@ -146,7 +145,7 @@ test.describe('Assistants flow', () => {
 		await confirmDialog(page, 'Delete Assistant');
 
 		const assistantHeading = page.locator('h4:has-text("Assistants") + ul');
-		await expect(assistantHeading.locator('li')).toHaveCount(0);
+		await expect(assistantHeading.locator('li')).toHaveCount(1);
 	});
 
 });

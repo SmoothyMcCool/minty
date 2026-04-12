@@ -13,7 +13,9 @@ import tom.api.task.TaskConfigTypes;
 public class EmitDocumentConfig implements TaskConfigSpec {
 
 	public static final String File = "File";
+	public static final String Save = "Save File in Workflow";
 	private FileData fileData;
+	private boolean save;
 
 	private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -25,6 +27,7 @@ public class EmitDocumentConfig implements TaskConfigSpec {
 		if (config.containsKey(File)) {
 			try {
 				fileData = mapper.readValue(mapper.writeValueAsString(config.get(File)), FileData.class);
+				save = Boolean.getBoolean((String) config.get(Save));
 			} catch (JsonProcessingException e) {
 				fileData = null;
 			}
@@ -35,6 +38,7 @@ public class EmitDocumentConfig implements TaskConfigSpec {
 	public Map<String, TaskConfigTypes> getConfig() {
 		Map<String, TaskConfigTypes> config = new HashMap<>();
 		config.put(File, TaskConfigTypes.Document);
+		config.put(Save, TaskConfigTypes.Boolean);
 		return config;
 	}
 
@@ -54,6 +58,6 @@ public class EmitDocumentConfig implements TaskConfigSpec {
 
 	@Override
 	public Map<String, Object> getValues() {
-		return Map.of(File, fileData);
+		return Map.of(File, fileData, Save, save);
 	}
 }

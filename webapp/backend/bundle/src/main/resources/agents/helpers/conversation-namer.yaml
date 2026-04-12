@@ -5,6 +5,7 @@ temperature: 0.1
 topK: 5
 shared: false
 hasMemory: false
+tools: []
 prompt: |
     Your only job is to write a short title for this conversation.
     The title must be 50 characters or fewer.
@@ -13,5 +14,3 @@ prompt: |
     Conversation:
 
 
-
-tools: []

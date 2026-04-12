@@ -20,16 +20,20 @@
 			<ng-container *ngSwitchCase="'Boolean'">
 				<div class="mb-3">
 					<ng-container *ngIf="defaults && defaults[item.key]; else notDefaultNumber">
-						<label for="booleanInput-{{item.key}}">{{item.key}} (System or User Default)</label>
-						<input type="checkbox" class="form-check-input me-2" id="booleanInput-{{item.key}}"
+						<div class="form-check">
+							<input type="checkbox" class="form-check-input me-2" id="booleanInput-{{item.key}}"
 							name="booleanInput-{{item.key}}" [ngModel]="defaults[item.key]"
 							(ngModelChange)="valueChanged(item.key, $event)" [disabled]="defaults && defaults[item.key]">
+							<label for="booleanInput-{{item.key}}">{{item.key}} (System or User Default)</label>
+						</div>
 					</ng-container>
 					<ng-template #notDefaultNumber>
-						<label for="booleanInput-{{item.key}}">{{item.key}}</label>
-						<input type="checkbox" class="form-check-input me-2" id="booleanInput-{{item.key}}"
-							name="booleanInput-{{item.key}}" [ngModel]="getConfig(item.key)"
-							(ngModelChange)="valueChanged(item.key, $event)" [disabled]="defaults && defaults[item.key]">
+						<div class="form-check">
+							<input type="checkbox" class="form-check-input me-2" id="booleanInput-{{item.key}}"
+								name="booleanInput-{{item.key}}" [ngModel]="getConfig(item.key)"
+								(ngModelChange)="valueChanged(item.key, $event)" [disabled]="defaults && defaults[item.key]">
+							<label for="booleanInput-{{item.key}}">{{item.key}}</label>
+						</div>
 					</ng-template>
 				</div>
 			</ng-container>

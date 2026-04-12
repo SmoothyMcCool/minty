@@ -4,7 +4,8 @@ contextSize: 10000
 temperature: 0.5
 topK: 5
 shared: false
-hasMemory: false
+hasMemory: true
+tools: []
 prompt: |
     You are a response synthesizer.
 
@@ -14,4 +15,3 @@ prompt: |
     - Be concise
     - Include final output
     - Do not mention steps
-tools: []

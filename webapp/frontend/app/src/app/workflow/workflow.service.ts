@@ -162,45 +162,7 @@ export class WorkflowService {
 	}
 
 	newWorkflow(workflow: Workflow): Observable<Workflow> {
-		let outputStep = null;
-		if (workflow.outputStep) {
-			outputStep = {
-				taskName: workflow.outputStep.taskName,
-				stepName: workflow.outputStep.stepName,
-				id: workflow.outputStep.id,
-				loggingActive: workflow.outputStep.loggingActive,
-				configuration: { ...workflow.outputStep.configuration },
-				layout: {
-					x: workflow.outputStep.layout.x,
-					y: workflow.outputStep.layout.y,
-					numInputs: workflow.outputStep.layout.numInputs,
-					numOutputs: workflow.outputStep.layout.numOutputs
-				}
-			}
-		}
-
-		const body = {
-			id: workflow.id,
-			name: workflow.name,
-			description: workflow.description,
-			connections: workflow.connections,
-			steps: workflow.steps.map(item => {
-				return {
-					taskName: item.taskName,
-					stepName: item.stepName,
-					id: item.id,
-					loggingActive: item.loggingActive,
-					configuration: { ...item.configuration },
-					layout: {
-						x: item.layout.x,
-						y: item.layout.y,
-						numInputs: item.layout.numInputs,
-						numOutputs: item.layout.numOutputs
-					}
-				};
-			}),
-			outputStep: outputStep
-		};
+		const body: Workflow = this.objectify(workflow);
 
 		return this.http.post<ApiResult>(WorkflowService.NewWorkflow, body)
 			.pipe(
@@ -215,45 +177,7 @@ export class WorkflowService {
 	}
 
 	updateWorkflow(workflow: Workflow): Observable<Workflow> {
-		let outputStep = null;
-		if (workflow.outputStep) {
-			outputStep = {
-				taskName: workflow.outputStep.taskName,
-				stepName: workflow.outputStep.stepName,
-				id: workflow.outputStep.id,
-				loggingActive: workflow.outputStep.loggingActive,
-				configuration: { ...workflow.outputStep.configuration },
-				layout: {
-					x: workflow.outputStep.layout.x,
-					y: workflow.outputStep.layout.y,
-					numInputs: workflow.outputStep.layout.numInputs,
-					numOutputs: workflow.outputStep.layout.numOutputs
-				}
-			}
-		}
-
-		const body = {
-			id: workflow.id,
-			name: workflow.name,
-			description: workflow.description,
-			connections: workflow.connections,
-			steps: workflow.steps.map(item => {
-				return {
-					taskName: item.taskName,
-					stepName: item.stepName,
-					id: item.id,
-					loggingActive: item.loggingActive,
-					configuration: { ...item.configuration },
-					layout: {
-						x: item.layout.x,
-						y: item.layout.y,
-						numInputs: item.layout.numInputs,
-						numOutputs: item.layout.numOutputs
-					}
-				};
-			}),
-			outputStep: outputStep
-		};
+		const body: Workflow = this.objectify(workflow);
 
 		return this.http.post<ApiResult>(WorkflowService.UpdateWorkflow, body)
 			.pipe(
@@ -401,7 +325,7 @@ export class WorkflowService {
 	}
 
 	private objectify(workflow: any): Workflow {
-		let outputStep = undefined;
+		let outputStep : TaskRequest | undefined = undefined;
 		if (workflow.outputStep) {
 			outputStep = {
 				taskName: workflow.outputStep.taskName,
@@ -424,6 +348,11 @@ export class WorkflowService {
 			name: workflow.name,
 			description: workflow.description,
 			steps: (workflow.steps as any[]).map((element: TaskRequest) => {
+				// The document task configuration contains a flag to set if the doc should not be saved in the workflow.
+				// Enforce respecting this flag if present.
+				if (element.taskName.localeCompare("Emit Document") === 0 && !element.configuration['Save File in Workflow']) {
+					element.configuration.File = null;
+				}
 				return {
 					taskName: element.taskName,
 					stepName: element.stepName,
