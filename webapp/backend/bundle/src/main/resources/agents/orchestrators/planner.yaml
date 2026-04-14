@@ -36,6 +36,7 @@ prompt: |
     - Use mermaid_generator after parsing
     - Use mermaid_validator if generating mermaid
     - Use general for everything else
+    - If the query can be answered by a single general step, do not emit a plan
 
     Example output:
     [

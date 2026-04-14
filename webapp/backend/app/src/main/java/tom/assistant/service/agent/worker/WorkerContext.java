@@ -5,7 +5,7 @@ import java.util.Map;
 import tom.api.UserId;
 import tom.api.model.assistant.AssistantQuery;
 import tom.api.services.assistant.StreamResult;
-import tom.assistant.service.agent.AgentStep;
+import tom.assistant.service.agent.model.AgentStep;
 
 public class WorkerContext {
 	public final UserId userId;

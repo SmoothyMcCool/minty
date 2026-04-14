@@ -91,4 +91,10 @@ public class HelperFunctions {
 		return false;
 	}
 
+	public int max(Object a, Object b) {
+		int ia = (a instanceof Number) ? ((Number) a).intValue() : 0;
+		int ib = (b instanceof Number) ? ((Number) b).intValue() : 0;
+		return Math.max(ia, ib);
+	}
+
 }

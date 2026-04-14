@@ -5,6 +5,7 @@ import java.util.List;
 import tom.api.UserId;
 import tom.api.model.assistant.AssistantQuery;
 import tom.api.services.assistant.AssistantQueryService;
+import tom.assistant.service.agent.model.AgentStep;
 
 public interface AgentPlanner {
 

@@ -10,6 +10,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import tom.api.UserId;
 import tom.api.model.assistant.AssistantQuery;
 import tom.api.services.assistant.AssistantQueryService;
+import tom.assistant.service.agent.model.AgentQuery;
+import tom.assistant.service.agent.model.AgentStep;
 
 @Service
 public class AgentPlannerImpl implements AgentPlanner {

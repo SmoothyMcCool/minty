@@ -6,6 +6,9 @@
 		<div class="overflow-auto" *ngIf="user && !newestMessagesFirst">
 			<minty-conversation [messages]="chatHistory" [responsePending]="waitingForResponse"
 				[queueDepth]="queueDepth" [oldestMessagesFirst]="user && !newestMessagesFirst" [showChatOptions]="showChatOptions"></minty-conversation>
+			<ul class="list-group list-group-flush" *ngIf="statusMessages.length > 0" >
+				<li class="list-group-item status-text--terminal" *ngFor="let message of statusMessages">{{message}}</li>
+			</ul>
 		</div>
 
 		<ng-container *ngIf="sources">
@@ -48,7 +51,7 @@
 
 		<div class="row mb-2 form-floating">
 			<div class="col form-floating">
-				<textarea class="form-control" id="aiQuery" name="aiQuery"
+				<textarea #aiQueryEl class="form-control" id="aiQuery" name="aiQuery"
 					[(ngModel)]="userText" style="max-height: 400px;" autoResize></textarea>
 				<label class="ms-3" for="aiQuery">Put your input here</label>
 			</div>
@@ -81,6 +84,9 @@
 		</div>
 
 		<div class="overflow-auto" *ngIf="user && newestMessagesFirst">
+			<ul class="list-unstyled" *ngIf="statusMessages.length > 0" >
+				<li class="status-text d-block" *ngFor="let message of statusMessages">{{message}}</li>
+			</ul>
 			<minty-conversation [messages]="chatHistory" [responsePending]="waitingForResponse" [responseComplete]="responseComplete"
 				[queueDepth]="queueDepth" [oldestMessagesFirst]="!newestMessagesFirst" [showChatOptions]="showChatOptions"></minty-conversation>
 		</div>

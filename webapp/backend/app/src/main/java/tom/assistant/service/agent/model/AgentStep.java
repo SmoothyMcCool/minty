@@ -1,4 +1,4 @@
-package tom.assistant.service.agent;
+package tom.assistant.service.agent.model;
 
 import java.util.Map;
 

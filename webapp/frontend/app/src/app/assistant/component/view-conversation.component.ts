@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
@@ -23,9 +23,12 @@ import { UserService } from '../../user.service';
 @Component({
 	selector: 'minty-view-conversation',
 	imports: [CommonModule, FormsModule, ConversationComponent, ConfirmationDialogComponent, ImageInputComponent, SliderComponent, AutoResizeDirective],
-	templateUrl: 'view-conversation.component.html'
+	templateUrl: 'view-conversation.component.html',
+	styleUrl: 'view-conversation.component.css'
 })
 export class ViewConversationComponent implements OnInit, OnDestroy {
+
+	@ViewChild('aiQueryEl') aiQueryEl!: ElementRef<HTMLTextAreaElement>;
 
 	user!: User;
 
@@ -45,6 +48,7 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 	reverseButtons = false;
 	metrics: LlmMetric | undefined = undefined;
 	sources: Set<string> | undefined = undefined;
+	statusMessages: string[] = [];
 	model: Model | undefined = undefined;
 	contextSize: number = 16384;
 
@@ -117,8 +121,19 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 		this.assistantService.ask(this.conversationId, this.assistant.id, text, this.image ?? null, this.contextSize).subscribe(streamId => {
 			this.waitingForResponse = true;
 			this.responseComplete = false;
+
 			this.userText = '';
+			setTimeout(() => {
+				const el = this.aiQueryEl.nativeElement;
+				el.style.height = 'auto';
+				if (!el.value.trim()) {
+					el.style.height = window.getComputedStyle(el).minHeight;
+				}
+				el.style.height = `${el.scrollHeight}px`;
+			});
+
 			this.shouldReset = true;
+			this.statusMessages = [];
 			setTimeout(() => {
 				this.stream(streamId);
 				this.shouldReset = false;
@@ -151,7 +166,12 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 						responseChunk.sources.forEach(source => this.sources!.add(source));
 					}
 					if (responseChunk.content) {
-						response += responseChunk.content;
+						if (responseChunk.content.startsWith('[STATUS]')) {
+							const index =  responseChunk.content.indexOf('[STATUS]');
+							this.statusMessages.push(responseChunk.content.substring(index));
+						} else {
+							response += responseChunk.content;
+						}
 					}
 					if (response.length > 0) {
 						this.waitingForResponse = false;
@@ -192,4 +212,5 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 	onImageChanged(image: File) {
 		this.image = image;
 	}
+
 }
