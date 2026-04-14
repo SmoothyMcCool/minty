@@ -12,6 +12,9 @@ import tom.api.UserId;
 import tom.api.model.assistant.AssistantQuery;
 import tom.api.services.assistant.AssistantQueryService;
 import tom.api.services.assistant.StreamResult;
+import tom.assistant.service.agent.model.AgentQuery;
+import tom.assistant.service.agent.model.AgentResponseType;
+import tom.assistant.service.agent.model.AgentStep;
 import tom.assistant.service.agent.response.LlmResponse;
 import tom.assistant.service.agent.response.LlmStatus;
 import tom.assistant.service.agent.worker.WorkerContext;
@@ -88,10 +91,7 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 		}
 
 		emit(sr, "Finalizing response...");
-
-		String finalAnswer = synthesize(userId, query, state, sr);
-
-		sr.addChunk("\n" + finalAnswer);
+		synthesize(userId, query, state, sr);
 		sr.markComplete();
 	}
 

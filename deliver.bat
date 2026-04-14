@@ -103,10 +103,7 @@ echo [OK] Minty-GitHub cleared.
 echo.
 echo [5/5] Copying files to D:\projects\Minty-GitHub...
 
-robocopy "D:\projects\Minty" "D:\projects\Minty-GitHub" /E /PURGE ^
-    /XD "D:\projects\Minty\.git" ^
-    /XD "D:\projects\Minty\.metadata" ^
-    /XD "D:\projects\Minty\webapp\frontend\app\.angular"
+robocopy "D:\projects\Minty" "D:\projects\Minty-GitHub" /E /PURGE /XD "D:\projects\Minty\.git" /XD "D:\projects\Minty\.metadata" /XD "D:\projects\Minty\webapp\frontend\app\.angular"
 
 :: Robocopy exit codes 0-7 are success (8+ are errors)
 if %ERRORLEVEL% geq 8 (

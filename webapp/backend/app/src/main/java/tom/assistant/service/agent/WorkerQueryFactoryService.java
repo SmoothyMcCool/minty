@@ -9,6 +9,8 @@ import tom.api.ConversationId;
 import tom.api.model.assistant.Assistant;
 import tom.api.model.assistant.AssistantQuery;
 import tom.api.model.assistant.AssistantSpec;
+import tom.assistant.service.agent.model.AgentQuery;
+import tom.assistant.service.agent.model.AgentResponseType;
 import tom.assistant.service.management.AssistantRegistry;
 
 @Service

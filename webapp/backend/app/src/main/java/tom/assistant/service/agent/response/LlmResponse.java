@@ -4,14 +4,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import tom.assistant.service.agent.AgentResponseType;
+import tom.assistant.service.agent.model.AgentResponseType;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class LlmResponse {
 
 	private static ObjectMapper Mapper = new ObjectMapper();
@@ -27,6 +29,16 @@ public class LlmResponse {
 
 	@JsonAnySetter
 	private Map<String, JsonNode> extra = new HashMap<>();
+
+	@Override
+	public String toString() {
+		try {
+			return Mapper.writeValueAsString(this);
+		} catch (JsonProcessingException e) {
+			return "LlmResponse [status=" + status + ", message=" + message + ", responseType=" + responseType
+					+ ", data=" + data + ", rawText=" + rawText + ", meta=" + meta + ", extra=" + extra + "]";
+		}
+	}
 
 	public LlmStatus getStatus() {
 		return status;

@@ -13,6 +13,19 @@ mixin safeCell(val)
   else
     td
 
+// --- Pre-pass: count renderable rows ---
+- var len = helpers.max(text != null ? text.size() : 0, data != null ? data.size() : 0)
+- var totalRows = 0
+- var i = 0
+while i < len
+  - var t = (text != null && i < text.size()) ? text.get(i) : null
+  - var d = (data != null && i < data.size()) ? data.get(i) : null
+  - var shouldRender = helpers.isNotBlank(t) || (d != null && (firstRow == null || helpers.hasAnyValueForKeys(d, firstRow.keySet())))
+  if shouldRender
+    - totalRows = totalRows + 1
+  - i = i + 1
+
+p.text-muted.mb-2 #{totalRows} Items
 
 table.table.table-hover.table-sm
   thead
@@ -24,31 +37,23 @@ table.table.table-hover.table-sm
           th(scope="col") #{entry.getKey()}
 
   tbody
-    // --- Text rows (skip null/blank entries) ---
-    if text != null
-      - var textIdx = 0
-      each t in text
-        if helpers.isNotBlank(t)
-          - textIdx = textIdx + 1
-          tr
-            td #{textIdx}
-            +safeCell(t)
-            if firstRow != null
-              each entry in firstRow.entrySet()
-                td
-
-    // --- Data rows (skip rows where all values are null) ---
-    if data != null
-      - var dataIdx = 0
-      each d in data
-        - var shouldRender = firstRow == null || helpers.hasAnyValueForKeys(d, firstRow.keySet())
-        if shouldRender
-          - dataIdx = dataIdx + 1
-          tr
-            td #{dataIdx}
-            td
-            if firstRow != null
-              each entry in firstRow.entrySet()
-                - var key = entry.getKey()
-                - var val = d.get(key)
-                +safeCell(val)
+    - var rowIdx = 0
+    - i = 0
+    while i < len
+      - var t = (text != null && i < text.size()) ? text.get(i) : null
+      - var d = (data != null && i < data.size()) ? data.get(i) : null
+      - var shouldRender = helpers.isNotBlank(t) || (d != null && (firstRow == null || helpers.hasAnyValueForKeys(d, firstRow.keySet())))
+      if shouldRender
+        - rowIdx = rowIdx + 1
+        tr
+          td #{rowIdx}
+          +safeCell(t)
+          if firstRow != null && d != null
+            each entry in firstRow.entrySet()
+              - var key = entry.getKey()
+              - var val = d.get(key)
+              +safeCell(val)
+          else if firstRow != null
+            each entry in firstRow.entrySet()
+              td
+      - i = i + 1
