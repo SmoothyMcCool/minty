@@ -96,4 +96,3 @@ prompt: |
   Are labels properly quoted?
 
   INPUT:
-  {{GRAPH_JSON}}

@@ -1,7 +1,9 @@
 .status-text {
+	white-space: pre-wrap;
+	margin: 0;
 	font-weight: 500;
 	letter-spacing: 0.04em;
-	display: inline-block;
+	display: block;
 
 	background: linear-gradient(90deg,
 			#6fd3bb,

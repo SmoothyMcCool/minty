@@ -1,6 +1,10 @@
 package tom.assistant.service.agent.worker;
 
-import tom.assistant.service.agent.response.LlmResponse;
+import java.util.Optional;
+
+import tom.Pair;
+import tom.assistant.service.agent.model.AgentStep;
+import tom.assistant.service.agent.model.AgentStepState;
 
 public class MermaidValidatorWorker implements WorkerHandler {
 
@@ -9,13 +13,20 @@ public class MermaidValidatorWorker implements WorkerHandler {
 
 	@Override
 	public WorkerDecision handle(WorkerContext ctx) {
-		LlmResponse generated = (LlmResponse) ctx.state.get("mermaid_generate");
+		Optional<Pair<AgentStep, AgentStepState>> step = ctx.state.findLastCompletedStep();
 
-		if (generated == null || generated.getRawText() == null || generated.getRawText().isBlank()) {
+		if (step.isEmpty()) {
 			return WorkerDecision.error("Missing generated diagram");
 		}
 
-		return WorkerDecision.llmCall("mermaid_validate");
+		Pair<AgentStep, AgentStepState> state = step.get();
+
+		String raw = state.right().getResponse().getRawText();
+		if (raw == null || raw.isBlank()) {
+			return WorkerDecision.error("Missing generated diagram");
+		}
+
+		return WorkerDecision.llmCall("mermaid_validator");
 	}
 
 }

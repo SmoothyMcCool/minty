@@ -47,6 +47,19 @@ public class AssistantQuery {
 		this.contextSize = contextSize;
 	}
 
+	public void setImage(ByteArrayResource imageData, String contentType) {
+		this.imageData = imageData;
+		this.imageContentType = contentType;
+	}
+
+	public ByteArrayResource getImageData() {
+		return this.imageData;
+	}
+
+	public String getContentType() {
+		return imageContentType;
+	}
+
 	@Override
 	public int hashCode() {
 		return Objects.hash(assistantSpec, conversationId, query);
@@ -65,17 +78,11 @@ public class AssistantQuery {
 				&& Objects.equals(conversationId, other.conversationId) && Objects.equals(query, other.query);
 	}
 
-	public void setImage(ByteArrayResource imageData, String contentType) {
-		this.imageData = imageData;
-		this.imageContentType = contentType;
-	}
-
-	public ByteArrayResource getImageData() {
-		return this.imageData;
-	}
-
-	public String getContentType() {
-		return imageContentType;
+	@Override
+	public String toString() {
+		return "AssistantQuery [assistantSpec=" + assistantSpec + ", conversationId=" + conversationId + ", query="
+				+ query + ", contextSize=" + contextSize + ", imageData=" + imageData + ", imageContentType="
+				+ imageContentType + "]";
 	}
 
 }

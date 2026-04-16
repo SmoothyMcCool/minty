@@ -58,10 +58,6 @@ public class WorkerDecision {
 		return builder().action(NextAction.ASK_USER).input(response.getData()).reason("Asking user").build();
 	}
 
-	public static WorkerDecision result(JsonNode data) {
-		return builder().action(NextAction.RESULT).input(data).build();
-	}
-
 	public static Builder builder() {
 		return new Builder();
 	}
