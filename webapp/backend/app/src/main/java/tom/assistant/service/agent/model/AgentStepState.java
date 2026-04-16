@@ -1,18 +1,18 @@
 package tom.assistant.service.agent.model;
 
+import tom.assistant.service.agent.response.LlmResponse;
 import tom.assistant.service.agent.response.LlmStatus;
 
 public class AgentStepState {
 
-	private String step = "";
 	private LlmStatus status = LlmStatus.UNKNOWN;
+	private LlmResponse response;
 
-	public String getStep() {
-		return step;
+	public AgentStepState() {
 	}
 
-	public void setStep(String step) {
-		this.step = step;
+	public AgentStepState(LlmStatus status) {
+		this.status = status;
 	}
 
 	public LlmStatus getStatus() {
@@ -21,6 +21,19 @@ public class AgentStepState {
 
 	public void setStatus(LlmStatus status) {
 		this.status = status;
+	}
+
+	public LlmResponse getResponse() {
+		return response;
+	}
+
+	public void setResponse(LlmResponse response) {
+		this.response = response;
+	}
+
+	@Override
+	public String toString() {
+		return "AgentStepState [status=" + status + ", response=" + response + "]";
 	}
 
 }

@@ -49,4 +49,10 @@ public class AssistantSpec {
 			return "";
 		}
 	}
+
+	@Override
+	public String toString() {
+		return "AssistantSpec [assistantId=" + assistantId + ", assistant=" + assistant + "]";
+	}
+
 }

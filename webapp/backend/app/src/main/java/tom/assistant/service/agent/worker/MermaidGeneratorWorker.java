@@ -1,6 +1,10 @@
 package tom.assistant.service.agent.worker;
 
-import tom.assistant.service.agent.response.LlmResponse;
+import java.util.Optional;
+
+import tom.Pair;
+import tom.assistant.service.agent.model.AgentStep;
+import tom.assistant.service.agent.model.AgentStepState;
 
 public class MermaidGeneratorWorker implements WorkerHandler {
 
@@ -10,25 +14,27 @@ public class MermaidGeneratorWorker implements WorkerHandler {
 	@Override
 	public WorkerDecision handle(WorkerContext ctx) {
 
-		LlmResponse parsed = (LlmResponse) ctx.state.get("diagram_parser");
+		Optional<Pair<AgentStep, AgentStepState>> parsed = ctx.state.findLastCompletedStep();
 
-		if (parsed == null) {
-			return WorkerDecision.error("Missing parsed diagram");
+		if (parsed.isEmpty()) {
+			// An empty input is ok. We can still try, we might be the first step in the
+			// chain.
+			return WorkerDecision.llmCall("mermaid_generator");
 		}
 
-		switch (parsed.getStatus()) {
+		AgentStepState stepState = parsed.get().right();
+		switch (stepState.getStatus()) {
 
 		case SUCCESS -> {
-			return WorkerDecision.llmCall("mermaid_generate");
+			return WorkerDecision.llmCall("mermaid_generator");
 		}
 
 		case NEED_INFO -> {
-			// Pass structured info upward, don't directly ask
-			return WorkerDecision.needInfo(parsed);
+			return WorkerDecision.needInfo(stepState.getResponse());
 		}
 
 		case ERROR -> {
-			return WorkerDecision.error("Failed to parse diagram: " + parsed.getMessage());
+			return WorkerDecision.error("Failed to parse diagram: " + stepState.getResponse().getMessage());
 		}
 
 		default -> {

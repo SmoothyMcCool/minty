@@ -33,6 +33,7 @@ prompt: |
 
   OUTPUT FORMAT:
   {
+    "status": "SUCCESS" | "NEED_INFO" | "ERROR",
     "valid": true | false,
     "errors": [
       {

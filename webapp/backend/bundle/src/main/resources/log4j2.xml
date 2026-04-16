@@ -32,6 +32,7 @@
 		<!--Logger name="org.springframework.jdbc.core.JdbcTemplate" level="debug" />
 		<Logger name="org.springframework.ai" level="debug" /-->
 		<Logger name="tom" level="info" />
+		<Logger name="tom.assistant.service.query" level="debug" />
 		<Logger name="org.springframework.security" level="info" />
 
 		<Logger name="tom.tool.auditing.AuditingToolCallingManager"

@@ -1,8 +1,9 @@
 package tom.assistant.service.agent;
 
-import java.util.Map;
 import java.util.UUID;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 import tom.api.ConversationId;
@@ -11,11 +12,13 @@ import tom.api.model.assistant.AssistantQuery;
 import tom.api.model.assistant.AssistantSpec;
 import tom.assistant.service.agent.model.AgentQuery;
 import tom.assistant.service.agent.model.AgentResponseType;
+import tom.assistant.service.agent.model.PlanState;
 import tom.assistant.service.management.AssistantRegistry;
 
 @Service
 public class WorkerQueryFactoryService {
 
+	private static final Logger logger = LogManager.getLogger(WorkerQueryFactoryService.class);
 	private final AssistantRegistry assistantRegistry;
 
 	public WorkerQueryFactoryService(AssistantRegistry assistantRegistry) {
@@ -30,10 +33,22 @@ public class WorkerQueryFactoryService {
 		assistantQuery.setContextSize(assistant.contextSize());
 		assistantQuery.setConversationId(conversationId);
 		assistantQuery.setQuery(query);
-		return new AgentQuery(responseType, assistantQuery);
+
+		AgentQuery agentQuery = new AgentQuery(responseType, assistantQuery);
+		logger.debug("Prepared Agent Query: " + agentQuery.toString());
+		return agentQuery;
 	}
 
-	// --- WORKERS ---
+	private static String buildQuery(AssistantQuery userQuery, PlanState state) {
+		String query = """
+				State:
+				{{STATE}}
+
+				User request:
+				{{USER_QUERY}}
+				""";
+		return query.replace("{{STATE}}", state.toString()).replace("{{USER_QUERY}}", userQuery.getQuery());
+	}
 
 	public AgentQuery planner(String userQuery, ConversationId conversationId, int contextSize) {
 		Assistant assistant = assistantRegistry.getOrchestrator("planner");
@@ -45,68 +60,39 @@ public class WorkerQueryFactoryService {
 		return baseQuery(AgentResponseType.RawText, assistant, userQuery.getConversationId(), userQuery.getQuery());
 	}
 
-	public AgentQuery diagramParser(AssistantQuery original) {
+	public AgentQuery general(AssistantQuery userQuery, PlanState state) {
+		Assistant assistant = assistantRegistry.getWorker("general");
+		String query = buildQuery(userQuery, state);
+		return baseQuery(AgentResponseType.RawText, assistant, userQuery.getConversationId(), query);
+	}
+
+	public AgentQuery diagramParser(AssistantQuery original, PlanState state) {
 		Assistant assistant = assistantRegistry.getWorker("diagram_parser");
-
-		String query = """
-				Parse the following diagram into a structured JSON model.
-
-				Input:
-				%s
-				""".formatted(original.getQuery());
-
+		String query = buildQuery(original, state);
 		return baseQuery(AgentResponseType.Structured, assistant, original.getConversationId(), query);
 	}
 
-	public AgentQuery mermaidGenerator(AssistantQuery original, Map<String, Object> state) {
+	public AgentQuery mermaidGenerator(AssistantQuery original, PlanState state) {
 		Assistant assistant = assistantRegistry.getWorker("mermaid_generator");
-
-		Object parsed = state.get("diagram_parser");
-
-		String query = """
-				Convert this structured diagram into Mermaid:
-
-				%s
-				""".formatted(parsed);
-
+		String query = buildQuery(original, state);
 		return baseQuery(AgentResponseType.RawText, assistant, original.getConversationId(), query);
 	}
 
-	public AgentQuery mermaidValidator(AssistantQuery original, Map<String, Object> state) {
+	public AgentQuery mermaidValidator(AssistantQuery original, PlanState state) {
 		Assistant assistant = assistantRegistry.getWorker("mermaid_validator");
-
-		Object parsed = state.get("mermaid_generator");
-
-		String query = """
-				Convert this structured diagram into Mermaid:
-
-				%s
-				""".formatted(parsed);
-
+		String query = buildQuery(original, state);
 		return baseQuery(AgentResponseType.Structured, assistant, original.getConversationId(), query);
 	}
 
-	public AgentQuery synthesizer(AssistantQuery original, Map<String, Object> state) {
-
+	public AgentQuery synthesizer(AssistantQuery original, PlanState state) {
 		Assistant assistant = assistantRegistry.getWorker("synthesizer");
-		String query = """
-				State:
-				{{STATE}}
-
-				User request:
-				{{USER_QUERY}}
-				""";
-		query = query.replace("{{STATE}}", state.toString()).replace("{{USER_QUERY}}", original.getQuery());
-
+		String query = buildQuery(original, state);
 		return baseQuery(AgentResponseType.RawText, assistant, original.getConversationId(), query);
 	}
 
-	public AgentQuery workflowPlanner(AssistantQuery original, Map<String, Object> state) {
+	public AgentQuery workflowPlanner(AssistantQuery original, PlanState state) {
 		Assistant assistant = assistantRegistry.getWorker("workflow_planner");
-
-		// Object input = state.get(step.getInput().get("fromStep"));
-		String query = String.valueOf(state);
-
+		String query = buildQuery(original, state);
 		return baseQuery(AgentResponseType.Structured, assistant, new ConversationId(UUID.randomUUID()), query);
 	}
 }

@@ -7,7 +7,9 @@
 			<minty-conversation [messages]="chatHistory" [responsePending]="waitingForResponse"
 				[queueDepth]="queueDepth" [oldestMessagesFirst]="user && !newestMessagesFirst" [showChatOptions]="showChatOptions"></minty-conversation>
 			<ul class="list-group list-group-flush" *ngIf="statusMessages.length > 0" >
-				<li class="list-group-item status-text--terminal" *ngFor="let message of statusMessages">{{message}}</li>
+				<li class="list-group-item" *ngFor="let message of statusMessages" >
+					<p class="status-text--terminal" style="white-space: pre-wrap;">{{message}}</p>
+				</li>
 			</ul>
 		</div>
 
@@ -84,9 +86,7 @@
 		</div>
 
 		<div class="overflow-auto" *ngIf="user && newestMessagesFirst">
-			<ul class="list-unstyled" *ngIf="statusMessages.length > 0" >
-				<li class="status-text d-block" *ngFor="let message of statusMessages">{{message}}</li>
-			</ul>
+			<div *ngFor="let message of statusMessages" class="status-text" style="white-space: pre-wrap;">{{message}}</div>
 			<minty-conversation [messages]="chatHistory" [responsePending]="waitingForResponse" [responseComplete]="responseComplete"
 				[queueDepth]="queueDepth" [oldestMessagesFirst]="!newestMessagesFirst" [showChatOptions]="showChatOptions"></minty-conversation>
 		</div>

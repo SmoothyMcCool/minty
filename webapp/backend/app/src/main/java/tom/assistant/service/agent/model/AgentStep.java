@@ -56,4 +56,9 @@ public class AgentStep {
 		this.input = input;
 	}
 
+	@Override
+	public String toString() {
+		return "AgentStep [id=" + id + ", name=" + name + ", worker=" + worker + ", input=" + input + "]";
+	}
+
 }

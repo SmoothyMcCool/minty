@@ -3,6 +3,7 @@ package tom.assistant.service.agent.response;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -27,7 +28,6 @@ public class LlmResponse {
 	private String rawText;
 	private JsonNode meta;
 
-	@JsonAnySetter
 	private Map<String, JsonNode> extra = new HashMap<>();
 
 	@Override
@@ -88,8 +88,14 @@ public class LlmResponse {
 		this.meta = meta;
 	}
 
+	@JsonAnyGetter
 	public Map<String, JsonNode> getExtra() {
 		return extra;
+	}
+
+	@JsonAnySetter
+	public void setExtra(Map<String, JsonNode> extra) {
+		this.extra = extra;
 	}
 
 	public static LlmResponse parse(String raw, AgentResponseType responseType)
@@ -128,6 +134,7 @@ public class LlmResponse {
 			return response;
 		} else {
 			LlmResponse response = new LlmResponse();
+			response.setStatus(LlmStatus.SUCCESS);
 			response.setResponseType(AgentResponseType.RawText);
 			response.setRawText(raw);
 			return response;

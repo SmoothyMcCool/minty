@@ -167,8 +167,9 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 					}
 					if (responseChunk.content) {
 						if (responseChunk.content.startsWith('[STATUS]')) {
-							const index =  responseChunk.content.indexOf('[STATUS]');
-							this.statusMessages.push(responseChunk.content.substring(index));
+							const message = responseChunk.content.substring('[STATUS]'.length).replace(/\\n/g, '\n').trim() + '\n';
+							this.statusMessages.push(message);
+							console.log('raw message:', message);
 						} else {
 							response += responseChunk.content;
 						}
