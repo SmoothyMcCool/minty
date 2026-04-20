@@ -5,23 +5,24 @@ import java.util.Map;
 public class AgentStep {
 
 	private String id;
+	private AgentStepType type;
 	private String name;
 	private String worker;
 	private Map<String, Object> input;
+	private AgentResponseVisibility visibility;
 
 	public AgentStep() {
-		id = "";
-		name = "";
-		worker = "";
-		input = null;
+
 	}
 
-	public AgentStep(String id, String name, String worker, Map<String, Object> input) {
-		super();
+	public AgentStep(String id, AgentStepType type, String name, String worker, Map<String, Object> input,
+			AgentResponseVisibility visibility) {
 		this.id = id;
+		this.type = type;
 		this.name = name;
 		this.worker = worker;
 		this.input = input;
+		this.visibility = visibility;
 	}
 
 	public String getId() {
@@ -30,6 +31,14 @@ public class AgentStep {
 
 	public void setId(String id) {
 		this.id = id;
+	}
+
+	public AgentStepType getType() {
+		return type;
+	}
+
+	public void setType(AgentStepType type) {
+		this.type = type;
 	}
 
 	public String getName() {
@@ -56,9 +65,18 @@ public class AgentStep {
 		this.input = input;
 	}
 
+	public AgentResponseVisibility getVisibility() {
+		return visibility;
+	}
+
+	public void setVisibility(AgentResponseVisibility visibility) {
+		this.visibility = visibility;
+	}
+
 	@Override
 	public String toString() {
-		return "AgentStep [id=" + id + ", name=" + name + ", worker=" + worker + ", input=" + input + "]";
+		return "AgentStep [id=" + id + ", type=" + type + ", name=" + name + ", worker=" + worker + ", input=" + input
+				+ ", visibility=" + visibility + "]";
 	}
 
 }

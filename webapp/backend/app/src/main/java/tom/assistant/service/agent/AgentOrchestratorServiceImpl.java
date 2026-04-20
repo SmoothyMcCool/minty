@@ -4,39 +4,30 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
-import tom.Pair;
 import tom.api.UserId;
 import tom.api.model.assistant.AssistantQuery;
 import tom.api.services.assistant.AssistantQueryService;
 import tom.api.services.assistant.StreamResult;
+import tom.assistant.service.agent.llm.LlmParseResult;
+import tom.assistant.service.agent.llm.LlmResponse;
+import tom.assistant.service.agent.llm.LlmStatus;
 import tom.assistant.service.agent.model.AgentQuery;
-import tom.assistant.service.agent.model.AgentResponseType;
+import tom.assistant.service.agent.model.AgentResponseVisibility;
 import tom.assistant.service.agent.model.AgentStep;
 import tom.assistant.service.agent.model.AgentStepState;
 import tom.assistant.service.agent.model.PlanState;
-import tom.assistant.service.agent.response.LlmResponse;
-import tom.assistant.service.agent.response.LlmStatus;
-import tom.assistant.service.agent.worker.WorkerContext;
-import tom.assistant.service.agent.worker.WorkerDecision;
-import tom.assistant.service.agent.worker.WorkerHandler;
-import tom.assistant.service.agent.worker.WorkerRegistry;
+import tom.assistant.service.agent.model.StepResult;
 
 @Service
 public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 
 	private AssistantQueryService assistantQueryService;
-	private final WorkerQueryFactoryService workerQueryFactoryService;
+	private final AgentRegistry agentRegistry;
 	private final AgentPlanner planner;
-	private final WorkerRegistry workerRegistry;
 
-	public AgentOrchestratorServiceImpl(WorkerQueryFactoryService workerQueryFactoryService, AgentPlanner planner,
-			WorkerRegistry workerRegistry) {
-		this.workerQueryFactoryService = workerQueryFactoryService;
+	public AgentOrchestratorServiceImpl(AgentRegistry agentRegistry, AgentPlanner planner) {
+		this.agentRegistry = agentRegistry;
 		this.planner = planner;
-		this.workerRegistry = workerRegistry;
-
 	}
 
 	public void setAssistantQueryService(AssistantQueryService assistantQueryService) {
@@ -57,8 +48,8 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 			fallback.setWorker("general");
 			fallback.setName("fallback");
 
-			assistantQueryService.runSingleLlmCallStreaming(userId, workerQueryFactoryService.general(query).query(),
-					sr);
+			assistantQueryService.runSingleLlmCallStreaming(userId,
+					agentRegistry.getAgent("general", query, null).query(), sr);
 			return;
 		}
 
@@ -74,21 +65,18 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 
 		while (!planState.isDone()) {
 
-			Pair<AgentStep, AgentStepState> currentStep = planState.currentStep();
-
-			emit(sr, "Running step: " + currentStep.left().getName());
+			AgentStep currentStep = planState.currentStep().left();
+			emit(sr, "Running step: " + currentStep.getName());
 
 			try {
-				WorkerDecision decision = runStep(userId, query, planState, sr);
-				emit(sr, "Decision: " + decision.toString());
+				StepResult result = runStep(userId, query, planState, sr);
 
-				boolean shouldContinue = handleDecision(userId, query, planState, decision, sr);
-				if (!shouldContinue) {
+				if (!handleResult(userId, query, planState, result, sr)) {
 					return;
 				}
 
 			} catch (Exception e) {
-				emit(sr, "Step failed: " + currentStep.left().getName());
+				emit(sr, "Step failed: " + currentStep.getName());
 				sr.addChunk("\nError: " + e.getMessage() + "\n\n");
 				break;
 			}
@@ -96,94 +84,127 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 			planState.advanceStep();
 		}
 
-		emit(sr, "Finalizing response...");
-		synthesize(userId, query, planState, sr);
-		emit(sr, "Complete.");
-		sr.markComplete();
 	}
 
-	private WorkerDecision runStep(UserId userId, AssistantQuery originalQuery, PlanState state, StreamResult sr) {
+	private StepResult runStep(UserId userId, AssistantQuery query, PlanState state, StreamResult sr) {
+		AgentStep step = state.currentStep().left();
 
-		WorkerHandler handler = workerRegistry.get(state.currentStep().left().getWorker());
-		WorkerContext context = new WorkerContext(userId, originalQuery, state, sr);
+		return switch (step.getType()) {
 
-		return handler.handle(context); // returns WorkerDecision
+		case ACTION -> runAction(userId, query, step, state, sr);
+
+		case ASK -> runAsk(step);
+
+		case PLAN -> runReplan(userId, query, step, state);
+
+		default -> throw new IllegalStateException("Unknown step type: " + step.getType());
+		};
 	}
 
-	private boolean handleDecision(UserId userId, AssistantQuery originalQuery, PlanState state,
-			WorkerDecision decision, StreamResult sr) {
+	private StepResult runAction(UserId userId, AssistantQuery query, AgentStep step, PlanState state,
+			StreamResult sr) {
+		AgentQuery agentQuery = agentRegistry.getAgent(step.getWorker(), query, state);
 
-		WorkerDecision current = decision;
-
-		while (true) {
-			switch (current.getAction()) {
-
-			case LLM_CALL -> {
-
-				String type = decision.getInput().get("type").asText();
-
-				AgentQuery agentQuery = switch (type) {
-				case "general" -> workerQueryFactoryService.general(originalQuery, state);
-				case "diagram_parser" -> workerQueryFactoryService.diagramParser(originalQuery, state);
-				case "mermaid_generator" -> workerQueryFactoryService.mermaidGenerator(originalQuery, state);
-				case "mermaid_validator" -> workerQueryFactoryService.mermaidValidator(originalQuery, state);
-				case "plan_workflow" -> workerQueryFactoryService.workflowPlanner(originalQuery, state);
-				default -> throw new IllegalStateException("Unknown LLM call type: " + type);
-				};
-
-				// Call LLM
-				String raw = assistantQueryService.runSingleLlmCall(userId, agentQuery.query());
-
-				// Deserialize into LlmResponse
-				LlmResponse llm;
-				try {
-					llm = LlmResponse.parse(raw, agentQuery.responsetype());
-				} catch (JsonProcessingException e) {
-					emit(sr, "Agent returned an invalid response: " + raw);
-					return false;
-				}
-
-				// Store structured result
-				state.currentStep().right().setResponse(llm);
-				state.currentStep().right().setStatus(llm.getStatus());
-
-				if (llm.getResponseType() == AgentResponseType.Structured) {
-					if (llm.getStatus() == LlmStatus.NEED_INFO) {
-						current = WorkerDecision.needInfo(llm);
-						continue;
-					}
-					if (llm.getStatus() == LlmStatus.ERROR) {
-						current = WorkerDecision.error(llm.getMessage());
-						continue;
-					}
-				}
-
-				return true;
-			}
-
-			case ASK_USER -> {
-				emit(sr, "Asking a question");
-				String msg = decision.getInput().get("message").asText();
-				sr.addChunk("\n" + msg);
-				sr.markComplete();
-				return false;
-			}
-
-			case ERROR -> {
-				sr.addChunk("\nError: " + decision.getReason() + "\n\n");
-				sr.markComplete();
-				return false;
-			}
-
-			default -> throw new IllegalStateException("Unhandled action: " + decision.getAction());
-			}
+		String raw;
+		if (step.getVisibility() == AgentResponseVisibility.USER) {
+			raw = assistantQueryService.runSingleLlmCallStreaming(userId, agentQuery.query(), sr);
+			sr.addChunk("\n\n");
+		} else {
+			raw = assistantQueryService.runSingleLlmCall(userId, agentQuery.query());
 		}
 
+		LlmParseResult parsed = LlmResponse.parse(raw);
+
+		if (parsed.isStructured()) {
+
+			LlmResponse response = parsed.getStructured();
+
+			return switch (response.getStatus()) {
+			case SUCCESS -> StepResult.success(response);
+			case NEED_INFO -> StepResult.ask(response);
+			case ERROR -> StepResult.error(response);
+			case PENDING -> throw new UnsupportedOperationException("Unimplemented case: " + response.getStatus());
+			default -> throw new IllegalArgumentException("Unexpected value: " + response.getStatus());
+			};
+		}
+
+		return StepResult.unstructured(parsed.getFallbackText());
 	}
 
-	private String synthesize(UserId userId, AssistantQuery query, PlanState state, StreamResult sr) {
-		AgentQuery synthQuery = workerQueryFactoryService.synthesizer(query, state);
-		return assistantQueryService.runSingleLlmCallStreaming(userId, synthQuery.query(), sr);
+	private StepResult runAsk(AgentStep step) {
+		String question = (String) step.getInput().get("question");
+		return StepResult.ask(question);
+	}
+
+	private StepResult runReplan(UserId userId, AssistantQuery query, AgentStep step, PlanState state) {
+		// Re-run planner with current context
+		List<AgentStep> newSteps = planner.plan(userId, query, state);
+
+		if (newSteps == null || newSteps.isEmpty()) {
+			return StepResult.error("Replanning produced empty plan");
+		}
+
+		// Replace remaining steps
+		state.replaceRemaining(newSteps);
+
+		// Optional: advance immediately to next step
+		state.advanceStep();
+
+		LlmResponse response = new LlmResponse();
+		response.setStatus(LlmStatus.SUCCESS);
+		response.setMessage("Replanned");
+
+		return StepResult.success(response);
+	}
+
+	private boolean handleResult(UserId userId, AssistantQuery query, PlanState state, StepResult result,
+			StreamResult sr) {
+
+		AgentStepState stepState = state.currentStep().right();
+
+		switch (result.getType()) {
+
+		case SUCCESS -> {
+			stepState.setResponse(result.getResponse());
+			stepState.setStatus(LlmStatus.SUCCESS);
+			stepState.setResponse(result.getResponse());
+			return true;
+		}
+
+		case ASK -> {
+			stepState.setResponse(result.getResponse());
+			stepState.setStatus(LlmStatus.NEED_INFO);
+			stepState.setResponse(result.getResponse());
+
+			sr.addChunk("\n" + result.getResponse().getMessage());
+			sr.markComplete();
+
+			return false;
+		}
+
+		case ERROR -> {
+			stepState.setResponse(result.getResponse());
+			stepState.setStatus(LlmStatus.ERROR);
+			stepState.setResponse(result.getResponse());
+
+			sr.addChunk("\nError: " + result.getResponse().getMessage());
+			sr.markComplete();
+
+			return false;
+		}
+
+		case UNSTRUCTURED -> {
+			stepState.setResponse(result.getResponse());
+			stepState.setStatus(LlmStatus.SUCCESS);
+			stepState.setResponse(result.getResponse());
+			if (state.currentStep().left().getVisibility() == AgentResponseVisibility.INTERNAL) {
+				sr.addChunk("\n\n[INTERNAL STEP RESULT]" + result.getFallbackText());
+			}
+			return true;
+		}
+		}
+
+		return false;
 	}
 
 	private void emit(StreamResult sr, String msg) {

@@ -134,19 +134,16 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 	@Transactional
 	public Assistant findAssistant(UserId userId, AssistantId assistantId) {
 		if (assistantId.equals(AssistantManagementService.DefaultAssistantId)) {
-			Assistant assistant = assistantRegistry.getHelper("default");
+			Assistant assistant = assistantRegistry.getAssistant("default");
 			return assistant.toBuilder().id(AssistantManagementService.DefaultAssistantId).build();
 		} else if (assistantId.equals(AssistantManagementService.ConversationNamingAssistantId)) {
-			Assistant assistant = assistantRegistry.getHelper("conversation-namer");
+			Assistant assistant = assistantRegistry.getAssistant("conversation_namer");
 			return assistant.toBuilder().id(AssistantManagementService.ConversationNamingAssistantId).build();
-		} else if (assistantId.equals(AssistantManagementService.DiagrammingAssistantId)) {
-			Assistant assistant = assistantRegistry.getHelper("mermaid-creator");
-			return assistant.toBuilder().id(AssistantManagementService.DiagrammingAssistantId).build();
 		} else if (assistantId.equals(AssistantManagementService.DocumentSummarizingAssistantId)) {
-			Assistant assistant = assistantRegistry.getHelper("summarizer");
+			Assistant assistant = assistantRegistry.getAssistant("document_summarizer");
 			return assistant.toBuilder().id(AssistantManagementService.DocumentSummarizingAssistantId).build();
 		} else if (assistantId.equals(AssistantManagementService.AgenticAssistantId)) {
-			Assistant assistant = assistantRegistry.getHelper("AgentChat");
+			Assistant assistant = assistantRegistry.getAssistant("AgentChat");
 			return assistant.toBuilder().id(AssistantManagementService.AgenticAssistantId).build();
 		}
 

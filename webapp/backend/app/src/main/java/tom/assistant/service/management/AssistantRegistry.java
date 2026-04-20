@@ -29,46 +29,23 @@ public class AssistantRegistry {
 	private static final Logger logger = LogManager.getLogger(AssistantRegistry.class);
 	private static ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
-	private final Map<String, Assistant> helpers;
-	private final Map<String, Assistant> orchestrators;
-	private final Map<String, Assistant> workers;
+	private final Map<String, Assistant> assistants;
 
 	public AssistantRegistry(MintyConfiguration config) throws StreamReadException, DatabindException, IOException {
-		helpers = new HashMap<>();
-		orchestrators = new HashMap<>();
-		workers = new HashMap<>();
+		assistants = new HashMap<>();
 
 		Path agentRoot = config.getConfig().fileStores().agents();
-		Path helpersPath = agentRoot.resolve("helpers");
-		Path orchestratorsPath = agentRoot.resolve("orchestrators");
-		Path workersPath = agentRoot.resolve("workers");
+		Path helpersPath = agentRoot.resolve("assistants");
 
-		try (Stream<Path> helpersStream = Files.list(helpersPath);
-				Stream<Path> orchestratorsStream = Files.list(orchestratorsPath);
-				Stream<Path> workersStream = Files.list(workersPath)) {
+		try (Stream<Path> helpersStream = Files.list(helpersPath)) {
 
 			helpersStream.filter(Files::isRegularFile).forEach((p) -> {
 				Assistant assistant = buildAssistant(p);
 				if (assistant != null) {
-					helpers.put(assistant.name(), assistant);
-					logger.info("Added helper " + assistant.name());
+					assistants.put(assistant.name(), assistant);
+					logger.info("Added assistants " + assistant.name());
 				}
 			});
-			orchestratorsStream.filter(Files::isRegularFile).forEach((p) -> {
-				Assistant assistant = buildAssistant(p);
-				if (assistant != null) {
-					orchestrators.put(assistant.name(), assistant);
-					logger.info("Added orchestrator " + assistant.name());
-				}
-			});
-			workersStream.filter(Files::isRegularFile).forEach((p) -> {
-				Assistant assistant = buildAssistant(p);
-				if (assistant != null) {
-					workers.put(assistant.name(), assistant);
-					logger.info("Added worker " + assistant.name());
-				}
-			});
-
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -98,27 +75,12 @@ public class AssistantRegistry {
 		return null;
 	}
 
-	public Assistant getWorker(String name) {
-		return new AssistantBuilder(workers.get(name)).build();
+	public Assistant getAssistant(String name) {
+		return new AssistantBuilder(assistants.get(name)).build();
 	}
 
-	public boolean hasWorker(String key) {
-		return workers.containsKey(key);
+	public boolean hasAssistant(String key) {
+		return assistants.containsKey(key);
 	}
 
-	public Assistant getOrchestrator(String name) {
-		return new AssistantBuilder(orchestrators.get(name)).build();
-	}
-
-	public boolean hasOrchestrator(String key) {
-		return orchestrators.containsKey(key);
-	}
-
-	public Assistant getHelper(String name) {
-		return new AssistantBuilder(helpers.get(name)).build();
-	}
-
-	public boolean hasHelper(String key) {
-		return helpers.containsKey(key);
-	}
 }

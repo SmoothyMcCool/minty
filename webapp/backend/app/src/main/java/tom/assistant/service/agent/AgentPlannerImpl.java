@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import tom.api.UserId;
@@ -14,6 +15,7 @@ import tom.api.model.assistant.AssistantQuery;
 import tom.api.services.assistant.AssistantQueryService;
 import tom.assistant.service.agent.model.AgentQuery;
 import tom.assistant.service.agent.model.AgentStep;
+import tom.assistant.service.agent.model.PlanState;
 
 @Service
 public class AgentPlannerImpl implements AgentPlanner {
@@ -21,13 +23,13 @@ public class AgentPlannerImpl implements AgentPlanner {
 	private static final Logger logger = LogManager.getLogger(AgentPlannerImpl.class);
 
 	private AssistantQueryService assistantQueryService;
-	private final WorkerQueryFactoryService workerQueryFactoryService;
+	private final AgentRegistry agentRegistry;
 
 	private static final ObjectMapper Mapper = new ObjectMapper();
 
-	public AgentPlannerImpl(WorkerQueryFactoryService workerQueryFactoryService) {
+	public AgentPlannerImpl(AgentRegistry agentRegistry) {
 
-		this.workerQueryFactoryService = workerQueryFactoryService;
+		this.agentRegistry = agentRegistry;
 	}
 
 	@Override
@@ -36,31 +38,36 @@ public class AgentPlannerImpl implements AgentPlanner {
 	}
 
 	@Override
-	public List<AgentStep> plan(UserId userId, AssistantQuery query) {
+	public List<AgentStep> plan(UserId userId, AssistantQuery query, PlanState state) {
 		int retryCount = 0;
 		while (retryCount < 3) {
-			AgentQuery plannerQuery = buildPlannerQuery(query);
+			AgentQuery plannerQuery = buildPlannerQuery(query, state);
 			String json = assistantQueryService.runSingleLlmCall(userId, plannerQuery.query());
 			try {
 				return parse(json);
 			} catch (Exception e) {
 				logger.warn("Planner generated invalid plan. Retrying.");
-			} finally {
 				retryCount++;
 			}
 		}
 		throw new RuntimeException("Planner repeatedly failed to produce a plan.");
 	}
 
-	private AgentQuery buildPlannerQuery(AssistantQuery original) {
-		return workerQueryFactoryService.planner(original.getQuery(), original.getConversationId(),
-				original.getContextSize());
+	private AgentQuery buildPlannerQuery(AssistantQuery original, PlanState state) {
+		return agentRegistry.getPlanner("planner", original, state);
 	}
 
 	private static List<AgentStep> parse(String json) {
 		try {
-			return Mapper.readValue(json, new TypeReference<List<AgentStep>>() {
-			});
+			JsonNode node = Mapper.readTree(json);
+			if (node.isArray()) {
+				return Mapper.convertValue(node, new TypeReference<List<AgentStep>>() {
+				});
+			} else {
+				return List.of(Mapper.convertValue(node, new TypeReference<AgentStep>() {
+				}));
+			}
+
 		} catch (Exception e) {
 			throw new RuntimeException("Failed to parse planner output: " + json, e);
 		}

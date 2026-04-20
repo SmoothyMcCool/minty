@@ -1,4 +1,4 @@
-name: summarizer
+name: document_summarizer
 model: gpt-oss:20b
 contextSize: 128000
 temperature: 0.2
