@@ -176,7 +176,6 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 				return "";
 			}
 
-			logger.debug("Calling LLM with query:\n" + query.toString());
 			Flux<ChatClientResponse> responses = spec.stream().chatClientResponse();
 
 			AtomicReference<Usage> usage = new AtomicReference<>();
@@ -258,11 +257,9 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 				return "Failed to generate response.";
 			}
 
-			logger.debug("Calling LLM with query:\n" + query.toString());
 			ChatResponse chatResponse = spec.call().chatResponse();
 
 			if (chatResponse != null && chatResponse.getResult() != null) {
-				logger.debug("LLM Response:\n" + chatResponse.getResult().getOutput().getText());
 				return chatResponse.getResult().getOutput().getText();
 			}
 

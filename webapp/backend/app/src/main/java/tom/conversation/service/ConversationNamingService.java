@@ -84,8 +84,6 @@ public class ConversationNamingService {
 					ConversationId requestId = null;
 					while (true) {
 						try {
-							logger.info(
-									"asking assistantquery service for " + conversation.getConversationId().toString());
 							requestId = assistantQueryService.ask(UserService.DefaultId, assistantQuery);
 							logger.info("requestId: " + requestId);
 							break;
@@ -98,7 +96,6 @@ public class ConversationNamingService {
 					}
 
 					while (true) {
-						logger.info("getting result for  " + requestId);
 						StringResult llmResult = (StringResult) assistantQueryService
 								.getResultAndRemoveIfComplete(requestId);
 						if (llmResult != null && llmResult.isComplete()) {

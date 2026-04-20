@@ -86,7 +86,7 @@
 		</div>
 
 		<div class="overflow-auto" *ngIf="user && newestMessagesFirst">
-			<div *ngFor="let message of statusMessages" class="status-text" style="white-space: pre-wrap;">{{message}}</div>
+			<p *ngFor="let message of statusMessages" class="status-text" style="white-space: pre-wrap;">{{message}}</p>
 			<minty-conversation [messages]="chatHistory" [responsePending]="waitingForResponse" [responseComplete]="responseComplete"
 				[queueDepth]="queueDepth" [oldestMessagesFirst]="!newestMessagesFirst" [showChatOptions]="showChatOptions"></minty-conversation>
 		</div>

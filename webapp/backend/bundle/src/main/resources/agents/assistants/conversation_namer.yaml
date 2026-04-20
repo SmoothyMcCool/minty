@@ -1,4 +1,4 @@
-name: conversation-namer
+name: conversation_namer
 model: gpt-oss:20b
 contextSize: 32768
 temperature: 0.1

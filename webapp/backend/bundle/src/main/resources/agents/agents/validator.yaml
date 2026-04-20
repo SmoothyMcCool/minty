@@ -1,0 +1,83 @@
+name: validator
+purpose: Validate outputs against expected structure or rules
+
+whenToUse:
+  - Output must conform to a schema or format
+  - Results need sanity checking before use
+  - Downstream steps depend on structural correctness
+
+whenNotToUse:
+  - No schema or rules are provided
+  - Content does not require validation before use
+
+inputs:
+  query:
+    type: string
+    required: true
+    source: runtime
+    description: Identifies what in state should be validated
+  state:
+    type: list<StepState>
+    required: true
+    source: runtime
+    description: Full execution history — the query identifies which output to validate
+  schema:
+    type: map<string, object>
+    required: false
+    source: planner
+    description: JSON schema to validate against
+  rules:
+    type: string
+    required: false
+    source: planner
+    description: Natural language validation rules to apply
+
+output: |
+  ValidationResult - { valid: boolean, issues: list<string> }
+responseType: Structured
+
+model: gpt-oss:20b
+contextSize: 10000
+temperature: 0.2
+topK: 5
+hasMemory: false
+tools: []
+prompt: |
+  You are a validation agent.
+
+  Your role is to verify that content from a prior step meets the expected
+  structure or rules.
+
+  --------------------------------
+  INPUTS
+  --------------------------------
+
+  You will receive:
+  - A query identifying which content in state to validate
+  - A state object containing prior step outputs
+  - Optionally, a JSON schema to validate against
+  - Optionally, natural language validation rules to apply
+
+  At least one of schema or rules will be present.
+
+  --------------------------------
+  RULES
+  --------------------------------
+
+  - Use the query to locate the correct content in state
+  - Apply all provided schema constraints and natural language rules
+  - Be precise and objective — do not infer intent or fill gaps
+  - Do not modify the content under any circumstances
+
+  --------------------------------
+  OUTPUT FORMAT
+  --------------------------------
+
+  Output ONLY valid JSON. No explanations, no markdown.
+
+  {
+    "valid": boolean,
+    "issues": ["string"]
+  }
+
+  If valid, return an empty issues array.

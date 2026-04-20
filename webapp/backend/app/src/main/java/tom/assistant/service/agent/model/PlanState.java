@@ -1,6 +1,7 @@
 package tom.assistant.service.agent.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,7 +12,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import tom.Pair;
-import tom.assistant.service.agent.response.LlmResponse;
+import tom.assistant.service.agent.llm.LlmResponse;
 
 public class PlanState {
 
@@ -61,6 +62,10 @@ public class PlanState {
 		steps.get(currentStep).right().setResponse(result);
 	}
 
+	public List<Pair<AgentStep, AgentStepState>> getSteps() {
+		return steps;
+	}
+
 	@JsonIgnore
 	public boolean isDone() {
 		return currentStep == steps.size();
@@ -80,4 +85,15 @@ public class PlanState {
 		}
 	}
 
+	public void replaceRemaining(List<AgentStep> newSteps) {
+		List<Pair<AgentStep, AgentStepState>> prefix = new ArrayList<>(steps.subList(0, currentStep + 1));
+		prefix.addAll(newSteps.stream().map(step -> new Pair<AgentStep, AgentStepState>(step, new AgentStepState()))
+				.toList());
+
+		this.steps = prefix;
+	}
+
+	public List<Pair<AgentStep, AgentStepState>> toStepStateList() {
+		return Collections.unmodifiableList(steps.subList(0, currentStep + 1));
+	}
 }

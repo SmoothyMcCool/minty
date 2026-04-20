@@ -1,11 +1,11 @@
 package tom.assistant.service.agent.model;
 
-import tom.assistant.service.agent.response.LlmResponse;
-import tom.assistant.service.agent.response.LlmStatus;
+import tom.assistant.service.agent.llm.LlmResponse;
+import tom.assistant.service.agent.llm.LlmStatus;
 
 public class AgentStepState {
 
-	private LlmStatus status = LlmStatus.UNKNOWN;
+	private LlmStatus status = LlmStatus.PENDING;
 	private LlmResponse response;
 
 	public AgentStepState() {
