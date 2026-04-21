@@ -24,7 +24,7 @@ The results from the named steps are amalgamated into a single `"Task Results"` 
 | `Output Template` (enum) | string | yes | Name of the pre-built output template to use |
 | `Result Tasks` | JSON string array | yes | Step names whose results should be included in the output |
 
-The `Result Tasks` value is a JSON array of `stepName` strings (not task names — the unique step labels you set).
+The `Result Tasks` value is a JSON array of `stepName` strings (not task names - the unique step labels you set).
 
 ## Configuration example
 

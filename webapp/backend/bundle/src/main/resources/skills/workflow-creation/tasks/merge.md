@@ -3,7 +3,7 @@
 ## Identity
 ```
 taskName:   "Merge"
-numInputs:  <configured value — default 2>
+numInputs:  <configured value - default 2>
 numOutputs: 1
 ```
 
@@ -14,7 +14,7 @@ Waits for one packet from each input, then combines their `text` and `data`
 arrays into a single output packet. Runs once per set of inputs.
 
 Use Merge when two parallel branches each produce one packet and you need their contents
-combined before continuing — for example, reuniting an LLM response with the original source
+combined before continuing - for example, reuniting an LLM response with the original source
 data after a Broadcast → Query LLM branch. Configure `Number of Inputs` to match the number
 of branches feeding into it.
 

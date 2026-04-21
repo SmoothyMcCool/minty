@@ -20,7 +20,7 @@ If the specified path cannot be resolved, a warning is logged and the ID is left
 | `ID Element` | string | yes | A path expression pointing to the field whose value should become the packet ID |
 
 ### Path expression syntax
-Paths use JSONPath notation. The `$` prefix is optional — it is added automatically.
+Paths use JSONPath notation. The `$` prefix is optional - it is added automatically.
 
 | Path | Returns |
 |------|---------|

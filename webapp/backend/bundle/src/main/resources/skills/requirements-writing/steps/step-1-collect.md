@@ -1,6 +1,6 @@
-# Step 1 — Collect Inputs
+# Step 1 - Collect Inputs
 
-## SCAN FIRST — before asking anything
+## SCAN FIRST - before asking anything
 
 Check the current conversation for these 4 values. Do not ask for a value that is already present.
 

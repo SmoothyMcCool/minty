@@ -3,7 +3,7 @@
 ## Identity
 ```
 taskName:   "Funnel"
-numInputs:  <configured value — default 2>
+numInputs:  <configured value - default 2>
 numOutputs: 1
 ```
 
@@ -11,7 +11,7 @@ numOutputs: 1
 
 ## What it does
 Routes packets from N inputs to a single output, passing each through unchanged.
-Packets are forwarded individually as they arrive — no waiting, buffering, or combining of contents.
+Packets are forwarded individually as they arrive - no waiting, buffering, or combining of contents.
 
 Use Funnel to reconnect branches that were separated by a Broadcast, when you want all branches
 to continue into the same downstream step but do not need to combine their packet contents.

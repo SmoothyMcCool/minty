@@ -9,7 +9,7 @@ numOutputs: 1
 
 ## What it does
 Source task. Emits one or more hardcoded packets into the workflow at startup.
-Runs once immediately — use this as a source step when data is known at design time.
+Runs once immediately - use this as a source step when data is known at design time.
 For plain text use Emit Text; for uploaded files use Emit Document.
 
 ## Configuration
@@ -21,16 +21,16 @@ For plain text use Emit Text; for uploaded files use Emit Document.
 ### IMPORTANT: Data to Emit is an array of Packets, not plain records
 
 Each element of the array must be a complete Packet object with `id`, `text`, and `data` fields.
-This is the most common mistake — do not put plain data objects here.
+This is the most common mistake - do not put plain data objects here.
 
-**Correct** — array of Packet objects:
+**Correct** - array of Packet objects:
 ```json
 {
   "Data to Emit": "[{\"id\":\"1\",\"text\":[],\"data\":[{\"name\":\"Alice\",\"score\":42}]},{\"id\":\"2\",\"text\":[],\"data\":[{\"name\":\"Bob\",\"score\":17}]}]"
 }
 ```
 
-**Wrong** — plain data records (will fail):
+**Wrong** - plain data records (will fail):
 ```json
 {
   "Data to Emit": "[{\"id\":\"1\",\"name\":\"Alice\",\"score\":42}]"
@@ -41,7 +41,7 @@ The decoded value must match this structure:
 ```json
 [
   {
-    "id":   "<string — use empty string if no meaningful ID>",
+    "id":   "<string - use empty string if no meaningful ID>",
     "text": ["<optional text strings>"],
     "data": [{ "<field>": "<value>", ... }]
   }

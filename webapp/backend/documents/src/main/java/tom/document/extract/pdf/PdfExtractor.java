@@ -18,7 +18,7 @@ import org.apache.tika.sax.BodyContentHandler;
 public class PdfExtractor {
 
 	// If fragments-per-line ratio exceeds this, the layout is too complex for
-	// heuristic extraction (multi-column, dense tables) — fall back to Tika
+	// heuristic extraction (multi-column, dense tables) - fall back to Tika
 	private static final double FRAGMENT_RATIO_THRESHOLD = 10.0;
 
 	public static String extract(File file) throws IOException {
@@ -81,7 +81,7 @@ public class PdfExtractor {
 				continue;
 			}
 
-			// Strip very short lines — page numbers, stray labels, running headers
+			// Strip very short lines - page numbers, stray labels, running headers
 			if (trimmed.length() < 4) {
 				continue;
 			}

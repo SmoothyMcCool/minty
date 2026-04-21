@@ -10,7 +10,7 @@ numOutputs: 1
 ## What it does
 Buffers ALL incoming packets until the input stream is exhausted, then sorts them and emits them in order.
 
-Sort is a blocking task — it will not emit anything until every upstream packet has arrived.
+Sort is a blocking task - it will not emit anything until every upstream packet has arrived.
 Sorting is done by comparing the specified field(s) as strings, in the order listed (primary sort first, then secondary, etc.).
 
 ## Configuration

@@ -22,10 +22,10 @@ import tom.assistant.service.agent.model.StepResult;
 public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 
 	private AssistantQueryService assistantQueryService;
-	private final AgentRegistry agentRegistry;
+	private final AgentRegistryImpl agentRegistry;
 	private final AgentPlanner planner;
 
-	public AgentOrchestratorServiceImpl(AgentRegistry agentRegistry, AgentPlanner planner) {
+	public AgentOrchestratorServiceImpl(AgentRegistryImpl agentRegistry, AgentPlanner planner) {
 		this.agentRegistry = agentRegistry;
 		this.planner = planner;
 	}
@@ -53,12 +53,11 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 			return;
 		}
 
-		StringBuilder plan = new StringBuilder();
-		plan.append("Running plan (" + steps.size() + " steps):\n");
+		emit(sr, "Running plan (" + steps.size() + " steps):\n");
 		for (int i = 0; i < steps.size(); i++) {
-			plan.append((i + 1) + ". ").append(steps.get(i).getName()).append("(" + steps.get(i).getWorker() + ")\n");
+			emit(sr, "" + (i + 1) + ". " + steps.get(i).getName() + "(" + steps.get(i).getWorker() + ") - "
+					+ steps.get(i).getVisibility().toString());
 		}
-		emit(sr, plan.toString());
 
 		PlanState planState = new PlanState(steps);
 		planState.start();
@@ -108,7 +107,7 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 		String raw;
 		if (step.getVisibility() == AgentResponseVisibility.USER) {
 			raw = assistantQueryService.runSingleLlmCallStreaming(userId, agentQuery.query(), sr);
-			sr.addChunk("\n\n");
+			sr.addChunk("<br><br>");
 		} else {
 			raw = assistantQueryService.runSingleLlmCall(userId, agentQuery.query());
 		}
@@ -167,16 +166,17 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 		case SUCCESS -> {
 			stepState.setResponse(result.getResponse());
 			stepState.setStatus(LlmStatus.SUCCESS);
-			stepState.setResponse(result.getResponse());
+			if (state.currentStep().left().getVisibility() == AgentResponseVisibility.INTERNAL) {
+				sr.addChunk("[INTERNAL][" + state.currentStep().left().getName() + "]" + result.getResponse());
+			}
 			return true;
 		}
 
 		case ASK -> {
 			stepState.setResponse(result.getResponse());
 			stepState.setStatus(LlmStatus.NEED_INFO);
-			stepState.setResponse(result.getResponse());
 
-			sr.addChunk("\n" + result.getResponse().getMessage());
+			sr.addChunk("<br>" + result.getResponse().getMessage());
 			sr.markComplete();
 
 			return false;
@@ -185,9 +185,8 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 		case ERROR -> {
 			stepState.setResponse(result.getResponse());
 			stepState.setStatus(LlmStatus.ERROR);
-			stepState.setResponse(result.getResponse());
 
-			sr.addChunk("\nError: " + result.getResponse().getMessage());
+			sr.addChunk("<br>Error: " + result.getResponse().getMessage());
 			sr.markComplete();
 
 			return false;
@@ -196,9 +195,8 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 		case UNSTRUCTURED -> {
 			stepState.setResponse(result.getResponse());
 			stepState.setStatus(LlmStatus.SUCCESS);
-			stepState.setResponse(result.getResponse());
 			if (state.currentStep().left().getVisibility() == AgentResponseVisibility.INTERNAL) {
-				sr.addChunk("\n\n[INTERNAL STEP RESULT]" + result.getFallbackText());
+				sr.addChunk("[INTERNAL][" + state.currentStep().left().getName() + "]" + result.getFallbackText());
 			}
 			return true;
 		}

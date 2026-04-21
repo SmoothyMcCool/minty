@@ -10,17 +10,17 @@ import java.util.regex.Pattern;
  *
  * Cleaning passes (applied in this order):
  *
- * 1. Smart quotes — curly/typographic quote chars → straight ASCII quotes 2.
- * Dashes — em dash (—) and en dash (–) → hyphen-minus (-) 3. Non-breaking space
- * — U+00A0 → regular space 4. Soft hyphen — U+00AD (invisible) → removed
- * entirely 5. Broken lists — "1 text" style items → "1. text", renumbered from
- * 1 6. Heading spacing — "# Title" (extra spaces after hashes) → "# Title" 7.
- * Normalize — trailing whitespace, excess blank lines, trim
+ * 1. Smart quotes - curly/typographic quote chars → straight ASCII quotes 2.
+ * Dashes - em dash (-) and en dash (–) → hyphen-minus (-) 3. Non-breaking space
+ * - U+00A0 → regular space 4. Soft hyphen - U+00AD (invisible) → removed
+ * entirely 5. Broken lists - "1 text" style items → "1. text", renumbered from
+ * 1 6. Heading spacing - "# Title" (extra spaces after hashes) → "# Title" 7.
+ * Normalize - trailing whitespace, excess blank lines, trim
  */
 public class MarkdownCleaner {
 
 	// -------------------------------------------------------------------------
-	// Pass 1 — Smart quotes
+	// Pass 1 - Smart quotes
 	// -------------------------------------------------------------------------
 
 	// Double curly quotes → straight double quote
@@ -32,29 +32,29 @@ public class MarkdownCleaner {
 	private static final Pattern CLOSE_SINGLE_QUOTE = Pattern.compile("\u2019");
 
 	// -------------------------------------------------------------------------
-	// Pass 2 — Dashes
+	// Pass 2 - Dashes
 	// -------------------------------------------------------------------------
 
-	// Em dash (—) and en dash (–) → hyphen-minus
+	// Em dash (-) and en dash (–) → hyphen-minus
 	private static final Pattern EM_DASH = Pattern.compile("\u2014");
 	private static final Pattern EN_DASH = Pattern.compile("\u2013");
 
 	// -------------------------------------------------------------------------
-	// Pass 5 — Broken ordered lists
+	// Pass 5 - Broken ordered lists
 	// -------------------------------------------------------------------------
 
 	/**
 	 * Matches a broken list item: optional indent, a number, one or more spaces
 	 * (but no dot), then item text. Does NOT match already-correct "1. text".
 	 *
-	 * Groups: 1 — leading indent (may be empty) 2 — number (discarded; we renumber)
-	 * 3 — item text
+	 * Groups: 1 - leading indent (may be empty) 2 - number (discarded; we renumber)
+	 * 3 - item text
 	 */
 	private static final Pattern LIST_ITEM = Pattern.compile("^([ \\t]*)(\\d+)(?:\\.|[ \\t]+)(.+)$");
 	private static final Pattern LIST_SEPARATOR = Pattern.compile("^\\s*<!--.*?-->\\s*$");
 
 	// -------------------------------------------------------------------------
-	// Pass 6 — Heading spacing
+	// Pass 6 - Heading spacing
 	// -------------------------------------------------------------------------
 
 	// "## Title" → "## Title" (one or more hashes, then 2+ spaces)
@@ -81,7 +81,7 @@ public class MarkdownCleaner {
 	}
 
 	// -------------------------------------------------------------------------
-	// Pass 1 — Smart quotes
+	// Pass 1 - Smart quotes
 	// -------------------------------------------------------------------------
 
 	static String fixSmartQuotes(String s) {
@@ -93,7 +93,7 @@ public class MarkdownCleaner {
 	}
 
 	// -------------------------------------------------------------------------
-	// Pass 2 — Dashes
+	// Pass 2 - Dashes
 	// -------------------------------------------------------------------------
 
 	static String fixDashes(String s) {
@@ -103,7 +103,7 @@ public class MarkdownCleaner {
 	}
 
 	// -------------------------------------------------------------------------
-	// Pass 3 — Non-breaking spaces
+	// Pass 3 - Non-breaking spaces
 	// -------------------------------------------------------------------------
 
 	static String fixNonBreakingSpaces(String s) {
@@ -112,7 +112,7 @@ public class MarkdownCleaner {
 	}
 
 	// -------------------------------------------------------------------------
-	// Pass 4 — Soft hyphens
+	// Pass 4 - Soft hyphens
 	// -------------------------------------------------------------------------
 
 	static String fixSoftHyphens(String s) {
@@ -122,7 +122,7 @@ public class MarkdownCleaner {
 	}
 
 	// -------------------------------------------------------------------------
-	// Pass 5 — Broken ordered lists
+	// Pass 5 - Broken ordered lists
 	// -------------------------------------------------------------------------
 
 	/**
@@ -217,7 +217,7 @@ public class MarkdownCleaner {
 	}
 
 	// -------------------------------------------------------------------------
-	// Pass 6 — Heading spacing
+	// Pass 6 - Heading spacing
 	// -------------------------------------------------------------------------
 
 	static String fixHeadingSpacing(String s) {
@@ -226,7 +226,7 @@ public class MarkdownCleaner {
 	}
 
 	// -------------------------------------------------------------------------
-	// Pass 7 — Normalize whitespace
+	// Pass 7 - Normalize whitespace
 	// -------------------------------------------------------------------------
 
 	static String normalize(String markdown) {

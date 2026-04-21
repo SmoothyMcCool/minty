@@ -4,6 +4,7 @@ public class AgentInputField {
 	private String name;
 	private String type;
 	private boolean required;
+	private String description;
 	private AgentInputSource source;
 
 	public AgentInputField(String name, Agent.InputField field) {
@@ -45,9 +46,18 @@ public class AgentInputField {
 		this.source = source;
 	}
 
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
 	@Override
 	public String toString() {
-		return "AgentInputField [name=" + name + ", type=" + type + ", required=" + required + "]";
+		return "AgentInputField [name=" + name + ", type=" + type + ", required=" + required + ", description="
+				+ description + ", source=" + source + "]";
 	}
 
 }

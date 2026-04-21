@@ -5,7 +5,7 @@ You do not generate or modify workflow JSON. You only check it and report findin
 
 ## Your process
 
-Check the workflow JSON against every rule below. Report all errors found — do not stop
+Check the workflow JSON against every rule below. Report all errors found - do not stop
 at the first one. If the JSON is valid, say so explicitly.
 
 ## Structural checks
@@ -65,12 +65,12 @@ at the first one. If the JSON is valid, say so explicitly.
 ## Output format
 
 If valid:
-  "VALID — no errors found."
+  "VALID - no errors found."
 
 If errors found:
-  "INVALID — N error(s) found:"
-  1. [step id / stepName] — description of error
+  "INVALID - N error(s) found:"
+  1. [step id / stepName] - description of error
   2. ...
 
-Be specific. Name the step, field, and exact problem. Do not suggest fixes —
+Be specific. Name the step, field, and exact problem. Do not suggest fixes -
 that is the build agent's job.

@@ -13,7 +13,7 @@ Operations run in order and can be chained to clean, reshape, and transform data
 
 Use Transform for common data preparation tasks: removing null or empty fields, renaming or
 filtering fields, flattening arrays to strings, or applying SpEL expressions for computed values.
-Build the operation sequence in the Definition field — each operation has a name and optional
+Build the operation sequence in the Definition field - each operation has a name and optional
 configuration. Multiple operations in one Transform step run more efficiently than chaining
 multiple separate tasks.
 
@@ -25,7 +25,7 @@ multiple separate tasks.
 
 ### IMPORTANT: Double-encoding
 The `Definition` value is a **JSON string inside a JSON string**.
-You must JSON-encode the inner object — all quotes become `\"`, backslashes become `\\`.
+You must JSON-encode the inner object - all quotes become `\"`, backslashes become `\\`.
 
 Inner object structure (before encoding):
 ```json
@@ -84,7 +84,7 @@ Sets a specific field to a fixed value on every record.
 
 ### SpEL Expression
 Evaluates a SpEL expression against the packet's `data` list.
-The expression receives `data` as the root object — the array of data records.
+The expression receives `data` as the root object - the array of data records.
 Use `data.![expression]` to project (map) over every record in the list.
 Inside `data.![...]`, `#this` refers to the current record (a Map).
 ```json
@@ -96,21 +96,21 @@ Inside `data.![...]`, `#this` refers to the current record (a Map).
 
 ## Configuration examples
 
-### Single operation — remove nulls
+### Single operation - remove nulls
 ```json
 {
   "Definition": "{\"operations\":[{\"name\":\"Remove Null Fields\",\"configuration\":null}]}"
 }
 ```
 
-### Multiple operations — remove nulls then flatten lists
+### Multiple operations - remove nulls then flatten lists
 ```json
 {
   "Definition": "{\"operations\":[{\"name\":\"Remove Null Fields\",\"configuration\":null},{\"name\":\"Flatten Lists\",\"configuration\":{\"separator\":\"\\n----\\n\",\"precedence\":\"last\"}}]}"
 }
 ```
 
-### Multiple operations — SpEL uppercase then keep specific fields
+### Multiple operations - SpEL uppercase then keep specific fields
 ```json
 {
   "Definition": "{\"operations\":[{\"name\":\"SpEL Expression\",\"configuration\":\"data.![#this.put('name', #this['name']?.toUpperCase())]\"},{\"name\":\"Keep Fields\",\"configuration\":[\"id\",\"name\"]}]}"

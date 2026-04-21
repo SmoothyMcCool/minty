@@ -76,7 +76,7 @@ public class Funnel extends MintyTask {
 			@Override
 			public String expects() {
 				return "Accepts: any packets on any connected input. Packets are forwarded individually "
-						+ "as they arrive — there is no waiting, buffering, or combining across inputs.";
+						+ "as they arrive - there is no waiting, buffering, or combining across inputs.";
 			}
 
 			@Override

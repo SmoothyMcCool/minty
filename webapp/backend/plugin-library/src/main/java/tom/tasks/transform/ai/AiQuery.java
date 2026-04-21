@@ -218,12 +218,12 @@ public class AiQuery extends MintyTask implements ServiceConsumer {
 			public String description() {
 				return "Send a prompt to an AI assistant and emit the response as a packet. "
 						+ "The system prompt is set in the Assistant configuration. "
-						+ "The Query field is the first user message — leave it empty when text is fed from an upstream step.";
+						+ "The Query field is the first user message - leave it empty when text is fed from an upstream step.";
 			}
 
 			@Override
 			public String expects() {
-				return "Accepts: a packet whose text items are each appended to the Query and sent to the model — "
+				return "Accepts: a packet whose text items are each appended to the Query and sent to the model - "
 						+ "one LLM call is made per text item. "
 						+ "The input data array must contain 0 or 1 objects; multiple records are not supported. "
 						+ "Both text and data must be arrays even when empty. "

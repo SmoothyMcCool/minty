@@ -32,7 +32,7 @@ public class SkillTools implements MintyTool, ServiceConsumer {
 			6. Do not skip steps. Do not read ahead.
 
 			Important rules:
-			- Always check list_skills before attempting a complex task — a skill may exist for it.
+			- Always check list_skills before attempting a complex task - a skill may exist for it.
 			- Never guess at filenames. Only request files that are explicitly named in instructions you have already read.
 			- If a skill step tells you to stop and wait for the user, do so before loading the next file.
 
@@ -51,7 +51,7 @@ public class SkillTools implements MintyTool, ServiceConsumer {
 			Returns the full contents of SKILL.md for the named skill.
 			Call this after list_skills once you have identified the skill you need.
 			SKILL.md contains the instructions you must follow to complete the task.
-			It may also tell you to load additional files using get_skill_file — follow those instructions exactly.
+			It may also tell you to load additional files using get_skill_file - follow those instructions exactly.
 			""")
 	public String getSkill(
 			@ToolParam(description = "The exact skill name as returned by list_skills.") String skillName) {
@@ -62,7 +62,7 @@ public class SkillTools implements MintyTool, ServiceConsumer {
 			Returns the contents of a supporting file that belongs to a skill.
 			Only call this when SKILL.md explicitly tells you to load a specific file.
 			Use the exact filename path as written in SKILL.md (for example: steps/step-1-collect.md).
-			Do not load files speculatively — only load the file that the current instruction refers to.
+			Do not load files speculatively - only load the file that the current instruction refers to.
 			""")
 	public String getSkillFile(
 			@ToolParam(description = "The exact skill name as returned by list_skills.") String skillName,

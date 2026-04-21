@@ -1,4 +1,4 @@
-# Step 3B — Quality Checklist
+# Step 3B - Quality Checklist
 
 Run these checks on the requirement you just wrote in Step 3A.
 If any check FAILS, rewrite the requirement and show the corrected version before continuing.
@@ -17,7 +17,7 @@ CHECK 2: Contains a forbidden word?
   YES → Replace it using the table below. FAIL.
 
 CHECK 3 (P and Q types only): Missing a number and no [TBD]?
-  YES → Add the number or write [TBD — reason]. FAIL.
+  YES → Add the number or write [TBD - reason]. FAIL.
 
 CHECK 4: Names a specific technology, vendor, or language?
   YES → Remove it. Describe what the system does, not how. FAIL.

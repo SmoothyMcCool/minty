@@ -9,7 +9,7 @@ numOutputs: 1
 
 ## What it does
 Parses TSV (tab-separated values) text from the input packet's `text` field into structured data records.
-The first row of the TSV is treated as the header row — its values become the field names in the output data.
+The first row of the TSV is treated as the header row - its values become the field names in the output data.
 Each subsequent row becomes one data record (a map of field name to value).
 All resulting records are collected into a single output packet's `data` list.
 
@@ -61,5 +61,5 @@ Output data:
 ```
 
 ## Common uses
-- After Emit Document when the uploaded file is a spreadsheet — converts its TSV content into structured data records
+- After Emit Document when the uploaded file is a spreadsheet - converts its TSV content into structured data records
 - Parsing any tab-delimited text produced by an upstream step

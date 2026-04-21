@@ -34,4 +34,6 @@ public interface PluginServices {
 	SkillService getSkillsService();
 
 	WorkflowService getWorkflowService();
+
+	AgentRegistry getAgentRegistry();
 }

@@ -93,7 +93,7 @@ public class ExtractSpreadSheet extends MintyTask {
 			@Override
 			public String expects() {
 				return "Accepts: a packet with one or more items in the text list, each containing TSV-formatted "
-						+ "content. The first row of each TSV block is the header row — its values become the "
+						+ "content. The first row of each TSV block is the header row - its values become the "
 						+ "field names in the output data records.";
 			}
 

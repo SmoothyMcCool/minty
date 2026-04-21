@@ -18,7 +18,7 @@ Runs once immediately when the workflow starts.
 |-----|------|----------|-------------|
 | `File` | Document | yes | The uploaded file to read. Stored as a base64-encoded object with `name` and `file` fields. |
 
-The `File` configuration value is set via the UI file upload widget — it is not a plain string.
+The `File` configuration value is set via the UI file upload widget - it is not a plain string.
 When generating JSON for this task, set `"File": {}` as a placeholder and note that the user must upload the file via the UI.
 
 ## Output packet structure
@@ -26,7 +26,7 @@ When generating JSON for this task, set `"File": {}` as a placeholder and note t
 { "id": null, "text": ["<file contents as markdown>"], "data": null }
 ```
 
-Note: Emit Document is the only task that produces `null` for `id` and `data`. The `text` field is still an array containing one string — the full file contents.
+Note: Emit Document is the only task that produces `null` for `id` and `data`. The `text` field is still an array containing one string - the full file contents.
 
 ## Connections
 - Has NO inputs. Never set this step as a `readerId` in connections.

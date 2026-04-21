@@ -1,4 +1,4 @@
-# Step 3D — Review All Requirements
+# Step 3D - Review All Requirements
 
 Read `req-requirements.json` and present every requirement in this table:
 
@@ -6,7 +6,7 @@ Read `req-requirements.json` and present every requirement in this table:
 | ID        | Requirement                         | Type | Verification | TBD? |
 |-----------|-------------------------------------|------|--------------|------|
 | GCS-F-001 | The system shall ...                | F    | Test         | No   |
-| GCS-P-001 | The system shall ... [TBD — ...]    | P    | Analysis     | Yes  |
+| GCS-P-001 | The system shall ... [TBD - ...]    | P    | Analysis     | Yes  |
 ```
 
 TBD? = Yes if the requirement's `tbd` field is true. Otherwise No.

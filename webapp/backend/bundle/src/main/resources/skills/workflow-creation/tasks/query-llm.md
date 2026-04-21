@@ -15,37 +15,37 @@ input packet. If the input has multiple text items, one LLM call is made per ite
 The response is stored in `data` if it parses as a JSON array of objects, otherwise in `text`.
 
 Feed structured data through Format Text first if you need to construct a prompt from data fields.
-For multi-turn conversations, choose an assistant with memory enabled — the task will
+For multi-turn conversations, choose an assistant with memory enabled - the task will
 automatically continue the conversation using the `Conversation ID` carried in the packet.
 
-## Before generating this task — ask the user
+## Before generating this task - ask the user
 
 You must ask the user for these two values before writing the configuration:
 
 1. **Which model?** Suggested default: `gpt-oss:120b`
 2. **Context size?** Suggested default: `32768` (32k). Common values: `16384` (16k), `32768` (32k).
 
-You may choose a reasonable `temperature` yourself — `0.7` is a good general default.
+You may choose a reasonable `temperature` yourself - `0.7` is a good general default.
 Lower values (0.1–0.3) for factual/structured output, higher (0.7–1.0) for creative tasks.
 
 ## Configuration
 
-The `Assistant` object is inline — it is not a reference to a saved assistant.
+The `Assistant` object is inline - it is not a reference to a saved assistant.
 The `id` and `name` fields inside `assistant` do not matter; use empty string and any label.
 The `prompt` field is the **system prompt** (instruction to the model).
-The `Query` field is the **first user message** — this is only used if the step has no
+The `Query` field is the **first user message** - this is only used if the step has no
 upstream input, or if you want a fixed opening message. Most of the time leave it empty
 and supply text from an upstream step instead.
 
-All other fields must be set exactly as shown in the template — do not change them.
+All other fields must be set exactly as shown in the template - do not change them.
 
 | Field | Set by user | Notes |
 |-------|------------|-------|
-| `model` | yes | Ask the user — suggest `gpt-oss:120b` |
-| `contextSize` | yes | Ask the user — suggest `32768` |
+| `model` | yes | Ask the user - suggest `gpt-oss:120b` |
+| `contextSize` | yes | Ask the user - suggest `32768` |
 | `temperature` | you decide | 0.7 is a good default |
 | `prompt` | yes | The system prompt / instruction |
-| `Query` | yes | First user message — leave `""` if fed from upstream |
+| `Query` | yes | First user message - leave `""` if fed from upstream |
 | `topK` | fixed | Always `5` |
 | `tools` | fixed | Always `[]` |
 | `owned` | fixed | Always `false` |
@@ -53,7 +53,7 @@ All other fields must be set exactly as shown in the template — do not change 
 | `documentIds` | fixed | Always `[]` |
 | `assistantId` | fixed | Always `null` |
 | `id` (assistant) | fixed | Always `""` |
-| `name` (assistant) | fixed | Any string — use `"assistant"` |
+| `name` (assistant) | fixed | Any string - use `"assistant"` |
 
 ## Configuration template
 
@@ -65,10 +65,10 @@ All other fields must be set exactly as shown in the template — do not change 
     "assistant": {
       "id": "",
       "name": "assistant",
-      "prompt": "<system prompt — your instruction to the model>",
-      "model": "<ask user — suggest gpt-oss:120b>",
-      "contextSize": <ask user — suggest 32768>,
-      "temperature": <you decide — 0.7 is a good default>,
+      "prompt": "<system prompt - your instruction to the model>",
+      "model": "<ask user - suggest gpt-oss:120b>",
+      "contextSize": <ask user - suggest 32768>,
+      "temperature": <you decide - 0.7 is a good default>,
       "topK": 5,
       "tools": [],
       "owned": false,
@@ -128,8 +128,8 @@ Query LLM used as a starting step (Query provides the first user message):
 ```
 
 ## Input constraints
-- Input `data` array must contain 0 or 1 objects — multiple records are not supported.
-- Input `text` array may contain multiple strings — one LLM call is made per text item.
+- Input `data` array must contain 0 or 1 objects - multiple records are not supported.
+- Input `text` array may contain multiple strings - one LLM call is made per text item.
 - Both `text` and `data` must be arrays even when empty.
 
 ## Output

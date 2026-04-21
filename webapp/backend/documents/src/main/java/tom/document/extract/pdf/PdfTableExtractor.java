@@ -30,7 +30,7 @@ public class PdfTableExtractor {
     }
 
     /**
-     * Detects lines that appear repeatedly across pages — these are almost certainly
+     * Detects lines that appear repeatedly across pages - these are almost certainly
      * running headers or footers and should be stripped before block detection.
      *
      * A line is considered a header/footer if:
@@ -89,7 +89,7 @@ public class PdfTableExtractor {
                 continue;
             }
 
-            // Table detection — only commit if we see MIN_TABLE_ROWS consecutive rows
+            // Table detection - only commit if we see MIN_TABLE_ROWS consecutive rows
             if (looksLikeTableRow(line)) {
                 int tableEnd = i;
                 while (tableEnd < lines.size() && looksLikeTableRow(lines.get(tableEnd))) {
@@ -106,10 +106,10 @@ public class PdfTableExtractor {
                     blocks.add(new PdfBlock.Table(rows));
                     continue;
                 }
-                // Fewer than MIN_TABLE_ROWS — fall through to paragraph
+                // Fewer than MIN_TABLE_ROWS - fall through to paragraph
             }
 
-            // Paragraph — merge consecutive non-structural lines
+            // Paragraph - merge consecutive non-structural lines
             StringBuilder paragraph = new StringBuilder(line.getText());
             i++;
 

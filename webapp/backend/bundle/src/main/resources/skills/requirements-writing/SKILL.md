@@ -8,8 +8,8 @@ description: >
   functional requirements", "write non-functional requirements", "decompose requirements",
   or any request to produce or refine requirements artifacts for a system or subsystem.
   Also use when the user provides a ConOps, SOW, customer spec, or problem statement and
-  wants requirements derived from it. Always use this skill — even for a single requirement
-  — to ensure INCOSE-aligned quality and correct output format.
+  wants requirements derived from it. Always use this skill - even for a single requirement
+  - to ensure INCOSE-aligned quality and correct output format.
 metadata:
   target_model: "small (≤20B parameters)"
 ---
@@ -20,7 +20,7 @@ This skill produces INCOSE-aligned system requirements in Markdown format.
 
 ---
 
-## SESSION START — do this first, every time
+## SESSION START - do this first, every time
 
 Before responding to the user, read the project state files to determine where to resume:
 
@@ -40,15 +40,15 @@ Never ask the user for information already present in these files.
 
 | `step` in req-session.json | Action |
 |---|---|
-| `1` | Inputs incomplete — load `steps/step-1-collect.md` |
-| `2` | Inputs collected — load `steps/step-2-classify.md` |
-| `3` | Classification confirmed — read req-classified.json, resume Step 3 loop at index `needs_written + 1`, load `steps/step-3a-template.md` |
-| `3d` | All requirements written — read both JSONs, load `steps/step-3d-review.md` |
-| `4` | Review confirmed — read all JSONs, load `steps/step-4-output.md` |
+| `1` | Inputs incomplete - load `steps/step-1-collect.md` |
+| `2` | Inputs collected - load `steps/step-2-classify.md` |
+| `3` | Classification confirmed - read req-classified.json, resume Step 3 loop at index `needs_written + 1`, load `steps/step-3a-template.md` |
+| `3d` | All requirements written - read both JSONs, load `steps/step-3d-review.md` |
+| `4` | Review confirmed - read all JSONs, load `steps/step-4-output.md` |
 | `done` | Inform user the document was already generated. Offer to regenerate or revise. |
 
 When resuming mid-session, tell the user briefly where you're picking up:
-> "Resuming — inputs collected, 2 of 5 requirements written. Continuing with requirement 3."
+> "Resuming - inputs collected, 2 of 5 requirements written. Continuing with requirement 3."
 
 ---
 
@@ -60,7 +60,7 @@ When resuming mid-session, tell the user briefly where you're picking up:
         ▼ (no state file)
 [STEP 1] steps/step-1-collect.md
   Collect: system name, prefix, level, source material.
-  Scan conversation first — only ask for genuinely missing values.
+  Scan conversation first - only ask for genuinely missing values.
   → writeFile: req-session.json (step: 2)
         │
         ▼
@@ -91,7 +91,7 @@ When resuming mid-session, tell the user briefly where you're picking up:
 [STEP 4] steps/step-4-output.md
   Generate and save the Markdown requirements document.
   → update req-session.json (step: "done")
-  END — do not load any further files.
+  END - do not load any further files.
 ```
 
 ---

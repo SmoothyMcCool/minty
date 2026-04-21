@@ -21,7 +21,7 @@ prompt: |
 
       {"insufficient": true}
 
-      Otherwise, return a single JSON object — no markdown, no explanation — using
+      Otherwise, return a single JSON object - no markdown, no explanation - using
       this schema:
 
       {

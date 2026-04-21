@@ -23,11 +23,11 @@ public class AgentPlannerImpl implements AgentPlanner {
 	private static final Logger logger = LogManager.getLogger(AgentPlannerImpl.class);
 
 	private AssistantQueryService assistantQueryService;
-	private final AgentRegistry agentRegistry;
+	private final AgentRegistryImpl agentRegistry;
 
 	private static final ObjectMapper Mapper = new ObjectMapper();
 
-	public AgentPlannerImpl(AgentRegistry agentRegistry) {
+	public AgentPlannerImpl(AgentRegistryImpl agentRegistry) {
 
 		this.agentRegistry = agentRegistry;
 	}
@@ -68,7 +68,9 @@ public class AgentPlannerImpl implements AgentPlanner {
 				}));
 			}
 
-		} catch (Exception e) {
+		} catch (
+
+		Exception e) {
 			throw new RuntimeException("Failed to parse planner output: " + json, e);
 		}
 	}

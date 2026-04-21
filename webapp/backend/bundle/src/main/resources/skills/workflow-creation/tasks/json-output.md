@@ -15,7 +15,7 @@ It is the standard output formatter for most workflows.
 ## IMPORTANT: This task is an outputStep only
 - Do NOT place this task in the `steps` array.
 - Place it only in the top-level `outputStep` field.
-- It receives no connections — it reads directly from the ExecutionResult, not from connectors.
+- It receives no connections - it reads directly from the ExecutionResult, not from connectors.
 
 ## Configuration
 No configuration required.

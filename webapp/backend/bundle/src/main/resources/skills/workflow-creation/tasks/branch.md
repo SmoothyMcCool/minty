@@ -23,15 +23,15 @@ For repeated conditional evaluation (looping), use Loop instead.
 
 ### SpEL expression context
 The variable `#p` refers to the current packet. Access all three packet fields via `#p`:
-- `#p.id` — the packet's id string
-- `#p.text` — the packet's text list (List<String>)
-- `#p.text[0]` — the first text string
-- `#p.data` — the packet's data list (List<Map>)
-- `#p.data[0]['fieldName']` — value of a field in the first data record
+- `#p.id` - the packet's id string
+- `#p.text` - the packet's text list (List<String>)
+- `#p.text[0]` - the first text string
+- `#p.data` - the packet's data list (List<Map>)
+- `#p.data[0]['fieldName']` - value of a field in the first data record
 
 The expression MUST return a boolean. If it returns anything else, the task fails.
 
-Note: Branch uses `#p` as the packet variable. Loop uses a different context — see loop.md.
+Note: Branch uses `#p` as the packet variable. Loop uses a different context - see loop.md.
 
 ## Configuration examples
 

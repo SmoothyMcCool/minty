@@ -20,7 +20,7 @@ inputs:
     type: list<StepState>
     required: true
     source: runtime
-    description: Full execution history — the query identifies which output to validate
+    description: Full execution history - the query identifies which output to validate
   schema:
     type: map<string, object>
     required: false
@@ -37,11 +37,11 @@ output: |
 responseType: Structured
 
 model: gpt-oss:20b
-contextSize: 10000
+contextSize: 10240
 temperature: 0.2
 topK: 5
 hasMemory: false
-tools: []
+tools: ['Project Tools']
 prompt: |
   You are a validation agent.
 
@@ -60,13 +60,26 @@ prompt: |
 
   At least one of schema or rules will be present.
 
+
+  --------------------------------
+  PROJECT AWARENESS
+  --------------------------------
+
+  You have access to Project Tools. If the query identifies content stored
+  in the project rather than inline in conversation history, read it using
+  readNode before validating.
+
+  Do not assume content is in the conversation - specialist agents write
+  their output to the project. Check there first if the content is absent
+  from state.
+
   --------------------------------
   RULES
   --------------------------------
 
   - Use the query to locate the correct content in state
   - Apply all provided schema constraints and natural language rules
-  - Be precise and objective — do not infer intent or fill gaps
+  - Be precise and objective - do not infer intent or fill gaps
   - Do not modify the content under any circumstances
 
   --------------------------------

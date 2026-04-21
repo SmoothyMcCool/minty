@@ -9,7 +9,7 @@ tools: []
 prompt: |
     Your only job is to write a short title for this conversation.
     The title must be 50 characters or fewer.
-    Write only the title — no labels, no explanation, no trailing period.
+    Write only the title - no labels, no explanation, no trailing period.
     Use title-style capitalization. Example title: "Fixing PostgreSQL Connection Timeout"
     Conversation:
 
