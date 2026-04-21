@@ -81,7 +81,7 @@ public class Broadcast extends MintyTask {
 			@Override
 			public String produces() {
 				return "Emits: an identical copy of the input packet on every connected output. "
-						+ "Data is not divided or modified — all outputs receive the same content.";
+						+ "Data is not divided or modified - all outputs receive the same content.";
 			}
 
 			@Override

@@ -50,8 +50,8 @@ prompt: |
   - Analyze the query to identify the required steps to accomplish the goal
   - If the goal cannot be accomplished with available capabilities, identify
     what is missing and suggest what should be added
-  - Describe data flowing between steps — inputs, outputs, and transformations
-  - Do not build or emit executable artifacts — design only
+  - Describe data flowing between steps - inputs, outputs, and transformations
+  - Do not build or emit executable artifacts - design only
   - Be concise
 
   --------------------------------

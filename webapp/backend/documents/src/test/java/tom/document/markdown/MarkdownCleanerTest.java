@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 class MarkdownCleanerTest {
 
 	// =========================================================================
-	// Pass 1 — Smart quotes
+	// Pass 1 - Smart quotes
 	// =========================================================================
 
 	@Test
@@ -36,7 +36,7 @@ class MarkdownCleanerTest {
 	}
 
 	// =========================================================================
-	// Pass 2 — Dashes
+	// Pass 2 - Dashes
 	// =========================================================================
 
 	@Test
@@ -63,7 +63,7 @@ class MarkdownCleanerTest {
 	}
 
 	// =========================================================================
-	// Pass 3 — Non-breaking spaces
+	// Pass 3 - Non-breaking spaces
 	// =========================================================================
 
 	@Test
@@ -88,7 +88,7 @@ class MarkdownCleanerTest {
 	}
 
 	// =========================================================================
-	// Pass 4 — Soft hyphens
+	// Pass 4 - Soft hyphens
 	// =========================================================================
 
 	@Test
@@ -107,7 +107,7 @@ class MarkdownCleanerTest {
 	}
 
 	// =========================================================================
-	// Pass 5 — Broken ordered lists (carried over from MarkdownListCleaner)
+	// Pass 5 - Broken ordered lists (carried over from MarkdownListCleaner)
 	// =========================================================================
 
 	@Test
@@ -142,7 +142,7 @@ class MarkdownCleanerTest {
 	}
 
 	// =========================================================================
-	// Pass 6 — Heading spacing
+	// Pass 6 - Heading spacing
 	// =========================================================================
 
 	@Test
@@ -177,7 +177,7 @@ class MarkdownCleanerTest {
 	}
 
 	// =========================================================================
-	// Pass 7 — Normalize (whitespace / blank lines / trim)
+	// Pass 7 - Normalize (whitespace / blank lines / trim)
 	// =========================================================================
 
 	@Test
@@ -196,7 +196,7 @@ class MarkdownCleanerTest {
 	}
 
 	// =========================================================================
-	// Integration — all passes together
+	// Integration - all passes together
 	// =========================================================================
 
 	@Test

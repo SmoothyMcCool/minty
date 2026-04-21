@@ -18,23 +18,21 @@ import tom.assistant.service.agent.model.PlanState;
 
 public class AgentPlannerPromptBuilder {
 
+	private static final int MaxWords = 12;
 	private static final ObjectMapper Mapper = new ObjectMapper();
 
-	private static final int MaxUseWhen = 4;
-	private static final int MaxAvoidWhen = 3;
-	private static final int MaxInputs = 6;
-	private static final int MaxWords = 12;
-
-	public static String buildPrompt(String prompt, Collection<Agent> agents, Collection<String> staticWorkers,
+	public static String buildPrompt(String prompt, Collection<Agent> staticAgents, Collection<Agent> dynamicAgents,
 			PlanState state) {
 		String dynamicAgentsBlock = "";
-		if (agents != null) {
-			dynamicAgentsBlock = agents.stream().map(agent -> toCompact(agent)).collect(Collectors.joining("\n\n"));
+		if (dynamicAgents != null) {
+			dynamicAgentsBlock = dynamicAgents.stream().map(agent -> getAgentSummary(agent))
+					.collect(Collectors.joining("\n\n"));
 		}
 
-		String staticWorkersBlock = "";
-		if (staticWorkers != null) {
-			staticWorkersBlock = String.join("\n- ", prependDash(staticWorkers));
+		String staticAgentsBlock = "";
+		if (staticAgents != null) {
+			staticAgentsBlock = staticAgents.stream().map(agent -> getAgentSummary(agent))
+					.collect(Collectors.joining("\n\n"));
 		}
 
 		String stateAsString = "";
@@ -42,8 +40,8 @@ public class AgentPlannerPromptBuilder {
 			stateAsString = buildPlanContext(state);
 		}
 
-		return prompt.replace("{{STATIC_WORKERS}}", staticWorkersBlock)
-				.replace("{{DYNAMIC_AGENTS}}", dynamicAgentsBlock).replace("{{PLAN_CONTEXT_JSON}}", stateAsString);
+		return prompt.replace("{{STATIC_WORKERS}}", staticAgentsBlock).replace("{{DYNAMIC_AGENTS}}", dynamicAgentsBlock)
+				.replace("{{PLAN_CONTEXT_JSON}}", stateAsString);
 	}
 
 	private static String buildPlanContext(PlanState state) {
@@ -72,27 +70,23 @@ public class AgentPlannerPromptBuilder {
 		}
 	}
 
-	// =========================
-	// COMPACT TRANSFORMATION
-	// =========================
-
-	private static String toCompact(Agent agent) {
+	public static String createAgentDefinition(Agent agent) {
 		StringBuilder sb = new StringBuilder();
 
 		appendLine(sb, "Agent: " + agent.getName());
-		appendLine(sb, "Purpose: " + shorten(agent.getPurpose()));
+		appendLine(sb, "Purpose: " + agent.getPurpose());
 
 		if (!isEmpty(agent.getWhenToUse())) {
 			appendLine(sb, "Use when:");
-			for (String rule : limit(agent.getWhenToUse(), MaxUseWhen)) {
-				appendLine(sb, "- " + shorten(rule));
+			for (String rule : agent.getWhenToUse()) {
+				appendLine(sb, "- " + rule);
 			}
 		}
 
 		if (!isEmpty(agent.getWhenNotToUse())) {
 			appendLine(sb, "Avoid when:");
-			for (String rule : limit(agent.getWhenNotToUse(), MaxAvoidWhen)) {
-				appendLine(sb, "- " + shorten(rule));
+			for (String rule : agent.getWhenNotToUse()) {
+				appendLine(sb, "- " + rule);
 			}
 		}
 
@@ -106,21 +100,27 @@ public class AgentPlannerPromptBuilder {
 					.filter(f -> f.getSource().name().equals("planner")).collect(Collectors.toList());
 
 			if (!runtimeInputs.isEmpty()) {
-				appendLine(sb, "Inputs (runtime-injected — do not include in step input):");
-				for (AgentInputField f : limit(runtimeInputs, MaxInputs)) {
+				appendLine(sb, "Inputs (runtime-injected - do not include in step input):");
+				for (AgentInputField f : runtimeInputs) {
 					String line = "- " + f.getName() + " (" + f.getType() + ")";
-					if (f.isRequired())
+					if (f.isRequired()) {
 						line += " [required]";
+					}
+					if (f.getDescription() != null) {
+						line += ": " + f.getDescription();
+					}
 					appendLine(sb, line);
 				}
 			}
 
 			if (!plannerInputs.isEmpty()) {
-				appendLine(sb, "Inputs (planner-provided — include in step input as needed):");
-				for (AgentInputField f : limit(plannerInputs, MaxInputs)) {
+				appendLine(sb, "Inputs (planner-provided - include in step input as needed):");
+				for (AgentInputField f : plannerInputs) {
 					String line = "- " + f.getName() + " (" + f.getType() + ")";
 					if (f.isRequired())
 						line += " [required]";
+					if (f.getDescription() != null)
+						line += ": " + f.getDescription();
 					appendLine(sb, line);
 				}
 			}
@@ -128,15 +128,33 @@ public class AgentPlannerPromptBuilder {
 
 		if (agent.getOutput() != null && !agent.getOutput().isBlank()) {
 			appendLine(sb, "Output:");
-			appendLine(sb, "- " + shorten(agent.getOutput()));
+			appendLine(sb, "- " + agent.getOutput());
+		}
+
+		if (agent.getPrompt() != null && !agent.getPrompt().isBlank()) {
+			appendLine(sb, "Prompt summary:");
+			appendLine(sb, "- " + shorten(agent.getPrompt()));
 		}
 
 		return sb.toString().trim();
 	}
 
-	// =========================
-	// HELPERS
-	// =========================
+	private static String getAgentSummary(Agent agent) {
+		StringBuilder sb = new StringBuilder();
+
+		appendLine(sb, "Agent: " + agent.getName());
+		appendLine(sb, "Purpose: " + shorten(agent.getPurpose()));
+
+		if (!isEmpty(agent.getWhenToUse())) {
+			appendLine(sb, "Use when: " + agent.getWhenToUse().get(0)); // first rule only
+		}
+
+		if (!isEmpty(agent.getWhenNotToUse())) {
+			appendLine(sb, "Avoid when: " + agent.getWhenNotToUse().get(0)); // first rule only
+		}
+
+		return sb.toString().trim();
+	}
 
 	private static void appendLine(StringBuilder sb, String line) {
 		sb.append(line.trim()).append("\n");
@@ -146,20 +164,11 @@ public class AgentPlannerPromptBuilder {
 		return list == null || list.isEmpty();
 	}
 
-	private static <T> List<T> limit(List<T> list, int max) {
-		return list.stream().limit(max).collect(Collectors.toList());
-	}
-
 	private static List<AgentInputField> sortInputs(Agent.Inputs inputs) {
 		return inputs.properties.entrySet().stream().map(entry -> new AgentInputField(entry.getKey(), entry.getValue()))
 				.sorted(Comparator.comparing((AgentInputField f) -> !f.isRequired())).collect(Collectors.toList());
 	}
 
-	private static List<String> prependDash(Collection<String> items) {
-		return items.stream().map(item -> "- " + item).collect(Collectors.toList());
-	}
-
-	// Basic shortening heuristic
 	private static String shorten(String text) {
 		if (text == null)
 			return "";
@@ -173,4 +182,5 @@ public class AgentPlannerPromptBuilder {
 
 		return String.join(" ", Arrays.copyOfRange(words, 0, MaxWords));
 	}
+
 }

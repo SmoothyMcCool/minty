@@ -93,7 +93,7 @@ public class FormatText extends MintyTask {
 			@Override
 			public String expects() {
 				return "Accepts: any packet whose fields are referenced in the Format template. "
-						+ "Placeholders use the syntax {path} — for example {data[0].name} or {text[0]}. "
+						+ "Placeholders use the syntax {path} - for example {data[0].name} or {text[0]}. "
 						+ "Reference specific array indices to pull values from multi-record packets.";
 			}
 

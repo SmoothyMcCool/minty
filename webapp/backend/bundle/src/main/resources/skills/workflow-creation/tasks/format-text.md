@@ -12,7 +12,7 @@ Renders a template string by substituting values from the input packet's data an
 
 Template placeholders use the syntax `{path.to.value}` where the path navigates the packet's JSON structure.
 The rendered result is added to the output packet's `text` list.
-Even if the input `data` contains an array of items, only one rendered string is produced — but the template can reference different array indices.
+Even if the input `data` contains an array of items, only one rendered string is produced - but the template can reference different array indices.
 
 ## Configuration
 
@@ -46,7 +46,7 @@ Placeholders use `{path}` where path follows the same rules as SetId path expres
 ```
 ```json
 {
-  "Format": "Score: {data.score} — Category: {data.category}"
+  "Format": "Score: {data.score} - Category: {data.category}"
 }
 ```
 

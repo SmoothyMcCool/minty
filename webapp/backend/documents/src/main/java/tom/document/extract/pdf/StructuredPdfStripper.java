@@ -61,7 +61,7 @@ public class StructuredPdfStripper extends PDFTextStripper {
 
     /**
      * Groups raw text fragments into logical lines by proximity of y coordinate.
-     * PDFBox calls writeString once per text fragment (word, run, etc.) — multiple
+     * PDFBox calls writeString once per text fragment (word, run, etc.) - multiple
      * fragments share the same visual line but have slightly differing y values due
      * to floating point. We bucket them within Y_THRESHOLD and concatenate.
      */

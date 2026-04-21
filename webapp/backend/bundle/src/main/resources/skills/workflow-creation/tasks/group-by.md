@@ -12,8 +12,8 @@ Joins two sorted streams on a shared packet ID, grouping matching records togeth
 Port 0 receives key packets one at a time. Port 1 receives a stream of detail packets.
 For each key packet, all detail packets whose ID matches are combined into one output packet.
 
-Use GroupBy when you have two related streams — for example, a list of categories on port 0
-and a larger sorted list of items on port 1 — and you want to group the items under their
+Use GroupBy when you have two related streams - for example, a list of categories on port 0
+and a larger sorted list of items on port 1 - and you want to group the items under their
 category. Both streams must be sorted by ID before reaching GroupBy. Add Sort and SetId
 steps upstream on each branch if needed.
 

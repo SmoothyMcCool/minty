@@ -9,10 +9,10 @@ numOutputs: 1
 
 ## What it does
 Expands a single packet that contains multiple items in its `text` or `data` arrays
-into a stream of individual packets — one per item. All output packets share the input packet's ID.
+into a stream of individual packets - one per item. All output packets share the input packet's ID.
 
 Use Split to fan out a multi-record packet so each record can be processed individually
-by downstream steps — for example, sending each item to Query LLM for its own LLM call.
+by downstream steps - for example, sending each item to Query LLM for its own LLM call.
 Pair with Collect at the end of the pipeline to reassemble the results into one packet.
 
 To clone a packet identically to multiple outputs, use Broadcast instead.

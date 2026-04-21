@@ -1,3 +1,8 @@
+export interface AgentStepResult {
+	statusMessage: string;
+	stepOutput: string;
+}
+
 export interface Assistant {
 	id: string;
 	name: string;

@@ -46,18 +46,18 @@ It returns: the workflow JSON, and information on where the workflow is stored.
 Only call create_workflow or update_workflow after the Validate agent has confirmed the JSON is valid.
 Never submit workflow JSON that has not passed validation.
 
-### Step 1 — identify which tasks are needed
+### Step 1 - identify which tasks are needed
 Read the user's request and decide which tasks are required.
 Available tasks are listed in the TASK INDEX below.
 Load the task file for each task you intend to use before writing any JSON.
 
-### Step 2 — load supporting files
+### Step 2 - load supporting files
 Always load:
-- `workflow-schema.md` — the full JSON schema and connection rules
-- `packet-schema.md` — Packet structure, path syntax, and SpEL expression reference
+- `workflow-schema.md` - the full JSON schema and connection rules
+- `packet-schema.md` - Packet structure, path syntax, and SpEL expression reference
 
 Load only the task files you need:
-- `tasks/<filename>` — one file per task
+- `tasks/<filename>` - one file per task
 
 Do not load task files you will not use. Keep context small.
 
@@ -71,7 +71,7 @@ Use the loaded task files for exact taskName values, numInputs, numOutputs, and 
 
 ## Task index
 
-### Emit (source tasks — no inputs, start immediately)
+### Emit (source tasks - no inputs, start immediately)
 | Task | File | Purpose |
 |------|------|---------|
 | Emit Packet | `tasks/emit-packet.md` | Injects hardcoded JSON packet data |
@@ -140,7 +140,7 @@ Use Split to expand, process each item individually, then Collect to reassemble.
 
 ---
 
-## Golden rules — never violate these
+## Golden rules - never violate these
 
 1. `writerId` is the upstream step (the step sending data). `readerId` is the downstream step (the step receiving data).
 2. Indices are zero-based. `writerPort` must be within `[0, numOutputs-1]`. `readerPort` must be within `[0, numInputs-1]`.
@@ -151,7 +151,7 @@ Use Split to expand, process each item individually, then Collect to reassemble.
 7. The `outputStep` is NOT in the `steps` array. It is a separate top-level field.
 8. All `configuration` values are strings, even numbers (e.g. `"2"` not `2`).
 9. Give every step a unique `id`. Use simple incrementing integers: "1", "2", "3", etc. Never reuse an ID within the same workflow.
-10. The `Transform` task `Definition` config is a JSON string inside a JSON string — it must be escaped.
+10. The `Transform` task `Definition` config is a JSON string inside a JSON string - it must be escaped.
 11. Every Packet has exactly three fields: `id` (string), `text` (array of strings), `data` (array of objects). Never omit any field.
-12. `text` and `data` are always arrays — never bare strings or bare objects.
-13. The `Emit Packet` `Data to Emit` value is a JSON array of Packet objects — each element must have `id`, `text`, and `data` fields.
+12. `text` and `data` are always arrays - never bare strings or bare objects.
+13. The `Emit Packet` `Data to Emit` value is a JSON array of Packet objects - each element must have `id`, `text`, and `data` fields.

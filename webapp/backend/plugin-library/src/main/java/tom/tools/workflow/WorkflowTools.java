@@ -38,7 +38,7 @@ public class WorkflowTools implements MintyTool, ServiceConsumer {
 			8. Call cancel_workflow to stop a running workflow by name.
 
 			Important rules:
-			- Always use the workflow-builder skill to produce workflow JSON — do not write it from memory.
+			- Always use the workflow-builder skill to produce workflow JSON - do not write it from memory.
 			- Never reuse step IDs in the same workflow. Every step must have a unique UUID.
 			- The workflow JSON must be valid before calling create_workflow or update_workflow.
 			  Use the generation checklist in workflow-schema.md to verify it first.
@@ -123,7 +123,7 @@ public class WorkflowTools implements MintyTool, ServiceConsumer {
 
 	/*
 	 * @Tool(name = "execute_workflow", description = """ Runs a workflow and
-	 * returns an execution ID. The workflow must already exist — call
+	 * returns an execution ID. The workflow must already exist - call
 	 * create_workflow first if it does not. Execution runs asynchronously; use the
 	 * returned execution ID to track progress. """) public String executeWorkflow(
 	 * 

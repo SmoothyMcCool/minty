@@ -20,16 +20,16 @@
 
 ```json
 {
-  "taskName": "<exact registered name — see task file>",
+  "taskName": "<exact registered name - see task file>",
   "stepName": "<unique human label for this step>",
-  "id": "<unique string — e.g. \"1\", \"2\", \"3\">",
+  "id": "<unique string - e.g. \"1\", \"2\", \"3\">",
   "loggingActive": true,
   "configuration": { },
   "layout": {
     "x": 0,
     "y": 0,
-    "numInputs": <integer — must match task declaration>,
-    "numOutputs": <integer — must match task declaration>
+    "numInputs": <integer - must match task declaration>,
+    "numOutputs": <integer - must match task declaration>
   }
 }
 ```
@@ -42,16 +42,16 @@
 
 ```json
 {
-  "writerId": "<id of the upstream step — the step sending data>",
+  "writerId": "<id of the upstream step - the step sending data>",
   "writerPort": <zero-based output index on the upstream step>,
-  "readerId": "<id of the downstream step — the step receiving data>",
+  "readerId": "<id of the downstream step - the step receiving data>",
   "readerPort": <zero-based input index on the downstream step>
 }
 ```
 
 ### How data flows
-- `writerId` / `writerPort` — the upstream step — which output it sends from.
-- `readerId` / `readerPort` — the downstream step — which input it receives on.
+- `writerId` / `writerPort` - the upstream step - which output it sends from.
+- `readerId` / `readerPort` - the downstream step - which input it receives on.
 - One connection = one directed edge from one step's output to another step's input.
 - A step waits for data on each of its inputs. When all upstream steps finish sending, the step completes.
 
@@ -62,8 +62,8 @@
 - Never use an index >= the step's numInputs or numOutputs.
 
 ### Unconnected inputs and outputs
-- An unconnected input receives a NullConnector — the step sees it as immediately terminated (empty).
-- An unconnected output is a NullConnector — data written there is discarded.
+- An unconnected input receives a NullConnector - the step sees it as immediately terminated (empty).
+- An unconnected output is a NullConnector - data written there is discarded.
 - Steps with no inputs (`numInputs: 0`) start immediately when the workflow runs.
 
 ### Concurrency
@@ -113,9 +113,9 @@ Before finalising the JSON, verify:
 **Request**: "Emit test records, remove null fields, then log the result."
 
 **Plan**:
-- Emit Packet (id: `1`) — no inputs, 1 output
-- Transform (id: `2`) — remove nulls, 1 input, 1 output
-- Log Packets (id: `3`) — pass-through, 1 input, 1 output
+- Emit Packet (id: `1`) - no inputs, 1 output
+- Transform (id: `2`) - remove nulls, 1 input, 1 output
+- Log Packets (id: `3`) - pass-through, 1 input, 1 output
 
 **Data flow**: 1 → 2 → 3
 

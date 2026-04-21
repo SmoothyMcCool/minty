@@ -94,7 +94,7 @@ public class Collect extends MintyTask {
 			@Override
 			public String description() {
 				return "Accumulate a stream of incoming packets into a single combined packet. "
-						+ "Use Collect to reassemble packets after a Split fan-out — "
+						+ "Use Collect to reassemble packets after a Split fan-out - "
 						+ "it is the natural pair to Split.";
 			}
 
@@ -103,7 +103,7 @@ public class Collect extends MintyTask {
 				return "Accepts: a stream of packets on a single input. "
 						+ "In All mode, collects every packet until the stream ends then emits once. "
 						+ "In ById mode, collects packets sharing the same ID and emits a combined packet "
-						+ "each time the ID changes — input must be sorted by ID for this mode to work correctly.";
+						+ "each time the ID changes - input must be sorted by ID for this mode to work correctly.";
 			}
 
 			@Override

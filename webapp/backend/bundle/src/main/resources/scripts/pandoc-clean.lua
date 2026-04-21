@@ -35,7 +35,7 @@ function Underline(el)
     return pandoc.Emph(el.content)
 end
 
--- Flatten SmallCaps — Word uses these for certain heading styles;
+-- Flatten SmallCaps - Word uses these for certain heading styles;
 -- they produce awkward output in plain markdown.
 function SmallCaps(el)
     return el.content

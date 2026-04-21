@@ -20,7 +20,7 @@ structure and how to reference values inside one.
 
 | Field  | Type             | Default | Notes |
 |--------|------------------|---------|-------|
-| `id`   | string           | `""`    | Plain string — never a UUID object |
+| `id`   | string           | `""`    | Plain string - never a UUID object |
 | `text` | array of strings | `[]`    | Always an array, never a bare string |
 | `data` | array of objects | `[]`    | Always an array of objects, never a bare object |
 
@@ -89,7 +89,7 @@ Transform (`SpEL Expression`), Branch (`Branch Expression`), Loop (`Branch Expre
 | `text` | All text entries joined by newline |
 
 ### JSONPath (for data and indexed access)
-The `$` prefix is optional — it is added automatically if omitted.
+The `$` prefix is optional - it is added automatically if omitted.
 
 | Path | Returns |
 |------|---------|
@@ -102,11 +102,11 @@ The `$` prefix is optional — it is added automatically if omitted.
 
 ---
 
-## SpEL expressions — Branch vs Loop
+## SpEL expressions - Branch vs Loop
 
 Branch and Loop both use SpEL but with **different root objects**.
 
-### Branch — root is `#p` (the Packet)
+### Branch - root is `#p` (the Packet)
 The packet is bound to the variable `#p`. Access fields via `#p.`:
 
 ```
@@ -117,7 +117,7 @@ The packet is bound to the variable `#p`. Access fields via `#p.`:
 #p.text[0].contains('error')
 ```
 
-### Loop — root IS the packet itself (no `#p`)
+### Loop - root IS the packet itself (no `#p`)
 The packet itself is the root object. Access fields directly:
 
 ```

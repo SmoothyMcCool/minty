@@ -81,7 +81,7 @@ public class SetId extends MintyTask {
 			public String description() {
 				return "Set the packet ID by extracting a value from a data field or text element. "
 						+ "Use SetId to assign a meaningful key before steps that operate on packet IDs "
-						+ "— Sort, GroupBy, and Collect in ById mode all use the packet ID.";
+						+ "- Sort, GroupBy, and Collect in ById mode all use the packet ID.";
 			}
 
 			@Override

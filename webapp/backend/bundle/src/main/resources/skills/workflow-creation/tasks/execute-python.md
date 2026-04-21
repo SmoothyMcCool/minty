@@ -21,19 +21,19 @@ The output must conform to the Packet JSON structure.
 
 ### Python script contract
 The script receives two command-line arguments:
-- `sys.argv[1]` — path to a JSON file containing the input packet
-- `sys.argv[2]` — path where the script must write the output JSON
+- `sys.argv[1]` - path to a JSON file containing the input packet
+- `sys.argv[2]` - path where the script must write the output JSON
 
 The output JSON must be a valid Packet with all three fields present:
 ```json
 {
-  "id": "<string — use empty string if no meaningful ID>",
+  "id": "<string - use empty string if no meaningful ID>",
   "text": ["<string>", ...],
   "data": [{ "<key>": "<value>", ... }, ...]
 }
 ```
 
-`text` must be an array of strings (not a bare string). `data` must be an array of objects (not a bare object). Use `[]` for either field if there is no content — never omit them.
+`text` must be an array of strings (not a bare string). `data` must be an array of objects (not a bare object). Use `[]` for either field if there is no content - never omit them.
 
 ### Script template
 ```python

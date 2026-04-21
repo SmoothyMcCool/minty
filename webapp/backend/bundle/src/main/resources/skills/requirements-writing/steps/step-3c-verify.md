@@ -1,4 +1,4 @@
-# Step 3C — Assign ID and Verification Method, Save Progress
+# Step 3C - Assign ID and Verification Method, Save Progress
 
 ## Assign an ID
 

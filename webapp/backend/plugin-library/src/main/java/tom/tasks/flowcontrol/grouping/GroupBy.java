@@ -119,11 +119,11 @@ public class GroupBy extends MintyTask {
 
 			@Override
 			public String expects() {
-				return "Accepts: input 0 — a single key packet whose ID defines the grouping key. "
-						+ "Input 1 — a stream of detail packets sorted by ID. "
+				return "Accepts: input 0 - a single key packet whose ID defines the grouping key. "
+						+ "Input 1 - a stream of detail packets sorted by ID. "
 						+ "Detail packets whose ID matches the current key are accumulated; "
 						+ "when the ID changes the result is emitted and the next key packet is read. "
-						+ "Both streams must be sorted by ID — add Sort and SetId steps upstream if needed.";
+						+ "Both streams must be sorted by ID - add Sort and SetId steps upstream if needed.";
 			}
 
 			@Override

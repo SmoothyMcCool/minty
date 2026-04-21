@@ -110,7 +110,7 @@ public class FormatHtml extends MintyTask implements ServiceConsumer {
 
 			@Override
 			public String expects() {
-				return "Accepts: any packet. The full packet — id, text array, and data array — is passed "
+				return "Accepts: any packet. The full packet - id, text array, and data array - is passed "
 						+ "to the Pug template as context. This task does not iterate over the data array "
 						+ "automatically; use Pug's each directive inside your template to handle multiple records.";
 			}

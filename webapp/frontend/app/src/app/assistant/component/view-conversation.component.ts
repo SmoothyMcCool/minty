@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { retry } from 'rxjs';
 import { AssistantService } from '../../assistant.service';
-import { Assistant, createAssistant } from '../../model/assistant';
+import { AgentStepResult, Assistant, createAssistant } from '../../model/assistant';
 import { ConversationService } from '../../conversation.service';
 import { ConversationComponent } from './conversation.component';
 import { ChatMessage } from '../../model/conversation/chat-message';
@@ -48,7 +48,7 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 	reverseButtons = false;
 	metrics: LlmMetric | undefined = undefined;
 	sources: Set<string> | undefined = undefined;
-	statusMessages: string[] = [];
+	statusMessages: AgentStepResult[] = [];
 	model: Model | undefined = undefined;
 	contextSize: number = 16384;
 
@@ -168,8 +168,25 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 					if (responseChunk.content) {
 						if (responseChunk.content.startsWith('[STATUS]')) {
 							const message = responseChunk.content.substring('[STATUS]'.length).replace(/\\n/g, '\n').trim() + '\n';
-							this.statusMessages.push(message);
+							this.statusMessages.push({ statusMessage: message, stepOutput: '' });
 							console.log('raw message:', message);
+
+						} else if (responseChunk.content.startsWith('[INTERNAL]')) {
+							let message = responseChunk.content.substring('[INTERNAL]'.length).replace(/\\n/g, '\n').trim() + '\n';
+
+							const start = message.indexOf("[") + 1;
+							const end = message.indexOf("]");
+							const stepName = message.substring(start, end);
+
+							message = message.substring(end + 1);
+
+							const statusStep = this.statusMessages.find(message => message.statusMessage?.includes(stepName));
+							if (statusStep) {
+								statusStep.stepOutput += message;
+							}
+							this.statusMessages = [...this.statusMessages];
+							console.log('raw message:', message);
+
 						} else {
 							response += responseChunk.content;
 						}
@@ -212,6 +229,10 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 
 	onImageChanged(image: File) {
 		this.image = image;
+	}
+
+	trackByIndex(index: number) {
+		return index;
 	}
 
 }

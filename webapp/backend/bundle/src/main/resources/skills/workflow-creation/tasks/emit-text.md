@@ -9,7 +9,7 @@ numOutputs: 1
 
 ## What it does
 Source task. Emits a single hardcoded text string as a packet.
-Simpler than Emit Packet — use this when you only need to inject a text value, not structured data.
+Simpler than Emit Packet - use this when you only need to inject a text value, not structured data.
 Runs once immediately when the workflow starts.
 
 ## Configuration

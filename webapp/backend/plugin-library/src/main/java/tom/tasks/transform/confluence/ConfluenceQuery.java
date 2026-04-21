@@ -172,7 +172,7 @@ public class ConfluenceQuery extends MintyTask implements ServiceConsumer {
 
 			@Override
 			public String expects() {
-				return "Accepts: a packet containing exactly one data record — this is required. "
+				return "Accepts: a packet containing exactly one data record - this is required. "
 						+ "If data[0] contains a 'Page IDs' key (a JSON array of page ID strings), "
 						+ "those IDs are used in addition to any configured in the task settings, "
 						+ "allowing page IDs to be determined dynamically by an upstream step.";

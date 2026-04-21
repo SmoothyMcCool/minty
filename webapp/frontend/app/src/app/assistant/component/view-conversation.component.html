@@ -5,9 +5,10 @@
 
 		<div class="overflow-auto" *ngIf="user && !newestMessagesFirst">
 			<minty-conversation [messages]="chatHistory" [responsePending]="waitingForResponse"
-				[queueDepth]="queueDepth" [oldestMessagesFirst]="user && !newestMessagesFirst" [showChatOptions]="showChatOptions"></minty-conversation>
-			<ul class="list-group list-group-flush" *ngIf="statusMessages.length > 0" >
-				<li class="list-group-item" *ngFor="let message of statusMessages" >
+				[queueDepth]="queueDepth" [oldestMessagesFirst]="user && !newestMessagesFirst"
+				[showChatOptions]="showChatOptions"></minty-conversation>
+			<ul class="list-group list-group-flush" *ngIf="statusMessages.length > 0">
+				<li class="list-group-item" *ngFor="let message of statusMessages">
 					<p class="status-text--terminal" style="white-space: pre-wrap;">{{message}}</p>
 				</li>
 			</ul>
@@ -53,8 +54,8 @@
 
 		<div class="row mb-2 form-floating">
 			<div class="col form-floating">
-				<textarea #aiQueryEl class="form-control" id="aiQuery" name="aiQuery"
-					[(ngModel)]="userText" style="max-height: 400px;" autoResize></textarea>
+				<textarea #aiQueryEl class="form-control" id="aiQuery" name="aiQuery" [(ngModel)]="userText"
+					style="max-height: 400px;" autoResize></textarea>
 				<label class="ms-3" for="aiQuery">Put your input here</label>
 			</div>
 		</div>
@@ -63,11 +64,13 @@
 			<div class="col-auto">
 				<button class="btn btn-primary mb-2" (click)="submit(userText)"
 					[disabled]="!userText || waitingForResponse">
-					<i class="bi" [class.bi-arrow-down]="newestMessagesFirst" [class.bi-arrow-up]="!newestMessagesFirst"></i>
+					<i class="bi" [class.bi-arrow-down]="newestMessagesFirst"
+						[class.bi-arrow-up]="!newestMessagesFirst"></i>
 				</button>
 			</div>
 			<div class="col">
-				<minty-image-input [imageSupport]="model && model.imageSupport" [reset]="shouldReset" (image)="onImageChanged($event)"></minty-image-input>
+				<minty-image-input [imageSupport]="model && model.imageSupport" [reset]="shouldReset"
+					(image)="onImageChanged($event)"></minty-image-input>
 			</div>
 			<div class="col-auto">
 				<button class="btn btn-danger" (click)="restartConversation()">
@@ -82,13 +85,30 @@
 		</div>
 
 		<div class="form-group mb-2" *ngIf="model && showChatOptions">
-			<minty-slider [min]="0" [max]="model.maximumContext" [label]="'Context Size'" [(ngModel)]="contextSize"></minty-slider>
+			<minty-slider [min]="0" [max]="model.maximumContext" [label]="'Context Size'"
+				[(ngModel)]="contextSize"></minty-slider>
 		</div>
-
 		<div class="overflow-auto" *ngIf="user && newestMessagesFirst">
-			<p *ngFor="let message of statusMessages" class="status-text" style="white-space: pre-wrap;">{{message}}</p>
-			<minty-conversation [messages]="chatHistory" [responsePending]="waitingForResponse" [responseComplete]="responseComplete"
-				[queueDepth]="queueDepth" [oldestMessagesFirst]="!newestMessagesFirst" [showChatOptions]="showChatOptions"></minty-conversation>
+			<div *ngFor="let message of statusMessages; let i = index; trackBy: trackByIndex" class="mb-2">
+				<p class="status-text mb-1" style="white-space: pre-wrap;">{{message.statusMessage}}</p>
+
+				<div *ngIf="message.stepOutput">
+					<button class="btn btn-sm btn-outline-secondary" type="button"
+						[attr.data-bs-target]="'#stepOutput-' + i" data-bs-toggle="collapse"
+						[attr.aria-controls]="'stepOutput-' + i" aria-expanded="false">
+						+
+					</button>
+					<div [id]="'stepOutput-' + i" class="collapse mt-1">
+						<div class="card card-body p-2">
+							<pre class="mb-0"
+								style="white-space: pre-wrap; font-size: 0.85em;">{{message.stepOutput}}</pre>
+						</div>
+					</div>
+				</div>
+			</div>
+			<minty-conversation [messages]="chatHistory" [responsePending]="waitingForResponse"
+				[responseComplete]="responseComplete" [queueDepth]="queueDepth"
+				[oldestMessagesFirst]="!newestMessagesFirst" [showChatOptions]="showChatOptions"></minty-conversation>
 		</div>
 
 	</div>

@@ -26,12 +26,12 @@ Input `data` must contain exactly one element.
 | `Confluence Use Bearer Authorization` | string | no | `"true"` for bearer token auth, `"false"` for basic auth (default) |
 | `Page IDs` | JSON string array | yes | JSON array of Confluence page ID strings |
 | `Maximum Characters to Read from Page` | string | no | Max characters per page. Default `"20000"` |
-| `Page Concatenation Strategy` (enum) | string | no | How to combine multiple pages — see below |
+| `Page Concatenation Strategy` (enum) | string | no | How to combine multiple pages - see below |
 
 ### Page Concatenation Strategy options
-- `"Concatenated"` — all pages joined into one text string (default)
-- `"Array"` — each page's text added as a separate entry in the text array
-- `"MultiPacket"` — one packet emitted per page
+- `"Concatenated"` - all pages joined into one text string (default)
+- `"Array"` - each page's text added as a separate entry in the text array
+- `"MultiPacket"` - one packet emitted per page
 
 ## Configuration example
 
@@ -56,7 +56,7 @@ Depends on the concatenation strategy:
 In all cases, input `data` and `id` are preserved in the output packet.
 
 ## Connections
-- 1 input (index 0) — input packet data may override page IDs
+- 1 input (index 0) - input packet data may override page IDs
 - 1 output (index 0)
 
 ## Step template

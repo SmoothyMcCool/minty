@@ -15,7 +15,7 @@ Use Collect to reassemble packets after a Split → process fan-out pattern. It 
 pair to Split: Split expands one packet into many, Collect gathers many back into one.
 
 Two grouping modes: `All` waits for the entire stream then emits once. `ById` emits a combined
-packet each time the packet ID changes — useful for processing pre-sorted groups. Use `ById`
+packet each time the packet ID changes - useful for processing pre-sorted groups. Use `ById`
 mode only when input is sorted by ID (add a Sort step upstream if needed).
 
 ## Configuration
@@ -35,7 +35,7 @@ mode only when input is sorted by ID (add a Sort step upstream if needed).
 
 ## Behaviour detail
 - `All` mode: the task waits until all upstream data has arrived, then emits one combined packet.
-- `ById` mode: emits a combined packet each time the packet ID changes. Input must be sorted by ID — add a Sort step upstream if needed.
+- `ById` mode: emits a combined packet each time the packet ID changes. Input must be sorted by ID - add a Sort step upstream if needed.
 
 ## Connections
 - 1 input (index 0).

@@ -1,4 +1,4 @@
-# Step 2 — Classify Each Need
+# Step 2 - Classify Each Need
 
 Read the source material from `req-session.json` (`source_summary`) and the original conversation.
 Identify each distinct need and assign exactly one type code.
@@ -6,7 +6,7 @@ Identify each distinct need and assign exactly one type code.
 | Code | Type | Assign if the need describes... |
 |------|------|---------------------------------|
 | F | Functional | An action or behavior the system performs |
-| P | Performance | A numeric measure — speed, accuracy, capacity, latency |
+| P | Performance | A numeric measure - speed, accuracy, capacity, latency |
 | I | Interface | A connection to something external: another system, user, or hardware |
 | C | Constraint | A rule the system must obey: standard, regulation, physical limit |
 | Q | Quality | Reliability, safety, availability, security, or maintainability |

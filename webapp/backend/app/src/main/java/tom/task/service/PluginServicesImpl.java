@@ -3,6 +3,7 @@ package tom.task.service;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import tom.api.services.AgentRegistry;
 import tom.api.services.ConversationService;
 import tom.api.services.HttpService;
 import tom.api.services.PluginServices;
@@ -35,13 +36,15 @@ public class PluginServicesImpl implements PluginServices {
 	private final DocumentExtractorService documentExtractorService;
 	private final SkillService skillsService;
 	private final WorkflowService workflowService;
+	private final AgentRegistry agentRegistry;
 
 	public PluginServicesImpl(@Lazy AssistantManagementService assistantManagementService,
 			@Lazy AssistantQueryService assistantQueryService, @Lazy ConversationServiceInternal conversationService,
 			@Lazy HttpService httpService, @Lazy PythonService pythonService, @Lazy RenderService renderService,
 			@Lazy UserService userService, @Lazy DocumentService documentService, @Lazy ProjectService projectService,
 			@Lazy CacheService cacheService, @Lazy DocumentExtractorService documentExtractorService,
-			@Lazy SkillService skillsService, @Lazy WorkflowService workflowService) {
+			@Lazy SkillService skillsService, @Lazy WorkflowService workflowService,
+			@Lazy AgentRegistry agentRegistry) {
 		this.assistantManagementService = assistantManagementService;
 		this.assistantQueryService = assistantQueryService;
 		this.conversationService = conversationService;
@@ -55,6 +58,7 @@ public class PluginServicesImpl implements PluginServices {
 		this.documentExtractorService = documentExtractorService;
 		this.skillsService = skillsService;
 		this.workflowService = workflowService;
+		this.agentRegistry = agentRegistry;
 	}
 
 	@Override
@@ -120,5 +124,10 @@ public class PluginServicesImpl implements PluginServices {
 	@Override
 	public WorkflowService getWorkflowService() {
 		return workflowService;
+	}
+
+	@Override
+	public AgentRegistry getAgentRegistry() {
+		return agentRegistry;
 	}
 }

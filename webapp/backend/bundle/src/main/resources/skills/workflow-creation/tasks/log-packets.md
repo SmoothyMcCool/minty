@@ -10,7 +10,7 @@ numOutputs: 1
 ## What it does
 Logs the content of each received packet to the workflow log file.
 Passes each packet through to its output unchanged.
-Has no effect on data — purely observational.
+Has no effect on data - purely observational.
 
 ## Configuration
 No configuration required.
@@ -21,7 +21,7 @@ No configuration required.
 
 ## Connections
 - Has 1 input (index 0) and 1 output (index 0).
-- Can be placed anywhere in a pipeline as a tap — connect the upstream step to its input and the downstream step to its output.
+- Can be placed anywhere in a pipeline as a tap - connect the upstream step to its input and the downstream step to its output.
 - If placed at the end of a branch, the output can be left unconnected.
 
 ## Step template

@@ -4,17 +4,17 @@
 ```
 taskName:   "Broadcast"
 numInputs:  1
-numOutputs: <configured value — default 2>
+numOutputs: <configured value - default 2>
 ```
 
 `numOutputs` is set by configuration and must be reflected in `layout.numOutputs`.
 
 ## What it does
 Sends an identical copy of each incoming packet to every connected output.
-All outputs receive the same packet — data is not divided, filtered, or modified.
+All outputs receive the same packet - data is not divided, filtered, or modified.
 
 Use Broadcast when you need the same data to flow through multiple independent processing branches
-in parallel — for example, sending records to both a transform pipeline and a logging step simultaneously.
+in parallel - for example, sending records to both a transform pipeline and a logging step simultaneously.
 Connect each output to a different downstream step.
 
 To divide a multi-item packet into individual packets, use Split instead.

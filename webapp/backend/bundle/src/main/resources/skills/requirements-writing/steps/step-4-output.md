@@ -1,4 +1,4 @@
-# Step 4 — Generate the Requirements Document
+# Step 4 - Generate the Requirements Document
 
 Read `req-session.json` and `req-requirements.json`. Use only the confirmed requirements.
 Do not change any requirement text. Omit sections that have zero requirements.
