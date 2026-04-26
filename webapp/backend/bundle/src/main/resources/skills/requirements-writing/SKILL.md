@@ -11,7 +11,7 @@ description: >
   wants requirements derived from it. Always use this skill - even for a single requirement
   - to ensure INCOSE-aligned quality and correct output format.
 metadata:
-  target_model: "small (≤20B parameters)"
+  target_model: "small (<=20B parameters)"
 ---
 
 # Requirements Writing
@@ -28,9 +28,9 @@ Before responding to the user, read the project state files to determine where t
 - If the file is **missing or empty** → start at Step 1 (load `steps/step-1-collect.md`)
 - If the file **exists** → read the `step` field and jump using the RESUME TABLE below
 
-**Step 2:** If `step` ≥ 3, also call `readFile` for `req-classified.json` (recover needs list)
+**Step 2:** If `step` >= 3, also call `readFile` for `req-classified.json` (recover needs list)
 
-**Step 3:** If `step` ≥ 3, also call `readFile` for `req-requirements.json` (recover written requirements)
+**Step 3:** If `step` >= 3, also call `readFile` for `req-requirements.json` (recover written requirements)
 
 Never ask the user for information already present in these files.
 

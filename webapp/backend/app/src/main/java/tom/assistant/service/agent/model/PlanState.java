@@ -49,6 +49,17 @@ public class PlanState {
 		return steps.get(currentStep);
 	}
 
+	public void addReplanStep() {
+		AgentStep currentStep = currentStep().left();
+		AgentStep replanStep = new AgentStep();
+		replanStep.setId(currentStep.getId() + "a");
+		replanStep.setName("Replan");
+		replanStep.setType(AgentStepType.PLAN);
+		replanStep.setVisibility(AgentResponseVisibility.INTERNAL);
+		replanStep.setWorker("planner");
+		steps.add(this.currentStep + 1, new Pair<>(replanStep, new AgentStepState()));
+	}
+
 	public Optional<Pair<AgentStep, AgentStepState>> findLastCompletedStep() {
 		if (currentStep > 0) {
 			return Optional.of(steps.get(currentStep - 1));
@@ -96,4 +107,5 @@ public class PlanState {
 	public List<Pair<AgentStep, AgentStepState>> toStepStateList() {
 		return Collections.unmodifiableList(steps.subList(0, currentStep + 1));
 	}
+
 }

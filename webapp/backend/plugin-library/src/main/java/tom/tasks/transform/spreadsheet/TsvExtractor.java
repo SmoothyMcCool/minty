@@ -32,7 +32,7 @@ import tom.api.task.Packet;
  * <p>
  * Example usage:
  * </p>
- * 
+ *
  * <pre>
  *     String extract = /* Tika output * /;
  *     List&lt;Map&lt;String, Object&gt;&gt; rows = ExcelExtractor.parse(extract);

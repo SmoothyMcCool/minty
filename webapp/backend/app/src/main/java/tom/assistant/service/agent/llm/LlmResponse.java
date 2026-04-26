@@ -12,12 +12,9 @@ public class LlmResponse {
 	private String message;
 	private Object data;
 
-	private boolean structured;
-
 	@Override
 	public String toString() {
-		return "LlmResponse [status=" + status + ", message=" + message + ", data=" + data + ", structured="
-				+ structured + "]";
+		return "LlmResponse [status=" + status + ", message=" + message + ", data=" + data + "]";
 	}
 
 	public LlmStatus getStatus() {

@@ -6,7 +6,7 @@ import tom.assistant.service.agent.llm.LlmStatus;
 public class StepResult {
 
 	public enum Type {
-		SUCCESS, ASK, ERROR, UNSTRUCTURED
+		SUCCESS, ASK, REPLAN, ERROR, UNSTRUCTURED
 	}
 
 	private Type type;
@@ -29,7 +29,6 @@ public class StepResult {
 
 	public static StepResult ask(String question) {
 		LlmResponse r = new LlmResponse();
-		r.setStatus(LlmStatus.NEED_INFO);
 		r.setMessage(question);
 
 		StepResult s = new StepResult();
@@ -47,7 +46,6 @@ public class StepResult {
 
 	public static StepResult error(String message) {
 		LlmResponse r = new LlmResponse();
-		r.setStatus(LlmStatus.ERROR);
 		r.setMessage(message);
 
 		StepResult s = new StepResult();
@@ -60,6 +58,14 @@ public class StepResult {
 		StepResult r = new StepResult();
 		r.type = Type.UNSTRUCTURED;
 		r.fallbackText = text;
+		return r;
+	}
+
+	public static StepResult replan(LlmResponse response) {
+		StepResult r = new StepResult();
+		r.type = Type.REPLAN;
+		r.response = response;
+		r.getResponse().setStatus(LlmStatus.SUCCESS); // To help out the replanner not replan the replan.
 		return r;
 	}
 

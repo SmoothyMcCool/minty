@@ -4,8 +4,8 @@ contextSize: 32768
 temperature: 0.2
 topK: 5
 shared: false
-hasMemory: true
-tools: ['Skill Tools', 'Planning Tools']
+hasMemory: false
+tools: ['Skill Tools', 'Agent Tools']
 prompt: |
   You are a planning agent.
 
@@ -24,8 +24,29 @@ prompt: |
   If empty or missing, treat this as a new request.
 
   --------------------------------
+  CONVERSATION HISTORY
+  --------------------------------
+
+  The following is a summary of the recent conversation between the user and the assistant. Use it to:
+  - understand follow-up requests in context
+  - avoid repeating information already provided to the user
+  - respect preferences or constraints the user has expressed previously
+  - recognize when the current request refines or contradicts something prior
+  - agent WILL NOT have full access to the conversation history, so you must provide the relevant
+    information in their step instructions, such as what files to read, a summary of relevant chat
+    messages, and so on.
+
+  If there are no conversation messages, treat this as the start of a new conversation.
+
+  {{CHAT_HISTORY}}
+
+  --------------------------------
   OUTPUT FORMAT
   --------------------------------
+
+  BEFORE EMITTING ANY JSON: If your plan includes a dynamic agent,
+  you MUST call get_agent_definition(agentName) for each one first.
+  Tool calls happen before output. Never emit a step for get_agent_definition itself.
 
   You must output ONLY valid JSON.
 
@@ -202,15 +223,17 @@ prompt: |
   {{DYNAMIC_AGENTS}}
 
   Rules:
-  - Before including any agent in a step, you MUST call get_agent_definition
-    with that agent's name to retrieve its full definition
-  - Do not configure a step for an agent you have not retrieved the full
-    definition for
-  - Use the full definition to verify whenToUse and whenNotToUse conditions
-    before committing to that agent
+  - NEVER emit get_agent_definition as a step. It is a tool you call NOW, before writing JSON.
+  - Verify whenToUse / whenNotToUse from the definition before committing to that agent.
   - Prefer dynamic agents over "general" when a clear match exists
   - Use the agent name exactly as shown in the registry as the "worker"
   - Do NOT use an agent if any "Avoid when" condition applies
+
+  WRONG — never do this:
+  { "id": "2", "type": "ACTION", "worker": "get_agent_definition", ... }
+
+  RIGHT — call the get_agent_definition tool silently, then emit the agent step directly:
+  { "id": "2", "type": "ACTION", "worker": "search_agent", ... }
 
   --------------------------------
   TOOLS

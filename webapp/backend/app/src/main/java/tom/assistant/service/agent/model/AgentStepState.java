@@ -7,6 +7,7 @@ public class AgentStepState {
 
 	private LlmStatus status = LlmStatus.PENDING;
 	private LlmResponse response;
+	private String unstructuredResponse;
 
 	public AgentStepState() {
 	}
@@ -31,9 +32,18 @@ public class AgentStepState {
 		this.response = response;
 	}
 
+	public String getUnstructuredResponse() {
+		return unstructuredResponse;
+	}
+
+	public void setUnstructuredResponse(String unstructuredResponse) {
+		this.unstructuredResponse = unstructuredResponse;
+	}
+
 	@Override
 	public String toString() {
-		return "AgentStepState [status=" + status + ", response=" + response + "]";
+		return "AgentStepState [status=" + status + ", response=" + response + ", unstructuredResponse="
+				+ unstructuredResponse + "]";
 	}
 
 }

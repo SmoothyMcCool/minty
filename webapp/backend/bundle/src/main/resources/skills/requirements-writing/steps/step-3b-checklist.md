@@ -32,12 +32,12 @@ Forbidden word replacements:
 | support | provide / transmit / display / store |
 | handle | receive / reject / route |
 | fast / quickly / soon | within [N] [units] |
-| reliable (no number) | achieve MTBF ≥ [N] hours |
+| reliable (no number) | achieve MTBF >= [N] hours |
 | robust | [describe the specific failure mode it must survive] |
-| adequate / sufficient | ≥ [N] [units] |
+| adequate / sufficient | >= [N] [units] |
 | user-friendly | [specific measurable behavior] |
 | and/or | split into two requirements |
-| optimize / maximize / minimize | achieve ≥ / ≤ [N] [units] |
+| optimize / maximize / minimize | achieve >= / <= [N] [units] |
 
 ---
 

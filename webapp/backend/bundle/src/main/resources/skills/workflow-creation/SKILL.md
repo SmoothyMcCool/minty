@@ -25,7 +25,7 @@ Use them in order whenever the user wants to create or modify a workflow.
 
 ### When planning
 Use the `workflow_design` agent to perform step 1: the user describes
-something they want a workflow to do, asks to modify an existing workflow, or asks for 
+something they want a workflow to do, asks to modify an existing workflow, or asks for
 advice on how to structure a workflow.
 
 Use the `workflow_build` agent to perform step 2: when the `workflow_design`

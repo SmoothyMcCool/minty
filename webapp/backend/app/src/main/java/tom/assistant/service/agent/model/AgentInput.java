@@ -3,6 +3,8 @@ package tom.assistant.service.agent.model;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -11,6 +13,10 @@ import tom.api.model.assistant.AssistantQuery;
 
 public class AgentInput {
 
+	private static final ObjectMapper Mapper = new ObjectMapper();
+
+	private String userQuery;
+	private PlanState plan;
 	private String query;
 	private List<Pair<AgentStep, AgentStepState>> state;
 	private String reason;
@@ -26,7 +32,8 @@ public class AgentInput {
 		AgentInput input = new AgentInput();
 
 		// Start with the user's original query
-		input.query = userQuery.getQuery();
+		input.userQuery = userQuery.getQuery();
+		input.plan = planState;
 
 		// Override with step-level query if the planner provided one
 		Map<String, Object> stepInput = Map.of();
@@ -58,9 +65,27 @@ public class AgentInput {
 		return input;
 	}
 
-	public String serialize() {
+	public String toPrompt() {
 		try {
-			return new ObjectMapper().writeValueAsString(this);
+			StringBuilder sb = new StringBuilder();
+
+			// sb.append("Original user request: ").append(userQuery).append("\n\n");
+			sb.append("The plan with results so far: ").append(Mapper.writeValueAsString(state)).append("\n\n");
+			if (StringUtils.isNotBlank(format)) {
+				sb.append("Format: ").append(format).append("\n\n");
+			}
+			if (schema != null) {
+				sb.append("Schema: ").append(schema).append("\n\n");
+			}
+			if (StringUtils.isNotBlank(rules)) {
+				sb.append("Rules: ").append(rules).append("\n\n");
+			}
+
+			AgentStep currentStep = plan.currentStep().left();
+			sb.append("Your step: ").append(currentStep.getId()).append(" - ").append(currentStep.getName())
+					.append("\n\n");
+			return sb.toString();
+			// return new ObjectMapper().writeValueAsString(this);
 		} catch (JsonProcessingException e) {
 			throw new RuntimeException("Failed to serialize AgentInput", e);
 		}
