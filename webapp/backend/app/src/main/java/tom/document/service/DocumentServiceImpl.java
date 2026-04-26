@@ -150,7 +150,15 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 				file, projectService, conversationService, assistantManagementService, assistantQueryService,
 				documentExtractorService, config);
 
-		task.decompose();
+		try {
+			task.decompose();
+		} catch (Exception e) {
+			// If anything went wrong, we have to make sure that the file is cleaned up in
+			// all cases.
+			logger.error("Failed to decompose file " + file.getName(), e);
+			file.delete();
+			return;
+		}
 
 		if (summarize) {
 			fileProcessingExecutor.submit(task);

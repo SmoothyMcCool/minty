@@ -146,9 +146,13 @@ export class ProjectService {
 	}
 
 	convertAndAddMarkdown(projectId: string, doc: DocProperties): Observable<string> {
+		if (!doc || !doc.file || !doc.title) {
+			throw new Error('Invalid file information.');
+		}
+
 		const formData = new FormData();
 		formData.append('projectId', projectId);
-		formData.append('file', doc.file, doc.title);
+		formData.append('file', doc.file!, doc.title);
 
 		return this.http.post<ApiResult>(ProjectService.ConvertToMarkdownAndAddFile, formData)
 			.pipe(
@@ -163,9 +167,13 @@ export class ProjectService {
 	}
 
 	decomposeMarkdown(projectId: string, doc: DocProperties): Observable<string> {
+		if (!doc || !doc.file || !doc.title) {
+			throw new Error('Invalid file information.');
+		}
+
 		const formData = new FormData();
 		formData.append('projectId', projectId);
-		formData.append('file', doc.file, doc.title);
+		formData.append('file', doc.file!, doc.title);
 
 		return this.http.post<ApiResult>(ProjectService.ConvertToMarkdownDecomposeFile, formData)
 			.pipe(
@@ -180,6 +188,10 @@ export class ProjectService {
 	}
 
 	decomposeAndSummarizeMarkdown(projectId: string, doc: DocProperties): Observable<string> {
+		if (!doc || !doc.file || !doc.title) {
+			throw new Error('Invalid file information.');
+		}
+
 		const formData = new FormData();
 		formData.append('projectId', projectId);
 		formData.append('file', doc.file, doc.title);
@@ -197,6 +209,9 @@ export class ProjectService {
 	}
 
 	writeZipFile(projectId: string, file: DocProperties): Observable<string> {
+		if (!file || !file.file || !file.title) {
+			throw new Error('Invalid file information.');
+		}
 		const formData = new FormData();
 		formData.append('projectId', projectId);
 		formData.append('file', file.file, file.title);
@@ -214,6 +229,9 @@ export class ProjectService {
 	}
 
 	convertToMermaid(projectId: string, file: DocProperties): Observable<string> {
+		if (!file || !file.file || !file.title) {
+			throw new Error('Invalid file information.');
+		}
 		const formData = new FormData();
 		formData.append('projectId', projectId);
 		formData.append('file', file.file, file.title);
@@ -333,8 +351,8 @@ export class ProjectService {
 	// ERROR HANDLER
 	// -------------------------
 
-	private handleError() {
-		return catchError(error => {
+	private handleError<T>() {
+		return catchError<T, Observable<never>>(error => {
 			this.alertService.postFailure(JSON.stringify(error));
 			return EMPTY;
 		});

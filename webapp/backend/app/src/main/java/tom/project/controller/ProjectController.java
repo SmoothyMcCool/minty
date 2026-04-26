@@ -351,49 +351,53 @@ public class ProjectController {
 
 	}
 
+	@SuppressWarnings("unused")
 	@PostMapping(value = { "/node/convert/mermaid" }, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<ResponseWrapper<String>> convertToMermaid(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestParam("projectId") ProjectId projectId, @RequestPart("file") MultipartFile mpf) {
 
-		ResponseWrapper<String> response = ResponseWrapper
-				.SuccessResponse("Mermaid conversion isn't fully implemented yet.");
-		return new ResponseEntity<>(response, HttpStatus.OK);
-		/*File file = new File(tempFileStore + "/" + mpf.getOriginalFilename());
-		try {
-			Files.createDirectories(file.toPath());
-			mpf.transferTo(file);
+		ResponseWrapper<String> response;
 
+		if (false) {
+			File file = new File(tempFileStore + "/" + mpf.getOriginalFilename());
 			try {
-				String filename = file.getName();
-				int lastDot = filename.lastIndexOf('.');
-				String baseName = (lastDot == -1) ? filename : filename.substring(0, lastDot);
-				String newName = baseName + ".md";
-				logger.info("Started processing " + newName);
+				Files.createDirectories(file.toPath());
+				mpf.transferTo(file);
 
-				String markdown = documentExtractorService.extract(file);
+				try {
+					String filename = file.getName();
+					int lastDot = filename.lastIndexOf('.');
+					String baseName = (lastDot == -1) ? filename : filename.substring(0, lastDot);
+					String newName = baseName + ".md";
+					logger.info("Started processing " + newName);
 
-				projectService.writeFile(user.getId(), projectId, "/" + newName, FileType.markdown, markdown);
-				logger.info("Markdown processing complete for " + file.getName());
+					String markdown = documentExtractorService.extract(file);
 
-				ResponseWrapper<String> response = ResponseWrapper.SuccessResponse("File processed successfully.");
-				return new ResponseEntity<>(response, HttpStatus.OK);
+					projectService.writeFile(user.getId(), projectId, "/" + newName, FileType.markdown, markdown);
+					logger.info("Markdown processing complete for " + file.getName());
 
-			} catch (Exception e) {
-				logger.error("Markdown processing failed: ", e);
-			} finally {
-				file.delete();
+					response = ResponseWrapper.SuccessResponse("File processed successfully.");
+					return new ResponseEntity<>(response, HttpStatus.OK);
+
+				} catch (Exception e) {
+					logger.error("Markdown processing failed: ", e);
+				} finally {
+					file.delete();
+				}
+
+			} catch (IllegalStateException | IOException e) {
+				logger.error("Failed to store file: ", e);
+				response = ResponseWrapper.ApiFailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+						List.of(ApiError.REQUEST_FAILED));
+				return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
 			}
 
-		} catch (IllegalStateException | IOException e) {
-			logger.error("Failed to store file: ", e);
-			ResponseWrapper<String> response = ResponseWrapper
-					.ApiFailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), List.of(ApiError.REQUEST_FAILED));
-			return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+			response = ResponseWrapper.SuccessResponse("You'll find your file in the active project.");
+			return new ResponseEntity<>(response, HttpStatus.OK);
 		}
 
-		ResponseWrapper<String> response = ResponseWrapper
-				.SuccessResponse("You'll find your file in the active project.");
-		return new ResponseEntity<>(response, HttpStatus.OK);*/
+		response = ResponseWrapper.SuccessResponse("Mermaid conversion isn't fully implemented yet.");
+		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	@PostMapping(value = "/node/import/zip", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

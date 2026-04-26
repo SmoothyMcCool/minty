@@ -4,8 +4,8 @@ import { BehaviorSubject } from 'rxjs';
 export type AlertType = 'failure' | 'info' | 'success';
 
 export class Alert {
-	type: AlertType;
-	message: string;
+	type: AlertType | undefined;
+	message: string | undefined;
 
 	constructor(alert?: Alert) {
 		if (alert) {

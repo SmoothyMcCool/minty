@@ -279,19 +279,21 @@ export class WorkflowListComponent implements AfterViewChecked, OnInit, OnDestro
 	}
 
 	downloadWorkflow(workflow: Workflow) {
-		const workflowToDownload: Workflow = JSON.parse(JSON.stringify(workflow));
-		workflowToDownload.id = '';
-		workflowToDownload.owned = true;
-		const blob = new Blob([JSON.stringify(workflowToDownload, undefined, 2)], { type: 'application/json' });
-		const url = URL.createObjectURL(blob);
-		const link = document.createElement('a');
-		link.href = url;
-		link.download = workflow.name + '.json';
-		link.style.display = 'none';
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
-		window.URL.revokeObjectURL(url);
+		this.workflowService.getWorkflow(workflow.id).subscribe(workflowToDownload => {
+			workflowToDownload.id = '';
+			workflowToDownload.owned = true;
+			const blob = new Blob([JSON.stringify(workflowToDownload, undefined, 2)], { type: 'application/json' });
+			const url = URL.createObjectURL(blob);
+			const link = document.createElement('a');
+			link.href = url;
+			link.download = workflow.name + '.json';
+			link.style.display = 'none';
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			window.URL.revokeObjectURL(url);
+		});
+
 	}
 
 	filterChanged(filter: string | undefined) {
