@@ -1,19 +1,24 @@
 package tom.assistant.service.agent;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import tom.Pair;
+import tom.assistant.service.agent.llm.LlmStatus;
 import tom.assistant.service.agent.model.Agent;
 import tom.assistant.service.agent.model.AgentInputField;
 import tom.assistant.service.agent.model.AgentStep;
 import tom.assistant.service.agent.model.AgentStepState;
+import tom.assistant.service.agent.model.AgentStepType;
 import tom.assistant.service.agent.model.PlanState;
 
 public class AgentPlannerPromptBuilder {
@@ -22,7 +27,7 @@ public class AgentPlannerPromptBuilder {
 	private static final ObjectMapper Mapper = new ObjectMapper();
 
 	public static String buildPrompt(String prompt, Collection<Agent> staticAgents, Collection<Agent> dynamicAgents,
-			PlanState state) {
+			String chatHistory, PlanState state) {
 		String dynamicAgentsBlock = "";
 		if (dynamicAgents != null) {
 			dynamicAgentsBlock = dynamicAgents.stream().map(agent -> getAgentSummary(agent))
@@ -41,7 +46,7 @@ public class AgentPlannerPromptBuilder {
 		}
 
 		return prompt.replace("{{STATIC_WORKERS}}", staticAgentsBlock).replace("{{DYNAMIC_AGENTS}}", dynamicAgentsBlock)
-				.replace("{{PLAN_CONTEXT_JSON}}", stateAsString);
+				.replace("{{PLAN_CONTEXT_JSON}}", stateAsString).replace("{{CHAT_HISTORY}}", chatHistory);
 	}
 
 	private static String buildPlanContext(PlanState state) {
@@ -50,21 +55,67 @@ public class AgentPlannerPromptBuilder {
 			return "{}";
 		}
 
-		List<Map<String, Object>> compact = state.getSteps().stream().map(pair -> {
+		List<Map<String, Object>> completedSteps = new ArrayList<>();
+		List<Map<String, Object>> remainingSteps = new ArrayList<>();
+		List<String> replanInstructions = new ArrayList<>();
+
+		List<Pair<AgentStep, AgentStepState>> steps = state.getSteps();
+
+		for (Pair<AgentStep, AgentStepState> pair : steps) {
 			AgentStep step = pair.left();
 			AgentStepState stepState = pair.right();
+			LlmStatus status = stepState.getStatus();
 
-			Map<String, Object> m = new HashMap<>();
-			m.put("id", step.getId());
-			m.put("name", step.getName());
-			m.put("worker", step.getWorker());
-			m.put("type", step.getType());
-			m.put("status", stepState.getStatus());
-			return m;
-		}).toList();
+			if (status == LlmStatus.PENDING) {
+				Map<String, Object> m = new HashMap<>();
+				m.put("id", step.getId());
+				m.put("name", step.getName());
+				m.put("worker", step.getWorker());
+				m.put("type", step.getType());
+				m.put("input", step.getInput());
+				m.put("visibility", step.getVisibility());
+				remainingSteps.add(m);
+
+			} else {
+				Map<String, Object> m = new HashMap<>();
+				m.put("id", step.getId());
+				m.put("name", step.getName());
+				m.put("type", step.getType());
+				m.put("status", status);
+
+				if (step.getType() == AgentStepType.PLAN && status == LlmStatus.SUCCESS) {
+					// extract the replan reason and surface it as a directive
+					Object input = step.getInput();
+					if (input instanceof Map<?, ?> inputMap) {
+						Object reason = inputMap.get("reason");
+						if (reason != null) {
+							m.put("replanReason", reason);
+							replanInstructions.add(reason.toString());
+						}
+					}
+				} else if (stepState.getResponse() != null && stepState.getResponse().getData() != null) {
+					m.put("output", stepState.getResponse().getData());
+				}
+
+				completedSteps.add(m);
+			}
+		}
+
+		Map<String, Object> context = new LinkedHashMap<>();
+		context.put("completedSteps", completedSteps);
+		context.put("remainingSteps", remainingSteps);
+
+		if (!replanInstructions.isEmpty()) {
+			String directive = replanInstructions.size() == 1 ? replanInstructions.get(0)
+					: String.join("; ", replanInstructions);
+			context.put("replanInstruction",
+					"A completed PLAN step requires you to insert new steps before the remaining steps. "
+							+ "Insert them after the last completed step and before the first remaining step. "
+							+ "Do NOT recreate the PLAN step itself. Reason: " + directive);
+		}
 
 		try {
-			return Mapper.writeValueAsString(compact);
+			return Mapper.writeValueAsString(context);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

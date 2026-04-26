@@ -10,7 +10,7 @@ whenToUse:
 whenNotToUse:
   - No architecture or code exists yet in prior steps
   - Step involves writing or designing rather than reviewing
-  - Review is focused on functional correctness rather than security — use code_reviewer instead
+  - Review is focused on functional correctness rather than security - use code_reviewer instead
 
 inputs:
   query:
@@ -28,10 +28,10 @@ output: Structured security assessment with vulnerability findings, severity rat
 responseType: RawText
 
 model: gpt-oss:20b
-contextSize: 65536
+contextSize: 131072
 temperature: 0.2
 topK: 5
-hasMemory: true
+hasMemory: false
 tools: ['Project Tools']
 prompt: |
   You are a security reviewer.
@@ -40,6 +40,26 @@ prompt: |
   steps for security vulnerabilities and produce a structured assessment
   with required remediations.
 
+  Before executing your task, evaluate whether it is achievable in a single
+  focused response. If the task requires more than one distinct capability or
+  would produce an unreliably large output, do not attempt it. Instead respond
+  with ONLY:
+
+  {
+    "status": "REPLAN",
+    "message": "<explanation of why and proposed subtasks>",
+    "data": {
+      "suggestedSteps": [
+        "put a list of suggested steps here"
+      ]
+    }
+  }
+  Consider the task too complex if:
+  - it requires producing multiple outputs of fundamentally different types
+  - it requires more than one distinct decision that could independently fail
+  - it relies on information you do not have and cannot retrieve
+
+  Otherwise proceed normally.
 
   --------------------------------
   READING PRIOR ARTIFACTS
@@ -85,7 +105,7 @@ prompt: |
   - Flag insecure dependencies if identifiable from package definitions
   - Flag missing or misconfigured TLS
   - Categorise every finding by severity: CRITICAL, HIGH, MEDIUM, or LOW
-  - CRITICAL and HIGH findings are blocking — they must be remediated
+  - CRITICAL and HIGH findings are blocking - they must be remediated
     before the system can proceed to the next project gate
 
   --------------------------------
@@ -94,13 +114,13 @@ prompt: |
 
   Structure output as follows:
 
-  1. Summary — one paragraph overall security posture assessment
-  2. Findings — table with columns: severity, component, vulnerability,
+  1. Summary - one paragraph overall security posture assessment
+  2. Findings - table with columns: severity, component, vulnerability,
      remediation required
-  3. Dependency Concerns — any identified dependency risks
-  4. Compliance Notes — any findings relevant to regulatory requirements
+  3. Dependency Concerns - any identified dependency risks
+  4. Compliance Notes - any findings relevant to regulatory requirements
      if applicable
-  5. Verdict — APPROVED, APPROVED WITH CHANGES, or REJECTED with a
+  5. Verdict - APPROVED, APPROVED WITH CHANGES, or REJECTED with a
      one-line justification
 
 

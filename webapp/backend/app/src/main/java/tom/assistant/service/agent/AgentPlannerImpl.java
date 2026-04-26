@@ -40,9 +40,10 @@ public class AgentPlannerImpl implements AgentPlanner {
 	@Override
 	public List<AgentStep> plan(UserId userId, AssistantQuery query, PlanState state) {
 		int retryCount = 0;
+		String json = "";
 		while (retryCount < 3) {
 			AgentQuery plannerQuery = buildPlannerQuery(query, state);
-			String json = assistantQueryService.runSingleLlmCall(userId, plannerQuery.query());
+			json = assistantQueryService.runSingleLlmCall(userId, plannerQuery.query());
 			try {
 				return parse(json);
 			} catch (Exception e) {
@@ -50,7 +51,7 @@ public class AgentPlannerImpl implements AgentPlanner {
 				retryCount++;
 			}
 		}
-		throw new RuntimeException("Planner repeatedly failed to produce a plan.");
+		throw new RuntimeException("Planner repeatedly failed to produce a plan. Produced " + json);
 	}
 
 	private AgentQuery buildPlannerQuery(AssistantQuery original, PlanState state) {

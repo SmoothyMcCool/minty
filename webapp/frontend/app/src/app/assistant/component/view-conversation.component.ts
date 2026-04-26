@@ -49,6 +49,7 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 	metrics: LlmMetric | undefined = undefined;
 	sources: Set<string> | undefined = undefined;
 	statusMessages: AgentStepResult[] = [];
+	expandedSteps: Record<number, boolean> = {};
 	model: Model | undefined = undefined;
 	contextSize: number = 16384;
 
@@ -220,6 +221,7 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 		this.confirmRestartConversationVisible = false;
 		this.conversationService.reset(this.conversationId).subscribe(() => {
 			this.chatHistory = [];
+			this.statusMessages = [];
 		});
 	}
 
@@ -235,4 +237,7 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 		return index;
 	}
 
+	toggleStep(i: number) {
+		this.expandedSteps[i] = !this.expandedSteps[i];
+	}
 }

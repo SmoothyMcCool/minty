@@ -126,11 +126,11 @@ public class WorkflowTools implements MintyTool, ServiceConsumer {
 	 * returns an execution ID. The workflow must already exist - call
 	 * create_workflow first if it does not. Execution runs asynchronously; use the
 	 * returned execution ID to track progress. """) public String executeWorkflow(
-	 * 
+	 *
 	 * @ToolParam(description =
 	 * "The UUID of the workflow to execute, as returned by list_workflows or create_workflow."
 	 * ) String workflowId,
-	 * 
+	 *
 	 * @ToolParam(description =
 	 * "Optional name to identify this execution run. Leave blank to use the workflow name."
 	 * ) String executionName) { try { WorkflowRequest request = new
@@ -142,11 +142,11 @@ public class WorkflowTools implements MintyTool, ServiceConsumer {
 	 * (NotOwnedException e) { return
 	 * "Error: you do not have permission to execute this workflow."; } catch
 	 * (Exception e) { return "Error executing workflow: " + e.getMessage(); } }
-	 * 
+	 *
 	 * @Tool(name = "cancel_workflow", description = """ Cancels a currently running
 	 * workflow execution by name. Use this to stop a workflow that is taking too
 	 * long or was started by mistake. """) public String cancelWorkflow(
-	 * 
+	 *
 	 * @ToolParam(description =
 	 * "The name of the running workflow execution to cancel.") String
 	 * executionName) { try {

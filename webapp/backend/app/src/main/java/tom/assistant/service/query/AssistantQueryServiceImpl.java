@@ -398,7 +398,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 				.map(toolName -> toolRegistryService.getTool(toolName, user.getId())).filter(Objects::nonNull).toList();
 
 		ChatClient chatClient = buildChatClient(assistant, computeContextSize(assistant, query, tools), query);
-		UserMessage message = UserMessage.builder().text(query.getQuery()).media(images).build();
+
 		StringBuilder systemPrompt = new StringBuilder();
 
 		ChatClientRequestSpec spec = chatClient.prompt();
@@ -421,6 +421,8 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			spec = spec
 					.advisors(a -> a.param(ChatMemory.CONVERSATION_ID, query.getConversationId().value().toString()));
 		}
+
+		UserMessage message = UserMessage.builder().text(query.getQuery()).media(images).build();
 
 		spec = spec.messages(List.of(message));
 

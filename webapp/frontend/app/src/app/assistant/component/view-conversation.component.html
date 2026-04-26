@@ -90,18 +90,22 @@
 		</div>
 		<div class="overflow-auto" *ngIf="user && newestMessagesFirst">
 			<div *ngFor="let message of statusMessages; let i = index; trackBy: trackByIndex" class="mb-2">
-				<p class="status-text mb-1" style="white-space: pre-wrap;">{{message.statusMessage}}</p>
-
-				<div *ngIf="message.stepOutput">
-					<button class="btn btn-sm btn-outline-secondary" type="button"
-						[attr.data-bs-target]="'#stepOutput-' + i" data-bs-toggle="collapse"
-						[attr.aria-controls]="'stepOutput-' + i" aria-expanded="false">
-						+
-					</button>
-					<div [id]="'stepOutput-' + i" class="collapse mt-1">
-						<div class="card card-body p-2">
-							<pre class="mb-0"
-								style="white-space: pre-wrap; font-size: 0.85em;">{{message.stepOutput}}</pre>
+				<div class="row mb-1 align-items-center mx-0">
+					<div class="col-auto status-text" style="white-space: pre-wrap;">{{message.statusMessage}}</div>
+					<div class="col-auto p-0" *ngIf="message.stepOutput">
+						<button class="chevron-btn" type="button" [class.open]="expandedSteps[i]" (click)="toggleStep(i)"
+							aria-label="Toggle step output">
+							<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+								stroke-linejoin="round">
+								<polyline points="4 4 8 8 4 12" />
+								<polyline points="8 4 12 8 8 12" />
+							</svg>
+						</button>
+					</div>
+				</div><div class="row mb-1" style="white-space: pre-wrap;" *ngIf="message.stepOutput">
+					<div [id]="'stepOutput-' + i" [class.show]="expandedSteps[i]" class="collapse mt-1">
+						<div class="card-body p-2">
+							<pre class="mb-0" style="white-space: pre-wrap; font-size: 0.85em;">{{message.stepOutput}}</pre>
 						</div>
 					</div>
 				</div>

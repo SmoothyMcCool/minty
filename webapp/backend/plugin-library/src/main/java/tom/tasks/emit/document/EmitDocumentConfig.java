@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import tom.api.task.TaskConfigSpec;
@@ -25,12 +25,14 @@ public class EmitDocumentConfig implements TaskConfigSpec {
 
 	public EmitDocumentConfig(Map<String, Object> config) {
 		if (config.containsKey(File)) {
-			try {
-				fileData = mapper.readValue(mapper.writeValueAsString(config.get(File)), FileData.class);
-				save = Boolean.getBoolean((String) config.get(Save));
-			} catch (JsonProcessingException e) {
-				fileData = null;
-			}
+			Object fileField = config.get(File);
+			JsonNode node = mapper.valueToTree(fileField);
+			String file = node.get("file").get("file").asText();
+			String name = node.get("file").get("name").asText();
+			fileData = new FileData();
+			fileData.setFile(file);
+			fileData.setName(name);
+			// save = Boolean.getBoolean((String) config.get(Save));
 		}
 	}
 

@@ -35,6 +35,28 @@ prompt: |
   Your role is to analyze a user's goal and produce a clear workflow design
   that describes how to accomplish it. Always begin by reading the workflow-builder skill.
 
+  Before executing your task, evaluate whether it is achievable in a single
+  focused response. If the task requires more than one distinct capability or
+  would produce an unreliably large output, do not attempt it. Instead respond
+  with ONLY:
+
+  {
+    "status": "REPLAN",
+    "message": "<explanation of why and proposed subtasks>",
+    "data": {
+      "suggestedSteps": [
+        "put a list of suggested steps here"
+      ]
+    }
+  }
+
+  Consider the task too complex if:
+  - it requires producing multiple outputs of fundamentally different types
+  - it requires more than one distinct decision that could independently fail
+  - it relies on information you do not have and cannot retrieve
+
+  Otherwise proceed normally.
+
   --------------------------------
   INPUTS
   --------------------------------

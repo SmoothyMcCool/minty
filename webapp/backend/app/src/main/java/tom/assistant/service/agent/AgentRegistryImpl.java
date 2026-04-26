@@ -6,10 +6,13 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.messages.Message;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.exc.StreamReadException;
@@ -31,6 +34,7 @@ import tom.assistant.service.agent.model.AgentQuery;
 import tom.assistant.service.agent.model.AgentResponseType;
 import tom.assistant.service.agent.model.PlanState;
 import tom.config.MintyConfiguration;
+import tom.llm.service.LlmService;
 
 @Service
 public class AgentRegistryImpl implements AgentRegistry {
@@ -41,11 +45,14 @@ public class AgentRegistryImpl implements AgentRegistry {
 	private final Map<String, Assistant> orchestrators;
 	private final Map<String, Agent> staticAgents;
 	private final Map<String, Agent> dynamicAgents;
+	private final ChatMemory chatMemory;
 
-	public AgentRegistryImpl(MintyConfiguration config) throws StreamReadException, DatabindException, IOException {
+	public AgentRegistryImpl(MintyConfiguration config, LlmService llmService)
+			throws StreamReadException, DatabindException, IOException {
 		orchestrators = new HashMap<>();
 		staticAgents = new HashMap<>();
 		dynamicAgents = new HashMap<>();
+		chatMemory = llmService.getChatMemory();
 
 		Path agentRoot = config.getConfig().fileStores().agents();
 		Path orchestratorsPath = agentRoot.resolve("orchestrators");
@@ -146,8 +153,12 @@ public class AgentRegistryImpl implements AgentRegistry {
 		Assistant assistant = orchestrators.get(plannerName);
 		AssistantBuilder builder = assistant.toBuilder();
 
+		List<Message> history = chatMemory.get(userQuery.getConversationId().getValue().toString());
+		String chatHistory = history.stream().map(m -> m.getMessageType() + ": " + m.getText())
+				.collect(Collectors.joining("\n"));
+
 		String prompt = AgentPlannerPromptBuilder.buildPrompt(assistant.prompt(), staticAgents.values(),
-				dynamicAgents.values(), state);
+				dynamicAgents.values(), chatHistory, state);
 		builder.prompt(prompt);
 
 		return baseQuery(AgentResponseType.Structured, builder.build(), userQuery.getConversationId(),
@@ -173,7 +184,8 @@ public class AgentRegistryImpl implements AgentRegistry {
 		}
 
 		AgentInput input = AgentInput.resolve(userQuery, state);
-		return baseQuery(agent.getResponseType(), agent, userQuery.getConversationId(), input.serialize());
+		String stepName = state != null ? "[" + state.currentStep().left().getName() + "]" : "";
+		return baseQuery(agent.getResponseType(), agent, userQuery.getConversationId(), stepName + input.toPrompt());
 	}
 
 	@Override

@@ -11,7 +11,7 @@ import jakarta.persistence.Embeddable;
 public class UserAssistantId implements Serializable {
 
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 304838745383109854L;
 
