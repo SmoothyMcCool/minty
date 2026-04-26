@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ProjectService } from '../project.service';
 import { ProjectNodeComponent } from './project-node.component';
 import { NodeViewerComponent } from './project-node-viewer.component';
-import { AlertService } from '../../alert.service';
+import { Alert, AlertService } from '../../alert.service';
 import { ConfirmationDialogComponent } from '../../app/component/confirmation-dialog.component';
 import { DocProperties } from '../../document/document-editor.component';
 import { ProjectNode } from '../../model/project/project-node';
@@ -160,26 +160,38 @@ export class ProjectEditorComponent {
 
 	addMarkdownFile() {
 		this.mdFileDialogVisible = false;
-		this.projectService.convertAndAddMarkdown(this.project.id, this.document).subscribe((result: string) => {
-			this.alertService.postSuccess(result);
-			this.refresh();
-		});
+		try {
+			this.projectService.convertAndAddMarkdown(this.project.id, this.document).subscribe((result: string) => {
+				this.alertService.postSuccess(result);
+				this.refresh();
+			});
+		} catch (error: unknown) {
+			this.alertService.postAlert({ type: 'failure', message: "Couldn't process your file. Did you forget to choose one?" });
+		}
 	}
 
 	decomposeMarkdown() {
 		this.mdFileDialogVisible = false;
-		this.projectService.decomposeMarkdown(this.project.id, this.document).subscribe((result: string) => {
-			this.alertService.postSuccess(result);
-			this.refresh();
-		});
+		try {
+			this.projectService.decomposeMarkdown(this.project.id, this.document).subscribe((result: string) => {
+				this.alertService.postSuccess(result);
+				this.refresh();
+			});
+		} catch (error: unknown) {
+			this.alertService.postAlert({ type: 'failure', message: "Couldn't process your file. Did you forget to choose one?" });
+		}
 	}
 
 	decomposeAndSummarizeMarkdown() {
 		this.mdFileDialogVisible = false;
-		this.projectService.decomposeAndSummarizeMarkdown(this.project.id, this.document).subscribe((result: string) => {
-			this.alertService.postSuccess(result);
-			this.refresh();
-		});
+		try {
+			this.projectService.decomposeAndSummarizeMarkdown(this.project.id, this.document).subscribe((result: string) => {
+				this.alertService.postSuccess(result);
+				this.refresh();
+			});
+		} catch (error: unknown) {
+			this.alertService.postAlert({ type: 'failure', message: "Couldn't process your file. Did you forget to choose one?" });
+		}
 	}
 
 	addZipToProject() {
@@ -188,18 +200,26 @@ export class ProjectEditorComponent {
 
 	addZip() {
 		this.zipFileDialogVisible = false;
-		this.projectService.writeZipFile(this.project.id, this.document).subscribe((result: string) => {
-			this.alertService.postSuccess(result);
-			this.refresh();
-		});
+		try {
+			this.projectService.writeZipFile(this.project.id, this.document).subscribe((result: string) => {
+				this.alertService.postSuccess(result);
+				this.refresh();
+			});
+		} catch (error: unknown) {
+			this.alertService.postAlert({ type: 'failure', message: "Couldn't process your file. Did you forget to choose one?" });
+		}
 	}
 
 	convertToMermaid() {
 		this.mermaidFileDialogVisible = false;
-		this.projectService.convertToMermaid(this.project.id, this.document).subscribe((result: string) => {
-			this.alertService.postSuccess(result);
-			this.refresh();
-		});
+		try {
+			this.projectService.convertToMermaid(this.project.id, this.document).subscribe((result: string) => {
+				this.alertService.postSuccess(result);
+				this.refresh();
+			});
+		} catch (error: unknown) {
+			this.alertService.postAlert({ type: 'failure', message: "Couldn't process your file. Did you forget to choose one?" });
+		}
 	}
 
 	fileSelected(event: Event) {

@@ -2,6 +2,7 @@ import { CommonModule } from "@angular/common";
 import { Component, EventEmitter, Input, Output } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ProjectNode } from "../../model/project/project-node";
+import { AlertService } from "../../alert.service";
 
 @Component({
 	selector: 'minty-project-node',
@@ -24,6 +25,8 @@ export class ProjectNodeComponent {
 	editFileType: 'code' | 'markdown' | 'json' | 'text' | 'diagram' = 'code';
 	editParent: string | undefined = undefined;
 	isExpanded = true;
+
+	public constructor(private alertService: AlertService) {}
 
 	getParentPath(input: string): string {
 		if (!input) return '';
@@ -87,7 +90,11 @@ export class ProjectNodeComponent {
 	}
 
 	deleteNode() {
-		this.delete.emit(this.node);
+		if (this.node.path === '/') {
+			this.alertService.postAlert({ type: 'failure', message: 'You can\'t delete the rood node.'});
+		} else {
+			this.delete.emit(this.node);
+		}
 	}
 
 	childNodesOf(parent: string): ProjectNode[] {

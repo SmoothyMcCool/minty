@@ -9,8 +9,7 @@ import { ProjectService } from '../project.service';
 @Component({
 	selector: 'minty-edit-project',
 	imports: [CommonModule, FormsModule, ProjectEditorComponent],
-	templateUrl: 'edit-project.component.html',
-	styleUrls: []
+	templateUrl: 'edit-project.component.html'
 })
 export class EditProjectComponent implements OnInit {
 
