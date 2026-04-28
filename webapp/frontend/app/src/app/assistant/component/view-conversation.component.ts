@@ -212,6 +212,9 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 	}
 
 	restart() {
+		if (!this.waitingForResponse && this.responseComplete) { // Streaming in progress
+			this.cancelStream();
+		}
 		this.conversationService.reset(this.conversationId).subscribe(() => {
 			this.chatHistory = [];
 		});
@@ -227,6 +230,12 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 
 	restartConversation() {
 		this.confirmRestartConversationVisible = true;
+	}
+
+	cancelStream() {
+		this.assistantService.cancelStream(this.conversationId).subscribe(() => {
+			this.statusMessages = [];
+		});
 	}
 
 	onImageChanged(image: File) {

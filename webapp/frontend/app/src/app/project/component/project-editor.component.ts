@@ -238,7 +238,7 @@ export class ProjectEditorComponent {
 	}
 
 	rootNodes(): ProjectNode[] {
-		return this.nodes && this.nodes.filter(node => node.path.split('/').length === 2);
+		return this.nodes && this.nodes.filter(node => node.path.split('/').length === 2 && node.path != '/');
 	}
 
 	randomId(length: number) {

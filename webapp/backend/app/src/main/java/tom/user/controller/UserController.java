@@ -68,7 +68,11 @@ public class UserController {
 			user = userService.decrypt(encryptedUser);
 			user.setPassword("");
 			user.getDefaults().forEach((k, v) -> {
-				user.getDefaults().put(k, "Value hidden");
+				if (k != "defaultProject") {
+					user.getDefaults().put(k, "Value hidden");
+				} else {
+					user.getDefaults().put(k, v);
+				}
 			});
 		} catch (Exception e) {
 			ResponseWrapper<User> response = ResponseWrapper.ApiFailureResponse(HttpStatus.BAD_REQUEST.value(),

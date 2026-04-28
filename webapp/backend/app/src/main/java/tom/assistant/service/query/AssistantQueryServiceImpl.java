@@ -1,5 +1,6 @@
 package tom.assistant.service.query;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -38,6 +39,7 @@ import org.springframework.stereotype.Service;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Sinks;
 import reactor.core.scheduler.Schedulers;
 import tom.api.ConversationId;
 import tom.api.UserId;
@@ -80,6 +82,8 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	private final PriorityThreadPoolTaskExecutor llmExecutor;
 	private final Map<ConversationId, LlmResult> results;
 	private final List<ChatModelConfig> modelConfigs;
+	private final Duration streamingTimeout;
+	private final ConcurrentHashMap<ConversationId, Sinks.One<Void>> activeLlmCalls;
 
 	public AssistantQueryServiceImpl(AssistantManagementService assistantManagementService, LlmService llmService,
 			UserServiceInternal userService, ToolRegistryService toolRegistryService,
@@ -93,6 +97,8 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		this.results = new ConcurrentHashMap<>();
 		this.agentOrchestratorService = agentOrchestratorService;
 		this.modelConfigs = properties.getConfig().llm().modelDefinitions();
+		this.streamingTimeout = properties.getConfig().llm().asyncResponseTimeout();
+		this.activeLlmCalls = new ConcurrentHashMap<>();
 	}
 
 	@PostConstruct
@@ -148,12 +154,25 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	}
 
 	@Override
+	public boolean cancelRequest(ConversationId conversationId) {
+		Sinks.One<Void> sink = activeLlmCalls.get(conversationId);
+		if (sink != null) {
+			sink.tryEmitEmpty();
+			return true;
+		}
+		return false;
+	}
+
+	@Override
 	public String runSingleLlmCallStreaming(UserId userId, AssistantQuery query, StreamResult sr) {
 
 		StringBuilder finalText = new StringBuilder();
 		Set<String> docsUsed = new HashSet<>();
 
 		String contextKey = query.getConversationId().getValue().toString();
+
+		Sinks.One<Void> cancelSink = Sinks.one();
+		this.activeLlmCalls.put(query.getConversationId(), cancelSink);
 
 		try {
 
@@ -176,7 +195,8 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 				return "";
 			}
 
-			Flux<ChatClientResponse> responses = spec.stream().chatClientResponse();
+			Flux<ChatClientResponse> responses = spec.stream().chatClientResponse().timeout(streamingTimeout)
+					.takeUntilOther(cancelSink.asMono());
 
 			AtomicReference<Usage> usage = new AtomicReference<>();
 			AtomicBoolean failed = new AtomicBoolean(false);
@@ -228,6 +248,8 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		} catch (Exception e) {
 			logger.warn("runSingleLlmCallStreaming failed", e);
 			sr.addChunk("Failed to generate response.");
+		} finally {
+			activeLlmCalls.remove(query.getConversationId());
 		}
 
 		return finalText.toString();
