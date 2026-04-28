@@ -31,7 +31,7 @@ export class AssistantConfigurationEditorComponent implements ControlValueAccess
 	tools: MintyTool[] = [];
 
 	assistantSpec: AssistantSpec | undefined = undefined;
-	useCustomAssistant: boolean = true;
+	useCustomAssistant: boolean = false;
 
 	onChange = (_: any) => { };
 	onTouched: () => void = () => { };
@@ -92,6 +92,9 @@ export class AssistantConfigurationEditorComponent implements ControlValueAccess
 			return;
 		}
 		this.useCustomAssistant = customAssistant;
+		if (!this.assistant) {
+			this.assistant = createAssistant();
+		}
 		this.updateValueAndNotify();
 	}
 

@@ -258,6 +258,14 @@ public class AssistantController {
 
 	}
 
+	@GetMapping(value = "/cancel")
+	public ResponseEntity<ResponseWrapper<Boolean>> cancelConversation(
+			@RequestParam("conversationId") ConversationId streamId) {
+		boolean success = assistantQueryService.cancelRequest(streamId);
+		ResponseWrapper<Boolean> response = ResponseWrapper.SuccessResponse(success);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
 	@PostMapping(value = "/response", produces = MediaType.APPLICATION_NDJSON_VALUE)
 	public Callable<ResponseEntity<StreamingResponseBody>> getResponse(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestBody ConversationId streamId) {

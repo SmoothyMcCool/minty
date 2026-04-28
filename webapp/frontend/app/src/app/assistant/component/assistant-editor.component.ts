@@ -48,9 +48,11 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 		return this._tools;
 	}
 
+	@Input() allowHistory: boolean = true;
+
 	usedDocs: MintyDoc[] = [];
 	unusedDocs: MintyDoc[] = [];
-	assistant!: Assistant;
+	assistant: Assistant | undefined = undefined;
 	minContext: number = 0;
 	maxContext: number = 0;
 
@@ -70,12 +72,12 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 		}
 
 		if (this.documents && this.assistant) {
-			this.usedDocs = this.documents.filter(doc => this.assistant.documentIds.find(id => id === doc.documentId) != undefined);
+			this.usedDocs = this.documents.filter(doc => this.assistant!.documentIds.find(id => id === doc.documentId) != undefined);
 			this.unusedDocs = this.documents.filter(doc => this.usedDocs.find(asstDoc => asstDoc.documentId === doc.documentId) == undefined);
 		}
 
 		if (this.tools && this.assistant) {
-			this.usedTools = this.tools.filter(tool => this.assistant.tools.find(name => name.localeCompare(tool.name) === 0) != undefined);
+			this.usedTools = this.tools.filter(tool => this.assistant!.tools.find(name => name.localeCompare(tool.name) === 0) != undefined);
 			this.unusedTools = this.tools.filter(tool => this.usedTools.find(asstTool => asstTool.name.localeCompare(tool.name) === 0) == undefined);
 		}
 	}
@@ -85,18 +87,21 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 			return;
 		}
 
-		this.assistant = { ...this.assistant, model: modelName, documentIds: this.assistant.documentIds, contextSize: this.assistant.contextSize };
+		if (this.assistant) {
+			this.assistant = { ...this.assistant, model: modelName, documentIds: this.assistant.documentIds, contextSize: this.assistant.contextSize };
 
-		const model = this.models.find(m => m.name === modelName);
 
-		if (model) {
-			this.minContext = 0;
-			this.maxContext = model.maximumContext;
+			const model = this.models.find(m => m.name === modelName);
 
-			if (this.assistant.contextSize < this.minContext) {
-				this.assistant.contextSize = this.minContext;
-			} else if (this.assistant.contextSize > this.maxContext) {
-				this.assistant.contextSize = this.maxContext;
+			if (model) {
+				this.minContext = 0;
+				this.maxContext = model.maximumContext;
+
+				if (this.assistant.contextSize < this.minContext) {
+					this.assistant.contextSize = this.minContext;
+				} else if (this.assistant.contextSize > this.maxContext) {
+					this.assistant.contextSize = this.maxContext;
+				}
 			}
 		}
 
@@ -104,36 +109,60 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 		this.onChange(createAssistant(this.assistant));
 	}
 	nameChanged(name: string) {
+		if (!this.assistant) {
+			return;
+		}
 		this.assistant.name = name;
 		this.onTouched();
 		this.onChange(createAssistant(this.assistant));
 	}
 	hasMemoryChanged(hasMemory: boolean) {
+		if (!this.assistant) {
+			return;
+		}
+		if (!this.allowHistory) {
+			hasMemory = false;
+		}
 		this.assistant.hasMemory = hasMemory;
 		this.onTouched();
 		this.onChange(createAssistant(this.assistant));
 	}
 	contextSizeChanged(contextSize: number) {
+		if (!this.assistant) {
+			return;
+		}
 		this.assistant.contextSize = contextSize;
 		this.onTouched();
 		this.onChange(createAssistant(this.assistant));
 	}
 	temperatureChanged(temperature: number) {
+		if (!this.assistant) {
+			return;
+		}
 		this.assistant.temperature = temperature;
 		this.onTouched();
 		this.onChange(createAssistant(this.assistant));
 	}
 	topKChanged(topK: number) {
+		if (!this.assistant) {
+			return;
+		}
 		this.assistant.topK = topK;
 		this.onTouched();
 		this.onChange(createAssistant(this.assistant));
 	}
 	promptChanged(prompt: string) {
+		if (!this.assistant) {
+			return;
+		}
 		this.assistant.prompt = prompt;
 		this.onTouched();
 		this.onChange(createAssistant(this.assistant));
 	}
 	addDoc(doc: MintyDoc) {
+		if (!this.assistant) {
+			return;
+		}
 		if (this.assistant.documentIds.find(el => el === doc.documentId)) {
 			return;
 		}
@@ -147,14 +176,20 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 	}
 
 	removeDoc(doc: MintyDoc) {
+		if (!this.assistant) {
+			return;
+		}
 		this.assistant.documentIds = this.assistant.documentIds.filter(el => el !== doc.documentId);
-		this.usedDocs = this.usedDocs.filter(doc => this.assistant.documentIds.findIndex(id => id === doc.documentId) !== -1);
+		this.usedDocs = this.usedDocs.filter(doc => this.assistant! .documentIds.findIndex(id => id === doc.documentId) !== -1);
 		this.unusedDocs = this._documents.filter(doc => this.usedDocs.find(asstDoc => asstDoc.documentId === doc.documentId) == undefined);
 		this.onTouched();
 		this.onChange(createAssistant(this.assistant));
 	}
 
 	addTool(tool: MintyTool) {
+		if (!this.assistant) {
+			return;
+		}
 		if (this.assistant.tools.find(el => el === tool.name)) {
 			return;
 		}
@@ -168,8 +203,11 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 	}
 
 	removeTool(tool: MintyTool) {
+		if (!this.assistant) {
+			return;
+		}
 		this.assistant.tools = this.assistant.tools.filter(el => el !== tool.name);
-		this.usedTools = this.usedTools.filter(tool => this.assistant.tools.findIndex(at => at.localeCompare(tool.name) === 0) !== -1);
+		this.usedTools = this.usedTools.filter(tool => this.assistant!.tools.findIndex(at => at.localeCompare(tool.name) === 0) !== -1);
 		this.unusedTools = this._tools.filter(tool => this.usedTools.find(asstTool => asstTool.name.localeCompare(tool.name) === 0) == undefined);
 		this.onTouched();
 		this.onChange(createAssistant(this.assistant));

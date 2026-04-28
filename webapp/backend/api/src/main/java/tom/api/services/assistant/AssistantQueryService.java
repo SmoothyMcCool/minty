@@ -20,4 +20,6 @@ public interface AssistantQueryService {
 
 	String runSingleLlmCall(UserId userId, AssistantQuery synthQuery);
 
+	boolean cancelRequest(ConversationId conversationId);
+
 }

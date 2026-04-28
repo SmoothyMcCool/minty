@@ -23,6 +23,7 @@ export class AssistantService {
 	private static readonly ListSharedUsers = 'api/assistant/getsharing';
 	private static readonly AskAssistant = 'api/assistant/ask';
 	private static readonly GetResponseStream = 'api/assistant/response';
+	private static readonly CancelResponseStream = 'api/assistant/cancel';
 	private static readonly GetAssistant = 'api/assistant/get';
 	private static readonly DeleteAssistant = 'api/assistant/delete';
 	private static readonly GetAssistantForConversation = 'api/assistant/conversation';
@@ -186,6 +187,22 @@ export class AssistantService {
 				}),
 				map((result: ApiResult) => {
 					return result.data as string;
+				})
+			);
+	}
+
+	cancelStream(streamId: string): Observable<boolean> {
+		let params: HttpParams = new HttpParams();
+		params = params.append('conversationId', streamId);
+
+		return this.http.get<ApiResult>(AssistantService.CancelResponseStream, { params: params })
+			.pipe(
+				catchError(error => {
+					this.alertService.postFailure(JSON.stringify(error));
+					return EMPTY;
+				}),
+				map((result: ApiResult) => {
+					return result.data as boolean;
 				})
 			);
 	}

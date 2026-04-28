@@ -5,7 +5,7 @@
 		<label class="form-check-label" for="useCustomAssistant">Custom Assistant</label>
 	</div>
 	<div class="mb-3" *ngIf="useCustomAssistant">
-		<minty-assistant-editor name="assistantInput" [models]="models" [documents]="documents" [tools]="tools" [ngModel]="assistant"
+		<minty-assistant-editor name="assistantInput" [allowHistory]="false" [models]="models" [documents]="documents" [tools]="tools" [ngModel]="assistant"
 			(ngModelChange)="onAssistantEditorChange($event)"></minty-assistant-editor>
 	</div>
 	<div class="mb-3" *ngIf="!useCustomAssistant">

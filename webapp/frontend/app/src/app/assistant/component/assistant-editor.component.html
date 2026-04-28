@@ -7,7 +7,7 @@
 	<div class="d-flex flex-row">
 		<div class="form-group mb-2">
 			<input type="checkbox" class="form-check-input" id="hasMemory" name="hasMemory"
-				[ngModel]="assistant.hasMemory" (ngModelChange)="hasMemoryChanged($event)">
+				[ngModel]="assistant.hasMemory" (ngModelChange)="hasMemoryChanged($event)" [disabled]="!allowHistory">
 			<label class=" ms-1" for="hasMemory">Keep conversation history</label>
 		</div>
 	</div>

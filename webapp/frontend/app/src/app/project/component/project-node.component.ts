@@ -46,9 +46,11 @@ export class ProjectNodeComponent {
 
 		const lastSlash = trimmed.lastIndexOf('/');
 
-		return lastSlash >= 0
+		const final = lastSlash >= 0
 			? trimmed.substring(lastSlash + 1)
 			: trimmed;
+
+		return final ? final : '/';
 	}
 
 	editNodeInfo(event?: MouseEvent) {
