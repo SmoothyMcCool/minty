@@ -23,6 +23,12 @@ inputs:
     required: true
     source: runtime
     description: Full execution history containing requirements, design artifacts, and any prior estimates to build on
+  conversation:
+    type: list<string>
+    required: false
+    source: planner
+    description: Agents do not have access to conversation history. Include any parts of the conversation with the
+      that this agent requires to correctly perform its function.
 
 output: Effort estimate with task breakdown, sizing rationale, dependencies, and confidence level
 responseType: RawText

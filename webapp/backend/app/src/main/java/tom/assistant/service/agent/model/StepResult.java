@@ -14,59 +14,59 @@ public class StepResult {
 	private String fallbackText;
 
 	public static StepResult success(LlmResponse response) {
-		StepResult r = new StepResult();
-		r.type = Type.SUCCESS;
-		r.response = response;
-		return r;
+		StepResult sr = new StepResult();
+		sr.type = Type.SUCCESS;
+		sr.response = response;
+		return sr;
 	}
 
 	public static StepResult ask(LlmResponse response) {
-		StepResult r = new StepResult();
-		r.type = Type.ASK;
-		r.response = response;
-		return r;
+		StepResult sr = new StepResult();
+		sr.type = Type.ASK;
+		sr.response = response;
+		return sr;
 	}
 
 	public static StepResult ask(String question) {
 		LlmResponse r = new LlmResponse();
 		r.setMessage(question);
 
-		StepResult s = new StepResult();
-		s.type = Type.ASK;
-		s.response = r;
-		return s;
+		StepResult sr = new StepResult();
+		sr.type = Type.ASK;
+		sr.response = r;
+		return sr;
 	}
 
 	public static StepResult error(LlmResponse response) {
-		StepResult r = new StepResult();
-		r.type = Type.ERROR;
-		r.response = response;
-		return r;
+		StepResult sr = new StepResult();
+		sr.type = Type.ERROR;
+		sr.response = response;
+		return sr;
 	}
 
 	public static StepResult error(String message) {
 		LlmResponse r = new LlmResponse();
 		r.setMessage(message);
 
-		StepResult s = new StepResult();
-		s.type = Type.ERROR;
-		s.response = r;
-		return s;
+		StepResult sr = new StepResult();
+		sr.type = Type.ERROR;
+		sr.response = r;
+		return sr;
 	}
 
 	public static StepResult unstructured(String text) {
-		StepResult r = new StepResult();
-		r.type = Type.UNSTRUCTURED;
-		r.fallbackText = text;
-		return r;
+		StepResult sr = new StepResult();
+		sr.type = Type.UNSTRUCTURED;
+		sr.fallbackText = text;
+		return sr;
 	}
 
 	public static StepResult replan(LlmResponse response) {
-		StepResult r = new StepResult();
-		r.type = Type.REPLAN;
-		r.response = response;
-		r.getResponse().setStatus(LlmStatus.SUCCESS); // To help out the replanner not replan the replan.
-		return r;
+		StepResult sr = new StepResult();
+		sr.type = Type.REPLAN;
+		sr.response = response;
+		sr.getResponse().setStatus(LlmStatus.SUCCESS); // To help out the replanner not replan the replan.
+		return sr;
 	}
 
 	public LlmResponse getResponse() {

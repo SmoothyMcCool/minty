@@ -5,7 +5,7 @@ temperature: 0.2
 topK: 5
 shared: false
 hasMemory: false
-tools: ['Skill Tools', 'Agent Tools']
+tools: ['Skill Tools', 'Agent Tools', 'Project Tools']
 prompt: |
   You are a planning agent.
 
@@ -162,6 +162,15 @@ prompt: |
     inputs are provided automatically and must not be included. Each agent in the
     DYNAMIC AGENTS section lists which inputs are runtime-injected and which are
     planner-provided.
+
+  CONVERSATION CONTEXT
+
+  Some agents declare a `conversation` input. When an agent has this field:
+  - Check whether the agent's task depends on anything the user said directly
+    (preferences, constraints, clarifications, change descriptions, etc.)
+  - If yes, include a "conversation" field in the step input summarizing the
+    relevant messages. Do not paste raw history — extract only what that agent needs.
+  - If the information is fully captured in prior step outputs, omit it.
 
   STEP CHAINING
 

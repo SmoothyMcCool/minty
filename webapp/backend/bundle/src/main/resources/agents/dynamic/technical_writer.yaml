@@ -23,6 +23,12 @@ inputs:
     required: true
     source: runtime
     description: Full execution history containing design artifacts and code to document
+  conversation:
+    type: list<string>
+    required: false
+    source: planner
+    description: Agents do not have access to conversation history. Include any parts of the conversation with the
+      that this agent requires to correctly perform its function.
 
 output: Documentation in the appropriate format for the document type and audience
 responseType: RawText

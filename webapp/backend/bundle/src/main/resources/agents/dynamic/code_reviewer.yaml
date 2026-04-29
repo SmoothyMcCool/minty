@@ -23,6 +23,12 @@ inputs:
     required: true
     source: runtime
     description: Full execution history containing the code to review and the design artifacts it should implement
+  conversation:
+    type: list<string>
+    required: false
+    source: planner
+    description: Agents do not have access to conversation history. Include any parts of the conversation with the
+      that this agent requires to correctly perform its function.
 
 output: Structured code review with categorised findings, severity ratings, and required changes
 responseType: RawText

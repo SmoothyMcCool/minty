@@ -23,6 +23,12 @@ inputs:
     required: true
     source: runtime
     description: Full execution history providing requirements, use cases, and prior design decisions to build on
+  conversation:
+    type: list<string>
+    required: false
+    source: planner
+    description: Agents do not have access to conversation history. Include any parts of the conversation with the
+      that this agent requires to correctly perform its function.
 
 output: Design artifact in the most appropriate format for the content (architecture diagram, Mermaid sequence diagram, data model, API contract, or prose design document)
 responseType: RawText
