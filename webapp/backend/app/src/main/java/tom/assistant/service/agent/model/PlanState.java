@@ -18,35 +18,45 @@ public class PlanState {
 
 	private static ObjectMapper Mapper = new ObjectMapper();
 
-	@JsonProperty("currentStepId")
-	private String currentStepId;
+	@JsonProperty("currentStep")
 	private int currentStep;
 	@JsonProperty("steps")
 	private List<Pair<AgentStep, AgentStepState>> steps;
 
+	@JsonIgnore
+	private boolean errored;
+
+	public PlanState() {
+		currentStep = 0;
+		steps = new ArrayList<>();
+		errored = false;
+	}
+
 	public PlanState(List<AgentStep> steps) {
 		this.currentStep = 0;
-		this.currentStepId = steps.get(currentStep).getId();
 		this.steps = new ArrayList<>();
+		this.errored = false;
 		for (AgentStep step : steps) {
 			this.steps.add(new Pair<>(step, new AgentStepState()));
 		}
 	}
 
 	public void start() {
-		currentStepId = steps.get(0).left().getId();
+		currentStep = 0;
 	}
 
 	public boolean advanceStep() {
 		currentStep++;
-		if (currentStep < steps.size()) {
-			currentStepId = steps.get(currentStep).left().getId();
-		}
 		return isDone();
 	}
 
 	public Pair<AgentStep, AgentStepState> currentStep() {
 		return steps.get(currentStep);
+	}
+
+	@JsonIgnore
+	public int getCurrentStepIndex() {
+		return currentStep;
 	}
 
 	public void addReplanStep() {
@@ -108,4 +118,13 @@ public class PlanState {
 		return Collections.unmodifiableList(steps.subList(0, currentStep + 1));
 	}
 
+	@JsonIgnore
+	public boolean isErrored() {
+		return errored;
+	}
+
+	@JsonIgnore
+	public void setErrored(boolean errored) {
+		this.errored = errored;
+	}
 }

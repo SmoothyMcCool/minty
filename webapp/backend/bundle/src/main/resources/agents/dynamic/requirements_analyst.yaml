@@ -23,6 +23,12 @@ inputs:
     required: true
     source: runtime
     description: Full execution history providing any prior context, constraints, or partial requirements
+  conversation:
+    type: list<string>
+    required: false
+    source: planner
+    description: Agents do not have access to conversation history. Include any parts of the conversation with the
+      that this agent requires to correctly perform its function.
 
 output: Structured requirements document containing functional requirements, user stories with acceptance criteria, actors, preconditions, and postconditions
 responseType: RawText

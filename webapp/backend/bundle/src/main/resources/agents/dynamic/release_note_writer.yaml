@@ -22,6 +22,12 @@ inputs:
     required: true
     source: runtime
     description: Full execution history containing implemented changes, use cases, and any ticket or issue references
+  conversation:
+    type: list<string>
+    required: false
+    source: planner
+    description: Agents do not have access to conversation history. Include any parts of the conversation with the
+      that this agent requires to correctly perform its function.
 
 output: Release notes or changelog entry in the appropriate format for the specified audience
 responseType: RawText

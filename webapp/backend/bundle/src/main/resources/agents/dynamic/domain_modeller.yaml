@@ -23,7 +23,12 @@ inputs:
     required: true
     source: runtime
     description: Full execution history containing requirements, use cases, and any prior domain decisions to build on
-
+  conversation:
+    type: list<string>
+    required: false
+    source: planner
+    description: Agents do not have access to conversation history. Include any parts of the conversation with the
+      that this agent requires to correctly perform its function.
 output: Domain model containing an entity relationship diagram, entity definitions with attributes and relationships, and a domain glossary
 responseType: RawText
 

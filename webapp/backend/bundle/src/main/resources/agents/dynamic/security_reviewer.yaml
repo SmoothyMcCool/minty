@@ -23,6 +23,12 @@ inputs:
     required: true
     source: runtime
     description: Full execution history containing architecture diagrams, code, and any prior security decisions
+  conversation:
+    type: list<string>
+    required: false
+    source: planner
+    description: Agents do not have access to conversation history. Include any parts of the conversation with the
+      that this agent requires to correctly perform its function.
 
 output: Structured security assessment with vulnerability findings, severity ratings, and required remediations
 responseType: RawText

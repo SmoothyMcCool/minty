@@ -23,6 +23,12 @@ inputs:
     required: true
     source: runtime
     description: Full execution history containing all artifacts that may be affected by the proposed change
+  conversation:
+    type: list<string>
+    required: false
+    source: planner
+    description: Agents do not have access to conversation history. Include any parts of the conversation with the
+      that this agent requires to correctly perform its function.
 
 output: Impact assessment identifying affected artifacts, required updates, effort implications, and risk level
 responseType: RawText
