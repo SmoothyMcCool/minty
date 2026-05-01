@@ -35,6 +35,7 @@ import tom.conversation.service.ConversationServiceInternal;
 import tom.document.markdown.MarkdownSectionSplitter;
 import tom.document.markdown.SectionResult;
 import tom.document.markdown.SectionSummary;
+import tom.document.service.DocumentServiceInternal;
 
 public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 
@@ -47,15 +48,18 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 	private final AssistantManagementService assistantManagementService;
 	private final AssistantQueryService assistantQueryService;
 	private final DocumentExtractorService documentExtractorService;
+	private final DocumentServiceInternal documentService;
 	private final String documentName;
 	private final String documentFolder;
 	private final MintyConfiguration config;
-	List<Section> sections;
+	private List<Section> sections;
+	private boolean complete;
 
 	public DecomposedMarkdownDocumentProcessingTask(UserId userId, ProjectId projectId, File file,
 			ProjectService projectService, ConversationServiceInternal conversationService,
 			AssistantManagementService assistantManagementService, AssistantQueryService assistantQueryService,
-			DocumentExtractorService documentExtractorService, MintyConfiguration config) {
+			DocumentExtractorService documentExtractorService, DocumentServiceInternal documentService,
+			MintyConfiguration config) {
 		this.userId = userId;
 		this.projectId = projectId;
 		this.file = file;
@@ -64,7 +68,9 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 		this.assistantManagementService = assistantManagementService;
 		this.assistantQueryService = assistantQueryService;
 		this.documentExtractorService = documentExtractorService;
+		this.documentService = documentService;
 		this.config = config;
+		complete = false;
 
 		String filename = file.getName();
 		int lastDot = filename.lastIndexOf('.');
@@ -106,8 +112,26 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 		} catch (Exception e) {
 			logger.error("Markdown processing failed: ", e);
 		} finally {
+			complete = true;
+			documentService.taskComplete(this);
 			file.delete();
 		}
+	}
+
+	public UserId getUserId() {
+		return userId;
+	}
+
+	public ProjectId getProjectId() {
+		return projectId;
+	}
+
+	public boolean isComplete() {
+		return complete;
+	}
+
+	public String getFilename() {
+		return documentName;
 	}
 
 	private String writeSummary(List<Section> sections) throws Exception {

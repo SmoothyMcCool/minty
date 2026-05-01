@@ -111,7 +111,7 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 		ChatMemory chatMemory = llmService.getChatMemory();
 
 		List<Message> messages = chatMemory.get(conversationId.value().toString());
-		result = messages.stream()
+		result = messages.stream().filter(message -> message.getMessageType() != MessageType.SYSTEM)
 				.map(message -> new ChatMessage(message.getMessageType() == MessageType.USER, message.getText()))
 				.collect(Collectors.toList());
 		Collections.reverse(result);

@@ -9,6 +9,7 @@ import tom.api.UserId;
 import tom.api.services.ProjectService;
 import tom.api.services.document.DocumentService;
 import tom.document.model.MintyDoc;
+import tom.document.service.tasks.DecomposedMarkdownDocumentProcessingTask;
 
 public interface DocumentServiceInternal extends DocumentService {
 
@@ -34,5 +35,9 @@ public interface DocumentServiceInternal extends DocumentService {
 	boolean documentOwnedBy(UserId userId, DocumentId documentId);
 
 	MintyDoc findByDocumentId(DocumentId documentId);
+
+	List<String> getInProgressTaskNames(UserId userId);
+
+	void taskComplete(DecomposedMarkdownDocumentProcessingTask decomposedMarkdownDocumentProcessingTask);
 
 }

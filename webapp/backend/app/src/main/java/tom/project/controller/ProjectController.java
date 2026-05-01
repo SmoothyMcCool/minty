@@ -448,4 +448,11 @@ public class ProjectController {
 		}
 	}
 
+	@GetMapping(value = "/tasks")
+	public ResponseEntity<ResponseWrapper<List<String>>> getInProgressTasks(
+			@AuthenticationPrincipal UserDetailsUser user) {
+		ResponseWrapper<List<String>> response = ResponseWrapper
+				.SuccessResponse(documentService.getInProgressTaskNames(user.getId()));
+		return ResponseEntity.ok(response);
+	}
 }

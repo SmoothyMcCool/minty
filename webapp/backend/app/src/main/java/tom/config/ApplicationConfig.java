@@ -1,12 +1,17 @@
 package tom.config;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import javax.sql.DataSource;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.ai.ollama.api.OllamaApi;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -46,6 +51,7 @@ import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import de.neuland.pug4j.PugConfiguration;
 import de.neuland.pug4j.filter.MarkdownFilter;
 import de.neuland.pug4j.template.FileTemplateLoader;
+import jakarta.annotation.PostConstruct;
 import tom.cache.service.SingleFlightCacheManager;
 import tom.config.model.LlmEngine;
 import tom.llm.service.LlmService;
@@ -61,10 +67,29 @@ import tom.prioritythreadpool.PriorityThreadPoolTaskExecutor;
 @ComponentScan("tom")
 public class ApplicationConfig implements WebMvcConfigurer {
 
-	MintyConfigurationImpl properties;
+	private static final Logger logger = LogManager.getLogger(ApplicationConfig.class);
+	private MintyConfigurationImpl properties;
 
 	public ApplicationConfig(MintyConfigurationImpl properties) {
 		this.properties = properties;
+	}
+
+	@PostConstruct
+	void initialize() {
+		Path temp = properties.getConfig().fileStores().temp();
+		if (temp != null && Files.isDirectory(temp)) {
+			try {
+				Files.walk(temp).filter(path -> !path.equals(temp)).sorted(Comparator.reverseOrder()).forEach(path -> {
+					try {
+						Files.delete(path);
+					} catch (IOException e) {
+						logger.warn("Couldn't delete temp file " + path, e);
+					}
+				});
+			} catch (IOException e) {
+				logger.warn("Error while trying to delete temp files. ", e);
+			}
+		}
 	}
 
 	@Bean
