@@ -1,4 +1,16 @@
-<div class="container-fluid">
+<div class="container-fluid position-relative">
 	<h1>Projects</h1>
-</div>
-<router-outlet></router-outlet>
+	<div *ngIf="anyTaskCompleted">
+		<div class="alert alert-warning" >
+			<strong>A task completed. You should reload this page.</strong>
+		</div>
+	</div>
+	<router-outlet></router-outlet>
+
+	<div class="toast-container position-absolute top-0 end-0 p-3" style="z-index: 1050;">
+		<div class="toast show" role="alert" *ngFor="let task of tasks">
+			<div class="toast-header">
+				<strong class="me-auto">Processing {{task}}</strong>
+			</div>
+		</div>
+	</div>

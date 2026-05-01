@@ -2,6 +2,7 @@ package tom.document.service;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,6 +72,8 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 	private final Path docFileStore;
 	private final ChatModel chatModel;
 
+	private List<DecomposedMarkdownDocumentProcessingTask> inProgressTasks;
+
 	public DocumentServiceImpl(DocumentRepository documentRepository,
 			@Qualifier("fileProcessingExecutor") ThreadPoolTaskExecutor fileProcessingExecutor, LlmService llmService,
 			AssistantDocumentLinkService assistantDocumentLinkService, MintyConfiguration properties,
@@ -98,6 +101,7 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 		String summarizingModel = properties.getConfig().llm().embedding().summarizingModel();
 		chatModel = llmService.buildSimpleModel(summarizingModel);
 
+		inProgressTasks = new ArrayList<>();
 	}
 
 	@PostConstruct
@@ -148,7 +152,7 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 
 		DecomposedMarkdownDocumentProcessingTask task = new DecomposedMarkdownDocumentProcessingTask(userId, projectId,
 				file, projectService, conversationService, assistantManagementService, assistantQueryService,
-				documentExtractorService, config);
+				documentExtractorService, this, config);
 
 		try {
 			task.decompose();
@@ -161,11 +165,25 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 		}
 
 		if (summarize) {
+			inProgressTasks.add(task);
+			inProgressTasks = inProgressTasks.stream().filter(inProgressTask -> !inProgressTask.isComplete())
+					.collect(Collectors.toList());
 			fileProcessingExecutor.submit(task);
 		} else {
 			file.delete();
 		}
 
+	}
+
+	@Override
+	public List<String> getInProgressTaskNames(UserId userId) {
+		return inProgressTasks.stream().filter(task -> task.getUserId().equals(userId)).map(task -> task.getFilename())
+				.toList();
+	}
+
+	@Override
+	public void taskComplete(DecomposedMarkdownDocumentProcessingTask decomposedMarkdownDocumentProcessingTask) {
+		inProgressTasks.removeIf(task -> task == decomposedMarkdownDocumentProcessingTask);
 	}
 
 	@Override

@@ -20,6 +20,7 @@ export class ProjectService {
 	private static readonly DeleteProject = 'api/project/delete';
 	private static readonly GetProject = 'api/project';
 	private static readonly ListProjects = 'api/project/list';
+	private static readonly ListTasks = 'api/project/tasks';
 
 	private static readonly ReadNode = 'api/project/node';
 	private static readonly WriteFile = 'api/project/node/file';
@@ -84,6 +85,14 @@ export class ProjectService {
 		return this.http.get<ApiResult>(ProjectService.ListProjects).pipe(
 			this.handleError(),
 			map((result: ApiResult) => result.data as Project[])
+		);
+	}
+
+	listTasks(): Observable<string[]> {
+
+		return this.http.get<ApiResult>(ProjectService.ListTasks).pipe(
+			this.handleError(),
+			map((result: ApiResult) => result.data as string[])
 		);
 	}
 
