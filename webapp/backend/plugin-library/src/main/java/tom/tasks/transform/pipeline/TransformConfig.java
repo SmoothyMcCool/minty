@@ -4,14 +4,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-
 import tom.api.task.TaskConfigSpec;
 import tom.api.task.TaskConfigTypes;
 import tom.tasks.transform.pipeline.model.PipelineDefinition;
 import tom.tasks.transform.pipeline.model.PipelineOperationConfiguration;
 import tom.tasks.transform.pipeline.model.PipelineOperationConfigurationDeserializer;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.module.SimpleModule;
 
 public class TransformConfig implements TaskConfigSpec {
 
@@ -20,10 +20,10 @@ public class TransformConfig implements TaskConfigSpec {
 	private static final ObjectMapper mapper = createMapper();
 
 	private static ObjectMapper createMapper() {
-		ObjectMapper mapper = new ObjectMapper();
-		SimpleModule module = new SimpleModule();
-		module.addDeserializer(PipelineOperationConfiguration.class, new PipelineOperationConfigurationDeserializer());
-		mapper.registerModule(module);
+		JsonMapper mapper = JsonMapper.builder()
+				.addModule(new SimpleModule().addDeserializer(PipelineOperationConfiguration.class,
+						new PipelineOperationConfigurationDeserializer()))
+				.build();
 		return mapper;
 	}
 

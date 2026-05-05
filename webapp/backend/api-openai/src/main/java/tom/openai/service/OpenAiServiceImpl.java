@@ -23,23 +23,23 @@ import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.OpenAiEmbeddingModel;
 import org.springframework.ai.openai.OpenAiEmbeddingOptions;
-import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.ai.tokenizer.JTokkitTokenCountEstimator;
 import org.springframework.ai.tokenizer.TokenCountEstimator;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.mariadb.MariaDBVectorStore;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import com.openai.client.OpenAIClient;
 
+import tom.api.MintyObjectMapper;
 import tom.api.model.assistant.Assistant;
 import tom.api.model.assistant.AssistantQuery;
 import tom.config.MintyConfiguration;
 import tom.config.model.ChatModelConfig;
 import tom.llm.service.LlmService;
 import tom.tool.auditing.AuditingToolCallingManager;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 //NO Service annotation. This bean is instantiated dynamically based on the LLM engine being used.
 public class OpenAiServiceImpl implements LlmService {
@@ -48,14 +48,14 @@ public class OpenAiServiceImpl implements LlmService {
 
 	private final List<ChatModelConfig> modelDefinitions;
 	private final List<String> activeModels;
-	private final OpenAiApi openAiApi;
+	private final OpenAIClient openAiClient;
 	private final MariaDBVectorStore vectorStore;
 	private final ChatMemoryRepository chatMemoryRepository;
 	private final ChatMemory chatMemory;
 	private final EmbeddingModel embeddingModel;
 	private final ToolCallingManager defaultToolCallingManager;
 
-	public OpenAiServiceImpl(OpenAiApi openAiApi, JdbcTemplate vectorJdbcTemplate, DataSource dataSource,
+	public OpenAiServiceImpl(OpenAIClient openAiClient, JdbcTemplate vectorJdbcTemplate, DataSource dataSource,
 			MintyConfiguration properties) {
 		String embeddingModelName = properties.getConfig().llm().embedding().model();
 		int chatMemoryDepth = properties.getConfig().llm().chatMemoryDepth();
@@ -65,20 +65,19 @@ public class OpenAiServiceImpl implements LlmService {
 
 		try {
 			logger.info("OpenAI API Interface Service starting...");
-			ObjectMapper mapper = new ObjectMapper();
-			mapper.findAndRegisterModules();
-			mapper.enable(SerializationFeature.INDENT_OUTPUT);
+			ObjectMapper mapper = MintyObjectMapper.PrettyPrinterJsonMapper;
+
 			logger.info("Defined models " + mapper.writeValueAsString(modelDefinitions));
 			logger.info("Active models " + mapper.writeValueAsString(activeModels));
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			// Just ignore. Startup logging. If this didn't work we got an exception for a
 			// malformed file before this anyway.
 		}
 
-		this.openAiApi = openAiApi;
+		this.openAiClient = openAiClient;
 
 		OpenAiEmbeddingOptions embeddingOptions = OpenAiEmbeddingOptions.builder().model(embeddingModelName).build();
-		embeddingModel = new OpenAiEmbeddingModel(openAiApi, MetadataMode.EMBED, embeddingOptions);
+		embeddingModel = new OpenAiEmbeddingModel(openAiClient, MetadataMode.EMBED, embeddingOptions);
 
 		vectorStore = MariaDBVectorStore.builder(vectorJdbcTemplate, embeddingModel).schemaName("Minty")
 				.vectorTableName("vector_store").idFieldName("doc_id").contentFieldName("text")
@@ -136,12 +135,12 @@ public class OpenAiServiceImpl implements LlmService {
 			List<Advisor> advisors) {
 
 		OpenAiChatOptions chatOptions = OpenAiChatOptions.builder().model(assistant.model())
-				.temperature(assistant.temperature()).parallelToolCalls(false).responseFormat(null).build();
+				.temperature(assistant.temperature()).parallelToolCalls(false).build();
 
-		ChatModel chatModel = OpenAiChatModel.builder().openAiApi(openAiApi)
+		ChatModel chatModel = OpenAiChatModel.builder().openAiClient(openAiClient)
 				.toolCallingManager(new AuditingToolCallingManager(query.getConversationId().getValue().toString(),
 						defaultToolCallingManager))
-				.defaultOptions(chatOptions).build();
+				.options(chatOptions).build();
 
 		return ChatClient.builder(chatModel).defaultAdvisors(advisors).build();
 
@@ -149,8 +148,8 @@ public class OpenAiServiceImpl implements LlmService {
 
 	@Override
 	public ChatModel buildSimpleModel(String model) {
-		return OpenAiChatModel.builder().openAiApi(openAiApi)
-				.defaultOptions(OpenAiChatOptions.builder().model(model).build()).build();
+		return OpenAiChatModel.builder().openAiClient(openAiClient)
+				.options(OpenAiChatOptions.builder().model(model).build()).build();
 	}
 
 }

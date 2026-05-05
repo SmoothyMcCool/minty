@@ -13,18 +13,15 @@ import javax.sql.DataSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.ai.ollama.api.OllamaApi;
-import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.http.converter.xml.MappingJackson2XmlHttpMessageConverter;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import org.springframework.http.converter.xml.JacksonXmlHttpMessageConverter;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.lang.NonNull;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -41,23 +38,26 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import com.fasterxml.jackson.core.exc.StreamReadException;
-import com.fasterxml.jackson.databind.AnnotationIntrospector;
-import com.fasterxml.jackson.databind.DatabindException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.JacksonXmlAnnotationIntrospector;
-import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
+import com.openai.client.OpenAIClient;
 
 import de.neuland.pug4j.PugConfiguration;
 import de.neuland.pug4j.filter.MarkdownFilter;
 import de.neuland.pug4j.template.FileTemplateLoader;
 import jakarta.annotation.PostConstruct;
+import tom.api.MintyObjectMapper;
 import tom.cache.service.SingleFlightCacheManager;
 import tom.config.model.LlmEngine;
 import tom.llm.service.LlmService;
 import tom.ollama.service.OllamaServiceImpl;
 import tom.openai.service.OpenAiServiceImpl;
 import tom.prioritythreadpool.PriorityThreadPoolTaskExecutor;
+import tools.jackson.core.exc.StreamReadException;
+import tools.jackson.databind.AnnotationIntrospector;
+import tools.jackson.databind.DatabindException;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.dataformat.xml.JacksonXmlAnnotationIntrospector;
+import tools.jackson.dataformat.xml.XmlMapper;
+import tools.jackson.module.jaxb.JaxbAnnotationIntrospector;
 
 @Configuration
 @EnableWebMvc
@@ -93,32 +93,32 @@ public class ApplicationConfig implements WebMvcConfigurer {
 	}
 
 	@Bean
-	public static MintyConfiguration properties() throws StreamReadException, DatabindException, IOException {
+	static MintyConfiguration properties() throws StreamReadException, DatabindException, IOException {
 		return new MintyConfigurationImpl();
 	}
 
 	@Bean
-	public LlmService llmService(OllamaApi ollamaApi, OpenAiApi openAiApi, JdbcTemplate vectorJdbcTemplate,
+	LlmService llmService(OllamaApi ollamaApi, OpenAIClient openAiClient, JdbcTemplate vectorJdbcTemplate,
 			DataSource dataSource) {
 		LlmEngine engine = properties.getConfig().llm().engine();
 		if (engine == LlmEngine.Ollama) {
 			return new OllamaServiceImpl(ollamaApi, vectorJdbcTemplate, dataSource, properties);
 		}
-		return new OpenAiServiceImpl(openAiApi, vectorJdbcTemplate, dataSource, properties);
+		return new OpenAiServiceImpl(openAiClient, vectorJdbcTemplate, dataSource, properties);
 	}
 
 	@Bean
-	public HttpSessionIdResolver httpSessionIdResolver() {
+	HttpSessionIdResolver httpSessionIdResolver() {
 		return HeaderHttpSessionIdResolver.xAuthToken();
 	}
 
 	@Bean
-	public CacheManager cacheManager() {
+	CacheManager cacheManager() {
 		return new SingleFlightCacheManager();
 	}
 
 	@Bean(name = "streamingExecutor", destroyMethod = "shutdown")
-	public ThreadPoolTaskExecutor streamingExecutor() {
+	ThreadPoolTaskExecutor streamingExecutor() {
 		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 		executor.setCorePoolSize(properties.getConfig().threads().streamDefault());
 		executor.setMaxPoolSize(properties.getConfig().threads().streamMax());
@@ -207,39 +207,33 @@ public class ApplicationConfig implements WebMvcConfigurer {
 	}
 
 	@Override
-	public void extendMessageConverters(@NonNull List<HttpMessageConverter<?>> converters) {
-		Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder();
-		builder.indentOutput(true);// .dateFormat(new SimpleDateFormat("EEE MMM dd hh:mm:ss yyyy"));
-		// .serializationInclusion(Include.NON_EMPTY);
+	public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
+		JsonMapper jsonMapper = MintyObjectMapper.PrettyPrinterJsonMapper;
 
-		// builder.featuresToDisable(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE);
+		converters.removeIf(c -> c instanceof JacksonJsonHttpMessageConverter);
+		converters.add(0, new JacksonJsonHttpMessageConverter(jsonMapper));
 
-		ObjectMapper mapper = builder.build();
-		// mapper.configure(DeserializationFeature.date, state);
-
-		MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(mapper);
-		// converter.setJsonPrefix(")]}',\n");
-		converters.add(converter);
-
-		AnnotationIntrospector introspector = new JaxbAnnotationIntrospector(null, false);
+		AnnotationIntrospector introspector = new JaxbAnnotationIntrospector(false);
 		AnnotationIntrospector secondary = new JacksonXmlAnnotationIntrospector();
-		builder.annotationIntrospector(AnnotationIntrospector.pair(introspector, secondary));
 
-		converters.add(new MappingJackson2XmlHttpMessageConverter(builder.createXmlMapper(true).build()));
+		XmlMapper xmlMapper = MintyObjectMapper.PrettyPrinterXmlMapper.rebuild()
+				.annotationIntrospector(AnnotationIntrospector.pair(introspector, secondary)).build();
+
+		converters.add(new JacksonXmlHttpMessageConverter(xmlMapper));
 	}
 
 	@Override
-	public void addResourceHandlers(@NonNull ResourceHandlerRegistry registry) {
+	public void addResourceHandlers(ResourceHandlerRegistry registry) {
 		registry.addResourceHandler("/**").addResourceLocations("/static/");
 	}
 
 	@Override
-	public void addViewControllers(@NonNull ViewControllerRegistry registry) {
+	public void addViewControllers(ViewControllerRegistry registry) {
 		registry.addViewController("/").setViewName("forward:/index.html");
 	}
 
 	@Override
-	public void configureAsyncSupport(@NonNull AsyncSupportConfigurer configurer) {
+	public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
 		Duration asyncResponseTimeout = properties.getConfig().llm().asyncResponseTimeout();
 		configurer.setDefaultTimeout(asyncResponseTimeout.toMillis());
 	}

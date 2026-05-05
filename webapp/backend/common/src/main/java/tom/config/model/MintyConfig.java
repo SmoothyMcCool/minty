@@ -3,9 +3,9 @@ package tom.config.model;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import tom.api.MintyObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 public record MintyConfig(OutputConfig output, SessionConfig session, FileStoresConfig fileStores, DatabaseConfig db,
 		LlmConfig llm, PandocConfig pandoc, ThreadPoolConfig threads, String secret,
@@ -13,12 +13,10 @@ public record MintyConfig(OutputConfig output, SessionConfig session, FileStores
 
 	public String prettyPrint() {
 		try {
-			ObjectMapper mapper = new ObjectMapper();
-			mapper.findAndRegisterModules();
-			mapper.enable(SerializationFeature.INDENT_OUTPUT);
+			ObjectMapper mapper = MintyObjectMapper.PrettyPrinterJsonMapper;
 
 			return mapper.writeValueAsString(this);
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			return toString();
 		}
 	}

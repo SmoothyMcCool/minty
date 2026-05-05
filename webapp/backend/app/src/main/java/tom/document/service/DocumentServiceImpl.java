@@ -3,6 +3,7 @@ package tom.document.service;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -101,7 +102,7 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 		String summarizingModel = properties.getConfig().llm().embedding().summarizingModel();
 		chatModel = llmService.buildSimpleModel(summarizingModel);
 
-		inProgressTasks = new ArrayList<>();
+		inProgressTasks = Collections.synchronizedList(new ArrayList<>());
 	}
 
 	@PostConstruct
@@ -165,9 +166,11 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 		}
 
 		if (summarize) {
-			inProgressTasks.add(task);
-			inProgressTasks = inProgressTasks.stream().filter(inProgressTask -> !inProgressTask.isComplete())
-					.collect(Collectors.toList());
+			synchronized (inProgressTasks) {
+				inProgressTasks.add(task);
+				inProgressTasks = inProgressTasks.stream().filter(inProgressTask -> !inProgressTask.isComplete())
+						.collect(Collectors.toList());
+			}
 			fileProcessingExecutor.submit(task);
 		} else {
 			file.delete();
@@ -177,13 +180,17 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 
 	@Override
 	public List<String> getInProgressTaskNames(UserId userId) {
-		return inProgressTasks.stream().filter(task -> task.getUserId().equals(userId)).map(task -> task.getFilename())
-				.toList();
+		synchronized (inProgressTasks) {
+			return inProgressTasks.stream().filter(task -> task.getUserId().equals(userId))
+					.map(task -> task.getFilename()).toList();
+		}
 	}
 
 	@Override
 	public void taskComplete(DecomposedMarkdownDocumentProcessingTask decomposedMarkdownDocumentProcessingTask) {
-		inProgressTasks.removeIf(task -> task == decomposedMarkdownDocumentProcessingTask);
+		synchronized (inProgressTasks) {
+			inProgressTasks.removeIf(task -> task == decomposedMarkdownDocumentProcessingTask);
+		}
 	}
 
 	@Override

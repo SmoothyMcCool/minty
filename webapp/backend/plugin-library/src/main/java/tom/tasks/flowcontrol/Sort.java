@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import tools.jackson.core.JacksonException;
 
 import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
@@ -120,7 +120,7 @@ public class Sort extends MintyTask {
 			public TaskConfigSpec taskConfiguration(Map<String, Object> configuration) {
 				try {
 					return new SortConfig(configuration);
-				} catch (JsonProcessingException e) {
+				} catch (JacksonException e) {
 					throw new RuntimeException("Failed to read configuration.", e);
 				}
 			}

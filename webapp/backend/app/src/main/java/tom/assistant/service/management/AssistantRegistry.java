@@ -12,22 +12,21 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.core.exc.StreamReadException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DatabindException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-
+import tom.api.MintyObjectMapper;
 import tom.api.model.assistant.Assistant;
 import tom.api.model.assistant.AssistantBuilder;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.config.MintyConfiguration;
+import tools.jackson.core.exc.StreamReadException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.DatabindException;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class AssistantRegistry {
 
 	private static final Logger logger = LogManager.getLogger(AssistantRegistry.class);
-	private static ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+	private static ObjectMapper mapper = MintyObjectMapper.StandardYamlMapper;
 
 	private final Map<String, Assistant> assistants;
 
@@ -69,7 +68,7 @@ public class AssistantRegistry {
 																					// are never owned by a user.
 					.hasMemory((Boolean) data.get("hasMemory")).documentIds(List.of());
 			return builder.build();
-		} catch (IOException e) {
+		} catch (IllegalArgumentException e) {
 			logger.warn("Could not read agent file " + assistantFilePath.getFileName());
 		}
 		return null;

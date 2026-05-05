@@ -23,3 +23,19 @@ h1 {
 .container-top {
 	z-index: 100;
 }
+
+.alert {
+	animation: fadeIn 200ms ease-out;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(-6px);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}

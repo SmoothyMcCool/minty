@@ -25,11 +25,10 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import tom.ApiError;
 import tom.api.AssistantId;
 import tom.api.ConversationId;
+import tom.api.MintyObjectMapper;
 import tom.api.model.assistant.Assistant;
 import tom.api.model.assistant.AssistantQuery;
 import tom.api.model.assistant.AssistantSpec;
@@ -48,6 +47,7 @@ import tom.conversation.service.ConversationServiceInternal;
 import tom.llm.service.LlmService;
 import tom.meta.service.MetadataService;
 import tom.model.security.UserDetailsUser;
+import tools.jackson.databind.ObjectMapper;
 
 @Controller
 @RequestMapping("/api/assistant")
@@ -70,7 +70,7 @@ public class AssistantController {
 		this.llmService = llmService;
 		this.conversationService = conversationService;
 		this.assistantQueryService = assistantQueryService;
-		this.mapper = new ObjectMapper();
+		this.mapper = MintyObjectMapper.StandardJsonMapper;
 	}
 
 	@PostMapping({ "/new" })

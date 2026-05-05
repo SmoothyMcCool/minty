@@ -9,7 +9,8 @@ import org.apache.hc.core5.http.HttpException;
 import org.apache.hc.core5.http.HttpStatus;
 import org.apache.hc.core5.http.io.HttpClientResponseHandler;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tom.api.MintyObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 
 public class HttpResponseHandler<T> implements HttpClientResponseHandler<T> {
 
@@ -34,7 +35,7 @@ public class HttpResponseHandler<T> implements HttpClientResponseHandler<T> {
 				return (T) new String(entity.getContent().readAllBytes(), StandardCharsets.UTF_8);
 			}
 
-			ObjectMapper mapper = new ObjectMapper();
+			ObjectMapper mapper = MintyObjectMapper.StandardJsonMapper;
 			T result = (T) mapper.readValue(entity.getContent(), type.getClass());
 			return result;
 		}

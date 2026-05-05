@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import tools.jackson.core.JacksonException;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -83,7 +83,7 @@ public class LoginController {
 			if (anythingRemoved || anythingAdded) {
 				userRepository.save(userService.encrypt(result));
 			}
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			throw new ApiException(ApiError.FAILED_TO_DECRYPT_USER);
 		}
 

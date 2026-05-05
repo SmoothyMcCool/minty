@@ -34,6 +34,8 @@
 		<Logger name="tom" level="info" />
 		<Logger name="tom.assistant.service.query" level="debug" />
 		<Logger name="org.springframework.security" level="info" />
+		<Logger name="tools.jackson.databind" level="debug" />
+		<Logger name="tools.jackson.core" level="DEBUG"/>
 
 		<Logger name="tom.tool.auditing.AuditingToolCallingManager"
 			level="info" additivity="false">

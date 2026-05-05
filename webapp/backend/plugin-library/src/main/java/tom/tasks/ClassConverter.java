@@ -3,22 +3,20 @@ package tom.tasks;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
 import jakarta.persistence.AttributeConverter;
+import tom.api.MintyObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 public class ClassConverter<T> implements AttributeConverter<T, String> {
 
 	private final Logger logger = LogManager.getLogger(ClassConverter.class);
-	private final ObjectMapper objectMapper = new ObjectMapper();
+	private final ObjectMapper objectMapper = MintyObjectMapper.StandardJsonMapper;
 	private final TypeReference<T> typeReference;
 
 	public ClassConverter(TypeReference<T> typeReference) {
 		this.typeReference = typeReference;
-		objectMapper.registerModule(new JavaTimeModule());
 	}
 
 	@Override
@@ -29,7 +27,7 @@ public class ClassConverter<T> implements AttributeConverter<T, String> {
 
 		try {
 			return objectMapper.writeValueAsString(attribute);
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			logger.warn("Could not convert " + typeReference.getType() + " to String.", e);
 			return null;
 		}
@@ -43,7 +41,7 @@ public class ClassConverter<T> implements AttributeConverter<T, String> {
 
 		try {
 			return objectMapper.readValue(dbData, typeReference);
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			logger.warn("Could not convert String to " + typeReference.getType() + ".", e);
 			return null;
 		}

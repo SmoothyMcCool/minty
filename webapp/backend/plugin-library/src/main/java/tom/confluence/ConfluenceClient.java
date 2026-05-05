@@ -14,9 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.cache.Cache.ValueRetrievalException;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import tom.api.MintyObjectMapper;
 import tom.api.services.cache.Cache;
 import tom.confluence.model.ChildPage;
 import tom.confluence.model.ChildrenResponse;
@@ -24,6 +22,8 @@ import tom.confluence.model.PageResponse;
 import tom.confluence.model.SearchRequest;
 import tom.confluence.model.SearchResponse;
 import tom.confluence.model.SearchResult;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 public class ConfluenceClient {
 
@@ -37,7 +37,7 @@ public class ConfluenceClient {
 
 	public ConfluenceClient(String baseUrl, String username, String accessToken, boolean useBearerAuth,
 			int maxPageCharacters, Cache cache) {
-		this.mapper = new ObjectMapper();
+		this.mapper = MintyObjectMapper.StandardJsonMapper;
 		this.baseUrl = baseUrl.replaceAll("/+$", "");
 		this.maxPageChars = maxPageCharacters;
 		this.cache = cache;
@@ -94,8 +94,8 @@ public class ConfluenceClient {
 		List<SearchResult> results = new ArrayList<>();
 
 		for (JsonNode r : root.path("results")) {
-			results.add(new SearchResult(r.path("id").asText(), r.path("title").asText(),
-					r.path("space").path("key").asText("UNKNOWN"), r.path("excerpt").asText("") // may be empty
+			results.add(new SearchResult(r.path("id").asString(), r.path("title").asString(),
+					r.path("space").path("key").asString("UNKNOWN"), r.path("excerpt").asString("") // may be empty
 			));
 		}
 
@@ -118,7 +118,7 @@ public class ConfluenceClient {
 		List<ChildPage> children = new ArrayList<>();
 
 		for (JsonNode r : root.path("results")) {
-			children.add(new ChildPage(r.path("id").asText(), r.path("title").asText()));
+			children.add(new ChildPage(r.path("id").asString(), r.path("title").asString()));
 		}
 
 		return new ChildrenResponse(children);
@@ -144,8 +144,8 @@ public class ConfluenceClient {
 			}
 
 			for (JsonNode r : root.path("results")) {
-				results.add(new SearchResult(r.path("id").asText(), r.path("title").asText(),
-						r.path("space").path("key").asText("UNKNOWN"), ""));
+				results.add(new SearchResult(r.path("id").asString(), r.path("title").asString(),
+						r.path("space").path("key").asString("UNKNOWN"), ""));
 			}
 		}
 
@@ -162,19 +162,19 @@ public class ConfluenceClient {
 			String body = client.execute(newGet(url), okHandler(pageId));
 			JsonNode root = mapper.readTree(body);
 
-			String id = root.path("id").asText();
-			String title = root.path("title").asText();
-			String space = root.path("space").path("key").asText("UNKNOWN");
-			String html = root.path("body").path("storage").path("value").asText();
-			String webui = root.path("_links").path("webui").asText(null);
+			String id = root.path("id").asString();
+			String title = root.path("title").asString();
+			String space = root.path("space").path("key").asString("UNKNOWN");
+			String html = root.path("body").path("storage").path("value").asString();
+			String webui = root.path("_links").path("webui").asString(null);
 			String pageUrl = (webui != null) ? baseUrl + webui : null;
-			String lastModified = root.path("version").path("when").asText(null);
+			String lastModified = root.path("version").path("when").asString(null);
 
 			List<String> labels = new ArrayList<>();
 			JsonNode labelResults = root.path("metadata").path("labels").path("results");
 			if (labelResults.isArray()) {
 				for (JsonNode label : labelResults) {
-					labels.add(label.path("name").asText());
+					labels.add(label.path("name").asString());
 				}
 			}
 

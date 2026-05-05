@@ -10,9 +10,8 @@ import org.apache.commons.text.StringSubstitutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import tom.api.ConversationId;
+import tom.api.MintyObjectMapper;
 import tom.api.ProjectId;
 import tom.api.UserId;
 import tom.api.model.assistant.Assistant;
@@ -36,6 +35,7 @@ import tom.document.markdown.MarkdownSectionSplitter;
 import tom.document.markdown.SectionResult;
 import tom.document.markdown.SectionSummary;
 import tom.document.service.DocumentServiceInternal;
+import tools.jackson.databind.ObjectMapper;
 
 public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 
@@ -135,7 +135,7 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 	}
 
 	private String writeSummary(List<Section> sections) throws Exception {
-		ObjectMapper mapper = new ObjectMapper();
+		ObjectMapper mapper = MintyObjectMapper.StandardJsonMapper;
 		List<SectionResult> results = new ArrayList<>();
 
 		for (Section s : sections) {
@@ -174,7 +174,7 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 		AssistantBuilder assistantBuilder = new AssistantBuilder(assistant);
 		assistantBuilder.prompt(resolvedPrompt);
 
-		AssistantSpec as = new AssistantSpec(null, assistantBuilder.build());
+		AssistantSpec as = new AssistantSpec(assistantBuilder.build());
 		AssistantQuery query = new AssistantQuery();
 		query.setAssistantSpec(as);
 		query.setQuery(s.content);

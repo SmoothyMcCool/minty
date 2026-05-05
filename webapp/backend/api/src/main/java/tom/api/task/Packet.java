@@ -5,26 +5,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;
 import com.jayway.jsonpath.ParseContext;
-import com.jayway.jsonpath.spi.json.JacksonJsonNodeJsonProvider;
-import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
+import com.jayway.jsonpath.spi.json.Jackson3JsonNodeJsonProvider;
+import com.jayway.jsonpath.spi.mapper.Jackson3MappingProvider;
+
+import tom.api.MintyObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 public class Packet {
 
-	private static final ObjectMapper mapper = JsonMapper.builder().enable(SerializationFeature.INDENT_OUTPUT)
-			.addModule(new JavaTimeModule()).build();
+	private static final ObjectMapper mapper = MintyObjectMapper.PrettyPrinterJsonMapper;
 
 	private static final Configuration jaywayConfig = Configuration.builder()
-			.jsonProvider(new JacksonJsonNodeJsonProvider(mapper)).mappingProvider(new JacksonMappingProvider(mapper))
+			.jsonProvider(new Jackson3JsonNodeJsonProvider(mapper)).mappingProvider(new Jackson3MappingProvider(mapper))
 			.options(Option.SUPPRESS_EXCEPTIONS).build();
 
 	private static final ParseContext jayway = JsonPath.using(jaywayConfig);
@@ -50,7 +48,7 @@ public class Packet {
 			this.text = clone.text;
 			this.data = clone.data;
 
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			throw new IllegalStateException("Failed to clone Packet", e);
 		}
 	}
@@ -119,7 +117,7 @@ public class Packet {
 		return map;
 	}
 
-	public String toJson() throws JsonProcessingException {
+	public String toJson() throws JacksonException {
 		return mapper.writeValueAsString(this);
 	}
 
@@ -132,7 +130,7 @@ public class Packet {
 			} else {
 				dataStr = mapper.writeValueAsString(data);
 			}
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			dataStr = data.toString();
 		}
 		return "Packet [id=" + id + ", text=" + text + ", data=" + dataStr + "]";
@@ -171,7 +169,7 @@ public class Packet {
 			if (node.isNull())
 				return null;
 			if (node.isValueNode())
-				return node.asText();
+				return node.asString();
 			return node.toString();
 		}
 
@@ -213,8 +211,8 @@ public class Packet {
 				return node.numberValue();
 			if (node.isBoolean())
 				return node.booleanValue();
-			if (node.isTextual())
-				return node.textValue();
+			if (node.isString())
+				return node.stringValue();
 		}
 
 		return result;

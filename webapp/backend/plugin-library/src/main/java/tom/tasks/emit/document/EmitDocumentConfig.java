@@ -4,11 +4,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import tom.api.MintyObjectMapper;
 import tom.api.task.TaskConfigSpec;
 import tom.api.task.TaskConfigTypes;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 public class EmitDocumentConfig implements TaskConfigSpec {
 
@@ -17,7 +17,7 @@ public class EmitDocumentConfig implements TaskConfigSpec {
 	private FileData fileData;
 	private boolean save;
 
-	private static final ObjectMapper mapper = new ObjectMapper();
+	private static final ObjectMapper mapper = MintyObjectMapper.StandardJsonMapper;
 
 	public EmitDocumentConfig() {
 		fileData = new FileData();
@@ -27,8 +27,8 @@ public class EmitDocumentConfig implements TaskConfigSpec {
 		if (config.containsKey(File)) {
 			Object fileField = config.get(File);
 			JsonNode node = mapper.valueToTree(fileField);
-			String file = node.get("file").get("file").asText();
-			String name = node.get("file").get("name").asText();
+			String file = node.get("file").get("file").asString();
+			String name = node.get("file").get("name").asString();
 			fileData = new FileData();
 			fileData.setFile(file);
 			fileData.setName(name);

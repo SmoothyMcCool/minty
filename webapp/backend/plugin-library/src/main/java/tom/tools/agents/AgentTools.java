@@ -41,4 +41,9 @@ public class AgentTools implements MintyTool, ServiceConsumer {
 	public String description() {
 		return "These are internal tools that allow planning agents to discover what agents are available.";
 	}
+
+	@Override
+	public boolean isPublic() {
+		return false;
+	}
 }

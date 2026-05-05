@@ -10,9 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import tom.Pair;
+import tom.api.MintyObjectMapper;
 import tom.assistant.service.agent.llm.LlmStatus;
 import tom.assistant.service.agent.model.Agent;
 import tom.assistant.service.agent.model.AgentInputField;
@@ -20,11 +19,12 @@ import tom.assistant.service.agent.model.AgentStep;
 import tom.assistant.service.agent.model.AgentStepState;
 import tom.assistant.service.agent.model.AgentStepType;
 import tom.assistant.service.agent.model.PlanState;
+import tools.jackson.databind.ObjectMapper;
 
 public class AgentPlannerPromptBuilder {
 
 	private static final int MaxWords = 12;
-	private static final ObjectMapper Mapper = new ObjectMapper();
+	private static final ObjectMapper Mapper = MintyObjectMapper.StandardJsonMapper;
 
 	public static String buildPrompt(String prompt, Collection<Agent> staticAgents, Collection<Agent> dynamicAgents,
 			String chatHistory, PlanState state) {

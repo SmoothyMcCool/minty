@@ -2,7 +2,7 @@ package tom.task.model.converters;
 
 import java.util.List;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import tools.jackson.core.type.TypeReference;
 
 import jakarta.persistence.Converter;
 import tom.util.ClassConverter;

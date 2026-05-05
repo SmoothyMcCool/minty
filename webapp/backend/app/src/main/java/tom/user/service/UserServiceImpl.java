@@ -12,16 +12,16 @@ import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.crypto.keygen.KeyGenerators;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import tom.api.MintyObjectMapper;
 import tom.api.UserId;
 import tom.api.services.UserService;
 import tom.config.MintyConfiguration;
 import tom.user.model.User;
 import tom.user.repository.EncryptedUser;
 import tom.user.repository.UserRepository;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DatabindException;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class UserServiceImpl implements UserServiceInternal {
@@ -31,19 +31,20 @@ public class UserServiceImpl implements UserServiceInternal {
 	private final String secret;
 	private final UserRepository userRepository;
 	private List<String> userNames;
+	private final ObjectMapper mapper;
 
 	public UserServiceImpl(UserRepository userRepository, MintyConfiguration properties) {
 		this.userRepository = userRepository;
 		secret = properties.getConfig().secret();
 		userNames = null;
+		mapper = MintyObjectMapper.StandardJsonMapper;
 	}
 
 	@Override
-	public User decrypt(EncryptedUser encryptedUser) throws JsonMappingException, JsonProcessingException {
+	public User decrypt(EncryptedUser encryptedUser) throws DatabindException, JacksonException {
 		TextEncryptor te = Encryptors.delux(secret, encryptedUser.getSalt());
 		String decrypted = te.decrypt(encryptedUser.getCrypt());
 
-		ObjectMapper mapper = new ObjectMapper();
 		User user = mapper.readValue(decrypted, User.class);
 		user.setPassword(encryptedUser.getPassword());
 		user.setId(encryptedUser.getId());
@@ -65,11 +66,10 @@ public class UserServiceImpl implements UserServiceInternal {
 	}
 
 	@Override
-	public EncryptedUser encrypt(User user) throws JsonProcessingException {
+	public EncryptedUser encrypt(User user) throws JacksonException {
 		String salt = KeyGenerators.string().generateKey();
 		TextEncryptor te = Encryptors.delux(secret, salt);
 
-		ObjectMapper mapper = new ObjectMapper();
 		String password = user.getPassword();
 		user.setPassword("");
 		String jsonUser = mapper.writeValueAsString(user);
@@ -96,7 +96,7 @@ public class UserServiceImpl implements UserServiceInternal {
 	public Optional<User> getUserFromName(String userName) {
 		try {
 			return Optional.of(decrypt(userRepository.findByAccount(userName)));
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			logger.warn("Failed to get user for username " + userName);
 			return Optional.empty();
 		}

@@ -4,14 +4,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import tom.api.MintyObjectMapper;
 import tom.api.task.TaskConfigSpec;
 import tom.api.task.TaskConfigTypes;
 import tom.tasks.transform.confluence.StringListFormatException;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.DatabindException;
+import tools.jackson.databind.ObjectMapper;
 
 public class SortConfig implements TaskConfigSpec {
 
@@ -23,7 +23,7 @@ public class SortConfig implements TaskConfigSpec {
 		idElement = List.of();
 	}
 
-	public SortConfig(Map<String, Object> config) throws JsonMappingException, JsonProcessingException {
+	public SortConfig(Map<String, Object> config) throws DatabindException, JacksonException {
 		this();
 		if (config.containsKey(IdElement)) {
 			idElement = stringToList(config.get(IdElement).toString());
@@ -60,8 +60,8 @@ public class SortConfig implements TaskConfigSpec {
 		return Map.of(IdElement, idElement);
 	}
 
-	private List<String> stringToList(String pagesStr) throws JsonMappingException, JsonProcessingException {
-		ObjectMapper mapper = new ObjectMapper();
+	private List<String> stringToList(String pagesStr) throws DatabindException, JacksonException {
+		ObjectMapper mapper = MintyObjectMapper.StandardJsonMapper;
 		try {
 			return mapper.readValue(pagesStr, new TypeReference<List<String>>() {
 			});

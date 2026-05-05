@@ -43,7 +43,9 @@
 				<div class="list-group">
 					<button class="list-group-item list-group-item-action"
 						*ngFor="let tool of unusedTools"
-						(click)="addTool(tool)">
+						[mintyTooltip]="tool.description"
+						tooltipPlacement="right"
+						(click)="addTool(tool, $event)">
 						{{tool.name}}
 					</button>
 				</div>
@@ -53,7 +55,9 @@
 				<div class="list-group">
 					<button type="button" class="list-group-item list-group-item-action"
 						*ngFor="let tool of usedTools"
-						(click)="removeTool(tool)">
+						[mintyTooltip]="tool.description"
+						tooltipPlacement="left"
+						(click)="removeTool(tool, $event)">
 						{{tool.name}}
 					</button>
 				</div>
@@ -71,7 +75,7 @@
 						(click)="addDoc(doc)">
 						{{doc.title}}
 					</button>
-			</div>
+				</div>
 			</div>
 			<div class="col">
 				<strong>Added Documents</strong>

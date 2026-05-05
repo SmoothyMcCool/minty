@@ -6,19 +6,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-
+import tom.api.MintyObjectMapper;
 import tom.document.xmi.model.Actor;
 import tom.document.xmi.model.NodeWithParent;
 import tom.document.xmi.model.UseCase;
 import tom.document.xmi.model.UseCaseModel;
 import tom.document.xmi.model.UseCaseRelation;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.dataformat.xml.XmlMapper;
 
 public class EnterpriseArchitectUseCaseMapper {
 
 	public UseCaseModel parse(InputStream is) throws Exception {
-		XmlMapper xmlMapper = new XmlMapper();
+		XmlMapper xmlMapper = MintyObjectMapper.StandardXmlMapper;
 		JsonNode root = xmlMapper.readTree(is);
 
 		UseCaseModel model = new UseCaseModel();
@@ -28,9 +28,9 @@ public class EnterpriseArchitectUseCaseMapper {
 
 		// --- 1. Actors + Use Cases ---
 		for (JsonNode node : elements) {
-			String type = node.path("@xmi:type").asText(null);
-			String id = node.path("@xmi:id").asText(null);
-			String name = node.path("@name").asText(null);
+			String type = node.path("@xmi:type").asString(null);
+			String id = node.path("@xmi:id").asString(null);
+			String name = node.path("@name").asString(null);
 
 			if (id == null || name == null || name.isEmpty())
 				continue;
@@ -52,7 +52,7 @@ public class EnterpriseArchitectUseCaseMapper {
 
 		// --- 2. Associations (Actor ↔ UseCase) ---
 		for (JsonNode node : elements) {
-			String type = node.path("@xmi:type").asText();
+			String type = node.path("@xmi:type").asString();
 			if (!"uml:Association".equals(type))
 				continue;
 
@@ -91,8 +91,8 @@ public class EnterpriseArchitectUseCaseMapper {
 			if (!isUseCase(parent))
 				continue;
 
-			String from = parent.path("@xmi:id").asText(null);
-			String to = n.path("@addition").asText(null);
+			String from = parent.path("@xmi:id").asString(null);
+			String to = n.path("@addition").asString(null);
 
 			if (validRelation(model, from, to)) {
 				addRelation(model, UseCaseRelation.Type.INCLUDE, from, to);
@@ -109,8 +109,8 @@ public class EnterpriseArchitectUseCaseMapper {
 			if (!isUseCase(parent))
 				continue;
 
-			String from = parent.path("@xmi:id").asText(null);
-			String to = n.path("@extendedCase").asText(null);
+			String from = parent.path("@xmi:id").asString(null);
+			String to = n.path("@extendedCase").asString(null);
 
 			if (validRelation(model, from, to)) {
 				addRelation(model, UseCaseRelation.Type.EXTEND, from, to);
@@ -123,14 +123,14 @@ public class EnterpriseArchitectUseCaseMapper {
 	// --- Helpers ---
 
 	private void addEndRef(JsonNode end, Map<String, String> idToName, List<String> ends) {
-		String ref = end.path("@type").asText(null);
+		String ref = end.path("@type").asString(null);
 		if (ref != null && idToName.containsKey(ref)) {
 			ends.add(ref);
 		}
 	}
 
 	private boolean isUseCase(JsonNode node) {
-		return node != null && "uml:UseCase".equals(node.path("@xmi:type").asText());
+		return node != null && "uml:UseCase".equals(node.path("@xmi:type").asString());
 	}
 
 	private boolean validRelation(UseCaseModel model, String from, String to) {

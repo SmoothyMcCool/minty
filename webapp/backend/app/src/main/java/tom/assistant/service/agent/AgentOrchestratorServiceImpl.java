@@ -14,9 +14,7 @@ import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import tom.api.MintyObjectMapper;
 import tom.api.UserId;
 import tom.api.model.assistant.AssistantQuery;
 import tom.api.services.assistant.AssistantQueryService;
@@ -32,11 +30,13 @@ import tom.assistant.service.agent.model.AgentStepType;
 import tom.assistant.service.agent.model.PlanState;
 import tom.assistant.service.agent.model.StepResult;
 import tom.llm.service.LlmService;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 
-	private static final ObjectMapper Mapper = new ObjectMapper();
+	private static final ObjectMapper Mapper = MintyObjectMapper.StandardJsonMapper;
 	private static final Logger logger = LogManager.getLogger(AgentOrchestratorServiceImpl.class);
 
 	private static final String PlanStateMarker = "PLAN_STATE::";
@@ -111,7 +111,7 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 				SystemMessage planCache = SystemMessage.builder()
 						.text(PlanStateMarker + Mapper.writeValueAsString(planState)).build();
 				chatMemory.add(conversationId, planCache);
-			} catch (JsonProcessingException e) {
+			} catch (JacksonException e) {
 				logger.error("Failed to persist plan state.", e);
 			}
 		}
@@ -151,7 +151,7 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 					Map<String, Object> stepInput = planState.currentStep().left().getInput();
 					stepInput.put("User Response", query.getQuery());
 
-				} catch (JsonProcessingException e) {
+				} catch (JacksonException e) {
 					// Not a valid plan object.
 					planState = null;
 				}

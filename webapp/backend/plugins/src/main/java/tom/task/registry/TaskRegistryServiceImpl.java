@@ -14,7 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import tools.jackson.core.JacksonException;
 
 import tom.api.UserId;
 import tom.api.model.assistant.AssistantSpec;
@@ -451,7 +451,7 @@ public class TaskRegistryServiceImpl implements TaskRegistryService {
 					String result = "";
 					try {
 						result = new Packet().toJson();
-					} catch (JsonProcessingException e) {
+					} catch (JacksonException e) {
 						logger.warn("Failed to JSON-ify packet: ", e);
 					}
 					yield result;

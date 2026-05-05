@@ -4,14 +4,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import tom.api.MintyObjectMapper;
 import tom.api.task.TaskConfigSpec;
 import tom.api.task.TaskConfigTypes;
 import tom.tasks.TaskUtils;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.DatabindException;
+import tools.jackson.databind.ObjectMapper;
 
 public class ConfluenceQueryConfig implements TaskConfigSpec {
 
@@ -21,6 +21,8 @@ public class ConfluenceQueryConfig implements TaskConfigSpec {
 	public static final String BaseURL = "Confluence Base URL";
 	public static final String UseBearerAuth = "Confluence Use Bearer Authorization";
 	public static final String MaxPageCharacters = "Maximum Characters to Read from Page";
+
+	private static final ObjectMapper Mapper = MintyObjectMapper.StandardJsonMapper;
 
 	private List<String> pages;
 	private String username;
@@ -40,7 +42,7 @@ public class ConfluenceQueryConfig implements TaskConfigSpec {
 		concatenationStrategy = ConfluencePageConcatenationStrategy.Concatenated;
 	}
 
-	public ConfluenceQueryConfig(Map<String, Object> config) throws JsonMappingException, JsonProcessingException {
+	public ConfluenceQueryConfig(Map<String, Object> config) throws DatabindException, JacksonException {
 		this();
 		if (config.containsKey(PageIds)) {
 			pages = stringToList(config.get(PageIds).toString());
@@ -117,15 +119,15 @@ public class ConfluenceQueryConfig implements TaskConfigSpec {
 		return concatenationStrategy;
 	}
 
-	public void updateFrom(Map<String, Object> obj) throws JsonMappingException, JsonProcessingException {
+	public void updateFrom(Map<String, Object> obj) throws DatabindException, JacksonException {
 		if (obj.containsKey(PageIds)) {
 			pages.addAll(TaskUtils.safeConvert(obj.get(PageIds), new TypeReference<List<String>>() {
 			}));
 		}
 	}
 
-	private List<String> stringToList(String pagesStr) throws JsonMappingException, JsonProcessingException {
-		ObjectMapper mapper = new ObjectMapper();
+	private List<String> stringToList(String pagesStr) throws DatabindException, JacksonException {
+		ObjectMapper mapper = MintyObjectMapper.StandardJsonMapper;
 		try {
 			return mapper.readValue(pagesStr, new TypeReference<List<String>>() {
 			});
@@ -138,10 +140,10 @@ public class ConfluenceQueryConfig implements TaskConfigSpec {
 	@Override
 	public Map<String, Object> getValues() {
 		try {
-			return Map.of(PageIds, new ObjectMapper().writeValueAsString(pages), Username, username, AccessToken,
-					apiKey, BaseURL, baseUrl, UseBearerAuth, Boolean.toString(useBearerAuth), MaxPageCharacters,
-					maxPageChars, ConfluenceConcatenationEnumSpecCreator.EnumName, concatenationStrategy);
-		} catch (JsonProcessingException e) {
+			return Map.of(PageIds, Mapper.writeValueAsString(pages), Username, username, AccessToken, apiKey, BaseURL,
+					baseUrl, UseBearerAuth, Boolean.toString(useBearerAuth), MaxPageCharacters, maxPageChars,
+					ConfluenceConcatenationEnumSpecCreator.EnumName, concatenationStrategy);
+		} catch (JacksonException e) {
 			return Map.of(PageIds, "[]", Username, username, AccessToken, apiKey, BaseURL, baseUrl, UseBearerAuth,
 					Boolean.toString(useBearerAuth), MaxPageCharacters, maxPageChars,
 					ConfluenceConcatenationEnumSpecCreator.EnumName, concatenationStrategy);

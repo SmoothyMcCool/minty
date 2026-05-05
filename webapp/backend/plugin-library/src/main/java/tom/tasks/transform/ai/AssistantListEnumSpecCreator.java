@@ -26,7 +26,7 @@ public class AssistantListEnumSpecCreator implements EnumSpecCreator {
 
 		List<NameValuePair> pairs = new ArrayList<>();
 		for (Assistant assistant : assistants) {
-			pairs.add(new NameValuePair(assistant.name(), assistant.id().getValue().toString()));
+			pairs.add(new NameValuePair(assistant.name(), assistant.id().value().toString()));
 		}
 
 		EnumSpec spec = new EnumSpec();

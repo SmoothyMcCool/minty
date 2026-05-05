@@ -17,13 +17,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-
 import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
+import tom.api.MintyObjectMapper;
 import tom.api.UserId;
 import tom.api.model.user.ResourceSharingSelection;
 import tom.api.model.user.UserSelection;
@@ -37,13 +33,16 @@ import tom.skill.model.joins.UserSkillLink;
 import tom.skill.repository.SkillRepository;
 import tom.skill.repository.UserSkillLinkRepository;
 import tom.user.service.UserServiceInternal;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class SkillServiceImpl implements SkillServiceInternal {
 
 	private final Logger logger = LogManager.getLogger(SkillServiceImpl.class);
 
-	private static final ObjectMapper YamlMapper = new ObjectMapper(new YAMLFactory());
+	private static final ObjectMapper YamlMapper = MintyObjectMapper.StandardYamlMapper;
 
 	private final UserServiceInternal userService;
 	private final SkillRepository skillRepository;
@@ -336,14 +335,14 @@ public class SkillServiceImpl implements SkillServiceInternal {
 			String name = textOrNull(root, "name");
 			String description = textOrNull(root, "description");
 			return new SkillMetadata(name, description, true);
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			return new SkillMetadata(null, null, true);
 		}
 	}
 
 	private String textOrNull(JsonNode node, String field) {
 		JsonNode child = node.get(field);
-		return child != null && !child.isNull() ? child.asText() : null;
+		return child != null && !child.isNull() ? child.asString() : null;
 	}
 
 }

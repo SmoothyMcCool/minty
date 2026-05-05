@@ -3,7 +3,7 @@ package tom.tasks.flowcontrol.packetlog;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import tools.jackson.core.JacksonException;
 
 import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
@@ -45,7 +45,7 @@ public class LogPacket extends MintyTask {
 	public void run() {
 		try {
 			info(input.toJson());
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			info(input.toString());
 		}
 

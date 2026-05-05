@@ -7,16 +7,17 @@ import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import tom.Pair;
+import tom.api.MintyObjectMapper;
 import tom.assistant.service.agent.llm.LlmResponse;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 public class PlanState {
 
-	private static ObjectMapper Mapper = new ObjectMapper();
+	private static ObjectMapper Mapper = MintyObjectMapper.StandardJsonMapper;
 
 	@JsonProperty("currentStep")
 	private int currentStep;
@@ -101,7 +102,7 @@ public class PlanState {
 	public String toString() {
 		try {
 			return Mapper.writeValueAsString(this);
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			throw new RuntimeException("Failed to stringify PlanState object.", e);
 		}
 	}

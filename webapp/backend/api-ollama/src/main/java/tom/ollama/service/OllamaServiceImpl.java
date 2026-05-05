@@ -31,17 +31,16 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.mariadb.MariaDBVectorStore;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-
 import io.micrometer.observation.ObservationRegistry;
+import tom.api.MintyObjectMapper;
 import tom.api.model.assistant.Assistant;
 import tom.api.model.assistant.AssistantQuery;
 import tom.config.MintyConfiguration;
 import tom.config.model.ChatModelConfig;
 import tom.llm.service.LlmService;
 import tom.tool.auditing.AuditingToolCallingManager;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 // NO Service annotation. This bean is instantiated dynamically based on the LLM engine being used.
 public class OllamaServiceImpl implements LlmService {
@@ -67,12 +66,10 @@ public class OllamaServiceImpl implements LlmService {
 
 		try {
 			logger.info("Ollama Interface Service starting...");
-			ObjectMapper mapper = new ObjectMapper();
-			mapper.findAndRegisterModules();
-			mapper.enable(SerializationFeature.INDENT_OUTPUT);
+			ObjectMapper mapper = MintyObjectMapper.PrettyPrinterJsonMapper;
 			logger.info("Defined models " + mapper.writeValueAsString(modelDefinitions));
 			logger.info("Active models " + mapper.writeValueAsString(activeModels));
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			// Just ignore. Startup logging. If this didn't work we got an exception for a
 			// malformed file before this anyway.
 		}
@@ -150,7 +147,7 @@ public class OllamaServiceImpl implements LlmService {
 						defaultToolCallingManager))
 				.defaultOptions(chatOptions).build();
 
-		return ChatClient.builder(chatModel).defaultAdvisors(advisors).defaultOptions(chatOptions).build();
+		return ChatClient.builder(chatModel).defaultAdvisors(advisors).build();
 
 	}
 

@@ -6,7 +6,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import tools.jackson.core.JacksonException;
 
 import tom.model.security.UserDetailsUser;
 import tom.user.model.User;
@@ -31,7 +31,7 @@ public class MintyUserDetailsService implements UserDetailsService {
 		User user = null;
 		try {
 			user = userService.decrypt(userRepository.findByAccount(username));
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			logger.error("MintyUserDetailsService: Failed to decrypt user", e);
 		}
 		if (user == null) {

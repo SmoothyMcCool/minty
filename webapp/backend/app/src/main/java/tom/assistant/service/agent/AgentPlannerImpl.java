@@ -6,16 +6,16 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import tom.api.MintyObjectMapper;
 import tom.api.UserId;
 import tom.api.model.assistant.AssistantQuery;
 import tom.api.services.assistant.AssistantQueryService;
 import tom.assistant.service.agent.model.AgentQuery;
 import tom.assistant.service.agent.model.AgentStep;
 import tom.assistant.service.agent.model.PlanState;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class AgentPlannerImpl implements AgentPlanner {
@@ -25,7 +25,7 @@ public class AgentPlannerImpl implements AgentPlanner {
 	private AssistantQueryService assistantQueryService;
 	private final AgentRegistryImpl agentRegistry;
 
-	private static final ObjectMapper Mapper = new ObjectMapper();
+	private static final ObjectMapper Mapper = MintyObjectMapper.StandardJsonMapper;
 
 	public AgentPlannerImpl(AgentRegistryImpl agentRegistry) {
 

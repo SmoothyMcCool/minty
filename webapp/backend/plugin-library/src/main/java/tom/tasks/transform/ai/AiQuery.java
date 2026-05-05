@@ -9,10 +9,8 @@ import java.util.concurrent.CancellationException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.core.tools.picocli.CommandLine.TypeConversionException;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import tom.api.ConversationId;
+import tom.api.MintyObjectMapper;
 import tom.api.UserId;
 import tom.api.model.assistant.AssistantQuery;
 import tom.api.model.services.ServiceConsumer;
@@ -28,6 +26,8 @@ import tom.api.task.TaskConfigSpec;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
 import tom.tasks.TaskGroup;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 @RunnableTask
 public class AiQuery extends MintyTask implements ServiceConsumer {
@@ -88,7 +88,7 @@ public class AiQuery extends MintyTask implements ServiceConsumer {
 		}
 
 		try {
-			ObjectMapper mapper = new ObjectMapper();
+			ObjectMapper mapper = MintyObjectMapper.StandardJsonMapper;
 
 			List<Map<String, Object>> resultAsMap = null;
 			try {
@@ -251,7 +251,7 @@ public class AiQuery extends MintyTask implements ServiceConsumer {
 			public TaskConfigSpec taskConfiguration() {
 				try {
 					return new AiQueryConfig(Map.of(AssistantListEnumSpecCreator.EnumName,
-							AssistantManagementService.DefaultAssistantId.getValue().toString()));
+							AssistantManagementService.DefaultAssistantId));
 				} catch (TypeConversionException e) {
 					return null;
 				}

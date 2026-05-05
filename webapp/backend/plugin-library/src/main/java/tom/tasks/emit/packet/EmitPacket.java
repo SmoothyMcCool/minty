@@ -4,10 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import tom.api.MintyObjectMapper;
 import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;
@@ -15,6 +12,8 @@ import tom.api.task.TaskConfigSpec;
 import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
 import tom.tasks.TaskGroup;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.json.JsonMapper;
 
 @RunnableTask
 public class EmitPacket extends MintyTask {
@@ -48,8 +47,7 @@ public class EmitPacket extends MintyTask {
 	@Override
 	public void run() {
 		String rawData = config.getData();
-		ObjectMapper mapper = new ObjectMapper();
-		mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
+		JsonMapper mapper = MintyObjectMapper.StandardJsonMapper;
 
 		List<Packet> data = new ArrayList<>();
 		try {

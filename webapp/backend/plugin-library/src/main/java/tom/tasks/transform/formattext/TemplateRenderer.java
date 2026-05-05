@@ -5,9 +5,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 import tom.api.task.Packet;
+import tools.jackson.databind.JsonNode;
 
 public class TemplateRenderer {
 
@@ -55,7 +54,7 @@ public class TemplateRenderer {
 			String path = matcher.group(1).strip();
 			JsonNode node = resolveNode(packet, context, path);
 
-			String value = (node != null && !node.isNull()) ? (node.isValueNode() ? node.asText() : node.toString())
+			String value = (node != null && !node.isNull()) ? (node.isValueNode() ? node.asString() : node.toString())
 					: matcher.group(0);
 
 			matcher.appendReplacement(sb, Matcher.quoteReplacement(value));

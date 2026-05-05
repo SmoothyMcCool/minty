@@ -1,24 +1,28 @@
 package tom.tasks.transform.pipeline.model;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.JsonNodeType;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.deser.std.StdDeserializer;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.JsonNodeType;
 
-public class PipelineOperationConfigurationDeserializer extends JsonDeserializer<PipelineOperationConfiguration> {
+public class PipelineOperationConfigurationDeserializer extends StdDeserializer<PipelineOperationConfiguration> {
+
+	public PipelineOperationConfigurationDeserializer() {
+		super(PipelineOperationConfiguration.class);
+	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public PipelineOperationConfiguration deserialize(JsonParser parser, DeserializationContext ctx)
-			throws IOException {
+	public PipelineOperationConfiguration deserialize(JsonParser parser, DeserializationContext ctxt)
+			throws JacksonException {
 
-		ObjectMapper mapper = (ObjectMapper) parser.getCodec();
+		JsonMapper mapper = (JsonMapper) parser.objectReadContext();
 		JsonNode node = mapper.readTree(parser);
 
 		if (node.getNodeType() == JsonNodeType.ARRAY) {
@@ -32,10 +36,10 @@ public class PipelineOperationConfigurationDeserializer extends JsonDeserializer
 		}
 
 		if (node.getNodeType() == JsonNodeType.STRING) {
-			return PipelineOperationConfiguration.ofString(node.asText());
+			return PipelineOperationConfiguration.ofString(node.asString());
 		}
 
-		ctx.reportInputMismatch(PipelineOperationConfiguration.class,
+		ctxt.reportInputMismatch(PipelineOperationConfiguration.class,
 				"Expected JSON array, object or string but got %s", node.getNodeType());
 
 		return null;

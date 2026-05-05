@@ -4,14 +4,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import tom.api.MintyObjectMapper;
 import tom.api.task.TaskConfigSpec;
 import tom.api.task.TaskConfigTypes;
 import tom.tasks.transform.confluence.StringListFormatException;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.DatabindException;
+import tools.jackson.databind.ObjectMapper;
 
 public class TemplateOutputHtmlFormatterConfig implements TaskConfigSpec {
 
@@ -24,8 +24,7 @@ public class TemplateOutputHtmlFormatterConfig implements TaskConfigSpec {
 		template = "";
 	}
 
-	public TemplateOutputHtmlFormatterConfig(Map<String, Object> config)
-			throws JsonMappingException, JsonProcessingException {
+	public TemplateOutputHtmlFormatterConfig(Map<String, Object> config) throws DatabindException, JacksonException {
 		this();
 		if (config.containsKey(OutputTemplateHtmlSpecCreator.EnumName)) {
 			template = config.get(OutputTemplateHtmlSpecCreator.EnumName).toString();
@@ -66,8 +65,8 @@ public class TemplateOutputHtmlFormatterConfig implements TaskConfigSpec {
 		return Map.of(OutputTemplateHtmlSpecCreator.EnumName, template);
 	}
 
-	private List<String> stringToList(String listStr) throws JsonMappingException, JsonProcessingException {
-		ObjectMapper mapper = new ObjectMapper();
+	private List<String> stringToList(String listStr) throws DatabindException, JacksonException {
+		ObjectMapper mapper = MintyObjectMapper.StandardJsonMapper;
 		try {
 			return mapper.readValue(listStr, new TypeReference<List<String>>() {
 			});

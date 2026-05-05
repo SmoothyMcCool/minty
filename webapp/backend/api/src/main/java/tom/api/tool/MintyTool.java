@@ -17,4 +17,8 @@ public interface MintyTool {
 
 	default void setPluginConfiguration(Map<String, Object> pluginConfiguration) {
 	}
+
+	default boolean isPublic() {
+		return true;
+	}
 }

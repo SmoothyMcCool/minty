@@ -16,16 +16,15 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
 import de.neuland.pug4j.PugConfiguration;
 import de.neuland.pug4j.model.PugModel;
 import de.neuland.pug4j.template.PugTemplate;
+import tom.api.MintyObjectMapper;
 import tom.api.services.RenderService;
 import tom.api.task.ExecutionResult;
 import tom.api.task.Packet;
 import tom.config.MintyConfiguration;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class RenderServiceImpl implements RenderService {
@@ -101,8 +100,7 @@ public class RenderServiceImpl implements RenderService {
 		}
 
 		StringWriter writer = new StringWriter();
-		ObjectMapper mapper = new ObjectMapper();
-		mapper.registerModule(new JavaTimeModule());
+		ObjectMapper mapper = MintyObjectMapper.StandardJsonMapper;
 		mapper.writerWithDefaultPrettyPrinter().writeValue(writer, data);
 
 		return writer.toString();
