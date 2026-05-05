@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import tools.jackson.core.JacksonException;
 
 import tom.api.model.services.ServiceConsumer;
 import tom.api.services.PluginServices;
@@ -143,7 +143,7 @@ public class ConfluenceQuery extends MintyTask implements ServiceConsumer {
 				config.updateFrom(data);
 			}
 			input = dataPacket;
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			throw new RuntimeException("Received malformed data as input.");
 		}
 		return true;
@@ -206,7 +206,7 @@ public class ConfluenceQuery extends MintyTask implements ServiceConsumer {
 			public TaskConfigSpec taskConfiguration(Map<String, Object> configuration) {
 				try {
 					return new ConfluenceQueryConfig(configuration);
-				} catch (JsonProcessingException e) {
+				} catch (JacksonException e) {
 					throw new RuntimeException("Failed to read configuration.", e);
 				}
 			}

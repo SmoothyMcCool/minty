@@ -70,7 +70,7 @@ public class ConversationNamingService {
 
 				AssistantQuery assistantQuery = new AssistantQuery();
 				AssistantSpec assistantSpec = new AssistantSpec(
-						AssistantManagementService.ConversationNamingAssistantId, null);
+						AssistantManagementService.ConversationNamingAssistantId);
 				assistantQuery.setAssistantSpec(assistantSpec);
 				Conversation namingConversation = conversationService.newConversation(UserService.DefaultId,
 						AssistantManagementService.ConversationNamingAssistantId);

@@ -1,11 +1,12 @@
 package tom.tasks;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tom.api.MintyObjectMapper;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 public class TaskUtils {
 
-	private static final ObjectMapper mapper = new ObjectMapper();
+	private static final ObjectMapper mapper = MintyObjectMapper.StandardJsonMapper;
 
 	private TaskUtils() {
 	}

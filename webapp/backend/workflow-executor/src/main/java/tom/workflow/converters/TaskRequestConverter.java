@@ -1,6 +1,6 @@
 package tom.workflow.converters;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import tools.jackson.core.type.TypeReference;
 
 import jakarta.persistence.Converter;
 import tom.api.services.workflow.TaskRequest;

@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import tools.jackson.core.JacksonException;
 
 import jakarta.servlet.http.HttpServletRequest;
 import tom.ApiError;
@@ -120,7 +120,7 @@ public class UserController {
 			ResponseWrapper<User> response = ResponseWrapper.SuccessResponse(savedUser);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			errors.add(ApiError.FAILED_TO_DECRYPT_USER);
 			throw new ApiException(errors);
 		}
@@ -180,7 +180,7 @@ public class UserController {
 			ResponseWrapper<User> response = ResponseWrapper.SuccessResponse(savedUser);
 			return new ResponseEntity<>(response, HttpStatus.OK);
 
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			errors.add(ApiError.FAILED_TO_DECRYPT_USER);
 			throw new ApiException(errors);
 		}

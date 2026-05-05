@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DatabindException;
 
 import tom.api.task.TaskConfigSpec;
 import tom.api.task.TaskConfigTypes;
@@ -20,7 +20,7 @@ public class ExecutePythonConfig implements TaskConfigSpec {
 		python = "";
 	}
 
-	public ExecutePythonConfig(Map<String, Object> config) throws JsonMappingException, JsonProcessingException {
+	public ExecutePythonConfig(Map<String, Object> config) throws DatabindException, JacksonException {
 		this();
 		if (config.containsKey(PythonCode)) {
 			python = config.get(PythonCode).toString();

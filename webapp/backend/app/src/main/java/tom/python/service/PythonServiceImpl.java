@@ -13,13 +13,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import tom.api.MintyObjectMapper;
 import tom.api.services.python.PythonException;
 import tom.api.services.python.PythonResult;
 import tom.api.services.python.PythonService;
 import tom.api.task.Packet;
 import tom.config.MintyConfiguration;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class PythonServiceImpl implements PythonService {
@@ -27,9 +27,11 @@ public class PythonServiceImpl implements PythonService {
 	private static final Logger logger = LogManager.getLogger(PythonServiceImpl.class);
 
 	private final Path tempFileDir;
+	private final ObjectMapper mapper;
 
 	public PythonServiceImpl(MintyConfiguration properties) {
 		tempFileDir = properties.getConfig().fileStores().temp();
+		mapper = MintyObjectMapper.StandardJsonMapper;
 	}
 
 	@Override
@@ -45,7 +47,7 @@ public class PythonServiceImpl implements PythonService {
 
 		try {
 
-			ObjectMapper mapper = new ObjectMapper();
+			ObjectMapper mapper = MintyObjectMapper.StandardJsonMapper;
 
 			inputFilePath = Files.createTempFile(inputFilePath, "py-in-", ".tom");
 			Files.writeString(inputFilePath, mapper.writeValueAsString(input));
@@ -122,7 +124,6 @@ public class PythonServiceImpl implements PythonService {
 	private Map<String, Object> fileToMap(Path outputFilePath, List<String> logs) throws IOException {
 		String content = Files.readString(outputFilePath);
 		logs.add("DEBUG - Raw python output: " + content);
-		ObjectMapper mapper = new ObjectMapper();
 
 		return mapper.readValue(content, Map.class);
 	}

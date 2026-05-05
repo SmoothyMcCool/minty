@@ -6,8 +6,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
 import org.springframework.cache.Cache;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
 
 public class SingleFlightCache implements Cache {
 
@@ -30,23 +28,23 @@ public class SingleFlightCache implements Cache {
 	/* ---------- Spring Cache API ---------- */
 
 	@Override
-	public @NonNull String getName() {
+	public String getName() {
 		return name;
 	}
 
 	@Override
-	public @NonNull Object getNativeCache() {
+	public Object getNativeCache() {
 		return map;
 	}
 
 	@Override
-	public ValueWrapper get(@NonNull Object key) {
+	public ValueWrapper get(Object key) {
 		Object value = get(key, (Callable<?>) NullLoader);
 		return () -> value;
 	}
 
 	@Override
-	public <T> T get(@NonNull Object key, @Nullable Class<T> type) {
+	public <T> T get(Object key, Class<T> type) {
 		ValueWrapper wrapper = get(key);
 		if (wrapper == null) {
 			return null;
@@ -66,7 +64,7 @@ public class SingleFlightCache implements Cache {
 	 */
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> T get(@NonNull Object key, @NonNull Callable<T> valueLoader) {
+	public <T> T get(Object key, Callable<T> valueLoader) {
 		while (true) {
 			CompletableFuture<CacheValue<Object>> future = map.get(key);
 
@@ -114,12 +112,12 @@ public class SingleFlightCache implements Cache {
 	}
 
 	@Override
-	public void put(@NonNull Object key, @Nullable Object value) {
+	public void put(Object key, Object value) {
 		map.put(key, CompletableFuture.completedFuture(new CacheValue<>(value, System.currentTimeMillis())));
 	}
 
 	@Override
-	public ValueWrapper putIfAbsent(@NonNull Object key, @Nullable Object value) {
+	public ValueWrapper putIfAbsent(Object key, Object value) {
 		CompletableFuture<CacheValue<Object>> existing = map.get(key);
 		if (existing == null) {
 			final CompletableFuture<CacheValue<Object>> future = CompletableFuture
@@ -137,7 +135,7 @@ public class SingleFlightCache implements Cache {
 	}
 
 	@Override
-	public void evict(@NonNull Object key) {
+	public void evict(Object key) {
 		map.remove(key);
 	}
 

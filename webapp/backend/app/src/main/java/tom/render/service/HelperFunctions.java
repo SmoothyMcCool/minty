@@ -7,21 +7,18 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.safety.Safelist;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tom.api.MintyObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 public class HelperFunctions {
 
-	static ObjectMapper mapper = JsonMapper.builder().addModule(new JavaTimeModule())
-			.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS).enable(SerializationFeature.INDENT_OUTPUT).build();
+	static ObjectMapper mapper = MintyObjectMapper.PrettyPrinterJsonMapper;
 
 	public String jsonToString(Object obj) {
 		try {
 			return mapper.writeValueAsString(obj);
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			return "";
 		}
 	}

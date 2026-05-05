@@ -39,7 +39,7 @@ public class Assistant {
 	}
 
 	public Assistant(tom.api.model.assistant.Assistant assistant) {
-		this.id = assistant.id().getValue();
+		this.id = assistant.id().value();
 		this.name = assistant.name();
 		this.prompt = assistant.prompt();
 		this.model = assistant.model();
@@ -74,7 +74,7 @@ public class Assistant {
 	}
 
 	public void setId(AssistantId id) {
-		this.id = id == null ? null : id.getValue();
+		this.id = id == null ? null : id.value();
 	}
 
 	public String getName() {

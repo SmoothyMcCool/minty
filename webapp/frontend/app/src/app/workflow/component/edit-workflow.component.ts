@@ -59,7 +59,7 @@ export class EditWorkflowComponent implements OnInit {
 			this.isNew = this.route.snapshot.queryParamMap.get('new') === 'true';
 			if (this.isNew) {
 				this.workflow = {
-					id: null,
+					id: '',
 					owned: true,
 					name: '',
 					description: '',

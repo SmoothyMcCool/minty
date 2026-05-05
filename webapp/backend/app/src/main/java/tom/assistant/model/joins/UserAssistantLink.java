@@ -29,7 +29,7 @@ public class UserAssistantLink {
 
 	public UserAssistantLink(UserId userId, Assistant assistant) {
 		this.assistant = assistant;
-		id = new UserAssistantId(userId.getValue(), assistant.getId().getValue());
+		id = new UserAssistantId(userId.getValue(), assistant.getId().value());
 	}
 
 	public UserAssistantId getId() {

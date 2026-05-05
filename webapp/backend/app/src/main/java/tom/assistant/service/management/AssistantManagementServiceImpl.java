@@ -71,7 +71,7 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 		UserAssistantLink ual = new UserAssistantLink();
 		UserAssistantId uai = new UserAssistantId();
 		uai.setUserId(userId.getValue());
-		uai.setAssistantId(repoAsst.getId().getValue());
+		uai.setAssistantId(repoAsst.getId().value());
 		ual.setId(uai);
 		ual.setAssistant(repoAsst);
 		linkRepository.save(ual);
@@ -149,7 +149,7 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 
 		try {
 			tom.assistant.model.Assistant assistant = linkRepository
-					.findFirstById_AssistantIdAndId_UserIdIn(assistantId.getValue(),
+					.findFirstById_AssistantIdAndId_UserIdIn(assistantId.value(),
 							List.of(userId.getValue(), ResourceSharingSelection.AllUsersId.getValue()))
 					.orElseThrow().getAssistant();
 
@@ -196,7 +196,7 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 		if (selection.getUserSelection().isAllUsers()) {
 			UserId sharingTargetUser = ResourceSharingSelection.AllUsersId;
 			UserAssistantId uai = new UserAssistantId();
-			uai.setAssistantId(assistant.getId().getValue());
+			uai.setAssistantId(assistant.getId().value());
 			uai.setUserId(sharingTargetUser.getValue());
 			ual.setId(uai);
 			linkRepository.save(ual);
@@ -206,7 +206,7 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 				try {
 					UserId sharingTargetUser = userService.getUserFromName(username).orElseThrow().getId();
 					UserAssistantId uai = new UserAssistantId();
-					uai.setAssistantId(assistant.getId().getValue());
+					uai.setAssistantId(assistant.getId().value());
 					uai.setUserId(sharingTargetUser.getValue());
 					ual.setId(uai);
 					linkRepository.save(ual);
@@ -221,7 +221,7 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 	@Transactional
 	public UserSelection getSharingFor(UserId userId, AssistantId assistantId)
 			throws NotOwnedException, NotFoundException {
-		Optional<tom.assistant.model.Assistant> maybeAssistant = assistantRepository.findById(assistantId.getValue());
+		Optional<tom.assistant.model.Assistant> maybeAssistant = assistantRepository.findById(assistantId.value());
 		if (maybeAssistant.isEmpty()) {
 			throw new NotFoundException(assistantId.toString());
 		}
@@ -232,7 +232,7 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 			throw new NotOwnedException(assistant.getName());
 		}
 
-		List<UserAssistantLink> sharedWith = linkRepository.findById_AssistantId(assistant.getId().getValue());
+		List<UserAssistantLink> sharedWith = linkRepository.findById_AssistantId(assistant.getId().value());
 
 		UserSelection selection = new UserSelection();
 		selection.setAllUsers(false);
@@ -258,8 +258,8 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 	@Override
 	@Transactional
 	public boolean deleteAssistant(UserId userId, AssistantId assistantId) {
-		UserAssistantLink ual = linkRepository
-				.findById_AssistantIdAndId_UserId(assistantId.getValue(), userId.getValue()).orElseThrow();
+		UserAssistantLink ual = linkRepository.findById_AssistantIdAndId_UserId(assistantId.value(), userId.getValue())
+				.orElseThrow();
 
 		tom.assistant.model.Assistant assistant = ual.getAssistant();
 

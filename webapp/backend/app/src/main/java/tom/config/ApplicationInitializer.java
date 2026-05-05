@@ -1,6 +1,5 @@
 package tom.config;
 
-import org.springframework.lang.NonNull;
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
 import jakarta.servlet.Filter;
@@ -23,12 +22,12 @@ public class ApplicationInitializer extends AbstractAnnotationConfigDispatcherSe
 	}
 
 	@Override
-	protected @NonNull String[] getServletMappings() {
+	protected String[] getServletMappings() {
 		return new String[] { "/" };
 	}
 
 	@Override
-	protected void customizeRegistration(@NonNull ServletRegistration.Dynamic registration) {
+	protected void customizeRegistration(ServletRegistration.Dynamic registration) {
 		registration.setMultipartConfig(new MultipartConfigElement(""));
 	}
 

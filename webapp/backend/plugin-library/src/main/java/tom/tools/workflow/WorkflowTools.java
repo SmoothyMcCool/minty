@@ -75,7 +75,7 @@ public class WorkflowTools implements MintyTool, ServiceConsumer {
 	public String createWorkflow(
 			@ToolParam(description = "The complete workflow JSON as a string, generated using the workflow-builder skill.") String workflowJson) {
 		try {
-			com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+			tools.jackson.databind.ObjectMapper mapper = new tools.jackson.databind.ObjectMapper();
 			Workflow workflow = mapper.readValue(workflowJson, Workflow.class);
 			Workflow created = pluginServices.getWorkflowService().createWorkflow(userId, workflow);
 			return mapper.writeValueAsString(created);
@@ -94,7 +94,7 @@ public class WorkflowTools implements MintyTool, ServiceConsumer {
 	public String updateWorkflow(
 			@ToolParam(description = "The complete updated workflow JSON as a string. Must include the existing workflow ID.") String workflowJson) {
 		try {
-			com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+			tools.jackson.databind.ObjectMapper mapper = new tools.jackson.databind.ObjectMapper();
 			Workflow workflow = mapper.readValue(workflowJson, Workflow.class);
 			Workflow updated = pluginServices.getWorkflowService().updateWorkflow(userId, workflow);
 			return mapper.writeValueAsString(updated);

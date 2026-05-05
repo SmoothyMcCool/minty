@@ -178,7 +178,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 
 			Map<String, String> params = Map.of(ToolExecutionContext.ASSISTANT_ID,
 					query.getAssistantSpec().getAssistantId() != null
-							? query.getAssistantSpec().getAssistantId().getValue().toString()
+							? query.getAssistantSpec().getAssistantId().value().toString()
 							: "worker",
 					ToolExecutionContext.REQUEST_ID, query.getConversationId().getValue().toString(),
 					ToolExecutionContext.USER_ID, userId.getValue().toString());
@@ -263,7 +263,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		try {
 			Map<String, String> params = Map.of(ToolExecutionContext.ASSISTANT_ID,
 					query.getAssistantSpec().getAssistantId() != null
-							? query.getAssistantSpec().getAssistantId().getValue().toString()
+							? query.getAssistantSpec().getAssistantId().value().toString()
 							: "worker",
 					ToolExecutionContext.REQUEST_ID, query.getConversationId().getValue().toString(),
 					ToolExecutionContext.USER_ID, userId.getValue().toString());

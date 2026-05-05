@@ -9,10 +9,11 @@ import { MintyDoc } from '../../model/minty-doc';
 import { MintyTool } from '../../model/minty-tool';
 import { Model } from '../../model/model';
 import { AutoResizeDirective } from '../../pipe/auto-resize-directive';
+import { TooltipDirective } from '../../pipe/tooltip-directive';
 
 @Component({
 	selector: 'minty-assistant-editor',
-	imports: [CommonModule, FormsModule, RouterModule, FilterPipe, SliderComponent, AutoResizeDirective],
+	imports: [CommonModule, FormsModule, RouterModule, FilterPipe, SliderComponent, AutoResizeDirective, TooltipDirective],
 	templateUrl: 'assistant-editor.component.html',
 	providers: [
 		{
@@ -186,27 +187,30 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 		this.onChange(createAssistant(this.assistant));
 	}
 
-	addTool(tool: MintyTool) {
+	addTool(tool: MintyTool, event: Event) {
 		if (!this.assistant) {
 			return;
 		}
 		if (this.assistant.tools.find(el => el === tool.name)) {
 			return;
 		}
-		this.assistant.tools.push(tool.name);
+
+		this.assistant!.tools.push(tool.name);
 		this.usedTools.push(tool);
 		// New object for better chances at sane change detection.
 		this.usedTools = [...this.usedTools];
 		this.unusedTools = this._tools.filter(tool => this.usedTools.find(asstTool => asstTool.name.localeCompare(tool.name) === 0) == undefined);
 		this.onTouched();
 		this.onChange(createAssistant(this.assistant));
+
 	}
 
-	removeTool(tool: MintyTool) {
+	removeTool(tool: MintyTool, event: Event) {
 		if (!this.assistant) {
 			return;
 		}
-		this.assistant.tools = this.assistant.tools.filter(el => el !== tool.name);
+
+		this.assistant!.tools = this.assistant!.tools.filter(el => el !== tool.name);
 		this.usedTools = this.usedTools.filter(tool => this.assistant!.tools.findIndex(at => at.localeCompare(tool.name) === 0) !== -1);
 		this.unusedTools = this._tools.filter(tool => this.usedTools.find(asstTool => asstTool.name.localeCompare(tool.name) === 0) == undefined);
 		this.onTouched();

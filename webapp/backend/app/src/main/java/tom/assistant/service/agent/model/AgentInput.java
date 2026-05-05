@@ -5,15 +5,15 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import tom.Pair;
+import tom.api.MintyObjectMapper;
 import tom.api.model.assistant.AssistantQuery;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 public class AgentInput {
 
-	private static final ObjectMapper Mapper = new ObjectMapper();
+	private static final ObjectMapper Mapper = MintyObjectMapper.StandardJsonMapper;
 
 	private String userQuery;
 	private PlanState plan;
@@ -85,8 +85,7 @@ public class AgentInput {
 			sb.append("Your step: ").append(currentStep.getId()).append(" - ").append(currentStep.getName())
 					.append("\n\n");
 			return sb.toString();
-			// return new ObjectMapper().writeValueAsString(this);
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			throw new RuntimeException("Failed to serialize AgentInput", e);
 		}
 	}

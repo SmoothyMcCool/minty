@@ -5,7 +5,6 @@ import { Subscription } from 'rxjs';
 import { Router, RouterModule } from '@angular/router';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { WorkflowService } from '../workflow.service';
-import * as bootstrap from 'bootstrap';
 import { AlertService } from '../../alert.service';
 import { ConfirmationDialogComponent } from '../../app/component/confirmation-dialog.component';
 import { UserSelectDialogComponent, UserSelection } from '../../app/component/user-select-dialog.component';
@@ -16,6 +15,8 @@ import { WorkflowResult } from '../../model/workflow/workflow-result';
 import { WorkflowState } from '../../model/workflow/workflow-state';
 import { UserService } from '../../user.service';
 import { ResultService } from '../result.service';
+
+declare var bootstrap: any;
 
 @Component({
 	selector: 'minty-workflow-list',

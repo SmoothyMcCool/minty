@@ -16,14 +16,12 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.util.PropertyPlaceholderHelper;
 
-import com.fasterxml.jackson.core.exc.StreamReadException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DatabindException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
+import tom.api.MintyObjectMapper;
 import tom.config.model.MintyConfig;
+import tools.jackson.core.exc.StreamReadException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.DatabindException;
+import tools.jackson.databind.ObjectMapper;
 
 public class MintyConfigurationImpl implements MintyConfiguration {
 
@@ -64,8 +62,8 @@ public class MintyConfigurationImpl implements MintyConfiguration {
 		}
 
 		// Load YAML as a structured object
-		ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-		mapper.registerModule(new JavaTimeModule());
+		ObjectMapper mapper = MintyObjectMapper.StandardYamlMapper;
+
 		Map<String, Object> tree = mapper.readValue(resource.getInputStream(), new TypeReference<>() {
 		});
 

@@ -15,13 +15,8 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.core.exc.StreamReadException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DatabindException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-
 import tom.api.ConversationId;
+import tom.api.MintyObjectMapper;
 import tom.api.model.assistant.Assistant;
 import tom.api.model.assistant.AssistantBuilder;
 import tom.api.model.assistant.AssistantQuery;
@@ -35,12 +30,17 @@ import tom.assistant.service.agent.model.AgentResponseType;
 import tom.assistant.service.agent.model.PlanState;
 import tom.config.MintyConfiguration;
 import tom.llm.service.LlmService;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.exc.StreamReadException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.DatabindException;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class AgentRegistryImpl implements AgentRegistry {
 
 	private static final Logger logger = LogManager.getLogger(AgentRegistryImpl.class);
-	private static ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+	private static ObjectMapper mapper = MintyObjectMapper.StandardYamlMapper;
 
 	private final Map<String, Assistant> orchestrators;
 	private final Map<String, Agent> staticAgents;
@@ -94,7 +94,7 @@ public class AgentRegistryImpl implements AgentRegistry {
 	private static AgentQuery baseQuery(AgentResponseType responseType, Assistant assistant,
 			ConversationId conversationId, String query) {
 		AssistantQuery assistantQuery = new AssistantQuery();
-		AssistantSpec spec = new AssistantSpec(null, assistant);
+		AssistantSpec spec = new AssistantSpec(assistant);
 		assistantQuery.setAssistantSpec(spec);
 		assistantQuery.setContextSize(assistant.contextSize());
 		assistantQuery.setConversationId(conversationId);
@@ -107,7 +107,7 @@ public class AgentRegistryImpl implements AgentRegistry {
 	private static AgentQuery baseQuery(AgentResponseType responseType, Agent agent, ConversationId conversationId,
 			String query) {
 		AssistantQuery assistantQuery = new AssistantQuery();
-		AssistantSpec spec = new AssistantSpec(null, agent.toAssistant());
+		AssistantSpec spec = new AssistantSpec(agent.toAssistant());
 		assistantQuery.setAssistantSpec(spec);
 		assistantQuery.setContextSize(agent.getContextSize());
 		assistantQuery.setConversationId(conversationId);
@@ -134,7 +134,7 @@ public class AgentRegistryImpl implements AgentRegistry {
 																					// are never owned by a user.
 					.hasMemory((Boolean) data.get("hasMemory")).documentIds(List.of());
 			return builder.build();
-		} catch (IOException e) {
+		} catch (IllegalArgumentException e) {
 			logger.warn("Could not read agent file " + assistantFilePath.getFileName());
 		}
 		return null;
@@ -143,7 +143,7 @@ public class AgentRegistryImpl implements AgentRegistry {
 	private Agent buildAgent(Path agentFilePath) {
 		try {
 			return mapper.readValue(agentFilePath.toFile(), Agent.class);
-		} catch (IOException e) {
+		} catch (JacksonException e) {
 			logger.warn("Could not read agent file " + agentFilePath.getFileName(), e);
 			return null;
 		}

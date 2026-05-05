@@ -1,12 +1,14 @@
 package tom.assistant.service.agent.llm;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
+import tom.api.MintyObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class LlmResponse {
 
-	private static final ObjectMapper mapper = new ObjectMapper();
+	private static final ObjectMapper mapper = MintyObjectMapper.StandardJsonMapper;
 
 	private LlmStatus status;
 	private String message;

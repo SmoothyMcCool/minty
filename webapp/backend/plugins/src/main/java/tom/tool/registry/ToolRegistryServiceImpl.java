@@ -91,7 +91,10 @@ public class ToolRegistryServiceImpl implements ToolRegistryService {
 			}
 
 			tools.put(toolName, mt.getClass());
-			descriptions.add(new MintyToolDescription(mt.name(), mt.description()));
+			// Only add them to the viewable list if they are public.
+			if (mt.isPublic()) {
+				descriptions.add(new MintyToolDescription(mt.name(), mt.description()));
+			}
 
 			logger.info("Registered tool " + toolName);
 		} catch (Exception e) {

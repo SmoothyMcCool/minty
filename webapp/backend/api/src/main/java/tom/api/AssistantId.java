@@ -1,6 +1,5 @@
 package tom.api;
 
-import java.io.Serializable;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
@@ -8,7 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public record AssistantId(UUID value) implements Serializable {
+public record AssistantId(UUID value) {
 
 	@JsonCreator
 	public AssistantId(String strValue) {
@@ -16,7 +15,8 @@ public record AssistantId(UUID value) implements Serializable {
 	}
 
 	@JsonValue
-	public UUID getValue() {
+	public UUID toJson() {
 		return value;
 	}
+
 }

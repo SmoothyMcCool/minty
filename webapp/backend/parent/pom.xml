@@ -27,39 +27,40 @@
 		<maven.compiler.release>${java.version}</maven.compiler.release>
 
 		<!-- Maven plugin versions -->
-		<maven.compiler.version>3.14.1</maven.compiler.version>
+		<maven.compiler.version>3.15.0</maven.compiler.version>
 		<maven.jar.version>3.5.0</maven.jar.version>
-		<maven.shade.version>3.6.1</maven.shade.version>
-		<maven.surefire.version>3.5.4</maven.surefire.version>
+		<maven.shade.version>3.6.2</maven.shade.version>
+		<maven.surefire.version>3.5.5</maven.surefire.version>
 		<maven.war.version>3.5.1</maven.war.version>
-		<maven.resources.version>3.4.0</maven.resources.version>
+		<maven.resources.version>3.5.0</maven.resources.version>
 
 		<!-- Library versions -->
-		<commonmark.version>0.27.1</commonmark.version>
+		<commonmark.version>0.28.0</commonmark.version>
 		<commons.lang.version>3.20.0</commons.lang.version>
-		<hibernate.version>7.2.1.Final</hibernate.version>
+		<hibernate.version>7.3.2.Final</hibernate.version>
 		<hikari.cp.version>7.0.2</hikari.cp.version>
-		<httpcore.version>5.4</httpcore.version>
-		<httpclient.version>5.6</httpclient.version>
-		<log4j.version>2.25.3</log4j.version>
-		<jackson.version>2.20.1</jackson.version>
+		<httpcore.version>5.4.2</httpcore.version>
+		<httpclient.version>5.6.1</httpclient.version>
+		<log4j.version>2.25.4</log4j.version>
+		<jackson.version>3.1.2</jackson.version>
 		<jakarta.annotation-api.version>3.0.0</jakarta.annotation-api.version>
 		<jakarta.persistence-api.version>3.2.0</jakarta.persistence-api.version>
 		<jakarta.servlet-api.version>6.1.0</jakarta.servlet-api.version>
 		<jakarta.transaction-api.version>2.0.1</jakarta.transaction-api.version>
 		<jsonpath.version>3.0.0</jsonpath.version>
-		<jsoup.version>1.22.1</jsoup.version>
-		<mariadb.client.version>3.5.7</mariadb.client.version>
-		<micrometer.version>1.16.2</micrometer.version>
+		<jsoup.version>1.22.2</jsoup.version>
+		<mariadb.client.version>3.5.8</mariadb.client.version>
+		<micrometer.version>1.16.5</micrometer.version>
 		<pdfbox.version>3.0.7</pdfbox.version>
 		<poi.version>5.5.1</poi.version>
-		<pug4j.version>2.3.1</pug4j.version>
-		<spring.version>6.2.15</spring.version>
-		<spring.data.version>2025.0.6</spring.data.version>
-		<spring.security.version>6.5.7</spring.security.version>
-		<spring.session.version>3.5.4</spring.session.version>
-		<spring.ai.version>1.1.2</spring.ai.version>
-		<tika.version>3.2.3</tika.version>
+		<pug4j.version>2.4.1</pug4j.version>
+		<reactor.version>2025.0.5</reactor.version>
+		<spring.version>7.0.7</spring.version>
+		<spring.data.version>2025.1.5</spring.data.version>
+		<spring.security.version>7.0.5</spring.security.version>
+		<spring.session.version>4.0.3</spring.session.version>
+		<spring.ai.version>2.0.0-M5</spring.ai.version>
+		<tika.version>3.3.0</tika.version>
 
 		<junit.jupiter.version>5.14.2</junit.jupiter.version>
 		<mockito.junit.jupiter.version>5.21.0</mockito.junit.jupiter.version>
@@ -131,6 +132,13 @@
 				<version>${jakarta.persistence-api.version}</version>
 			</dependency>
 
+			<dependency>
+				<groupId>io.projectreactor</groupId>
+				<artifactId>reactor-bom</artifactId>
+				<version>${reactor.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 			<!-- Hibernate -->
 			<dependency>
 				<groupId>org.hibernate.orm</groupId>
@@ -201,7 +209,7 @@
 
 			<!-- Jackson -->
 			<dependency>
-				<groupId>com.fasterxml.jackson</groupId>
+				<groupId>tools.jackson</groupId>
 				<artifactId>jackson-bom</artifactId>
 				<version>${jackson.version}</version>
 				<type>pom</type>

@@ -3,8 +3,8 @@ package tom.user.service;
 import java.util.List;
 import java.util.Optional;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DatabindException;
 
 import tom.api.UserId;
 import tom.api.services.UserService;
@@ -13,9 +13,9 @@ import tom.user.repository.EncryptedUser;
 
 public interface UserServiceInternal extends UserService {
 
-	public User decrypt(EncryptedUser encryptedUser) throws JsonMappingException, JsonProcessingException;
+	public User decrypt(EncryptedUser encryptedUser) throws DatabindException, JacksonException;
 
-	public EncryptedUser encrypt(User user) throws JsonProcessingException;
+	public EncryptedUser encrypt(User user) throws JacksonException;
 
 	public Optional<User> getUserFromName(String userName);
 

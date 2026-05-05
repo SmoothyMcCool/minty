@@ -1,11 +1,12 @@
 import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { Event, NavigationEnd, NavigationStart, Router, RouterEvent, RouterModule } from '@angular/router';
-import { Alert, AlertService } from '../../alert.service';
+import { Alert, AlertService, AlertType } from '../../alert.service';
 import { filter } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { UserService } from '../../user.service';
 import { Popover } from 'bootstrap';
 import { User } from '../../model/user';
+import { trigger, transition, style, animate } from '@angular/animations';
 
 
 @Component({
@@ -13,16 +14,42 @@ import { User } from '../../model/user';
 	imports: [CommonModule, RouterModule],
 	encapsulation: ViewEncapsulation.None,
 	templateUrl: 'app.component.html',
-	styleUrls: ['./app.component.css']
+	styleUrls: ['./app.component.css'],
+	animations: [
+		trigger('alertAnim', [
+
+			// ENTER (fade in)
+			transition(':enter', [
+				style({ opacity: 0, transform: 'translateY(-8px)' }),
+				animate('200ms ease-out',
+					style({ opacity: 1, transform: 'translateY(0)' })
+				)
+			]),
+
+			// EXIT (fade out)
+			transition(':leave', [
+				animate('200ms ease-in',
+					style({ opacity: 0, transform: 'translateY(-8px)' })
+				)
+			])
+		])
+	]
 })
 
 export class AppComponent implements OnInit {
-	alertList = new Map();
+	alerts = {
+		success: [] as string[],
+		info: [] as string[],
+		failure: [] as string[]
+	};
+
 	syncInProgress = false;
 	syncCounterDisplayed = false;
 	sessionActive = false;
 	connectionActive = true;
 	user!: User;
+
+	private alertTimers = new Map<string, any>();
 
 	constructor(private router: Router,
 		private userService: UserService,
@@ -45,9 +72,9 @@ export class AppComponent implements OnInit {
 			return label.toLowerCase().includes('dark') ? 'dark' : 'light';
 		};
 
-		this.alertList.set('failure', []);
-		this.alertList.set('info', []);
-		this.alertList.set('success', []);
+		this.alerts.failure = [];
+		this.alerts.info = [];
+		this.alerts.success = [];
 		this.alertService.alert.subscribe(item => this.handleAlert(item));
 
 		this.router.events.pipe(filter(event => event instanceof NavigationEnd)).subscribe((event: NavigationEnd) => {
@@ -64,30 +91,49 @@ export class AppComponent implements OnInit {
 	}
 
 	handleAlert(alert: Alert): void {
-		if (!alert) {
+		if (!alert || !alert.type || !alert.message) {
 			return;
 		}
-		const alerts: string[] = this.alertList.get(alert.type);
-		if (alert.type === 'success') {
-			alerts.push(alert.message);
-			$('#success-alert').fadeTo(500, 1).delay(5000).slideUp(500, () => {
-				this.alertList.set('success', []);
-			});
-		} else if (alert.type === 'info') {
-			alerts.push(alert.message);
-			$('#info-alert').fadeTo(500, 1).delay(10000).slideUp(500, () => {
-				this.alertList.set('info', []);
-			});
-		} else if (alert.type === 'failure') {
-			this.alertList.set(alert.type, [alert.message]);
-			$('#failure-alert').fadeTo(500, 1);
+
+		const type = alert.type.toLowerCase();
+
+		if (type !== 'success' && type !== 'info' && type !== 'failure') {
+			console.warn('Unknown alert type:', alert.type);
+			return;
 		}
+
+		const typed = type as AlertType;
+
+		this.alerts[typed] = [...this.alerts[typed], alert.message];
+
+		// clear previous timer
+		if (this.alertTimers.has(typed)) {
+			clearTimeout(this.alertTimers.get(typed));
+		}
+
+		if (typed === 'success') {
+			this.alertTimers.set(
+				typed,
+				setTimeout(() => {
+					this.alerts.success = [];
+				}, 5500)
+			);
+		}
+
+		else if (typed === 'info') {
+			this.alertTimers.set(
+				typed,
+				setTimeout(() => {
+					this.alerts.info = [];
+				}, 10500)
+			);
+		}
+
+		// failure = persistent
 	}
 
 	hideError(): void {
-		$('#failure-alert').slideUp(() => {
-			this.alertList.set('failure', []);
-		});
+		this.alerts.failure = [];
 	}
 
 	navigateTo(url: string): void {

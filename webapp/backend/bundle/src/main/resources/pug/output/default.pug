@@ -80,7 +80,14 @@ html(lang="en")
 
 					const a = document.createElement('a');
 					a.href = `#${slug}`;
-					a.textContent = snippet.id;
+
+					// Extract item count from the rendered HTML in snippet.text[0]
+					const countMatch = snippet.text[0] && snippet.text[0].match(/>(\d+)\s+Items?<\/p>/i);
+					const itemCount = countMatch ? parseInt(countMatch[1], 10) : null;
+
+					a.textContent = itemCount !== null
+						? `${snippet.id} (${itemCount} item${itemCount !== 1 ? 's' : ''})`
+						: snippet.id;
 
 					li.appendChild(a);
 					toc.appendChild(li);

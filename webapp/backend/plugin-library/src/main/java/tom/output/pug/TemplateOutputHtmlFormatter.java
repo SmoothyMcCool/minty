@@ -7,7 +7,7 @@ import java.util.Map;
 
 import org.apache.hc.core5.http.ContentType;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import tools.jackson.core.JacksonException;
 
 import tom.api.model.services.ServiceConsumer;
 import tom.api.services.PluginServices;
@@ -71,7 +71,7 @@ public class TemplateOutputHtmlFormatter implements OutputTask, ServiceConsumer 
 			public TaskConfigSpec taskConfiguration(Map<String, Object> configuration) {
 				try {
 					return new TemplateOutputHtmlFormatterConfig(configuration);
-				} catch (JsonProcessingException e) {
+				} catch (JacksonException e) {
 					throw new RuntimeException("Failed to read configuration.", e);
 				}
 			}
