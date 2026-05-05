@@ -5,14 +5,14 @@
 			<form>
 				<div class="form-check">
 					<input class="form-check-input" type="radio" name="orderLastUsed" id="orderLastUsed"
-						[(ngModel)]="conversationSortOrder" value="lastUsed" (change)="sortConversationsBy('lastUsed')" checked>
+						[(ngModel)]="conversationSortOrder" value="lastUsed" (ngModelChange)="sortConversationsBy('lastUsed')">
 					<label class="form-check-label" for="orderLastUsed">
 						Order by Last Used
 					</label>
 				</div>
 				<div class="form-check">
 					<input class="form-check-input" type="radio" name="orderAlphabetical" id="orderAlphabetical"
-						[(ngModel)]="conversationSortOrder" value="alpha" (change)="sortConversationsBy('alpha')">
+						[(ngModel)]="conversationSortOrder" value="alpha" (ngModelChange)="sortConversationsBy('alpha')">
 					<label class="form-check-label" for="orderAlphabetical">
 						Order A-Z
 					</label>

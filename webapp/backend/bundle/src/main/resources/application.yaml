@@ -32,7 +32,8 @@ llm:
   engine: Ollama
   uri: http://localhost:11434
   #engine: openai
-  #uri: http://172.24.128.199:8081
+  #uri: http://192.168.2.106:8081
+  openaiApiKey: dummy-key
   modelDefinitions:
     - name: gemma3:4b
       defaultContext: 32768

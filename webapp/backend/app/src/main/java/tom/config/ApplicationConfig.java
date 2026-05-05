@@ -39,6 +39,7 @@ import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.openai.client.OpenAIClient;
+import com.openai.client.OpenAIClientAsync;
 
 import de.neuland.pug4j.PugConfiguration;
 import de.neuland.pug4j.filter.MarkdownFilter;
@@ -98,13 +99,13 @@ public class ApplicationConfig implements WebMvcConfigurer {
 	}
 
 	@Bean
-	LlmService llmService(OllamaApi ollamaApi, OpenAIClient openAiClient, JdbcTemplate vectorJdbcTemplate,
-			DataSource dataSource) {
+	LlmService llmService(OllamaApi ollamaApi, OpenAIClient openAiClient, OpenAIClientAsync openAiClientAsync,
+			JdbcTemplate vectorJdbcTemplate, DataSource dataSource) {
 		LlmEngine engine = properties.getConfig().llm().engine();
 		if (engine == LlmEngine.Ollama) {
 			return new OllamaServiceImpl(ollamaApi, vectorJdbcTemplate, dataSource, properties);
 		}
-		return new OpenAiServiceImpl(openAiClient, vectorJdbcTemplate, dataSource, properties);
+		return new OpenAiServiceImpl(openAiClient, openAiClientAsync, vectorJdbcTemplate, dataSource, properties);
 	}
 
 	@Bean

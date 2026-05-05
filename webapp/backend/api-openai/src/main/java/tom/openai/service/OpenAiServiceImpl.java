@@ -30,6 +30,8 @@ import org.springframework.ai.vectorstore.mariadb.MariaDBVectorStore;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.openai.client.OpenAIClient;
+import com.openai.client.OpenAIClientAsync;
+import com.openai.credential.BearerTokenCredential;
 
 import tom.api.MintyObjectMapper;
 import tom.api.model.assistant.Assistant;
@@ -48,20 +50,23 @@ public class OpenAiServiceImpl implements LlmService {
 
 	private final List<ChatModelConfig> modelDefinitions;
 	private final List<String> activeModels;
+	private final String credentials;
 	private final OpenAIClient openAiClient;
+	private final OpenAIClientAsync openAiClientAsync;
 	private final MariaDBVectorStore vectorStore;
 	private final ChatMemoryRepository chatMemoryRepository;
 	private final ChatMemory chatMemory;
 	private final EmbeddingModel embeddingModel;
 	private final ToolCallingManager defaultToolCallingManager;
 
-	public OpenAiServiceImpl(OpenAIClient openAiClient, JdbcTemplate vectorJdbcTemplate, DataSource dataSource,
-			MintyConfiguration properties) {
+	public OpenAiServiceImpl(OpenAIClient openAiClient, OpenAIClientAsync openAiClientAsync,
+			JdbcTemplate vectorJdbcTemplate, DataSource dataSource, MintyConfiguration properties) {
 		String embeddingModelName = properties.getConfig().llm().embedding().model();
 		int chatMemoryDepth = properties.getConfig().llm().chatMemoryDepth();
 
 		modelDefinitions = properties.getConfig().llm().modelDefinitions();
 		activeModels = properties.getConfig().llm().activeModels();
+		credentials = properties.getConfig().llm().openaiApiKey();
 
 		try {
 			logger.info("OpenAI API Interface Service starting...");
@@ -75,6 +80,7 @@ public class OpenAiServiceImpl implements LlmService {
 		}
 
 		this.openAiClient = openAiClient;
+		this.openAiClientAsync = openAiClientAsync;
 
 		OpenAiEmbeddingOptions embeddingOptions = OpenAiEmbeddingOptions.builder().model(embeddingModelName).build();
 		embeddingModel = new OpenAiEmbeddingModel(openAiClient, MetadataMode.EMBED, embeddingOptions);
@@ -135,9 +141,10 @@ public class OpenAiServiceImpl implements LlmService {
 			List<Advisor> advisors) {
 
 		OpenAiChatOptions chatOptions = OpenAiChatOptions.builder().model(assistant.model())
-				.temperature(assistant.temperature()).parallelToolCalls(false).build();
+				.credential(BearerTokenCredential.create(credentials)).temperature(assistant.temperature())
+				.parallelToolCalls(false).build();
 
-		ChatModel chatModel = OpenAiChatModel.builder().openAiClient(openAiClient)
+		ChatModel chatModel = OpenAiChatModel.builder().openAiClient(openAiClient).openAiClientAsync(openAiClientAsync)
 				.toolCallingManager(new AuditingToolCallingManager(query.getConversationId().getValue().toString(),
 						defaultToolCallingManager))
 				.options(chatOptions).build();
@@ -148,7 +155,7 @@ public class OpenAiServiceImpl implements LlmService {
 
 	@Override
 	public ChatModel buildSimpleModel(String model) {
-		return OpenAiChatModel.builder().openAiClient(openAiClient)
+		return OpenAiChatModel.builder().openAiClient(openAiClient).openAiClientAsync(openAiClientAsync)
 				.options(OpenAiChatOptions.builder().model(model).build()).build();
 	}
 

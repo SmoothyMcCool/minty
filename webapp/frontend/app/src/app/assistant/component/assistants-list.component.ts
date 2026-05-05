@@ -96,11 +96,11 @@ export class AssistantsListComponent implements OnInit {
 
 	sortConversationsBy(ordering: string) {
 		this.conversationSortOrder = ordering;
-		this.sortConversations(this.conversations);
+		this.conversations = [...this.sortConversations(this.conversations)];
 	}
 
-	sortConversations(conversations: Conversation[]) {
-		conversations.sort((left, right) => {
+	sortConversations(conversations: Conversation[]): Conversation[] {
+		return conversations.sort((left, right) => {
 			if (this.conversationSortOrder === 'alpha') {
 				if (!left.title && !right.title) {
 					return left.conversationId.localeCompare(right.conversationId);
@@ -122,7 +122,8 @@ export class AssistantsListComponent implements OnInit {
 				if (!right.lastUsed) {
 					return -1;
 				}
-				return right.lastUsed - left.lastUsed;
+				const diff = new Date(right.lastUsed).getTime() - new Date(left.lastUsed).getTime();
+				return diff || left.conversationId.localeCompare(right.conversationId)
 			}
 		});
 	}
