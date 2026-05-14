@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ProjectService } from '../project.service';
 import { ProjectNodeComponent } from './project-node.component';
 import { NodeViewerComponent } from './project-node-viewer.component';
-import { Alert, AlertService } from '../../alert.service';
+import { AlertService } from '../../alert.service';
 import { ConfirmationDialogComponent } from '../../app/component/confirmation-dialog.component';
 import { DocProperties } from '../../document/document-editor.component';
 import { ProjectNode } from '../../model/project/project-node';
@@ -118,8 +118,8 @@ export class ProjectEditorComponent {
 		this.editFile = false;
 	}
 
-	onFileContentsChanged(text: string) {
-		this.currentFileContents = text;
+	onFileContentsChanged(node: ProjectNode) {
+		this.currentFileContents = node.content;
 	}
 
 	saveChangesToCurrentFile() {

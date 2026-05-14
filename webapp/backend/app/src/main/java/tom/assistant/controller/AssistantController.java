@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import jakarta.servlet.http.HttpServletResponse;
 import tom.ApiError;
 import tom.api.AssistantId;
 import tom.api.ConversationId;
@@ -259,18 +260,20 @@ public class AssistantController {
 	}
 
 	@GetMapping(value = "/cancel")
-	public ResponseEntity<ResponseWrapper<Boolean>> cancelConversation(
+	public ResponseEntity<ResponseWrapper<Boolean>> cancelConversation(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestParam("conversationId") ConversationId streamId) {
-		boolean success = assistantQueryService.cancelRequest(streamId);
+		boolean success = assistantQueryService.cancelRequest(user.getId(), streamId);
 		ResponseWrapper<Boolean> response = ResponseWrapper.SuccessResponse(success);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	@PostMapping(value = "/response", produces = MediaType.APPLICATION_NDJSON_VALUE)
 	public Callable<ResponseEntity<StreamingResponseBody>> getResponse(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestBody ConversationId streamId) {
+			@RequestBody ConversationId streamId, HttpServletResponse httpResponse) {
 
 		return () -> {
+			httpResponse.setBufferSize(0);
+
 			if (assistantQueryService.getQueuePositionFor(streamId) == -1) {
 				return ResponseEntity.noContent().build();
 			}
@@ -300,6 +303,7 @@ public class AssistantController {
 					writeResponse(outputStream,
 							new StreamingResponse(new LlmStatus(state, queuePosition), null, null, null));
 					outputStream.flush();
+					httpResponse.flushBuffer();
 
 					try {
 						Thread.sleep(250);
@@ -327,6 +331,7 @@ public class AssistantController {
 									new StreamingResponse(new LlmStatus(RequestProcessingState.COMPLETE, 0),
 											streamResult.get().getUsage(), streamResult.get().getSources(), ""));
 							outputStream.flush();
+							httpResponse.flushBuffer();
 							assistantQueryService.getResultAndRemoveIfComplete(streamId);
 							break;
 						}
@@ -334,6 +339,7 @@ public class AssistantController {
 						writeResponse(outputStream, new StreamingResponse(
 								new LlmStatus(RequestProcessingState.RUNNING, 0), null, null, chunk));
 						outputStream.flush();
+						httpResponse.flushBuffer();
 					}
 				} catch (Exception e) {
 					logger.error("Error streaming response for " + streamId, e);

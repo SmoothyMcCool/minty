@@ -10,11 +10,11 @@ import tom.assistant.service.agent.model.PlanState;
 
 public interface AgentPlanner {
 
-	default List<AgentStep> plan(UserId userId, AssistantQuery query) {
+	default List<AgentStep> plan(UserId userId, AssistantQuery query) throws InterruptedException {
 		return plan(userId, query, null);
 	}
 
-	List<AgentStep> plan(UserId userId, AssistantQuery query, PlanState state);
+	List<AgentStep> plan(UserId userId, AssistantQuery query, PlanState state) throws InterruptedException;
 
 	void setAssistantQueryService(AssistantQueryService assistantQueryService);
 

@@ -18,7 +18,6 @@ import tom.api.services.PluginServices;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.ConversationInUseException;
 import tom.api.services.assistant.QueueFullException;
-import tom.api.services.assistant.StringResult;
 import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;
@@ -139,10 +138,10 @@ public class AiQuery extends MintyTask implements ServiceConsumer {
 			}
 
 			try {
-				ConversationId requestId = null;
+				String response = null;
 				while (true) {
 					try {
-						requestId = pluginServices.getAssistantQueryService().ask(userId, query);
+						response = pluginServices.getAssistantQueryService().ask(userId, query);
 						break;
 
 					} catch (QueueFullException | ConversationInUseException e) {
@@ -150,18 +149,6 @@ public class AiQuery extends MintyTask implements ServiceConsumer {
 								e);
 						Thread.sleep(Duration.ofSeconds(5));
 					}
-				}
-
-				String response = null;
-				while (true) {
-					StringResult llmResult = (StringResult) pluginServices.getAssistantQueryService()
-							.getResultAndRemoveIfComplete(requestId);
-					if (llmResult != null && llmResult.isComplete()) {
-						response = llmResult instanceof StringResult ? ((StringResult) llmResult).getValue() : null;
-						break;
-					}
-					trace("LLM response not ready. Sleeping for 5 seconds before trying again.");
-					Thread.sleep(Duration.ofSeconds(5));
 				}
 
 				result = parseResponse(response);

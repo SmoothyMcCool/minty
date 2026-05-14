@@ -9,7 +9,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -35,6 +37,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskRejectedException;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -60,6 +65,9 @@ import tom.assistant.service.agent.AgentOrchestratorService;
 import tom.config.MintyConfiguration;
 import tom.config.model.ChatModelConfig;
 import tom.llm.service.LlmService;
+import tom.meta.model.LlmRequestId;
+import tom.meta.model.RequestSummary;
+import tom.meta.service.AiRequestMetricsService;
 import tom.prioritythreadpool.PriorityTask;
 import tom.prioritythreadpool.PriorityThreadPoolTaskExecutor;
 import tom.prioritythreadpool.TaskPriority;
@@ -79,6 +87,8 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	private final AssistantManagementService assistantManagementService;
 	private final AgentOrchestratorService agentOrchestratorService;
 	private final ToolRegistryService toolRegistryService;
+	private final AiRequestMetricsService aiRequestMetricsService;
+	private final PlatformTransactionManager transactionManager;
 	private final PriorityThreadPoolTaskExecutor llmExecutor;
 	private final Map<ConversationId, LlmResult> results;
 	private final List<ChatModelConfig> modelConfigs;
@@ -87,12 +97,15 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 
 	public AssistantQueryServiceImpl(AssistantManagementService assistantManagementService, LlmService llmService,
 			UserServiceInternal userService, ToolRegistryService toolRegistryService,
-			AgentOrchestratorService agentOrchestratorService, MintyConfiguration properties,
+			AgentOrchestratorService agentOrchestratorService, AiRequestMetricsService aiRequestMetricsService,
+			PlatformTransactionManager transactionManager, MintyConfiguration properties,
 			@Qualifier("llmExecutor") PriorityThreadPoolTaskExecutor llmExecutor) {
 		this.llmService = llmService;
 		this.userService = userService;
 		this.assistantManagementService = assistantManagementService;
 		this.toolRegistryService = toolRegistryService;
+		this.aiRequestMetricsService = aiRequestMetricsService;
+		this.transactionManager = transactionManager;
 		this.llmExecutor = llmExecutor;
 		this.results = new ConcurrentHashMap<>();
 		this.agentOrchestratorService = agentOrchestratorService;
@@ -112,38 +125,61 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	}
 
 	@Override
-	public synchronized ConversationId ask(UserId userId, AssistantQuery query)
-			throws QueueFullException, ConversationInUseException {
+	public String ask(UserId userId, AssistantQuery query) throws QueueFullException, ConversationInUseException {
+
+		LlmRequest request = new LlmRequest(userId, query, Instant.now());
+		StringResult sr = new StringResult();
+		sr.setState(LlmResultState.QUEUED);
+		results.put(query.getConversationId(), sr);
+
+		// We need two independent transactions in this method, so to avoid too much
+		// Spring jiggery-pokery, we manage it ourselves.
+		TransactionTemplate tx = new TransactionTemplate(transactionManager);
+		tx.setPropagationBehavior(Propagation.REQUIRES_NEW.value());
+		LlmRequestId llmRequestId = tx
+				.execute(status -> aiRequestMetricsService.registerRequest(userId, query.getConversationId()));
+
+		// Committed by here, safe to execute
+		CompletableFuture<Void> future = new CompletableFuture<>();
+		llmExecutor.execute(() -> {
+			askInternal(request, llmRequestId);
+			future.complete(null);
+		}, query.getConversationId(), TaskPriority.Low);
 
 		try {
-			if (results.containsKey(query.getConversationId())) {
-				throw new ConversationInUseException(query.getConversationId().value().toString());
-			}
-
-			LlmRequest request = new LlmRequest(userId, query, Instant.now());
-			StringResult sr = new StringResult();
-			sr.setState(LlmResultState.QUEUED);
-			results.put(query.getConversationId(), sr);
-
-			llmExecutor.execute(() -> askInternal(request), query.getConversationId(), TaskPriority.Low);
-
-			return query.getConversationId();
-
-		} catch (TaskRejectedException tre) {
-			// LLM is busy. Maybe next time.
-			results.remove(query.getConversationId());
-			throw new QueueFullException("LLM Queue is full, try again later.");
+			future.get();
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			logger.warn("Interrupted", e);
+		} catch (ExecutionException e) {
+			logger.warn("LLM execution failed", e.getCause());
 		}
 
+		return sr.getValue();
 	}
 
-	private void askInternal(LlmRequest request) {
+	@Override
+	public String askDirect(UserId userId, AssistantQuery query) {
+		TransactionTemplate tx = new TransactionTemplate(transactionManager);
+		tx.setPropagationBehavior(Propagation.REQUIRES_NEW.value());
+		LlmRequestId llmRequestId = tx
+				.execute(status -> aiRequestMetricsService.registerRequest(userId, query.getConversationId()));
+		tx.execute(status -> aiRequestMetricsService.markDequeued(llmRequestId));
+
+		return runSingleLlmCall(userId, llmRequestId, query);
+	}
+
+	private String askInternal(LlmRequest request, LlmRequestId llmRequestId) {
 		StringResult sr = (StringResult) getResult(request.getQuery().getConversationId());
 		sr.setState(LlmResultState.IN_PROGRESS);
+		StringBuilder result = new StringBuilder();
 
 		try {
-			String result = runSingleLlmCall(request.getUserId(), request.getQuery());
-			sr.setValue(result);
+			aiRequestMetricsService.markDequeued(llmRequestId);
+
+			result.append(runSingleLlmCall(request.getUserId(), llmRequestId, request.getQuery()));
+			sr.setValue(result.toString());
+
 		} catch (Exception e) {
 			logger.warn("askInternal failed", e);
 			sr.setValue("Failed to generate response." + StackTraceUtilities.StackTrace(e));
@@ -151,10 +187,17 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			sr.setState(LlmResultState.COMPLETE);
 			results.put(request.getQuery().getConversationId(), sr);
 		}
+
+		return result.toString();
 	}
 
 	@Override
-	public boolean cancelRequest(ConversationId conversationId) {
+	public boolean cancelRequest(UserId userId, ConversationId conversationId) {
+		List<RequestSummary> requests = aiRequestMetricsService.getActiveRequestsForUserAndConversation(userId,
+				conversationId);
+		// Like highlander, there really should only be one.
+		aiRequestMetricsService.markFailed(requests.get(0).llmRequestId(), "cancelled");
+
 		Sinks.One<Void> sink = activeLlmCalls.get(conversationId);
 		if (sink != null) {
 			sink.tryEmitEmpty();
@@ -163,8 +206,8 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		return false;
 	}
 
-	@Override
-	public String runSingleLlmCallStreaming(UserId userId, AssistantQuery query, StreamResult sr) {
+	private String runSingleLlmCallStreaming(UserId userId, AssistantQuery query, LlmRequestId llmRequestId,
+			StreamResult sr) {
 
 		StringBuilder finalText = new StringBuilder();
 		Set<String> docsUsed = new HashSet<>();
@@ -200,6 +243,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 
 			AtomicReference<Usage> usage = new AtomicReference<>();
 			AtomicBoolean failed = new AtomicBoolean(false);
+			AtomicBoolean firstToken = new AtomicBoolean(true);
 
 			responses.publishOn(Schedulers.immediate()).doOnNext(chatClientResponse -> {
 
@@ -216,6 +260,11 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 					return;
 				}
 
+				if (firstToken.get()) {
+					aiRequestMetricsService.recordFirstToken(llmRequestId);
+					firstToken.set(false);
+				}
+
 				AssistantMessage chunk = chatResponse.getResult().getOutput();
 
 				if (chunk != null && chunk.getText() != null) {
@@ -228,6 +277,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			}).onErrorResume(e -> {
 				logger.warn("runSingleLlmCallStreaming error", e);
 				failed.set(true);
+				aiRequestMetricsService.markFailed(llmRequestId, e.getMessage());
 				return Flux.empty();
 			}).doFinally(signalType -> {
 				if (failed.get()) {
@@ -243,6 +293,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 				}
 
 				ToolExecutionContext.getAndClear(contextKey);
+				aiRequestMetricsService.markCompleted(llmRequestId);
 			}).blockLast();
 
 		} catch (Exception e) {
@@ -255,8 +306,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		return finalText.toString();
 	}
 
-	@Override
-	public String runSingleLlmCall(UserId userId, AssistantQuery query) {
+	private String runSingleLlmCall(UserId userId, LlmRequestId llmRequestId, AssistantQuery query) {
 
 		String contextKey = query.getConversationId().getValue().toString();
 
@@ -281,6 +331,8 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 
 			ChatResponse chatResponse = spec.call().chatResponse();
 
+			aiRequestMetricsService.markCompleted(llmRequestId);
+
 			if (chatResponse != null && chatResponse.getResult() != null) {
 				return chatResponse.getResult().getOutput().getText();
 			}
@@ -296,17 +348,22 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	}
 
 	@Override
-	public synchronized ConversationId askStreaming(UserId userId, AssistantQuery query) throws QueueFullException {
+	public String askStreamingDirect(UserId userId, AssistantQuery query, StreamResult sr) {
+		LlmRequestId llmRequestId = aiRequestMetricsService.registerRequest(userId, query.getConversationId());
+		aiRequestMetricsService.markDequeued(llmRequestId);
+		return runSingleLlmCallStreaming(userId, query, llmRequestId, sr);
+	}
 
+	@Override
+	public ConversationId askStreaming(UserId userId, AssistantQuery query, StreamResult sr) throws QueueFullException {
 		try {
 			LlmRequest request = new LlmRequest(userId, query, Instant.now());
 
-			StreamResult initialStreamResult = new StreamResult(query.getQuery());
-			initialStreamResult.setState(LlmResultState.QUEUED);
-			results.put(request.getQuery().getConversationId(), initialStreamResult);
+			LlmRequestId llmRequestId = aiRequestMetricsService.registerRequest(userId, query.getConversationId());
 
 			llmExecutor.execute(() -> {
-				StreamResult sr = (StreamResult) getResult(request.getQuery().getConversationId());
+				aiRequestMetricsService.markDequeued(llmRequestId);
+
 				sr.setState(LlmResultState.IN_PROGRESS);
 
 				try {
@@ -314,10 +371,10 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 							.equals(AssistantManagementService.AgenticAssistantId)) {
 						agentOrchestratorService.execute(userId, query, sr);
 					} else {
-						runSingleLlmCallStreaming(userId, query, sr);
+						runSingleLlmCallStreaming(userId, query, llmRequestId, sr);
 					}
 				} catch (Exception e) {
-					logger.warn("Agent orchestration failed", e);
+					logger.warn("Streaming Agent orchestration failed", e);
 					sr.addChunk("Failed to generate response.");
 				} finally {
 					sr.markComplete();
@@ -332,7 +389,16 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			// LLM is super busy - the queue is full. Maybe next time.
 			throw new QueueFullException("LLM Queue is full, try again later.");
 		}
+	}
 
+	@Override
+	public ConversationId askStreaming(UserId userId, AssistantQuery query) throws QueueFullException {
+
+		StreamResult initialStreamResult = new StreamResult(query.getQuery());
+		initialStreamResult.setState(LlmResultState.QUEUED);
+		results.put(query.getConversationId(), initialStreamResult);
+
+		return askStreaming(userId, query, initialStreamResult);
 	}
 
 	@Override

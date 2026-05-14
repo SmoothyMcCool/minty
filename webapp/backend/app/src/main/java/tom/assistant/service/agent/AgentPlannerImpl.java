@@ -38,12 +38,15 @@ public class AgentPlannerImpl implements AgentPlanner {
 	}
 
 	@Override
-	public List<AgentStep> plan(UserId userId, AssistantQuery query, PlanState state) {
+	public List<AgentStep> plan(UserId userId, AssistantQuery query, PlanState state) throws InterruptedException {
 		int retryCount = 0;
-		String json = "";
+		String json = null;
 		while (retryCount < 3) {
 			AgentQuery plannerQuery = buildPlannerQuery(query, state);
-			json = assistantQueryService.runSingleLlmCall(userId, plannerQuery.query());
+			while (json == null) {
+				json = assistantQueryService.askDirect(userId, plannerQuery.query());
+			}
+
 			try {
 				return parse(json);
 			} catch (Exception e) {

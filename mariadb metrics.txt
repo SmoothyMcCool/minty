@@ -1,0 +1,118 @@
+CREATE TABLE IF NOT EXISTS LlmRequestStatus (
+	status VARCHAR(20) NOT NULL,
+	PRIMARY KEY (status)
+);
+
+INSERT IGNORE INTO LlmRequestStatus (status) VALUES
+	('queued'),
+	('processing'),
+	('completed'),
+	('failed');
+
+CREATE TABLE IF NOT EXISTS LlmRequests (
+	id UUID NOT NULL,
+	userId UUID NOT NULL,
+	conversationId UUID NOT NULL,
+	status VARCHAR(20) NOT NULL DEFAULT 'queued',
+	createdAt DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+	queuedAt DATETIME(6) NULL,
+	dequeuedAt DATETIME(6) NULL,
+	firstTokenAt DATETIME(6) NULL,
+	completedAt DATETIME(6) NULL,
+	error TEXT NULL,
+	PRIMARY KEY (id),
+	CONSTRAINT fk_requests_status FOREIGN KEY (status)
+		REFERENCES LlmRequestStatus(status)
+		ON UPDATE CASCADE
+);
+CREATE INDEX idx_requests_userId ON LlmRequests (userId);
+CREATE INDEX idx_requests_conversationId ON LlmRequests (conversationId);
+CREATE INDEX idx_requests_status ON LlmRequests (status);
+CREATE INDEX idx_requests_createdAt ON LlmRequests (createdAt);
+
+CREATE TABLE IF NOT EXISTS LlmRequestMetrics (
+	id UUID NOT NULL,
+	queueWaitUs BIGINT UNSIGNED NULL,
+	ttftUs BIGINT UNSIGNED NULL,
+	totalTimeUs BIGINT UNSIGNED NULL,
+	promptTokens INT UNSIGNED NULL,
+	completionTokens INT UNSIGNED NULL,
+	PRIMARY KEY (id),
+	CONSTRAINT fk_metrics_request FOREIGN KEY (id)
+		REFERENCES LlmRequests(id)
+		ON DELETE CASCADE
+);
+
+DELIMITER $$
+
+CREATE TRIGGER trg_computeMetrics
+AFTER UPDATE ON LlmRequests
+FOR EACH ROW
+BEGIN
+	IF NEW.status = 'completed' AND OLD.status <> 'completed' THEN
+		INSERT INTO LlmRequestMetrics (
+			requestId,
+			queueWaitUs,
+			ttftUs,
+			totalTimeUs
+		)
+		VALUES (
+			NEW.id,
+			TIMESTAMPDIFF(MICROSECOND, NEW.queuedAt, NEW.dequeuedAt),
+			TIMESTAMPDIFF(MICROSECOND, NEW.dequeuedAt, NEW.firstTokenAt),
+			TIMESTAMPDIFF(MICROSECOND, NEW.createdAt, NEW.completedAt)
+		)
+		ON DUPLICATE KEY UPDATE
+		queueWaitUs = VALUES(queueWaitUs),
+		ttftUs = VALUES(ttftUs),
+		totalTimeUs = VALUES(totalTimeUs);
+	END IF;
+END$$
+
+DELIMITER ;
+
+CREATE OR REPLACE VIEW DailyLlmMetrics AS
+SELECT
+	DATE(r.createdAt) AS day,
+	COUNT(*) AS totalRequests,
+
+	-- Queue wait
+	ROUND(AVG(m.queueWaitUs) / 1000, 2) AS avgQueueMs,
+	ROUND(PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY m.queueWaitUs)
+		OVER (PARTITION BY DATE(r.createdAt)) / 1000, 2) AS p50QueueMs,
+	ROUND(PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY m.queueWaitUs)
+		OVER (PARTITION BY DATE(r.createdAt)) / 1000, 2) AS p95QueueMs,
+
+	-- TTFT
+	ROUND(AVG(m.ttftUs) / 1000, 2) AS avgTtftMs,
+	ROUND(PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY m.ttftUs)
+		OVER (PARTITION BY DATE(r.createdAt)) / 1000, 2) AS p50TtftMs,
+	ROUND(PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY m.ttftUs)
+		OVER (PARTITION BY DATE(r.createdAt)) / 1000, 2) AS p95TtftMs,
+
+	-- Total time
+	ROUND(AVG(m.totalTimeUs) / 1000, 2) AS avgTotalMs,
+	ROUND(PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY m.totalTimeUs)
+		OVER (PARTITION BY DATE(r.createdAt)) / 1000, 2) AS p50TotalMs,
+	ROUND(PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY m.totalTimeUs)
+		OVER (PARTITION BY DATE(r.createdAt)) / 1000, 2) AS p95TotalMs
+
+FROM LlmRequests r
+JOIN LlmRequestMetrics m ON m.id = r.id
+WHERE r.status = 'completed'
+GROUP BY day, m.queueWaitUs, m.ttftUs, m.totalTimeUs;
+
+CREATE OR REPLACE VIEW DailyLlmMetricsCompat AS
+SELECT
+	DATE(r.createdAt) AS day,
+	COUNT(*) AS total_requests,
+	ROUND(AVG(m.queueWaitUs) / 1000, 2) AS avgQueueMs,
+	ROUND(AVG(m.ttftUs) / 1000, 2) AS avgTtftMs,
+	ROUND(AVG(m.totalTimeUs) / 1000, 2) AS avgTotalMs,
+	ROUND(MAX(m.queueWaitUs) / 1000, 2) AS maxQueueMs,
+	ROUND(MAX(m.ttftUs) / 1000, 2) AS maxTtftMs,
+	ROUND(MAX(m.totalTimeUs) / 1000, 2) AS maxTotalMs
+FROM LlmRequests r
+JOIN LlmRequestMetrics m ON m.id = r.id
+WHERE r.status = 'completed'
+GROUP BY DATE(r.createdAt);

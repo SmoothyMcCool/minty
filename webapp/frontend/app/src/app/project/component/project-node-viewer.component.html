@@ -1,4 +1,4 @@
-<markdown mermaid mermaidClipboard [data]="text" *ngIf="!edit"></markdown>
+<markdown mermaid mermaidClipboard [data]="displayText" *ngIf="!edit"></markdown>
 
-<textarea *ngIf="edit" class="border rounded p-3 bg-light whitespace-preserve form-control" style="height: 70vh; overflow: auto;" [ngModel]="text" (ngModelChange)="onTextChange($event)"></textarea>
+<textarea *ngIf="edit" class="border rounded p-3 bg-light whitespace-preserve form-control" style="height: 70vh; overflow: auto;" [ngModel]="node.content" (ngModelChange)="onTextChange($event)"></textarea>
 

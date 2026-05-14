@@ -6,9 +6,17 @@ import tom.api.model.assistant.AssistantQuery;
 
 public interface AssistantQueryService {
 
-	ConversationId ask(UserId userId, AssistantQuery query) throws QueueFullException, ConversationInUseException;
+	String ask(UserId userId, AssistantQuery query) throws QueueFullException, ConversationInUseException;
+
+	// Only for use by agents unless you like deadlocks.
+	String askDirect(UserId userId, AssistantQuery query);
 
 	ConversationId askStreaming(UserId userId, AssistantQuery query) throws QueueFullException;
+
+	ConversationId askStreaming(UserId userId, AssistantQuery query, StreamResult sr) throws QueueFullException;
+
+	// Only for use by agents unless you like deadlocks.
+	String askStreamingDirect(UserId userId, AssistantQuery query, StreamResult sr);
 
 	LlmResult getResultAndRemoveIfComplete(ConversationId conversationId);
 
@@ -16,10 +24,6 @@ public interface AssistantQueryService {
 
 	LlmResult peekLlmResult(ConversationId conversationId);
 
-	String runSingleLlmCallStreaming(UserId userId, AssistantQuery query, StreamResult sr);
-
-	String runSingleLlmCall(UserId userId, AssistantQuery synthQuery);
-
-	boolean cancelRequest(ConversationId conversationId);
+	boolean cancelRequest(UserId userId, ConversationId conversationId);
 
 }

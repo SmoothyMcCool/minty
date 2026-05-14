@@ -29,4 +29,9 @@ public class LlmRequest {
 		return queueTime;
 	}
 
+	@Override
+	public String toString() {
+		return "LlmRequest [userId=" + userId + ", query=" + query + ", queueTime=" + queueTime + "]";
+	}
+
 }

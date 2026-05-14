@@ -225,43 +225,51 @@ export class AssistantService {
 				method: 'POST',
 				headers: headers,
 				body: JSON.stringify(streamId)
-
 			}).then(response => {
 				if (response.status === 204 || !response.body) {
-					// Server explicitly returned no content
-					console.log('Server returned nothing (204)');
 					observer.complete();
 					return;
 				}
 
-				if (!response.body) {
-					console.log('getStream: no response body!');
-					return;
-				}
+				const decoder = new TextDecoder();
+				let buffer = '';
 
-				const reader = response.body.getReader();
-				const streamState = {
-					buffer: '',
-					decoder: new TextDecoder()
-				};
+				const transformer = new TransformStream<Uint8Array, StreamingResponse>({
+					transform(chunk, controller) {
+						console.log('transform called, chunk size:', chunk.byteLength);
+						buffer += decoder.decode(chunk, { stream: true });
+						const lines = buffer.split('\n');
+						buffer = lines.pop() ?? '';
+
+						for (const line of lines) {
+							const trimmed = line.trim();
+							if (trimmed) {
+								console.log('emitting line at:', Date.now());
+								controller.enqueue(JSON.parse(trimmed) as StreamingResponse);
+							}
+						}
+					},
+					flush(controller) {
+						if (buffer.trim()) {
+							controller.enqueue(JSON.parse(buffer.trim()) as StreamingResponse);
+						}
+					}
+				});
+
+				const readable = response.body.pipeThrough(transformer);
+				const reader = readable.getReader();
 
 				(async () => {
 					try {
 						while (true) {
-							const messages = await this.readJsonStream(reader, streamState);
-
-							if (!messages) {
+							const { done, value } = await reader.read();
+							if (done) {
 								observer.complete();
 								return;
 							}
-
-							for (const message of messages) {
-								observer.next(message);
-							}
+							observer.next(value);
 						}
-
 					} catch (error) {
-						console.log('Error reading stream: ', error);
 						observer.error(error);
 					}
 				})();

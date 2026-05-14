@@ -10,7 +10,6 @@ import org.apache.commons.text.StringSubstitutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import tom.api.ConversationId;
 import tom.api.MintyObjectMapper;
 import tom.api.ProjectId;
 import tom.api.UserId;
@@ -26,7 +25,6 @@ import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
 import tom.api.services.assistant.ConversationInUseException;
 import tom.api.services.assistant.QueueFullException;
-import tom.api.services.assistant.StringResult;
 import tom.api.services.document.extract.DocumentExtractorService;
 import tom.api.services.document.extract.Section;
 import tom.config.MintyConfiguration;
@@ -185,26 +183,16 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 		String summary = "";
 
 		try {
-			ConversationId requestId = null;
 			while (true) {
 				try {
-					requestId = assistantQueryService.ask(UserService.DefaultId, query);
+					summary = assistantQueryService.ask(UserService.DefaultId, query);
 					break;
 				} catch (QueueFullException | ConversationInUseException e) {
 					Thread.sleep(Duration.ofSeconds(5));
 				}
 			}
 
-			while (true) {
-				StringResult llmResult = (StringResult) assistantQueryService.getResultAndRemoveIfComplete(requestId);
-				if (llmResult != null && llmResult.isComplete()) {
-					summary = llmResult instanceof StringResult ? ((StringResult) llmResult).getValue() : "";
-					break;
-				}
-				Thread.sleep(Duration.ofSeconds(5));
-			}
 			summary = summary.strip();
-
 			conversationService.deleteConversation(conversation.getOwnerId(), conversation.getConversationId());
 
 		} catch (InterruptedException e) {

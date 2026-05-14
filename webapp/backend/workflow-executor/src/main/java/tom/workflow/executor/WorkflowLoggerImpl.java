@@ -4,7 +4,6 @@ import java.nio.file.Path;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.appender.FileAppender;
@@ -16,7 +15,7 @@ import org.apache.logging.log4j.message.SimpleMessage;
 import tom.api.task.TaskLogger;
 
 public class WorkflowLoggerImpl implements AutoCloseable, TaskLogger {
-	private static final LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+	private static final LoggerContext ctx = LoggerContext.getContext(false);
 	private static final Configuration cfg = ctx.getConfiguration();
 
 	private final FileAppender appender;

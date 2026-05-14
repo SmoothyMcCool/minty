@@ -169,7 +169,7 @@ prompt: |
   - Check whether the agent's task depends on anything the user said directly
     (preferences, constraints, clarifications, change descriptions, etc.)
   - If yes, include a "conversation" field in the step input summarizing the
-    relevant messages. Do not paste raw history — extract only what that agent needs.
+    relevant messages. Do not paste raw history - extract only what that agent needs.
   - If the information is fully captured in prior step outputs, omit it.
 
   STEP CHAINING
@@ -238,10 +238,10 @@ prompt: |
   - Use the agent name exactly as shown in the registry as the "worker"
   - Do NOT use an agent if any "Avoid when" condition applies
 
-  WRONG — never do this:
+  WRONG - never do this:
   { "id": "2", "type": "ACTION", "worker": "get_agent_definition", ... }
 
-  RIGHT — call the get_agent_definition tool silently, then emit the agent step directly:
+  RIGHT - call the get_agent_definition tool silently, then emit the agent step directly:
   { "id": "2", "type": "ACTION", "worker": "search_agent", ... }
 
   --------------------------------

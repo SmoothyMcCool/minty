@@ -13,6 +13,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import tom.api.ConversationId;
 import tom.api.services.assistant.AssistantManagementService;
@@ -24,6 +25,7 @@ import tom.config.model.ChatModelConfig;
 import tom.config.model.LlmConfig;
 import tom.config.model.MintyConfig;
 import tom.llm.service.LlmService;
+import tom.meta.service.AiRequestMetricsService;
 import tom.prioritythreadpool.PriorityTask;
 import tom.prioritythreadpool.PriorityThreadPoolTaskExecutor;
 import tom.tool.registry.ToolRegistryService;
@@ -46,8 +48,10 @@ class AssistantQueryServiceImplTest {
 	private final UserServiceInternal userService = mock(UserServiceInternal.class);
 	private final ToolRegistryService toolRegistryService = mock(ToolRegistryService.class);
 	private final AgentOrchestratorService agentOrchestratorService = mock(AgentOrchestratorService.class);
+	private final AiRequestMetricsService aiRequestMetricsService = mock(AiRequestMetricsService.class);
 	private MintyConfiguration mintyConfiguration = mock(MintyConfiguration.class);
 	private final PriorityThreadPoolTaskExecutor llmExecutor = mock(PriorityThreadPoolTaskExecutor.class);
+	private final PlatformTransactionManager transactionManager = mock(PlatformTransactionManager.class);
 
 	private AssistantQueryServiceImpl service;
 
@@ -67,7 +71,8 @@ class AssistantQueryServiceImplTest {
 
 		when(llmMock.modelDefinitions()).thenReturn(List.of(modelMock));
 		service = new AssistantQueryServiceImpl(assistantManagementService, llmService, userService,
-				toolRegistryService, agentOrchestratorService, mintyConfiguration, llmExecutor);
+				toolRegistryService, agentOrchestratorService, aiRequestMetricsService, transactionManager,
+				mintyConfiguration, llmExecutor);
 	}
 
 	/* --------------------------------------------------------------------- */

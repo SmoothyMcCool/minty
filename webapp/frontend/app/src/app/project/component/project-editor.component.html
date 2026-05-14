@@ -95,7 +95,7 @@
 				</div>
 			</div>
 			<h1>{{selectedNode.path}}</h1>
-			<minty-project-node-viewer [ngModel]="selectedNode.content" (ngModelChange)="onFileContentsChanged($event)"
+			<minty-project-node-viewer [ngModel]="selectedNode" (ngModelChange)="onFileContentsChanged($event)"
 				[edit]="editFile"></minty-project-node-viewer>
 		</div>
 		<ng-template #noSelection>

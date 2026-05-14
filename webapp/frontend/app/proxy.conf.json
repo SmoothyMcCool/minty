@@ -6,6 +6,9 @@
 		"pathRewrite": {
 			"^/": ""
 		},
-		"logLevel": "debug"
+		"logLevel": "debug",
+		"buffer": false,
+		"proxyTimeout": 120000,
+		"timeout": 120000
 	}
 }

@@ -16,7 +16,7 @@ const test = base.extend<{}, WorkerFixtures>({
 				},
 			});
 
-			const response = await apiContext.post('/api/login');
+			const response = await apiContext.get('/api/login');
 			if (!response.ok()) throw new Error('Login failed');
 
 			let authToken = response.headers()['x-auth-token'];

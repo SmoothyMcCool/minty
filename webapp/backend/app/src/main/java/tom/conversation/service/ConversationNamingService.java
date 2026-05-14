@@ -10,7 +10,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
-import tom.api.ConversationId;
 import tom.api.model.assistant.AssistantQuery;
 import tom.api.model.assistant.AssistantSpec;
 import tom.api.model.conversation.Conversation;
@@ -19,7 +18,6 @@ import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
 import tom.api.services.assistant.ConversationInUseException;
 import tom.api.services.assistant.QueueFullException;
-import tom.api.services.assistant.StringResult;
 import tom.assistant.service.management.AssistantRegistry;
 import tom.config.MintyConfiguration;
 import tom.conversation.model.ConversationEntity;
@@ -60,7 +58,7 @@ public class ConversationNamingService {
 
 			// More than one message, or first message is at least 80 characters.
 			if (messages.size() > 1 || (messages.size() == 1 && messages.get(0).getText().length() > 80)) {
-				logger.info("Starting on conversation ID " + conversation.getConversationId().toString());
+				logger.info("Starting on conversation ID " + conversation.getConversationId().value().toString());
 				StringBuilder sb = new StringBuilder();
 				messages.forEach(message -> {
 					String speaker = message.getMessageType().getValue();
@@ -81,11 +79,9 @@ public class ConversationNamingService {
 
 					String summary = "";
 
-					ConversationId requestId = null;
 					while (true) {
 						try {
-							requestId = assistantQueryService.ask(UserService.DefaultId, assistantQuery);
-							logger.info("requestId: " + requestId);
+							summary = assistantQueryService.ask(UserService.DefaultId, assistantQuery);
 							break;
 
 						} catch (QueueFullException | ConversationInUseException e) {
@@ -93,16 +89,6 @@ public class ConversationNamingService {
 									"Failed to enqueue request. Trying again in 5 seconds. Reason: " + e.toString());
 							Thread.sleep(Duration.ofSeconds(5));
 						}
-					}
-
-					while (true) {
-						StringResult llmResult = (StringResult) assistantQueryService
-								.getResultAndRemoveIfComplete(requestId);
-						if (llmResult != null && llmResult.isComplete()) {
-							summary = llmResult instanceof StringResult ? ((StringResult) llmResult).getValue() : "";
-							break;
-						}
-						Thread.sleep(Duration.ofSeconds(5));
 					}
 
 					// In case we're using Qwen3, strip off the <think> block.

@@ -46,9 +46,9 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 	private final AgentPlanner planner;
 	private final ChatMemory chatMemory;
 
-	public AgentOrchestratorServiceImpl(AgentRegistryImpl agentRegistry, AgentPlanner planner, LlmService llmService) {
-		this.agentRegistry = agentRegistry;
+	public AgentOrchestratorServiceImpl(AgentPlanner planner, LlmService llmService, AgentRegistryImpl agentRegistry) {
 		this.planner = planner;
+		this.agentRegistry = agentRegistry;
 		this.chatMemory = llmService.getChatMemory();
 	}
 
@@ -58,7 +58,6 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 	}
 
 	public void execute(UserId userId, AssistantQuery query, StreamResult sr) {
-
 		PlanState planState = null;
 
 		String conversationId = query.getConversationId().getValue().toString();
@@ -135,10 +134,14 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 
 					// If the current step is a question, advance the step and add the users
 					// response to the next step.
-					int currentStep = planState.getCurrentStepIndex();
-					if (planState.getSteps().get(currentStep).left().getType() == AgentStepType.ASK) {
+					if (planState.getSteps().get(planState.getCurrentStepIndex()).left()
+							.getType() == AgentStepType.ASK) {
 						planState.advanceStep();
 					}
+					if (planState.isDone()) {
+						return null; // nothing left to resume, treat as a fresh conversation
+					}
+					int currentStep = planState.getCurrentStepIndex();
 
 					emit(sr, "Resuming plan at step " + (currentStep + 1) + " of " + steps.size() + "\n");
 					for (int i = planState.getCurrentStepIndex(); i < steps.size(); i++) {
@@ -205,7 +208,8 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 
 	}
 
-	private StepResult runStep(UserId userId, AssistantQuery query, PlanState state, StreamResult sr) {
+	private StepResult runStep(UserId userId, AssistantQuery query, PlanState state, StreamResult sr)
+			throws InterruptedException {
 		AgentStep step = state.currentStep().left();
 
 		return switch (step.getType()) {
@@ -220,17 +224,21 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 		};
 	}
 
-	private StepResult runAction(UserId userId, AssistantQuery query, AgentStep step, PlanState state,
-			StreamResult sr) {
+	private StepResult runAction(UserId userId, AssistantQuery query, AgentStep step, PlanState state, StreamResult sr)
+			throws InterruptedException {
 		AgentQuery agentQuery = agentRegistry.getAgent(step.getWorker(), query, state);
 
-		String raw;
+		String raw = null;
+
 		sr.addChunk("[INTERNAL][" + state.currentStep().left().getName() + "]Query: " + agentQuery.query().getQuery());
-		if (step.getVisibility() == AgentResponseVisibility.USER) {
-			raw = assistantQueryService.runSingleLlmCallStreaming(userId, agentQuery.query(), sr);
-			sr.addChunk("<br><br>");
-		} else {
-			raw = assistantQueryService.runSingleLlmCall(userId, agentQuery.query());
+
+		while (raw == null) {
+			if (step.getVisibility() == AgentResponseVisibility.USER) {
+				raw = assistantQueryService.askStreamingDirect(userId, agentQuery.query(), sr);
+				sr.addChunk("<br><br>");
+			} else {
+				raw = assistantQueryService.askDirect(userId, agentQuery.query());
+			}
 		}
 
 		LlmParseResult parsed = LlmResponse.parse(raw);
@@ -257,8 +265,8 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 		return StepResult.ask(question);
 	}
 
-	private StepResult runReplan(UserId userId, AssistantQuery query, AgentStep step, PlanState state,
-			StreamResult sr) {
+	private StepResult runReplan(UserId userId, AssistantQuery query, AgentStep step, PlanState state, StreamResult sr)
+			throws InterruptedException {
 		// Re-run planner with current context
 		List<AgentStep> newSteps = planner.plan(userId, query, state);
 
