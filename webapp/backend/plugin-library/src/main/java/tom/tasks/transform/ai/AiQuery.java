@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.core.tools.picocli.CommandLine.TypeConversionException;
@@ -40,7 +42,7 @@ public class AiQuery extends MintyTask implements ServiceConsumer {
 	private Packet input;
 	private String error;
 	private List<? extends OutputPort> outputs;
-	private String conversationId;
+	private ConversationId conversationId;
 	private boolean failed;
 
 	public AiQuery() {
@@ -132,40 +134,64 @@ public class AiQuery extends MintyTask implements ServiceConsumer {
 			if (conversationId != null && query.getAssistantSpec().useId()
 					&& pluginServices.getAssistantManagementService()
 							.isAssistantConversational(query.getAssistantSpec().getAssistantId())) {
-				query.setConversationId(new ConversationId(conversationId));
+				query.setConversationId(conversationId);
 			} else {
 				query.setConversationId(new ConversationId(UUID.randomUUID()));
 			}
 
-			try {
-				String response = null;
-				while (true) {
-					try {
-						response = pluginServices.getAssistantQueryService().ask(userId, query);
-						break;
+			String response = null;
+			while (true) {
+				try {
+					CompletableFuture<String> future = pluginServices.getAssistantQueryService().ask(userId, query);
+					response = future.get();
+					break;
 
-					} catch (QueueFullException | ConversationInUseException e) {
-						trace("LLM queue is full or conversation in use. Sleeping for 5 seconds before trying again.",
-								e);
-						Thread.sleep(Duration.ofSeconds(5));
+				} catch (QueueFullException | ConversationInUseException e) {
+					if (!sleepForRetry()) {
+						throw new CancellationException("AiQuery interrupted while waiting to retry.");
+					}
+
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+					pluginServices.getAssistantQueryService().cancelRequest(userId, query.getConversationId());
+					throw new CancellationException("AiQuery task interrupted while waiting for LLM.");
+
+				} catch (CancellationException e) {
+					throw e; // propagate up
+
+				} catch (ExecutionException e) {
+					if (e.getCause() instanceof QueueFullException
+							|| e.getCause() instanceof ConversationInUseException) {
+						if (!sleepForRetry()) {
+							throw new CancellationException("AiQuery interrupted while waiting to retry.");
+						}
+					} else {
+						throw new RuntimeException("LLM call failed.", e.getCause());
 					}
 				}
+			}
 
-				result = parseResponse(response);
+			result = parseResponse(response);
 
-				result.setId(input != null ? input.getId() : "");
-				if (conversationId != null) {
-					result.getData().forEach(item -> item.put(ConversationId, conversationId));
-				}
-
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-				throw new CancellationException(
-						"AiQuery Task got interrupted while waiting for its turn with the LLM.");
+			result.setId(input != null ? input.getId() : "");
+			if (conversationId != null) {
+				result.getData().forEach(item -> item.put(ConversationId, conversationId));
 			}
 		}
 
 		outputs.get(0).write(result);
+	}
+
+	private boolean sleepForRetry() {
+		warn("LLM queue full or conversation in use, retrying in 5 seconds.");
+		try {
+			Thread.sleep(Duration.ofSeconds(5));
+			return true;
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			warn("Thread was interrupted while waiting to retry.");
+			return false;
+		}
 	}
 
 	@Override
@@ -181,7 +207,7 @@ public class AiQuery extends MintyTask implements ServiceConsumer {
 		if (dataPacket.getData().size() > 0) {
 			Map<String, Object> data = dataPacket.getData().getFirst();
 			if (data != null && data.containsKey(ConversationId)) {
-				conversationId = (String) data.get(ConversationId);
+				conversationId = new ConversationId((String) data.get(ConversationId));
 			}
 		}
 		return true;

@@ -5,6 +5,8 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.text.StringSubstitutor;
 import org.apache.logging.log4j.LogManager;
@@ -182,25 +184,52 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 
 		String summary = "";
 
-		try {
-			while (true) {
-				try {
-					summary = assistantQueryService.ask(UserService.DefaultId, query);
-					break;
-				} catch (QueueFullException | ConversationInUseException e) {
-					Thread.sleep(Duration.ofSeconds(5));
+		while (true) {
+			try {
+				summary = assistantQueryService.ask(UserService.DefaultId, query).get();
+				break;
+			} catch (QueueFullException | ConversationInUseException e) {
+				// Thrown directly from ask() before reaching the executor
+				logger.warn("LLM queue full or conversation in use, retrying in 5 seconds.");
+				if (!sleepForRetry()) {
+					return "";
 				}
+			} catch (CancellationException e) {
+				logger.warn("Summary generation was cancelled.");
+				return "";
+			} catch (ExecutionException e) {
+				if (e.getCause() instanceof QueueFullException || e.getCause() instanceof ConversationInUseException) {
+					logger.warn("LLM queue full or conversation in use, retrying in 5 seconds.");
+					if (!sleepForRetry()) {
+						return "";
+					}
+				} else {
+					logger.warn("Summary generation failed with unexpected error.", e.getCause());
+					return "";
+				}
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				logger.warn("Thread was interrupted while waiting for LLM.");
+				return "";
 			}
-
-			summary = summary.strip();
-			conversationService.deleteConversation(conversation.getOwnerId(), conversation.getConversationId());
-
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-			logger.warn("Thread was interrupted while sleeping and waiting for my turn with the LLM!");
 		}
 
+		summary = summary.strip();
+		conversationService.deleteConversation(conversation.getOwnerId(), conversation.getConversationId());
+
 		return summary;
+	}
+
+	private boolean sleepForRetry() {
+		logger.warn("LLM queue full or conversation in use, retrying in 5 seconds.");
+		try {
+			Thread.sleep(Duration.ofSeconds(5));
+			return true;
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			logger.warn("Thread was interrupted while waiting to retry.");
+			return false;
+		}
 	}
 
 	private void saveSummary(String summary) throws Exception {

@@ -125,7 +125,7 @@ test.describe('Workflow: playwright test', () => {
 		// Remove the route intercept before we do anything else
 		await page.unrouteAll();
 
-		const deleteResultBtn = completedItem.locator('button:has(.bi-trash3)');
+		const deleteResultBtn = completedItem.locator('button:has(.bi-trash)');
 		await deleteResultBtn.click();
 		await confirmDialog(page, 'Delete Result');
 

@@ -2,7 +2,10 @@ package tom.workflow.executor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang3.StringUtils;
@@ -23,6 +26,7 @@ public class TaskRunner {
 	private final TaskRegistryService taskRegistryService;
 	private final TaskRequest request;
 	private final List<CompletableFuture<Void>> activeTasks;
+	private final CopyOnWriteArrayList<Thread> activeTaskThreads;
 	private final List<Packet> results;
 	private final List<String> errors;
 	private final UserId userId;
@@ -32,6 +36,7 @@ public class TaskRunner {
 	private final ExecutionStepState executionState;
 	private boolean failed;
 	private final TaskLogger logger;
+	private volatile boolean cancelled;
 
 	public TaskRunner(UserId userId, TaskRegistryService taskRegistryService, TaskRequest request,
 			AsyncTaskExecutor taskExecutor, TaskLogger workflowLogger) {
@@ -39,12 +44,14 @@ public class TaskRunner {
 		this.taskRegistryService = taskRegistryService;
 		this.request = request;
 		this.activeTasks = new ArrayList<>();
+		this.activeTaskThreads = new CopyOnWriteArrayList<>();
 		this.results = new ArrayList<>();
 		this.errors = new ArrayList<>();
 		this.userId = userId;
 		this.executionState = new ExecutionStepState();
 		this.failed = false;
 		this.logger = workflowLogger;
+		cancelled = false;
 	}
 
 	public String getName() {
@@ -79,10 +86,20 @@ public class TaskRunner {
 		return errors;
 	}
 
+	public void cancel() {
+		cancelled = true;
+		activeTaskThreads.forEach(Thread::interrupt);
+		activeTasks.forEach(f -> f.cancel(true));
+	}
+
 	public void run() throws InterruptedException {
 		AtomicBoolean allTasksSpawned = new AtomicBoolean(false);
 
 		while (!allTasksSpawned.get()) {
+
+			if (cancelled) {
+				return;
+			}
 
 			MintyTask task = taskRegistryService.newTask(userId, request);
 			if (task == null) {
@@ -118,6 +135,10 @@ public class TaskRunner {
 						try {
 							Packet packet = inputs.get(i).read();
 
+							if (cancelled) {
+								return;
+							}
+
 							if (packet != null) {
 								if (packet == Connector.WRITING_COMPLETE) {
 									task.inputTerminated(i);
@@ -138,6 +159,9 @@ public class TaskRunner {
 								// from already running tasks, while we wait.
 								// }
 
+						} catch (InterruptedException e) {
+							Thread.currentThread().interrupt();
+							throw new CancellationException("TaskRunner interrupted while reading input");
 						} catch (Exception e) {
 							logger.error("TaskRunner for " + request.getStepName() + " failed to read from input " + i
 									+ ", with exception: ", e);
@@ -160,14 +184,23 @@ public class TaskRunner {
 
 			if (task.readyToRun()) {
 
+				if (cancelled) {
+					return;
+				}
+
 				executionState.addTask();
 				CompletableFuture<Void> future = taskExecutor.submitCompletable(() -> {
+					activeTaskThreads.add(Thread.currentThread());
 					boolean failed = false;
 					try {
 						task.run();
+					} catch (CancellationException e) {
+						throw e; // We can't swallow CancellationExceptions or cancellation doesn't work.
 					} catch (Exception e) {
 						logger.warn("TaskRunner: Task failed due to exception: ", e);
 						failed = true;
+					} finally {
+						activeTaskThreads.remove(Thread.currentThread());
 					}
 
 					if (failed || task.failed()) {
@@ -226,6 +259,18 @@ public class TaskRunner {
 			outputs.forEach(output -> output.complete());
 		});
 
-		allDone.join();
+		try {
+			allDone.get(); // get() is interruptible, join() is not.
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			activeTasks.forEach(f -> f.cancel(true));
+			throw new CancellationException("TaskRunner interrupted waiting for tasks to complete");
+		} catch (ExecutionException e) {
+			// already handled via whenComplete / failed state
+		}
+	}
+
+	public boolean isCancelled() {
+		return cancelled;
 	}
 }

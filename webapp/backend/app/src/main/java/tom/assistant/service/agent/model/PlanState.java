@@ -24,19 +24,21 @@ public class PlanState {
 	@JsonProperty("steps")
 	private List<Pair<AgentStep, AgentStepState>> steps;
 
+	@JsonProperty("statusMessages")
+	private List<String> statusMessages;
+
 	@JsonIgnore
 	private boolean errored;
 
 	public PlanState() {
 		currentStep = 0;
 		steps = new ArrayList<>();
+		statusMessages = new ArrayList<>();
 		errored = false;
 	}
 
 	public PlanState(List<AgentStep> steps) {
-		this.currentStep = 0;
-		this.steps = new ArrayList<>();
-		this.errored = false;
+		this();
 		for (AgentStep step : steps) {
 			this.steps.add(new Pair<>(step, new AgentStepState()));
 		}
@@ -119,6 +121,18 @@ public class PlanState {
 		return Collections.unmodifiableList(steps.subList(0, currentStep + 1));
 	}
 
+	public List<String> getStatusMessages() {
+		return statusMessages;
+	}
+
+	public void setStatusMessages(List<String> statusMessages) {
+		this.statusMessages = statusMessages;
+	}
+
+	public void addStatusMessage(String statusMessage) {
+		this.statusMessages.add(statusMessage);
+	}
+
 	@JsonIgnore
 	public boolean isErrored() {
 		return errored;
@@ -128,4 +142,5 @@ public class PlanState {
 	public void setErrored(boolean errored) {
 		this.errored = errored;
 	}
+
 }

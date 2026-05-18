@@ -34,7 +34,7 @@ output: Design artifact in the most appropriate format for the content (architec
 responseType: RawText
 
 model: gpt-oss:20b
-contextSize: 65536
+contextSize: 131072
 temperature: 0.4
 topK: 5
 hasMemory: false

@@ -51,7 +51,7 @@ FOR EACH ROW
 BEGIN
 	IF NEW.status = 'completed' AND OLD.status <> 'completed' THEN
 		INSERT INTO LlmRequestMetrics (
-			requestId,
+			id,
 			queueWaitUs,
 			ttftUs,
 			totalTimeUs

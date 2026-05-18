@@ -37,7 +37,7 @@ public class ApplicationInitializer extends AbstractAnnotationConfigDispatcherSe
 	}
 
 	@Override
-	public void onStartup(@SuppressWarnings("null") ServletContext servletContext) throws ServletException {
+	public void onStartup(ServletContext servletContext) throws ServletException {
 		super.onStartup(servletContext);
 		// e.g. servletContext.addListener(new SomeListener());
 	}

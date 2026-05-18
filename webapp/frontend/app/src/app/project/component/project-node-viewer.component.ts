@@ -30,12 +30,16 @@ export class NodeViewerComponent implements ControlValueAccessor {
 	private debounceTimer: ReturnType<typeof setTimeout> | undefined = undefined;
 
 	writeValue(value: ProjectNode | undefined): void {
+		this.node = undefined;
+		if (!value) {
+			return;
+		}
 		this.node = JSON.parse(JSON.stringify(value));
 		let lang = '';
 		if (this.node?.path) {
 			lang = this.getMarkdownLang(this.node?.path);
 		}
-		if (this.node?.fileType === 'code') {
+		if (this.node?.fileType === 'code' || this.node?.fileType === 'json' || this.node?.fileType === 'markdown') {
 			this.displayText = lang + '\n' + this.node.content + '\n```';
 		} else {
 			this.displayText = this.node?.content;

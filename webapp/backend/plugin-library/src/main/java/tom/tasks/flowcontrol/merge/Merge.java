@@ -81,7 +81,7 @@ public class Merge extends MintyTask {
 
 	@Override
 	public boolean readyToRun() {
-		return inputs.stream().anyMatch(input -> input == null);
+		return inputs.stream().allMatch(input -> input == null);
 	}
 
 	@Override

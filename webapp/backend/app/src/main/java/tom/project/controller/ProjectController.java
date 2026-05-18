@@ -78,7 +78,7 @@ public class ProjectController {
 
 	@DeleteMapping("/delete")
 	public ResponseEntity<ResponseWrapper<Boolean>> deleteProject(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("projectId") ProjectId projectId) {
+			@RequestParam ProjectId projectId) {
 
 		try {
 			projectService.deleteProject(user.getId(), projectId);
@@ -94,7 +94,7 @@ public class ProjectController {
 
 	@GetMapping
 	public ResponseEntity<ResponseWrapper<Project>> getProject(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("projectId") ProjectId projectId) {
+			@RequestParam ProjectId projectId) {
 
 		try {
 			Project project = projectService.getProject(user.getId(), projectId);
@@ -123,7 +123,7 @@ public class ProjectController {
 
 	@GetMapping("/node")
 	public ResponseEntity<ResponseWrapper<NodeContent>> readNode(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("projectId") ProjectId projectId, @RequestParam("path") String path) {
+			@RequestParam ProjectId projectId, @RequestParam String path) {
 
 		try {
 			NodeContent node = projectService.readNode(user.getId(), projectId, path);
@@ -139,7 +139,7 @@ public class ProjectController {
 
 	@PostMapping("/node/file")
 	public ResponseEntity<ResponseWrapper<NodeInfo>> writeFile(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("projectId") ProjectId projectId, @RequestBody NodeContent node) {
+			@RequestParam ProjectId projectId, @RequestBody NodeContent node) {
 
 		try {
 			NodeInfo info = projectService.writeFile(user.getId(), projectId, node.getPath(), node.getFileType(),
@@ -156,7 +156,7 @@ public class ProjectController {
 
 	@PostMapping("/node/folder")
 	public ResponseEntity<ResponseWrapper<NodeInfo>> createFolder(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("projectId") ProjectId projectId, @RequestParam("path") String path) {
+			@RequestParam ProjectId projectId, @RequestParam String path) {
 
 		try {
 			NodeInfo info = projectService.createFolder(user.getId(), projectId, path);
@@ -172,8 +172,8 @@ public class ProjectController {
 
 	@PostMapping("/node/move")
 	public ResponseEntity<ResponseWrapper<NodeInfo>> moveNode(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("projectId") ProjectId projectId, @RequestParam("sourcePath") String sourcePath,
-			@RequestParam("targetPath") String targetPath) {
+			@RequestParam ProjectId projectId, @RequestParam String sourcePath,
+			@RequestParam String targetPath) {
 
 		try {
 			NodeInfo info = projectService.moveNode(user.getId(), projectId, sourcePath, targetPath);
@@ -189,7 +189,7 @@ public class ProjectController {
 
 	@DeleteMapping("/node")
 	public ResponseEntity<ResponseWrapper<Boolean>> deleteNode(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("projectId") ProjectId projectId, @RequestParam("path") String path) {
+			@RequestParam ProjectId projectId, @RequestParam String path) {
 
 		try {
 			projectService.deleteNode(user.getId(), projectId, path);
@@ -205,9 +205,9 @@ public class ProjectController {
 
 	@PostMapping("/node/meta")
 	public ResponseEntity<ResponseWrapper<Boolean>> updateNodeMetadata(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("projectId") ProjectId projectId, @RequestParam("oldPath") String oldPath,
-			@RequestParam("newPath") String newPath,
-			@RequestParam(name = "fileType", required = false) String fileType) {
+			@RequestParam ProjectId projectId, @RequestParam String oldPath,
+			@RequestParam String newPath,
+			@RequestParam(required = false) String fileType) {
 
 		try {
 
@@ -225,7 +225,7 @@ public class ProjectController {
 
 	@GetMapping("/node/tree")
 	public ResponseEntity<ResponseWrapper<List<NodeInfo>>> describeTree(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("projectId") ProjectId projectId) {
+			@RequestParam ProjectId projectId) {
 
 		try {
 			return ResponseEntity
@@ -240,7 +240,7 @@ public class ProjectController {
 
 	@GetMapping("/node/children")
 	public ResponseEntity<ResponseWrapper<List<NodeInfo>>> listChildren(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("projectId") ProjectId projectId, @RequestParam("path") String path) {
+			@RequestParam ProjectId projectId, @RequestParam String path) {
 
 		try {
 			return ResponseEntity
@@ -255,7 +255,7 @@ public class ProjectController {
 
 	@PostMapping(value = { "/node/convert/markdown" }, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<ResponseWrapper<String>> convertToMarkdown(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("projectId") ProjectId projectId, @RequestPart("file") MultipartFile mpf) {
+			@RequestParam ProjectId projectId, @RequestPart("file") MultipartFile mpf) {
 
 		File file = new File(tempFileStore + "/" + mpf.getOriginalFilename());
 		try {
@@ -297,7 +297,7 @@ public class ProjectController {
 
 	@PostMapping(value = { "/node/convert/markdown/decompose" }, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<ResponseWrapper<String>> convertToMarkdownAndDecompose(
-			@AuthenticationPrincipal UserDetailsUser user, @RequestParam("projectId") ProjectId projectId,
+			@AuthenticationPrincipal UserDetailsUser user, @RequestParam ProjectId projectId,
 			@RequestPart("file") MultipartFile mpf) {
 
 		File file = new File(tempFileStore + "/" + mpf.getOriginalFilename());
@@ -325,7 +325,7 @@ public class ProjectController {
 
 	@PostMapping(value = { "/node/convert/markdown/summarize" }, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<ResponseWrapper<String>> convertToMarkdownAndDecomposeSummarize(
-			@AuthenticationPrincipal UserDetailsUser user, @RequestParam("projectId") ProjectId projectId,
+			@AuthenticationPrincipal UserDetailsUser user, @RequestParam ProjectId projectId,
 			@RequestPart("file") MultipartFile mpf) {
 
 		File file = new File(tempFileStore + "/" + mpf.getOriginalFilename());
@@ -354,7 +354,7 @@ public class ProjectController {
 	@SuppressWarnings("unused")
 	@PostMapping(value = { "/node/convert/mermaid" }, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<ResponseWrapper<String>> convertToMermaid(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("projectId") ProjectId projectId, @RequestPart("file") MultipartFile mpf) {
+			@RequestParam ProjectId projectId, @RequestPart("file") MultipartFile mpf) {
 
 		ResponseWrapper<String> response;
 
@@ -402,7 +402,7 @@ public class ProjectController {
 
 	@PostMapping(value = "/node/import/zip", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<ResponseWrapper<String>> importZip(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("projectId") ProjectId projectId, @RequestPart("file") MultipartFile file) {
+			@RequestParam ProjectId projectId, @RequestPart("file") MultipartFile file) {
 
 		try {
 			projectService.importZip(user.getId(), projectId, file.getInputStream());
@@ -416,7 +416,7 @@ public class ProjectController {
 
 	@GetMapping(value = "/node/export/zip")
 	public ResponseEntity<ResponseWrapper<String>> exportZip(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("projectId") ProjectId projectId) {
+			@RequestParam ProjectId projectId) {
 
 		try {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();

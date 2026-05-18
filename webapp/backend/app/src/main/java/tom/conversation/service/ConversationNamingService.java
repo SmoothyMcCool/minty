@@ -1,7 +1,8 @@
 package tom.conversation.service;
 
-import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -48,7 +49,6 @@ public class ConversationNamingService {
 	void nameConversations() {
 		List<ConversationEntity> conversations = conversationRepository.findAllByTitle(null);
 
-		// Ignore all conversations internal to workflows.
 		conversations = conversations.stream().filter(conversation -> conversation
 				.getAssociatedAssistantId() != AssistantManagementService.DefaultAssistantId).toList();
 
@@ -56,7 +56,6 @@ public class ConversationNamingService {
 			List<Message> messages = llmService.getChatMemory()
 					.get(conversation.getConversationId().value().toString());
 
-			// More than one message, or first message is at least 80 characters.
 			if (messages.size() > 1 || (messages.size() == 1 && messages.get(0).getText().length() > 80)) {
 				logger.info("Starting on conversation ID " + conversation.getConversationId().value().toString());
 				StringBuilder sb = new StringBuilder();
@@ -75,42 +74,46 @@ public class ConversationNamingService {
 				assistantQuery.setConversationId(namingConversation.getConversationId());
 				assistantQuery.setQuery(sb.toString());
 
-				try {
-
-					String summary = "";
-
-					while (true) {
-						try {
-							summary = assistantQueryService.ask(UserService.DefaultId, assistantQuery);
-							break;
-
-						} catch (QueueFullException | ConversationInUseException e) {
-							logger.warn(
-									"Failed to enqueue request. Trying again in 5 seconds. Reason: " + e.toString());
-							Thread.sleep(Duration.ofSeconds(5));
+				String summary = null;
+				while (summary == null) {
+					try {
+						// blocks this scheduled thread, which is acceptable here
+						summary = assistantQueryService.ask(UserService.DefaultId, assistantQuery).get();
+					} catch (CancellationException e) {
+						logger.warn("Conversation naming request was cancelled.");
+						return;
+					} catch (ExecutionException e) {
+						if (e.getCause() instanceof QueueFullException
+								|| e.getCause() instanceof ConversationInUseException) {
+							return; // Just return and we'll try next time the scheduler fires.
+						} else {
+							logger.warn("Conversation naming failed with unexpected error.", e.getCause());
+							return;
 						}
+					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
+						logger.warn("Thread was interrupted while waiting for conversation naming.");
+						return;
+					} catch (QueueFullException e) {
+						return; // Just return and we'll try next time the scheduler fires.
+					} catch (ConversationInUseException e) {
+						return; // Just return and we'll try next time the scheduler fires.
 					}
-
-					// In case we're using Qwen3, strip off the <think> block.
-					if (summary.startsWith("<think>")) {
-						summary = summary.substring(summary.indexOf("</think>") + "</think>".length());
-					}
-					summary = summary.strip();
-
-					conversation.setTitle(summary);
-					logger.info("Setting conversation title to " + summary);
-
-					conversationRepository.save(conversation);
-
-					conversationService.deleteConversation(namingConversation.getOwnerId(),
-							namingConversation.getConversationId());
-
-				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
-					logger.warn("Thread was interrupted while sleeping and waiting for my turn with the LLM!");
-					return;
 				}
 
+				// In case we're using Qwen3, strip off the <think> block.
+				if (summary.startsWith("<think>")) {
+					summary = summary.substring(summary.indexOf("</think>") + "</think>".length());
+				}
+				summary = summary.strip();
+
+				conversation.setTitle(summary);
+				logger.info("Setting conversation title to " + summary);
+
+				conversationRepository.save(conversation);
+
+				conversationService.deleteConversation(namingConversation.getOwnerId(),
+						namingConversation.getConversationId());
 			}
 		});
 	}

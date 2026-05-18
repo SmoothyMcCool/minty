@@ -242,7 +242,6 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 				return null;
 			}
 
-			@SuppressWarnings("null")
 			String clean = text.replaceAll("\\s+", " ").replaceAll("data:image/[^;]+;base64,[A-Za-z0-9+/=]+", "[B64]")
 					.replaceAll("\\{[^}]{1000,}\\}", "[JSON_BLOCK]");
 

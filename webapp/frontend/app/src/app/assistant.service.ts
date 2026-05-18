@@ -236,7 +236,6 @@ export class AssistantService {
 
 				const transformer = new TransformStream<Uint8Array, StreamingResponse>({
 					transform(chunk, controller) {
-						console.log('transform called, chunk size:', chunk.byteLength);
 						buffer += decoder.decode(chunk, { stream: true });
 						const lines = buffer.split('\n');
 						buffer = lines.pop() ?? '';
@@ -244,7 +243,6 @@ export class AssistantService {
 						for (const line of lines) {
 							const trimmed = line.trim();
 							if (trimmed) {
-								console.log('emitting line at:', Date.now());
 								controller.enqueue(JSON.parse(trimmed) as StreamingResponse);
 							}
 						}
@@ -276,6 +274,42 @@ export class AssistantService {
 
 			}).catch(err => observer.error(err));
 		});
+	}
+
+	getFileListFromMessage(message: string): string[] | null {
+		const fenceStart = message.lastIndexOf('```json');
+		if (fenceStart === -1) {
+			return null; // no JSON fence at all
+		}
+
+		const fenceEnd = message.indexOf('```', fenceStart + 7);
+		if (fenceEnd === -1) {
+			return null; // no closing fence
+		}
+
+		const tail = message.slice(fenceEnd + 3).trim();
+		if (tail.length !== 0) {
+			return null;
+		}
+
+		const jsonText = message.slice(fenceStart + 7, fenceEnd).trim();
+
+		try {
+			const parsed = JSON.parse(jsonText);
+			if (parsed && Array.isArray(parsed.files)) {
+				const result = [];
+				for (const file of parsed.files) {
+					if (typeof file === 'string') {
+						result.push(file);
+					}
+				}
+				return result;
+			}
+		} catch (_) {
+			// JSON.parse failed – treat as malformed
+		}
+
+		return null;
 	}
 
 	getAssistant(id: number): Observable<Assistant> {

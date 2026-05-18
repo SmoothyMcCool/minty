@@ -1,12 +1,15 @@
 package tom.api.services.assistant;
 
+import java.util.concurrent.CompletableFuture;
+
 import tom.api.ConversationId;
 import tom.api.UserId;
 import tom.api.model.assistant.AssistantQuery;
 
 public interface AssistantQueryService {
 
-	String ask(UserId userId, AssistantQuery query) throws QueueFullException, ConversationInUseException;
+	CompletableFuture<String> ask(UserId userId, AssistantQuery query)
+			throws QueueFullException, ConversationInUseException;
 
 	// Only for use by agents unless you like deadlocks.
 	String askDirect(UserId userId, AssistantQuery query);

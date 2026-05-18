@@ -69,7 +69,20 @@ public class ProjectTools implements MintyTool, ServiceConsumer {
 			Avoid invalid paths.
 			Make deliberate, minimal changes.
 
-						""";
+			END OF PROMPT
+
+			ALWAYS end your reply with a JSON block that lists every file path that was changed.
+			The block must be the very last thing in the reply and must look exactly like this:
+
+			```json
+			{
+			  "files": ["path/to/file1", "path/to/file2", "..."]
+			}
+			```
+
+			Do not add any other prose, code fences, or comments after the closing fence.
+			If no files were modified, do not include this JSON.
+			""";
 
 	@Override
 	public void initialize() {

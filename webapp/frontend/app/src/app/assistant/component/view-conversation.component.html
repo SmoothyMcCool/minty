@@ -1,143 +1,180 @@
 <div>
-	<div class="container">
-		<h1>{{assistant.name}}<ng-container *ngIf="conversation && conversation.title"> -
-				{{conversation.title}}</ng-container></h1>
+	<div [class]="files?.length > 0 && showFilesColumn ? 'container-fluid' : 'container'">
+		<div class="row" *ngIf="files?.length > 0">
 
-		<div class="overflow-auto" *ngIf="user && !newestMessagesFirst">
-			<minty-conversation [messages]="chatHistory" [responsePending]="waitingForResponse"
-				[queueDepth]="queueDepth" [oldestMessagesFirst]="user && !newestMessagesFirst"
-				[showChatOptions]="showChatOptions"></minty-conversation>
-			<div *ngFor="let message of statusMessages; let i = index; trackBy: trackByIndex" class="mb-2">
-				<div class="row mb-1 align-items-center mx-0">
-					<div class="col-auto status-text" style="white-space: pre-wrap;">{{message.statusMessage}}</div>
-					<div class="col-auto p-0" *ngIf="message.stepOutput">
-						<button class="chevron-btn" type="button" [class.open]="expandedSteps[i]" (click)="toggleStep(i)"
-							aria-label="Toggle step output">
-							<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-								stroke-linejoin="round">
-								<polyline points="4 4 8 8 4 12" />
-								<polyline points="8 4 12 8 8 12" />
-							</svg>
-						</button>
-					</div>
-				</div><div class="row mb-1" style="white-space: pre-wrap;" *ngIf="message.stepOutput">
-					<div [id]="'stepOutput-' + i" [class.show]="expandedSteps[i]" class="collapse mt-1">
-						<div class="card-body p-2">
-							<pre class="mb-0" style="white-space: pre-wrap; font-size: 0.85em;">{{message.stepOutput}}</pre>
-						</div>
+			<div [class]="showFilesColumn ? 'col-8' : 'col-12'">
+				<ng-container *ngTemplateOutlet="mainContent"></ng-container>
+			</div>
+
+			<div class="col-4 border-start" *ngIf="showFilesColumn">
+				<div class="p-3">
+					<h5>Files</h5>
+					<ul class="list-group">
+						<li class="list-group-item list-group-item-action" *ngFor="let file of files"
+							(click)="onFileClick(file)" style="cursor: pointer;">
+							{{file}}
+						</li>
+					</ul>
+					<div *ngIf="fileNode" class="card p-2 mt-3">
+						<minty-project-node-viewer [ngModel]="fileNode"></minty-project-node-viewer>
 					</div>
 				</div>
 			</div>
 		</div>
 
-		<ng-container *ngIf="sources">
-			<div class="row mb-2">
-				Sources Used by the last Response (Warning: source information is not preserved!):
-			</div>
-			<ul class="list-group">
-				<li class="list-group-item list-group-item" *ngFor="let source of sources">
-					{{source}}
-				</li>
-			</ul>
+		<ng-container *ngIf="files?.length === 0 || !showFilesColumn">
+			<ng-container *ngTemplateOutlet="mainContent"></ng-container>
 		</ng-container>
-
-		<div class="row mb-2" *ngIf="metrics && (metrics.promptTokens > 0 || metrics.completionTokens > 0) ">
-			<div class="col-auto">
-				<strong>Request Tokens:</strong>&nbsp;{{metrics.promptTokens}}
-			</div>
-			<div class="col-auto">
-				<strong>Response Tokens:</strong>&nbsp;{{metrics.completionTokens}}
-			</div>
-			<div class="col-auto">
-				<strong>Total Tokens:</strong>&nbsp;{{metrics.promptTokens + metrics.completionTokens}}
-			</div>
-		</div>
-
-		<div class="row mb-2" *ngIf="(assistant.prompt.length > 0 || !assistant.hasMemory) && showChatOptions">
-			<div class="col">
-				<div class="overflow-auto well p-3" style="white-space: pre-wrap; height: 100px;">
-					<div *ngIf="!assistant.hasMemory">
-						<i class="bi bi-exclamation-triangle">
-							This assistant has no conversation history!
-							It will only respond to the last message you send,
-							and your conversation will not be saved.
-						</i>
-					</div>
-					{{assistant.prompt}}
-				</div>
-			</div>
-		</div>
-
-		<div class="row mb-2 form-floating">
-			<div class="col form-floating">
-				<textarea #aiQueryEl class="form-control" id="aiQuery" name="aiQuery" [(ngModel)]="userText"
-					style="max-height: 400px;" autoResize></textarea>
-				<label class="ms-3" for="aiQuery">Put your input here</label>
-			</div>
-		</div>
-
-		<div class="row mb-2" [ngClass]="{ 'flex-row-reverse': reverseButtons }">
-			<div class="col-auto">
-				<button class="btn btn-primary mb-2" (click)="submit(userText)"
-					[disabled]="!userText || waitingForResponse">
-					<i class="bi" [class.bi-arrow-down]="newestMessagesFirst"
-						[class.bi-arrow-up]="!newestMessagesFirst"></i>
-				</button>
-			</div>
-			<div class="col">
-				<minty-image-input [imageSupport]="model && model.imageSupport" [reset]="shouldReset"
-					(image)="onImageChanged($event)"></minty-image-input>
-			</div>
-			<div class="col-auto">
-				<button class="btn btn-warning" [disabled]="!waitingForResponse && responseComplete" (click)="cancelStream()">
-					<i class="bi bi-x-circle"></i>
-				</button>
-			</div>
-			<div class="col-auto">
-				<button class="btn btn-danger" (click)="restartConversation()">
-					<i class="bi bi-arrow-counterclockwise"></i>
-				</button>
-			</div>
-			<div class="col-auto">
-				<button class="btn" (click)="showChatOptions = !showChatOptions">
-					<i class="bi bi-sliders"></i>
-				</button>
-			</div>
-		</div>
-
-		<div class="form-group mb-2" *ngIf="model && showChatOptions">
-			<minty-slider [min]="0" [max]="model.maximumContext" [label]="'Context Size'"
-				[(ngModel)]="contextSize"></minty-slider>
-		</div>
-		<div class="overflow-auto" *ngIf="user && newestMessagesFirst">
-			<div *ngFor="let message of statusMessages; let i = index; trackBy: trackByIndex" class="mb-2">
-				<div class="row mb-1 align-items-center mx-0">
-					<div class="col-auto status-text" style="white-space: pre-wrap;">{{message.statusMessage}}</div>
-					<div class="col-auto p-0" *ngIf="message.stepOutput">
-						<button class="chevron-btn" type="button" [class.open]="expandedSteps[i]" (click)="toggleStep(i)"
-							aria-label="Toggle step output">
-							<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-								stroke-linejoin="round">
-								<polyline points="4 4 8 8 4 12" />
-								<polyline points="8 4 12 8 8 12" />
-							</svg>
-						</button>
-					</div>
-				</div><div class="row mb-1" style="white-space: pre-wrap;" *ngIf="message.stepOutput">
-					<div [id]="'stepOutput-' + i" [class.show]="expandedSteps[i]" class="collapse mt-1">
-						<div class="card-body p-2">
-							<pre class="mb-0" style="white-space: pre-wrap; font-size: 0.85em;">{{message.stepOutput}}</pre>
-						</div>
-					</div>
-				</div>
-			</div>
-			<minty-conversation [messages]="chatHistory" [responsePending]="waitingForResponse"
-				[responseComplete]="responseComplete" [queueDepth]="queueDepth"
-				[oldestMessagesFirst]="!newestMessagesFirst" [showChatOptions]="showChatOptions"></minty-conversation>
-		</div>
 
 	</div>
 </div>
+
+<ng-template #mainContent>
+	<h1>{{assistant.name}}<ng-container *ngIf="conversation && conversation.title"> -
+			{{conversation.title}}</ng-container></h1>
+
+	<div class="overflow-auto" *ngIf="user && !newestMessagesFirst">
+		<minty-conversation [messages]="chatHistory" [responsePending]="waitingForResponse" [queueDepth]="queueDepth"
+			[oldestMessagesFirst]="user && !newestMessagesFirst"
+			[showChatOptions]="showChatOptions"></minty-conversation>
+		<div *ngFor="let message of statusMessages; let i = index; trackBy: trackByIndex" class="mb-2">
+			<div class="row mb-1 align-items-center mx-0">
+				<div class="col-auto status-text" style="white-space: pre-wrap;">{{message.statusMessage}}</div>
+				<div class="col-auto p-0" *ngIf="message.stepOutput">
+					<button class="chevron-btn" type="button" [class.open]="expandedSteps[i]" (click)="toggleStep(i)"
+						aria-label="Toggle step output">
+						<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"
+							stroke-linecap="round" stroke-linejoin="round">
+							<polyline points="4 4 8 8 4 12" />
+							<polyline points="8 4 12 8 8 12" />
+						</svg>
+					</button>
+				</div>
+			</div>
+			<div class="row mb-1" style="white-space: pre-wrap;" *ngIf="message.stepOutput">
+				<div [id]="'stepOutput-' + i" [class.show]="expandedSteps[i]" class="collapse mt-1">
+					<div class="card-body p-2">
+						<pre class="mb-0" style="white-space: pre-wrap; font-size: 0.85em;">{{message.stepOutput}}</pre>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<ng-container *ngIf="sources">
+		<div class="row mb-2">
+			Sources Used by the last Response (Warning: source information is not preserved!):
+		</div>
+		<ul class="list-group">
+			<li class="list-group-item list-group-item" *ngFor="let source of sources">
+				{{source}}
+			</li>
+		</ul>
+	</ng-container>
+
+	<div class="row mb-2" *ngIf="metrics && (metrics.promptTokens > 0 || metrics.completionTokens > 0)">
+		<div class="col-auto">
+			<strong>Request Tokens:</strong>&nbsp;{{metrics.promptTokens}}
+		</div>
+		<div class="col-auto">
+			<strong>Response Tokens:</strong>&nbsp;{{metrics.completionTokens}}
+		</div>
+		<div class="col-auto">
+			<strong>Total Tokens:</strong>&nbsp;{{metrics.promptTokens + metrics.completionTokens}}
+		</div>
+	</div>
+
+	<div class="row mb-2" *ngIf="(assistant.prompt.length > 0 || !assistant.hasMemory) && showChatOptions">
+		<div class="col">
+			<div class="overflow-auto well p-3" style="white-space: pre-wrap; height: 100px;">
+				<div *ngIf="!assistant.hasMemory">
+					<i class="bi bi-exclamation-triangle">
+						This assistant has no conversation history!
+						It will only respond to the last message you send,
+						and your conversation will not be saved.
+					</i>
+				</div>
+				{{assistant.prompt}}
+			</div>
+		</div>
+	</div>
+
+	<div class="row mb-2 form-floating">
+		<div class="col form-floating">
+			<textarea #aiQueryEl class="form-control" id="aiQuery" name="aiQuery" [(ngModel)]="userText"
+				style="max-height: 400px;" autoResize></textarea>
+			<label class="ms-3" for="aiQuery">Put your input here</label>
+		</div>
+	</div>
+
+	<div class="row mb-2" [ngClass]="{ 'flex-row-reverse': reverseButtons }">
+		<div class="col-auto">
+			<button class="btn btn-primary mb-2" (click)="submit(userText)"
+				[disabled]="!userText || waitingForResponse">
+				<i class="bi" [class.bi-arrow-down]="newestMessagesFirst"
+					[class.bi-arrow-up]="!newestMessagesFirst"></i>
+			</button>
+		</div>
+		<div class="col">
+			<minty-image-input [imageSupport]="model && model.imageSupport" [reset]="shouldReset"
+				(image)="onImageChanged($event)"></minty-image-input>
+		</div>
+		<div class="col-auto">
+			<button class="btn btn-warning" [disabled]="!waitingForResponse && responseComplete"
+				(click)="cancelStream()">
+				<i class="bi bi-x-circle"></i>
+			</button>
+		</div>
+		<div class="col-auto">
+			<button class="btn btn-danger" (click)="restartConversation()">
+				<i class="bi bi-arrow-counterclockwise"></i>
+			</button>
+		</div>
+		<div class="col-auto">
+			<button class="btn" (click)="showChatOptions = !showChatOptions">
+				<i class="bi bi-sliders"></i>
+			</button>
+		</div>
+		<div class="col-auto">
+			<button class="btn" (click)="showFilesColumn = !showFilesColumn" [class.btn-outline-secondary]="!showFilesColumn">
+				<i class="bi bi-columns-gap"></i>
+			</button>
+		</div>
+	</div>
+
+	<div class="form-group mb-2" *ngIf="model && showChatOptions">
+		<minty-slider [min]="0" [max]="model.maximumContext" [label]="'Context Size'"
+			[(ngModel)]="contextSize"></minty-slider>
+	</div>
+
+	<div class="overflow-auto" *ngIf="user && newestMessagesFirst">
+		<div *ngFor="let message of statusMessages; let i = index; trackBy: trackByIndex" class="mb-2">
+			<div class="row mb-1 align-items-center mx-0">
+				<div class="col-auto status-text" style="white-space: pre-wrap;">{{message.statusMessage}}</div>
+				<div class="col-auto p-0" *ngIf="message.stepOutput">
+					<button class="chevron-btn" type="button" [class.open]="expandedSteps[i]" (click)="toggleStep(i)"
+						aria-label="Toggle step output">
+						<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"
+							stroke-linecap="round" stroke-linejoin="round">
+							<polyline points="4 4 8 8 4 12" />
+							<polyline points="8 4 12 8 8 12" />
+						</svg>
+					</button>
+				</div>
+			</div>
+			<div class="row mb-1" style="white-space: pre-wrap;" *ngIf="message.stepOutput">
+				<div [id]="'stepOutput-' + i" [class.show]="expandedSteps[i]" class="collapse mt-1">
+					<div class="card-body p-2">
+						<pre class="mb-0" style="white-space: pre-wrap; font-size: 0.85em;">{{message.stepOutput}}</pre>
+					</div>
+				</div>
+			</div>
+		</div>
+		<minty-conversation [messages]="chatHistory" [responsePending]="waitingForResponse"
+			[responseComplete]="responseComplete" [queueDepth]="queueDepth" [oldestMessagesFirst]="!newestMessagesFirst"
+			[showChatOptions]="showChatOptions"></minty-conversation>
+	</div>
+</ng-template>
 
 <minty-confirmation-dialog [title]="'Restart Conversation'"
 	[message]="'Are you sure you want to start over? You conversation history will be irretrievably lost.'"

@@ -135,7 +135,7 @@ public class AssistantController {
 
 	@GetMapping({ "/conversation" })
 	public ResponseEntity<ResponseWrapper<Assistant>> getAssistantForChat(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("conversationId") ConversationId conversationId) {
+			@RequestParam ConversationId conversationId) {
 
 		if (conversationService.conversationOwnedBy(user.getId(), conversationId)) {
 			AssistantId assistantId = conversationService.getAssistantIdFromConversationId(user.getId(),
@@ -183,7 +183,7 @@ public class AssistantController {
 
 	@GetMapping(value = { "/getsharing" })
 	public ResponseEntity<ResponseWrapper<UserSelection>> getSharing(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("assistantId") String assistantId) {
+			@RequestParam String assistantId) {
 		try {
 			UserSelection selection = assistantManagementService.getSharingFor(user.getId(),
 					new AssistantId(assistantId));
@@ -200,9 +200,9 @@ public class AssistantController {
 
 	@PostMapping(value = "/ask", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<ResponseWrapper<ConversationId>> ask(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("conversationId") String conversationId,
-			@RequestPart("assistant") AssistantSpec assistantSpec, @RequestParam("query") String query,
-			@RequestParam("contextSize") int contextSize,
+			@RequestParam String conversationId,
+			@RequestPart("assistant") AssistantSpec assistantSpec, @RequestParam String query,
+			@RequestParam int contextSize,
 			@RequestParam(value = "image", required = false) MultipartFile imageFile) throws IOException {
 
 		Assistant assistant;

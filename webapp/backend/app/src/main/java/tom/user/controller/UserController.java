@@ -20,8 +20,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import tools.jackson.core.JacksonException;
-
 import jakarta.servlet.http.HttpServletRequest;
 import tom.ApiError;
 import tom.ApiException;
@@ -33,6 +31,7 @@ import tom.user.model.User;
 import tom.user.repository.EncryptedUser;
 import tom.user.repository.UserRepository;
 import tom.user.service.UserServiceInternal;
+import tools.jackson.core.JacksonException;
 
 @RestController
 @RequestMapping("/api/user")
@@ -68,7 +67,7 @@ public class UserController {
 			user = userService.decrypt(encryptedUser);
 			user.setPassword("");
 			user.getDefaults().forEach((k, v) -> {
-				if (k != "defaultProject") {
+				if (!"defaultProject".equals(k)) {
 					user.getDefaults().put(k, "Value hidden");
 				} else {
 					user.getDefaults().put(k, v);
