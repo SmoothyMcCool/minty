@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -42,6 +43,8 @@ public class WorkflowRunner {
 	private final AsyncTaskExecutor taskExecutor;
 	private final Workflow workflow;
 	List<CompletableFuture<Void>> tasks;
+	private final List<Thread> runnerThreads;
+	private final List<TaskRunner> runners;
 	private boolean workflowComplete;
 	private UserId userId;
 	private WorkflowExecution executionState;
@@ -62,6 +65,8 @@ public class WorkflowRunner {
 		this.logLevel = logLevel;
 		logFolder = workflowLoggingFolder;
 		tasks = new ArrayList<>();
+		runnerThreads = new CopyOnWriteArrayList<>();
+		runners = new ArrayList<>();
 	}
 
 	public WorkflowExecution getExecutionState() {
@@ -137,6 +142,8 @@ public class WorkflowRunner {
 			for (TaskRequest request : workflow.getSteps()) {
 
 				TaskRunner runner = new TaskRunner(userId, taskRegistryService, request, taskExecutor, logger);
+				runners.add(runner);
+
 				executionState.addStep(request.getStepName());
 
 				// Fetch and store the state now, so we can get live updates as the workflow
@@ -189,23 +196,30 @@ public class WorkflowRunner {
 				runner.setOutputConnectors(outputs);
 
 				CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> {
+					runnerThreads.add(Thread.currentThread());
 					try {
 						runner.run();
-						executionState.getResult().getErrors().put(runner.getName(), runner.getErrors());
-						executionState.getResult().getResults().put(runner.getName(), runner.getResults());
-						if (runner.failed()) {
-							executionState.setFailed(true);
+						if (runner.isCancelled()) {
+							return null;
 						}
 
+						executionState.getResult().getErrors().put(runner.getName(), runner.getErrors());
+						executionState.getResult().getResults().put(runner.getName(), runner.getResults());
+
 						if (runner.failed()) {
+							executionState.setFailed(true);
 							throw new WorkflowRunnerException("Runner " + runner.getName() + " failed.");
 						}
 
+					} catch (CancellationException e) {
+						// cooperative cancellation, not a failure
 					} catch (InterruptedException e) {
 						Thread.currentThread().interrupt();
 						throw new CancellationException("Runner " + runner.getName() + " was interrupted");
 					} catch (Exception e) {
 						throw new WorkflowRunnerException("Runner " + runner.getName() + " failed.", e);
+					} finally {
+						runnerThreads.remove(Thread.currentThread());
 					}
 					return null;
 				}, Executor);
@@ -243,6 +257,9 @@ public class WorkflowRunner {
 	}
 
 	public void cancel() {
+		logger.warn("Workflow was cancelled.");
+		logger.close();
+		runners.forEach(TaskRunner::cancel);
 		tasks.forEach(future -> future.cancel(true));
 	}
 

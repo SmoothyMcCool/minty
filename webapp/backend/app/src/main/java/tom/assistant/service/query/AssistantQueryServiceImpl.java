@@ -9,9 +9,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -125,7 +125,8 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	}
 
 	@Override
-	public String ask(UserId userId, AssistantQuery query) throws QueueFullException, ConversationInUseException {
+	public CompletableFuture<String> ask(UserId userId, AssistantQuery query)
+			throws QueueFullException, ConversationInUseException {
 
 		LlmRequest request = new LlmRequest(userId, query, Instant.now());
 		StringResult sr = new StringResult();
@@ -140,22 +141,20 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 				.execute(status -> aiRequestMetricsService.registerRequest(userId, query.getConversationId()));
 
 		// Committed by here, safe to execute
-		CompletableFuture<Void> future = new CompletableFuture<>();
+		CompletableFuture<String> future = new CompletableFuture<>();
+
 		llmExecutor.execute(() -> {
-			askInternal(request, llmRequestId);
-			future.complete(null);
+			try {
+				String result = askInternal(request, llmRequestId);
+				future.complete(result);
+			} catch (CancellationException e) {
+				future.cancel(false);
+			} catch (Exception e) {
+				future.completeExceptionally(e);
+			}
 		}, query.getConversationId(), TaskPriority.Low);
 
-		try {
-			future.get();
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-			logger.warn("Interrupted", e);
-		} catch (ExecutionException e) {
-			logger.warn("LLM execution failed", e.getCause());
-		}
-
-		return sr.getValue();
+		return future;
 	}
 
 	@Override
@@ -173,6 +172,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		StringResult sr = (StringResult) getResult(request.getQuery().getConversationId());
 		sr.setState(LlmResultState.IN_PROGRESS);
 		StringBuilder result = new StringBuilder();
+		boolean cancelled = false;
 
 		try {
 			aiRequestMetricsService.markDequeued(llmRequestId);
@@ -180,12 +180,19 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			result.append(runSingleLlmCall(request.getUserId(), llmRequestId, request.getQuery()));
 			sr.setValue(result.toString());
 
+		} catch (CancellationException e) {
+			cancelled = true;
+			throw e; // let it propagate out to the llmExecutor task so we can cancel properly.
 		} catch (Exception e) {
 			logger.warn("askInternal failed", e);
 			sr.setValue("Failed to generate response." + StackTraceUtilities.StackTrace(e));
 		} finally {
-			sr.setState(LlmResultState.COMPLETE);
-			results.put(request.getQuery().getConversationId(), sr);
+			if (!cancelled) {
+				sr.setState(LlmResultState.COMPLETE);
+				results.put(request.getQuery().getConversationId(), sr);
+			} else {
+				results.remove(request.getQuery().getConversationId());
+			}
 		}
 
 		return result.toString();
@@ -195,15 +202,23 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	public boolean cancelRequest(UserId userId, ConversationId conversationId) {
 		List<RequestSummary> requests = aiRequestMetricsService.getActiveRequestsForUserAndConversation(userId,
 				conversationId);
+
+		if (requests.isEmpty()) {
+			return false;
+		}
+
 		// Like highlander, there really should only be one.
 		aiRequestMetricsService.markFailed(requests.get(0).llmRequestId(), "cancelled");
+
+		boolean cancelled = llmExecutor.cancel(conversationId);
+		results.remove(conversationId);
 
 		Sinks.One<Void> sink = activeLlmCalls.get(conversationId);
 		if (sink != null) {
 			sink.tryEmitEmpty();
 			return true;
 		}
-		return false;
+		return cancelled;
 	}
 
 	private String runSingleLlmCallStreaming(UserId userId, AssistantQuery query, LlmRequestId llmRequestId,
@@ -293,7 +308,10 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 				}
 
 				ToolExecutionContext.getAndClear(contextKey);
-				aiRequestMetricsService.markCompleted(llmRequestId);
+				if (!failed.get()) {
+					// If failed is true, we marked it as failed in onErrorResume, above.
+					aiRequestMetricsService.markCompleted(llmRequestId);
+				}
 			}).blockLast();
 
 		} catch (Exception e) {
@@ -340,11 +358,24 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			return "LLM returned empty response.";
 
 		} catch (Exception e) {
+			if (Thread.currentThread().isInterrupted() || hasCause(e, InterruptedException.class)) {
+				Thread.currentThread().interrupt();
+				throw new CancellationException("LLM call interrupted");
+			}
 			logger.warn("runSingleLlmCall failed", e);
 			return "Failed to generate response: " + e.getMessage();
 		} finally {
 			ToolExecutionContext.getAndClear(contextKey);
 		}
+	}
+
+	private boolean hasCause(Throwable t, Class<? extends Throwable> causeClass) {
+		while (t != null) {
+			if (causeClass.isInstance(t))
+				return true;
+			t = t.getCause();
+		}
+		return false;
 	}
 
 	@Override
@@ -502,7 +533,11 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		}
 
 		if (!assistant.prompt().isBlank()) {
-			spec = spec.system(systemPrompt.toString() + assistant.prompt());
+			systemPrompt.append(assistant.prompt());
+		}
+
+		if (!systemPrompt.isEmpty()) {
+			spec = spec.system(systemPrompt.toString());
 		}
 
 		if (assistant.hasMemory()) {

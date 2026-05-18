@@ -18,11 +18,14 @@ import { Model } from '../../model/model';
 import { User } from '../../model/user';
 import { AutoResizeDirective } from '../../pipe/auto-resize-directive';
 import { UserService } from '../../user.service';
+import { ProjectService } from '../../project/project.service';
+import { ProjectNode } from '../../model/project/project-node';
+import { NodeViewerComponent } from '../../project/component/project-node-viewer.component';
 
 
 @Component({
 	selector: 'minty-view-conversation',
-	imports: [CommonModule, FormsModule, ConversationComponent, ConfirmationDialogComponent, ImageInputComponent, SliderComponent, AutoResizeDirective],
+	imports: [CommonModule, FormsModule, ConversationComponent, ConfirmationDialogComponent, ImageInputComponent, SliderComponent, AutoResizeDirective, NodeViewerComponent],
 	templateUrl: 'view-conversation.component.html',
 	styleUrl: 'view-conversation.component.css'
 })
@@ -39,6 +42,11 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 	queueDepth: number | undefined = undefined;
 	image: File | undefined = undefined;
 	shouldReset: boolean = false;
+
+	files: string[] | null = [];
+	activeProject: string | undefined = undefined;
+	fileNode: ProjectNode | undefined = undefined;
+	showFilesColumn: boolean = true;
 
 	assistant: Assistant = createAssistant();
 	private conversationId: string = '';
@@ -59,7 +67,8 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 	constructor(private route: ActivatedRoute,
 		private userService: UserService,
 		private conversationService: ConversationService,
-		private assistantService: AssistantService) {
+		private assistantService: AssistantService,
+		private projectService: ProjectService) {
 	}
 
 	ngOnInit(): void {
@@ -67,6 +76,8 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 			this.user = user;
 			this.newestMessagesFirst = user.settings['Message Order'] ? user.settings['Message Order'] == 'NewestFirst' : false;
 			this.reverseButtons = user.settings['Button Alignment'] ? user.settings['Button Alignment'] == 'Right' : false;
+
+			this.activeProject = user.defaults['defaultProject'];
 
 			this.route.params.subscribe(params => {
 
@@ -84,6 +95,11 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 					if (this.assistant.hasMemory) {
 						this.conversationService.history(this.conversationId).subscribe((chatHistory: ChatMessage[]) => {
 							this.chatHistory = chatHistory;
+							chatHistory.forEach(message => {
+								if (!message.user) {
+									this.addFiles(this.assistantService.getFileListFromMessage(message.message));
+								}
+							})
 
 							// If the last message in the chathistory is from the user, a query is (almost certainly) in progress.
 							// Try to resume it.
@@ -207,8 +223,28 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 				if (response == '') {
 					this.chatHistory[0] = { user: false, message: '<em>No response from server. Your request likely failed.</em>' };
 				}
+				// Check to see if the response includes a list of files to display.
+				this.addFiles(this.assistantService.getFileListFromMessage(response));
+				if (this.files) {
+					console.log(JSON.stringify(this.files));
+				}
 			}
 		});
+	}
+
+	addFiles(files: string[] | null) {
+		if (!files) {
+			return;
+		}
+		this.files = [...new Set([...this.files!, ...files])];
+	}
+
+	onFileClick(file: string) {
+		if (this.activeProject && file) {
+			this.projectService.readNode(this.activeProject, file).subscribe(node => {
+				this.fileNode = node;
+			});
+		}
 	}
 
 	restart() {
@@ -225,6 +261,7 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 		this.conversationService.reset(this.conversationId).subscribe(() => {
 			this.chatHistory = [];
 			this.statusMessages = [];
+			this.files = [];
 		});
 	}
 

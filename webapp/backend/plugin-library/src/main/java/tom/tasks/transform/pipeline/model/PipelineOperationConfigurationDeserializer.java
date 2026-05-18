@@ -8,7 +8,6 @@ import tools.jackson.core.JsonParser;
 import tools.jackson.databind.DeserializationContext;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.deser.std.StdDeserializer;
-import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.JsonNodeType;
 
 public class PipelineOperationConfigurationDeserializer extends StdDeserializer<PipelineOperationConfiguration> {
@@ -22,16 +21,15 @@ public class PipelineOperationConfigurationDeserializer extends StdDeserializer<
 	public PipelineOperationConfiguration deserialize(JsonParser parser, DeserializationContext ctxt)
 			throws JacksonException {
 
-		JsonMapper mapper = (JsonMapper) parser.objectReadContext();
-		JsonNode node = mapper.readTree(parser);
+		JsonNode node = ctxt.readTree(parser);
 
 		if (node.getNodeType() == JsonNodeType.ARRAY) {
-			List<Object> list = mapper.convertValue(node, List.class);
+			List<Object> list = ctxt.readTreeAsValue(node, List.class);
 			return PipelineOperationConfiguration.ofList(list);
 		}
 
 		if (node.getNodeType() == JsonNodeType.OBJECT) {
-			Map<String, Object> map = mapper.convertValue(node, Map.class);
+			Map<String, Object> map = ctxt.readTreeAsValue(node, Map.class);
 			return PipelineOperationConfiguration.ofMap(map);
 		}
 

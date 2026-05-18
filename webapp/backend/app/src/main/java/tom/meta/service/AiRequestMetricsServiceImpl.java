@@ -159,19 +159,17 @@ public class AiRequestMetricsServiceImpl implements AiRequestMetricsService {
 
 	@Override
 	public List<RequestSummary> getRequestsForUser(UserId userId) {
-		return requestRepository.findByUserId(userId.value()).stream().map(AiRequest::toSummary).toList();
+		return requestRepository.findByUserId(userId).stream().map(AiRequest::toSummary).toList();
 	}
 
 	@Override
 	public List<RequestSummary> getRequestsForConversation(ConversationId conversationId) {
-		return requestRepository.findByConversationId(conversationId.value()).stream().map(AiRequest::toSummary)
-				.toList();
+		return requestRepository.findByConversationId(conversationId).stream().map(AiRequest::toSummary).toList();
 	}
 
 	@Override
 	public List<RequestSummary> getActiveRequestsForUserAndConversation(UserId userId, ConversationId conversationId) {
-		return requestRepository
-				.findByUserIdAndConversationIdAndCompletedAtIsNull(userId.value(), conversationId.value()).stream()
+		return requestRepository.findByUserIdAndConversationIdAndCompletedAtIsNull(userId, conversationId).stream()
 				.map(AiRequest::toSummary).toList();
 	}
 

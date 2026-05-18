@@ -34,7 +34,7 @@ output: Structured requirements document containing functional requirements, use
 responseType: RawText
 
 model: gpt-oss:20b
-contextSize: 32768
+contextSize: 131072
 temperature: 0.3
 topK: 5
 hasMemory: false

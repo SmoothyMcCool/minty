@@ -32,7 +32,7 @@
 								class="btn btn-sm"
 								style="font-size: 14px; color: red;"
 								(click)="deleteWorkflow(workflow)">
-								<i class="bi bi-trash3"></i>
+								<i class="bi bi-trash"></i>
 							</button>
 						</div>
 					</div>
@@ -52,7 +52,7 @@
 				</div>
 				<div class="col-auto align-self-center">
 					<button class="btn btn-danger" (click)="deleteAllVisibleResults($event)">
-						<i class="bi bi-trash3"></i> All
+						<i class="bi bi-trash"></i> All
 					</button>
 				</div>
 			</div>
@@ -97,7 +97,7 @@
 							type="button"
 							class="btn btn-sm pe-3"
 							style="font-size: 20px; color: saddlebrown;"
-							(click)="displayProgress(result)">
+							(click)="displayProgress(result.name)">
 							<i class="bi bi-pie-chart-fill"></i>
 						</button>
 						<span *ngIf="!result.id" class="badge text-bg-secondary mx-2">Result Not Ready</span>
@@ -106,7 +106,7 @@
 							class="btn btn-sm p-0"
 							style="font-size: 20px; color: red;"
 							(click)="result.id && deleteResult($event, result)">
-							<i class="bi bi-trash3"></i>
+							<i class="bi bi-trash"></i>
 						</button>
 					</div>
 				</li>
@@ -120,12 +120,6 @@
 				(click)="hideProgress()">
 				<i class="bi bi-box-arrow-left"></i>
 			</button>
-			<i style="font-size: 20px;
-				color: orange;
-				text-shadow: 1px 1px 0 black, -1px -1px 0 black, 1px -1px 0 black, -1px 1px 0 black;"
-				class="bi bi-exclamation-triangle-fill me-2">
-			</i>
-				These numbers don't auto-refresh!
 				<table class="table table-sm table-bordered table-hover mb-0 minty-table">
 					<thead>
 						<tr>

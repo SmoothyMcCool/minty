@@ -13,6 +13,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import tom.api.ConversationId;
+import tom.api.UserId;
 import tom.meta.model.AiRequest;
 import tom.meta.model.RequestStatusEntity;
 
@@ -31,13 +33,13 @@ public interface AiRequestRepository extends JpaRepository<AiRequest, UUID> {
 	// Lookup helpers
 	// ----------------------------------------------------------------
 
-	List<AiRequest> findByUserId(UUID userId);
+	List<AiRequest> findByUserId(UserId userId);
 
-	Page<AiRequest> findByUserId(UUID userId, Pageable pageable);
+	Page<AiRequest> findByUserId(UserId userId, Pageable pageable);
 
-	List<AiRequest> findByConversationId(UUID conversationId);
+	List<AiRequest> findByConversationId(ConversationId conversationId);
 
-	List<AiRequest> findByUserIdAndConversationIdAndCompletedAtIsNull(UUID userId, UUID conversationId);
+	List<AiRequest> findByUserIdAndConversationIdAndCompletedAtIsNull(UserId userId, ConversationId conversationId);
 
 	/** Finds all requests currently in the given status, oldest first. */
 	@Query("""

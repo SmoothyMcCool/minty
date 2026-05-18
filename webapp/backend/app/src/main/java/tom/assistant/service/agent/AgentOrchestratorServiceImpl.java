@@ -78,7 +78,7 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 		while (!planState.isDone() && !planState.isErrored() && !stopEarly) {
 
 			AgentStep currentStep = planState.currentStep().left();
-			emit(sr, "Running step: " + currentStep.getName());
+			statusMessage(sr, "Running step: " + currentStep.getName());
 
 			try {
 				StepResult result = runStep(userId, query, planState, sr);
@@ -88,7 +88,7 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 				}
 
 			} catch (Exception e) {
-				emit(sr, "Step failed: " + currentStep.getName());
+				statusMessage(sr, "Step failed: " + currentStep.getName());
 				sr.addChunk("\nError: " + e.getMessage() + "\n\n");
 				break;
 			}
@@ -143,10 +143,10 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 					}
 					int currentStep = planState.getCurrentStepIndex();
 
-					emit(sr, "Resuming plan at step " + (currentStep + 1) + " of " + steps.size() + "\n");
+					statusMessage(sr, "Resuming plan at step " + (currentStep + 1) + " of " + steps.size() + "\n");
 					for (int i = planState.getCurrentStepIndex(); i < steps.size(); i++) {
-						emit(sr, "" + (i + 1) + ". " + steps.get(i).getName() + "(" + steps.get(i).getWorker() + ") - "
-								+ steps.get(i).getVisibility().toString());
+						statusMessage(sr, "" + (i + 1) + ". " + steps.get(i).getName() + "(" + steps.get(i).getWorker()
+								+ ") - " + steps.get(i).getVisibility().toString());
 					}
 
 					// Add the user's response message into the plan step, since agents don't get
@@ -171,7 +171,10 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 	}
 
 	private PlanState createPlan(StreamResult sr, UserId userId, AssistantQuery query) {
-		emit(sr, "Planning steps...");
+		List<String> statusMessages = new ArrayList<>();
+
+		statusMessage(sr, "Planning steps...");
+		statusMessages.add("Planning steps...");
 
 		List<AgentStep> steps = null;
 
@@ -182,7 +185,8 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 		}
 
 		if (steps == null || steps.isEmpty()) {
-			emit(sr, "No plan generated. Falling back.");
+			statusMessage(sr, "No plan generated. Falling back.");
+			statusMessages.add("No plan generated. Falling back.");
 
 			steps = new ArrayList<>();
 
@@ -198,13 +202,18 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 			return new PlanState(steps);
 		}
 
-		emit(sr, "Running plan (" + steps.size() + " steps):\n");
+		statusMessage(sr, "Running plan (" + steps.size() + " steps):\n");
+		statusMessages.add("Running plan (" + steps.size() + " steps):\n");
 		for (int i = 0; i < steps.size(); i++) {
-			emit(sr, "" + (i + 1) + ". " + steps.get(i).getName() + "(" + steps.get(i).getWorker() + ") - "
-					+ steps.get(i).getVisibility().toString());
+			String message = "" + (i + 1) + ". " + steps.get(i).getName() + "(" + steps.get(i).getWorker() + ") - "
+					+ steps.get(i).getVisibility().toString();
+			statusMessage(sr, message);
+			statusMessages.add(message);
 		}
 
-		return new PlanState(steps);
+		PlanState plan = new PlanState(steps);
+		plan.setStatusMessages(statusMessages);
+		return plan;
 
 	}
 
@@ -281,11 +290,15 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 		response.setStatus(LlmStatus.SUCCESS);
 		response.setMessage("Replanned");
 
-		emit(sr, "Replanned. New steps:");
+		statusMessage(sr, "Replanned. New steps:");
+		state.addStatusMessage("Replanned. New steps:");
+
 		for (int i = 0; i < state.getSteps().size(); i++) {
-			emit(sr, "" + (i + 1) + ". " + state.getSteps().get(i).left().getName() + "("
+			String message = "" + (i + 1) + ". " + state.getSteps().get(i).left().getName() + "("
 					+ state.getSteps().get(i).left().getWorker() + ") - "
-					+ state.getSteps().get(i).left().getVisibility().toString());
+					+ state.getSteps().get(i).left().getVisibility().toString();
+			statusMessage(sr, message);
+			state.addStatusMessage(message);
 		}
 
 		return StepResult.success(response);
@@ -358,7 +371,7 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 		return false;
 	}
 
-	private void emit(StreamResult sr, String msg) {
+	private void statusMessage(StreamResult sr, String msg) {
 		sr.addChunk("[STATUS] " + msg);
 	}
 }

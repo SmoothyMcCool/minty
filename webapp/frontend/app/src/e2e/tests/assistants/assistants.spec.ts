@@ -129,7 +129,7 @@ test.describe('Assistants flow', () => {
 	test('can delete a chat', async ({ page }) => {
 		await page.goto('http://localhost:4200/assistants');
 		await expect(page).toHaveURL(/assistants/);
-		const deleteButton = page.locator('h4:has-text("Active Conversations") ~ ul > li > div > button > i.bi-trash3');
+		const deleteButton = page.locator('h4:has-text("Active Conversations") ~ ul > li > div > button > i.bi-trash');
 		await deleteButton.click();
 		await confirmDialog(page, 'Delete Conversation');
 
@@ -140,7 +140,7 @@ test.describe('Assistants flow', () => {
 	test('delete assistant', async({ page }) => {
 		await page.goto('http://localhost:4200/assistants');
 		await expect(page).toHaveURL(/assistants/);
-		const deleteButton = page.locator('h4:has-text("Assistants") + ul > li > div > button > i.bi-trash3');
+		const deleteButton = page.locator('h4:has-text("Assistants") + ul > li > div > button > i.bi-trash');
 		await deleteButton.click();
 		await confirmDialog(page, 'Delete Assistant');
 

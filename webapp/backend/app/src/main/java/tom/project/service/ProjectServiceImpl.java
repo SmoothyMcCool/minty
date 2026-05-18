@@ -388,8 +388,16 @@ public class ProjectServiceImpl implements ProjectService {
 	}
 
 	private ProjectNodeEntity getRequiredNode(UserId userId, ProjectId projectId, String path) {
+		// Make sure the path starts with "/" since some paths come from the LLM that
+		// doesn't know the rules.
+		if (!path.startsWith("/")) {
+			path = "/" + path;
+		}
+
+		final String finalStringForLambda = path;
+
 		return nodeRepository.findByProjectIdAndPathAndOwnerId(projectId.getValue(), path, userId)
-				.orElseThrow(() -> new IllegalStateException("Path not found: " + path));
+				.orElseThrow(() -> new IllegalStateException("Path not found: " + finalStringForLambda));
 	}
 
 	private ProjectNodeEntity getParentNode(UserId userId, ProjectId projectId, String path) {

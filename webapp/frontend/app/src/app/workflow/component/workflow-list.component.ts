@@ -63,6 +63,8 @@ export class WorkflowListComponent implements AfterViewChecked, OnInit, OnDestro
 	workflowToShare: Workflow | undefined = undefined;
 	sharingSelection: UserSelection | undefined = undefined;
 
+	private workflowStateTimeoutId: NodeJS.Timeout | undefined = undefined;
+
 	constructor(private router: Router,
 		private alertService: AlertService,
 		private workflowService: WorkflowService,
@@ -111,6 +113,7 @@ export class WorkflowListComponent implements AfterViewChecked, OnInit, OnDestro
 			this.subscription.unsubscribe();
 			this.subscription = undefined;
 		}
+		clearTimeout(this.workflowStateTimeoutId);
 	}
 
 	displayResultsFor(result: WorkflowState) {
@@ -147,8 +150,15 @@ export class WorkflowListComponent implements AfterViewChecked, OnInit, OnDestro
 		}
 	}
 
-	displayProgress(result: WorkflowState) {
-		this.workflowStatus = result.state;
+	displayProgress(workflowName: string) {
+		if (this.workflowStateTimeoutId) {
+			clearTimeout(this.workflowStateTimeoutId);
+		}
+		this.workflowStateTimeoutId = setTimeout(() => this.displayProgress(workflowName), 2500);
+		const result = this.results.find(result => result.name.localeCompare(workflowName) === 0);
+		if (result) {
+			this.workflowStatus = result.state;
+		}
 	}
 
 	cancelWorkflow(workflow: Workflow) {
@@ -170,6 +180,9 @@ export class WorkflowListComponent implements AfterViewChecked, OnInit, OnDestro
 	}
 
 	hideProgress() {
+		if (this.workflowStateTimeoutId) {
+			clearTimeout(this.workflowStateTimeoutId);
+		}
 		this.workflowStatus = undefined;
 	}
 

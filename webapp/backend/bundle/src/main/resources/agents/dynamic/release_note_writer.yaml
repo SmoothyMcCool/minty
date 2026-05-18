@@ -33,7 +33,7 @@ output: Release notes or changelog entry in the appropriate format for the speci
 responseType: RawText
 
 model: gpt-oss:20b
-contextSize: 32768
+contextSize: 131072
 temperature: 0.4
 topK: 5
 hasMemory: false

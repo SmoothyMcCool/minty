@@ -65,7 +65,7 @@ public class DocumentController {
 
 	@PostMapping(value = { "/upload" }, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<ResponseWrapper<String>> uploadDocument(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("documentId") String documentId, @RequestPart("file") MultipartFile mpf) {
+			@RequestParam String documentId, @RequestPart("file") MultipartFile mpf) {
 
 		File file = new File(docFileStore + "/" + documentId);
 		try {
@@ -96,7 +96,7 @@ public class DocumentController {
 
 	@DeleteMapping({ "/delete" })
 	public ResponseEntity<ResponseWrapper<Boolean>> deleteDocument(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("documentId") DocumentId documentId) {
+			@RequestParam DocumentId documentId) {
 
 		if (!documentService.deleteDocument(user.getId(), documentId)) {
 			return new ResponseEntity<>(

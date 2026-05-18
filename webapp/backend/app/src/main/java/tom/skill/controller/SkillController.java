@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
@@ -41,7 +40,7 @@ public class SkillController {
 		this.skillService = skillsService;
 	}
 
-	@RequestMapping(value = { "/list" }, method = RequestMethod.GET)
+	@GetMapping({ "/list" })
 	public ResponseEntity<ResponseWrapper<List<SkillMetadata>>> listSkills(
 			@AuthenticationPrincipal UserDetailsUser user) {
 
@@ -56,9 +55,9 @@ public class SkillController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = { "" }, method = RequestMethod.GET)
+	@GetMapping({ "" })
 	public ResponseEntity<ResponseWrapper<Skill>> getSkill(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("name") String name) {
+			@RequestParam String name) {
 
 		Skill skill = skillService.getSkill(user.getId(), name);
 
@@ -92,7 +91,7 @@ public class SkillController {
 
 	@DeleteMapping(value = { "/delete" })
 	public ResponseEntity<ResponseWrapper<String>> removeSkill(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("name") String name) {
+			@RequestParam String name) {
 
 		try {
 			skillService.removeSkill(user.getId(), name);
@@ -127,7 +126,7 @@ public class SkillController {
 
 	@GetMapping(value = { "/getsharing" })
 	public ResponseEntity<ResponseWrapper<UserSelection>> getSharing(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("name") String name) {
+			@RequestParam String name) {
 		try {
 			UserSelection selection = skillService.getSharingFor(user.getId(), name);
 			ResponseWrapper<UserSelection> response = ResponseWrapper.SuccessResponse(selection);

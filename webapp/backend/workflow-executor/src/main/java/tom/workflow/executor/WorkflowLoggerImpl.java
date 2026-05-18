@@ -22,12 +22,14 @@ public class WorkflowLoggerImpl implements AutoCloseable, TaskLogger {
 	private final Path filePath;
 	private final String fileName;
 	private TaskLogger.LogLevel logLevel;
+	private volatile boolean closed;
 
 	public WorkflowLoggerImpl(Path path, String unsanitizedFilename) {
 		PatternLayout layout = PatternLayout.newBuilder().withPattern("[%d{HH:mm:ss}] %-5p - %m%n")
 				.withConfiguration(cfg).build();
 
 		logLevel = LogLevel.DEBUG;
+		closed = false;
 
 		fileName = sanitize(unsanitizedFilename);
 		filePath = path.resolve(fileName);
@@ -52,15 +54,25 @@ public class WorkflowLoggerImpl implements AutoCloseable, TaskLogger {
 	}
 
 	private void log(Level level, String message) {
-		LogEvent event = Log4jLogEvent.newBuilder().setLoggerName("dynamic").setLevel(level)
-				.setMessage(new SimpleMessage(message)).build();
-		appender.append(event);
+		if (!closed) {
+			LogEvent event = Log4jLogEvent.newBuilder().setLoggerName("dynamic").setLevel(level)
+					.setMessage(new SimpleMessage(message)).build();
+			appender.append(event);
+		}
 	}
 
 	private void log(Level level, String message, Throwable e) {
-		LogEvent event = Log4jLogEvent.newBuilder().setLoggerName("dynamic").setLevel(level)
-				.setMessage(new SimpleMessage(message)).setThrown(e).build();
-		appender.append(event);
+		if (!closed) {
+			LogEvent event = Log4jLogEvent.newBuilder().setLoggerName("dynamic").setLevel(level)
+					.setMessage(new SimpleMessage(message)).setThrown(e).build();
+			appender.append(event);
+		}
+	}
+
+	@Override
+	public void close() {
+		closed = true;
+		appender.stop();
 	}
 
 	@Override
@@ -96,11 +108,6 @@ public class WorkflowLoggerImpl implements AutoCloseable, TaskLogger {
 		if (logLevel.getLevel() <= LogLevel.WARN.getLevel()) {
 			log(Level.WARN, message);
 		}
-	}
-
-	@Override
-	public void close() {
-		appender.stop();
 	}
 
 	@Override

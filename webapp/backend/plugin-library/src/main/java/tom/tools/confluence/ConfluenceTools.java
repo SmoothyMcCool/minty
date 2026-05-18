@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -59,6 +60,11 @@ public class ConfluenceTools implements MintyTool, ServiceConsumer, Configuratio
 			Use only when you have a valid page ID.
 			Never call with a guessed ID.
 			Summarize large pages unless full text is requested.
+
+			confluence_get_pages
+			Use when you have multiple known page IDs and need to fetch them all at once.
+			Prefer this over calling confluence_get_page repeatedly.
+			Never call with guessed IDs.
 
 			confluence_get_children
 			Use when the user asks for subpages, children, or hierarchy.
@@ -177,6 +183,25 @@ public class ConfluenceTools implements MintyTool, ServiceConsumer, Configuratio
 			return MintyToolResponse.SuccessResponse(confluenceClient.getPage(pageId));
 		} catch (Exception e) {
 			return MintyToolResponse.FailureResponse("Confluence get page failed.");
+		}
+	}
+
+	@Tool(name = "confluence_get_pages", description = "Fetch multiple Confluence pages by id in a single call. Use this instead of confluence_get_page when you need to retrieve several known pages at once.")
+	public MintyToolResponse<List<PageResponse>> getPages(
+			@ToolParam(description = "The IDs of the pages to fetch") List<String> pageIds) {
+		logger.info("confluence_get_pages: {}", pageIds);
+		try {
+			List<PageResponse> pages = pageIds.stream().map(id -> {
+				try {
+					return confluenceClient.getPage(id);
+				} catch (Exception e) {
+					logger.warn("confluence_get_pages: failed to fetch page {}", id);
+					return null;
+				}
+			}).filter(Objects::nonNull).toList();
+			return MintyToolResponse.SuccessResponse(pages);
+		} catch (Exception e) {
+			return MintyToolResponse.FailureResponse("Confluence get pages failed.");
 		}
 	}
 

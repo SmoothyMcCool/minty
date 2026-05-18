@@ -40,7 +40,7 @@ public class ConversationController {
 
 	@GetMapping({ "" })
 	public ResponseEntity<ResponseWrapper<Conversation>> getConversation(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("conversationId") ConversationId conversationId) {
+			@RequestParam ConversationId conversationId) {
 
 		Conversation conversation = conversationService.getConversation(user.getId(), conversationId);
 		if (conversation == null) {
@@ -55,7 +55,7 @@ public class ConversationController {
 
 	@GetMapping({ "new" })
 	public ResponseEntity<ResponseWrapper<Conversation>> startNewConversation(
-			@AuthenticationPrincipal UserDetailsUser user, @RequestParam("assistantId") AssistantId assistantId) {
+			@AuthenticationPrincipal UserDetailsUser user, @RequestParam AssistantId assistantId) {
 		ResponseWrapper<Conversation> response = ResponseWrapper
 				.SuccessResponse(conversationService.newConversation(user.getId(), assistantId));
 		metadataService.newConversation(user.getId());
@@ -74,8 +74,7 @@ public class ConversationController {
 
 	@GetMapping({ "/history" })
 	public ResponseEntity<ResponseWrapper<List<ChatMessage>>> getChatHistory(
-			@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("conversationId") ConversationId conversationId) {
+			@AuthenticationPrincipal UserDetailsUser user, @RequestParam ConversationId conversationId) {
 
 		List<ChatMessage> messages = conversationService.getChatMessages(user.getId(), conversationId);
 		LlmResult result = assistantQueryService.peekLlmResult(conversationId);
@@ -90,7 +89,7 @@ public class ConversationController {
 
 	@DeleteMapping({ "/delete" })
 	public ResponseEntity<ResponseWrapper<String>> deleteConversation(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("conversationId") ConversationId conversationId) {
+			@RequestParam ConversationId conversationId) {
 
 		if (!conversationService.deleteConversation(user.getId(), conversationId)) {
 			ResponseWrapper<String> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
@@ -104,7 +103,7 @@ public class ConversationController {
 
 	@DeleteMapping({ "/reset" })
 	public ResponseEntity<ResponseWrapper<String>> resetConversation(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("conversationId") ConversationId conversationId) {
+			@RequestParam ConversationId conversationId) {
 
 		if (!conversationService.resetConversation(user.getId(), conversationId)) {
 			ResponseWrapper<String> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
@@ -118,8 +117,8 @@ public class ConversationController {
 
 	@GetMapping({ "/rename" })
 	public ResponseEntity<ResponseWrapper<Conversation>> renameConversation(
-			@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam("conversationId") ConversationId conversationId, @RequestParam("title") String title) {
+			@AuthenticationPrincipal UserDetailsUser user, @RequestParam ConversationId conversationId,
+			@RequestParam String title) {
 
 		Conversation conversation = conversationService.renameConversation(user.getId(), conversationId, title);
 		if (conversation == null) {
