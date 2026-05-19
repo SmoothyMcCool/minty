@@ -1,5 +1,5 @@
 import { CdkDragDrop, moveItemInArray } from "@angular/cdk/drag-drop";
-import { CommonModule } from "@angular/common";
+
 import { Component, forwardRef } from "@angular/core";
 import { FormsModule, NG_VALUE_ACCESSOR, ControlValueAccessor } from "@angular/forms";
 import { PipelineDefinition, PipelineOperation } from "../../../model/workflow/pipeline-transform";
@@ -7,7 +7,7 @@ import { PipelineDefinition, PipelineOperation } from "../../../model/workflow/p
 @Component({
 	selector: 'minty-pipeline-transform-editor',
 	templateUrl: 'pipeline-transform-editor.component.html',
-	imports: [CommonModule, FormsModule],
+	imports: [FormsModule],
 	providers: [
 		{
 			provide: NG_VALUE_ACCESSOR,

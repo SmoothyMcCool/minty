@@ -7,20 +7,22 @@
 	</text>
 
 	<g>
-		<rect *ngFor="let port of inputPorts; let i = index" [attr.x]="port.x" [attr.y]="port.y" [attr.width]="port.size"
-			[attr.height]="port.size" class="port"
-			(mousedown)="onPortMouseDown(i, true, $event); $event.stopPropagation()"
-			(mouseup)="onPortMouseUp(i, true, $event); $event.stopPropagation()"
-			(mouseenter)="hoverPort.emit({ portIndex: i, isInput: true, entering: true })"
-			(mouseleave)="hoverPort.emit({ portIndex: i, isInput: true, entering: false })"/>
+		@for (port of inputPorts; track port; let i = $index) {
+			<rect [attr.x]="port.x" [attr.y]="port.y" [attr.width]="port.size" [attr.height]="port.size" class="port"
+				(mousedown)="onPortMouseDown(i, true, $event); $event.stopPropagation()"
+				(mouseup)="onPortMouseUp(i, true, $event); $event.stopPropagation()"
+				(mouseenter)="hoverPort.emit({ portIndex: i, isInput: true, entering: true })"
+				(mouseleave)="hoverPort.emit({ portIndex: i, isInput: true, entering: false })" />
+		}
 	</g>
 
 	<g>
-		<rect *ngFor="let port of outputPorts; let i = index" [attr.x]="port.x" [attr.y]="port.y" [attr.width]="port.size"
-			[attr.height]="port.size" class="port"
-			(mousedown)="onPortMouseDown(i, false, $event); $event.stopPropagation()"
-			(mouseup)="onPortMouseUp(i, false, $event); $event.stopPropagation()"
-			(mouseenter)="hoverPort.emit({ portIndex: i, isInput: false, entering: true })"
-			(mouseleave)="hoverPort.emit({ portIndex: i, isInput: false, entering: false })"/>
+		@for (port of outputPorts; track port; let i = $index) {
+			<rect [attr.x]="port.x" [attr.y]="port.y" [attr.width]="port.size" [attr.height]="port.size" class="port"
+				(mousedown)="onPortMouseDown(i, false, $event); $event.stopPropagation()"
+				(mouseup)="onPortMouseUp(i, false, $event); $event.stopPropagation()"
+				(mouseenter)="hoverPort.emit({ portIndex: i, isInput: false, entering: true })"
+				(mouseleave)="hoverPort.emit({ portIndex: i, isInput: false, entering: false })" />
+		}
 	</g>
 </svg>

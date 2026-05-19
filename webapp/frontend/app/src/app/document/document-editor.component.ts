@@ -1,6 +1,6 @@
 import { Component, forwardRef } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+
 
 export interface DocProperties {
 	title: string,
@@ -9,7 +9,7 @@ export interface DocProperties {
 
 @Component({
 	selector: 'minty-document-editor',
-	imports: [CommonModule, FormsModule],
+	imports: [FormsModule],
 	templateUrl: 'document-editor.component.html',
 	providers: [
 		{

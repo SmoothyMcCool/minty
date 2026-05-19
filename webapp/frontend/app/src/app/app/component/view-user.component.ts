@@ -1,13 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+
 import { AlertService } from '../../alert.service';
 import { User } from '../../model/user';
 import { UserService } from '../../user.service';
 
 @Component({
 	selector: 'minty-user',
-	imports: [CommonModule, FormsModule],
+	imports: [FormsModule],
 	templateUrl: 'view-user.component.html'
 })
 export class ViewUserComponent implements OnInit {

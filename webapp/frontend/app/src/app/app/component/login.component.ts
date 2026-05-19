@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+
 import { UserService } from '../../user.service';
 import { environment } from '../../../environments/environment';
 
 @Component({
 	selector: 'minty-login',
-	imports: [CommonModule, FormsModule],
+	imports: [FormsModule],
 	templateUrl: 'login.component.html',
 	styleUrls: ['./login.component.css']
 })

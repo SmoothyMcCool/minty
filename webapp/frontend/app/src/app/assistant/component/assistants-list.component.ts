@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+
 import { Assistant, createAssistant } from '../../model/assistant';
 import { AssistantService } from '../../assistant.service';
 import { Router, RouterModule } from '@angular/router';
@@ -16,7 +16,7 @@ import { UserService } from '../../user.service';
 
 @Component({
 	selector: 'minty-assistants-list',
-	imports: [CommonModule, FormsModule, RouterModule, FilterPipe, ConfirmationDialogComponent, PredicatePipe, UserSelectDialogComponent],
+	imports: [FormsModule, RouterModule, FilterPipe, ConfirmationDialogComponent, PredicatePipe, UserSelectDialogComponent],
 	templateUrl: 'assistants-list.component.html'
 })
 export class AssistantsListComponent implements OnInit {

@@ -1,44 +1,41 @@
 <div class="container">
 	<h2>Runnable Workflows</h2>
 	<div class="row" style="column-count: 3; display: block;">
-		<div class="col-12" *ngFor="let workflow of workflows" style="break-inside: avoid;">
-			<div class="card">
-				<div class="card-body p-2">
-					<div class="row align-items-center flex-nowrap">
-						<span class="col me-auto clickable-text" (click)="editWorkflow(workflow)">
-							{{workflow.name}}
-						</span>
-						<div class="col-auto flex-shrink-0">
-							<button
-								class="btn btn-sm"
-								style="font-size: 14px;"
-								(click)="downloadWorkflow(workflow)">
-								<i class="bi bi-download"></i>
-							</button>
-							<button
-								class="btn btn-sm"
-								style="font-size: 14px;"
-								(click)="duplicateWorkflow(workflow)">
-								<i class="bi bi-copy"></i>
-							</button>
-							<button *ngIf="isOwned(workflow)"
-								class="btn btn-sm"
-								style="font-size: 14px;"
-								(click)="shareWorkflow(workflow)">
-								<i class="bi bi-share"></i>
-							</button>
-							<button *ngIf="isOwned(workflow)"
-								type="button"
-								class="btn btn-sm"
-								style="font-size: 14px; color: red;"
-								(click)="deleteWorkflow(workflow)">
-								<i class="bi bi-trash"></i>
-							</button>
+		@for (workflow of workflows; track workflow) {
+			<div class="col-12" style="break-inside: avoid;">
+				<div class="card">
+					<div class="card-body p-2">
+						<div class="row align-items-center flex-nowrap">
+							<span class="col me-auto clickable-text" (click)="editWorkflow(workflow)">
+								{{workflow.name}}
+							</span>
+							<div class="col-auto flex-shrink-0">
+								<button class="btn btn-sm" style="font-size: 14px;"
+									(click)="downloadWorkflow(workflow)">
+									<i class="bi bi-download"></i>
+								</button>
+								<button class="btn btn-sm" style="font-size: 14px;"
+									(click)="duplicateWorkflow(workflow)">
+									<i class="bi bi-copy"></i>
+								</button>
+								@if (isOwned(workflow)) {
+									<button class="btn btn-sm" style="font-size: 14px;"
+										(click)="shareWorkflow(workflow)">
+										<i class="bi bi-share"></i>
+									</button>
+								}
+								@if (isOwned(workflow)) {
+									<button type="button" class="btn btn-sm" style="font-size: 14px; color: red;"
+										(click)="deleteWorkflow(workflow)">
+										<i class="bi bi-trash"></i>
+									</button>
+								}
+							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-		</div>
+		}
 	</div>
 
 	<div class="row well p-2 mx-1 my-2" style="overflow: hidden;">
@@ -57,69 +54,60 @@
 				</div>
 			</div>
 			<ul class="list-group">
-				<li class="list-group-item list-group-item-action position-relative text-bg-light bg-opacity-75" *ngFor="let result of displayResults">
-					<div class="d-flex align-items-center h-100">
-						<!-- If the ID is null, the task is still in progress -->
-						<span
-							class="text-truncate clickable-text pe-3"
-							(click)="result.id && displayResultsFor(result)">
-							{{result.name}}
-						</span>
-						<span *ngIf="result.id && result.failed" data-bs-toggle="tooltip" data-placement="top" data-bs-title="Workflow failed">
-							<i class="bi bi-exclamation-diamond" style="font-size: 20px; color: red;"></i>
-						</span>
-						<button
-							type="button"
-							*ngIf="result.id"
-							class="btn btn-sm ms-1 pe-3"
-							style="font-size: 20px"
-							(click)="downloadResultsFor(result)">
-							<i class="bi bi-download"></i>
-						</button>
-						<button
-							type="button"
-							*ngIf="result.id"
-							class="btn btn-sm ms-1 pe-3"
-							style="font-size: 20px"
-							(click)="downloadLogsFor(result)">
-							<i class="bi bi-file-earmark-text"></i>
-						</button>
-						<span class="flex-grow-1"></span>
-						<button
-							type="button"
-							*ngIf="!result.id"
-							class="btn btn-sm ms-1 pe-3"
-							style="font-size: 20px; color: red;"
-							(click)="cancelWorkflow(result)">
-							<i class="bi bi-sign-stop-fill"></i>
-						</button>
-						<button
-							type="button"
-							class="btn btn-sm pe-3"
-							style="font-size: 20px; color: saddlebrown;"
-							(click)="displayProgress(result.name)">
-							<i class="bi bi-pie-chart-fill"></i>
-						</button>
-						<span *ngIf="!result.id" class="badge text-bg-secondary mx-2">Result Not Ready</span>
-						<button
-							type="button"
-							class="btn btn-sm p-0"
-							style="font-size: 20px; color: red;"
-							(click)="result.id && deleteResult($event, result)">
-							<i class="bi bi-trash"></i>
-						</button>
-					</div>
-				</li>
+				@for (result of displayResults; track result.name) {
+					<li class="list-group-item list-group-item-action position-relative text-bg-light bg-opacity-75">
+						<div class="d-flex align-items-center h-100">
+							<!-- If the ID is null, the task is still in progress -->
+							<span class="text-truncate clickable-text pe-3"
+								(click)="result.id && displayResultsFor(result)">
+								{{result.name}}
+							</span>
+							@if (result.id && result.failed) {
+								<span data-bs-toggle="tooltip" data-placement="top" data-bs-title="Workflow failed">
+									<i class="bi bi-exclamation-diamond" style="font-size: 20px; color: red;"></i>
+								</span>
+							}
+							@if (result.id) {
+								<button type="button" class="btn btn-sm ms-1 pe-3" style="font-size: 20px"
+									(click)="downloadResultsFor(result)">
+									<i class="bi bi-download"></i>
+								</button>
+							}
+							@if (result.id) {
+								<button type="button" class="btn btn-sm ms-1 pe-3" style="font-size: 20px"
+									(click)="downloadLogsFor(result)">
+									<i class="bi bi-file-earmark-text"></i>
+								</button>
+							}
+							<span class="flex-grow-1"></span>
+							@if (!result.id) {
+								<button type="button" class="btn btn-sm ms-1 pe-3" style="font-size: 20px; color: red;"
+									(click)="cancelWorkflow(result)">
+									<i class="bi bi-sign-stop-fill"></i>
+								</button>
+							}
+							<button type="button" class="btn btn-sm pe-3" style="font-size: 20px; color: saddlebrown;"
+								(click)="displayProgress(result.name)">
+								<i class="bi bi-pie-chart-fill"></i>
+							</button>
+							@if (!result.id) {
+								<span class="badge text-bg-secondary mx-2">Result Not Ready</span>
+							}
+							<button type="button" class="btn btn-sm p-0" style="font-size: 20px; color: red;"
+								(click)="result.id && deleteResult($event, result)">
+								<i class="bi bi-trash"></i>
+							</button>
+						</div>
+					</li>
+				}
 			</ul>
 		</div>
-		<div class="col" *ngIf="workflowStatus" @slideInOut>
-			<button
-				type="button"
-				class="btn btn-sm pe-3"
-				style="font-size: 20px; color: saddlebrown;"
-				(click)="hideProgress()">
-				<i class="bi bi-box-arrow-left"></i>
-			</button>
+		@if (workflowStatus) {
+			<div class="col" @slideInOut>
+				<button type="button" class="btn btn-sm pe-3" style="font-size: 20px; color: saddlebrown;"
+					(click)="hideProgress()">
+					<i class="bi bi-box-arrow-left"></i>
+				</button>
 				<table class="table table-sm table-bordered table-hover mb-0 minty-table">
 					<thead>
 						<tr>
@@ -130,26 +118,30 @@
 						</tr>
 					</thead>
 					<tbody>
-						<tr *ngFor="let stepState of workflowStatus.stepStates | keyvalue">
-							<td class="fw-semibold">{{stepState.key}}</td>
-							<ng-container *ngIf="stepState.totalTasks != 0; else notStarted">
-								<td class="text-center">{{stepState.value.numTasks}}</td>
-								<td class="text-center">
-									<span class="badge minty-badge-success">{{stepState.value.completedTasks}}</span>
-								</td>
-								<td class="text-center">
-									<span class="badge" [ngClass]="stepState.value.failedTasks > 0 ? 'bg-danger' : 'bg-secondary'">
-										{{stepState.value.failedTasks}}
-									</span>
-								</td>
-							</ng-container>
-							<ng-template #notStarted>
-								<td colspan="3" class="text-muted fst-italic text-center">Not started</td>
-							</ng-template>
-						</tr>
+						@for (stepState of workflowStatus.stepStates | keyvalue; track $index) {
+							<tr>
+								<td class="fw-semibold">{{stepState.key}}</td>
+								@if (stepState.totalTasks != 0) {
+									<td class="text-center">{{stepState.value.numTasks}}</td>
+									<td class="text-center">
+										<span
+											class="badge minty-badge-success">{{stepState.value.completedTasks}}</span>
+									</td>
+									<td class="text-center">
+										<span class="badge"
+											[ngClass]="stepState.value.failedTasks > 0 ? 'bg-danger' : 'bg-secondary'">
+											{{stepState.value.failedTasks}}
+										</span>
+									</td>
+								} @else {
+									<td colspan="3" class="text-muted fst-italic text-center">Not started</td>
+								}
+							</tr>
+						}
 					</tbody>
 				</table>
-		</div>
+			</div>
+		}
 	</div>
 </div>
 <minty-confirmation-dialog [title]="'Delete Workflow'" [message]="'Are you sure you want to delete this Workflow?'"
@@ -158,14 +150,17 @@
 <minty-confirmation-dialog [title]="'Delete Result'" [message]="'Are you sure you want to delete this result?'"
 	[visible]="confirmResultDeleteVisible" (confirm)="confirmDeleteResult()"
 	(cancel)="confirmResultDeleteVisible = false"></minty-confirmation-dialog>
-<minty-confirmation-dialog [title]="'Duplicate Workflow'" [message]="'Are you sure you want to duplicate this workflow?'"
-	[visible]="confirmResultDuplicateWorkflowVisible" (confirm)="confirmDuplicateWorkflow()"
+<minty-confirmation-dialog [title]="'Duplicate Workflow'"
+	[message]="'Are you sure you want to duplicate this workflow?'" [visible]="confirmResultDuplicateWorkflowVisible"
+	(confirm)="confirmDuplicateWorkflow()"
 	(cancel)="confirmResultDuplicateWorkflowVisible = false"></minty-confirmation-dialog>
-<minty-confirmation-dialog [title]="'Delete All Results'" [message]="'This will delete all currently displayed results. Are you sure?'"
+<minty-confirmation-dialog [title]="'Delete All Results'"
+	[message]="'This will delete all currently displayed results. Are you sure?'"
 	[visible]="confirmDeleteAllResultsVisible" (confirm)="confirmDeleteAllVisibleResults()"
 	(cancel)="confirmDeleteAllResultsVisible = false"></minty-confirmation-dialog>
-<minty-confirmation-dialog [title]="'Cancel Workflow'" [message]="'This will cancel and delete the workflow. Are you sure?'"
-	[visible]="confirmCancelWorkflowVisible" (confirm)="confirmCancelWorkflow()"
-	(cancel)="confirmCancelWorkflowVisible = false"></minty-confirmation-dialog>
-<minty-user-select-dialog [visible]="userSelectDialogVisible" (confirm)="onUsersConfirmed($event)" [initialSelection]="sharingSelection" (cancel)="userSelectDialogVisible = false">
+<minty-confirmation-dialog [title]="'Cancel Workflow'"
+	[message]="'This will cancel and delete the workflow. Are you sure?'" [visible]="confirmCancelWorkflowVisible"
+	(confirm)="confirmCancelWorkflow()" (cancel)="confirmCancelWorkflowVisible = false"></minty-confirmation-dialog>
+<minty-user-select-dialog [visible]="userSelectDialogVisible" (confirm)="onUsersConfirmed($event)"
+	[initialSelection]="sharingSelection" (cancel)="userSelectDialogVisible = false">
 </minty-user-select-dialog>

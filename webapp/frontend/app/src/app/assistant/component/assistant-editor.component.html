@@ -1,4 +1,4 @@
-<ng-container *ngIf="assistant">
+@if (assistant) {
 	<div class="form-group mb-2">
 		<label for="assistantName">Name</label>
 		<input type="text" class="form-control bg-opacity-75" id="assistantName" name="assistantName"
@@ -13,13 +13,19 @@
 	</div>
 	<div class="form-group mb-2">
 		<label for="model">Model</label>
-		<select class="form-select bg-opacity-75" name="model" [ngModel]="assistant.model" (ngModelChange)="modelChanged($event)">
-			<option *ngFor="let model of models" value="{{model.name}}">{{model.name}}</option>
+		<select class="form-select bg-opacity-75" name="model" [ngModel]="assistant.model"
+			(ngModelChange)="modelChanged($event)">
+			@for (model of models; track model) {
+				<option value="{{model.name}}">{{model.name}}</option>
+			}
 		</select>
 	</div>
-	<div class="form-group mb-2" *ngIf="assistant.model">
-		<minty-slider [min]="minContext" [max]="maxContext" [label]="'Default Context Size'" [ngModel]="assistant.contextSize" (ngModelChange)="contextSizeChanged($event)"></minty-slider>
-	</div>
+	@if (assistant.model) {
+		<div class="form-group mb-2">
+			<minty-slider [min]="minContext" [max]="maxContext" [label]="'Default Context Size'"
+				[ngModel]="assistant.contextSize" (ngModelChange)="contextSizeChanged($event)"></minty-slider>
+		</div>
+	}
 	<div class="form-group mb-2">
 		<label for="assistantTemperature">Temperature</label>
 		<input type="number" step="0.1" min="0" max="1" class="form-control bg-opacity-75" id="assistantTemperature"
@@ -35,63 +41,67 @@
 		<textarea autoResize class="form-control bg-opacity-75" id="assistantPrompt" name="assistantPrompt"
 			[ngModel]="assistant.prompt" (ngModelChange)="promptChanged($event)"></textarea>
 	</div>
-	<div class="form-group mb-2 well p-2" *ngIf="assistant && (tools && tools.length > 0) || (assistantTools && assistantTools.length > 0)">
-		<label class="form-label">Tools</label>
-		<div class="row">
-			<div class="col">
-				<strong>Available Tools</strong>
-				<div class="list-group">
-					<button class="list-group-item list-group-item-action"
-						*ngFor="let tool of unusedTools"
-						[mintyTooltip]="tool.description"
-						tooltipPlacement="right"
-						(click)="addTool(tool, $event)">
-						{{tool.name}}
-					</button>
+	@if (assistant && (tools && tools.length > 0) || (assistantTools && assistantTools.length > 0)) {
+		<div class="form-group mb-2 well p-2">
+			<label class="form-label">Tools</label>
+			<div class="row">
+				<div class="col">
+					<strong>Available Tools</strong>
+					<div class="list-group">
+						@for (tool of unusedTools; track tool) {
+							<button class="list-group-item list-group-item-action" [mintyTooltip]="tool.description"
+								tooltipPlacement="right" (click)="addTool(tool, $event)">
+								{{tool.name}}
+							</button>
+						}
+					</div>
 				</div>
-			</div>
-			<div class="col">
-				<strong>Added Tools</strong>
-				<div class="list-group">
-					<button type="button" class="list-group-item list-group-item-action"
-						*ngFor="let tool of usedTools"
-						[mintyTooltip]="tool.description"
-						tooltipPlacement="left"
-						(click)="removeTool(tool, $event)">
-						{{tool.name}}
-					</button>
-				</div>
-			</div>
-		</div>
-	</div>
-	<div class="form-group mb-2 well p-2" *ngIf="assistant && ((documents?.length > 0) || (assistantDocuments?.length > 0)); else noDocuments">
-		<label for="ragFile" class="form-label">Documents</label>
-		<div class="row">
-			<div class="col">
-				<strong>Available Documents</strong>
-				<div class="list-group">
-					<button class="list-group-item list-group-item-action"
-						*ngFor="let doc of unusedDocs"
-						(click)="addDoc(doc)">
-						{{doc.title}}
-					</button>
-				</div>
-			</div>
-			<div class="col">
-				<strong>Added Documents</strong>
-				<div class="list-group">
-					<button type="button" class="list-group-item list-group-item-action"
-						*ngFor="let doc of usedDocs"
-						(click)="removeDoc(doc)">
-						{{doc.title}}
-					</button>
+				<div class="col">
+					<strong>Added Tools</strong>
+					<div class="list-group">
+						@for (tool of usedTools; track tool) {
+							<button type="button" class="list-group-item list-group-item-action"
+								[mintyTooltip]="tool.description" tooltipPlacement="left"
+								(click)="removeTool(tool, $event)">
+								{{tool.name}}
+							</button>
+						}
+					</div>
 				</div>
 			</div>
 		</div>
-	</div>
-	<ng-template #noDocuments>
+	}
+	@if (assistant && ((documents?.length > 0) || (assistantDocuments?.length > 0))) {
+		<div class="form-group mb-2 well p-2">
+			<label for="ragFile" class="form-label">Documents</label>
+			<div class="row">
+				<div class="col">
+					<strong>Available Documents</strong>
+					<div class="list-group">
+						@for (doc of unusedDocs; track doc) {
+							<button class="list-group-item list-group-item-action" (click)="addDoc(doc)">
+								{{doc.title}}
+							</button>
+						}
+					</div>
+				</div>
+				<div class="col">
+					<strong>Added Documents</strong>
+					<div class="list-group">
+						@for (doc of usedDocs; track doc) {
+							<button type="button" class="list-group-item list-group-item-action"
+								(click)="removeDoc(doc)">
+								{{doc.title}}
+							</button>
+						}
+					</div>
+				</div>
+			</div>
+		</div>
+	} @else {
 		<div class="well p-2 mb-2">
-			No Documents available for Assistants to use. This is very sad and you should add some so they can grow up to be big and smart, just like you.
+			No Documents available for Assistants to use. This is very sad and you should add some so they can grow up
+			to be big and smart, just like you.
 		</div>
-	</ng-template>
-</ng-container>
+	}
+}

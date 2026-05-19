@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, SimpleChanges, OnChanges } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { WorkflowGeometryService } from './workflow-editor/services/workflow-geometry.service';
 import { TaskRequest } from '../../model/workflow/task-specification';
@@ -7,7 +7,7 @@ import { TaskRequest } from '../../model/workflow/task-specification';
 @Component({
 	selector: 'minty-task-widget',
 	standalone: true,
-	imports: [CommonModule, FormsModule],
+	imports: [FormsModule],
 	templateUrl: 'task-widget.component.html',
 	styleUrls: ['task-widget.component.css'],
 	host: { 'class': 'canvas-element' },

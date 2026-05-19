@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+
 import { Assistant, createAssistant } from '../../model/assistant';
 import { AssistantService } from '../../assistant.service';
 import { Router, RouterModule } from '@angular/router';
@@ -14,7 +14,7 @@ import { ToolService } from '../../tool.service';
 
 @Component({
 	selector: 'minty-new-assistant',
-	imports: [CommonModule, FormsModule, RouterModule, FilterPipe, AssistantEditorComponent],
+	imports: [FormsModule, RouterModule, FilterPipe, AssistantEditorComponent],
 	templateUrl: 'new-assistant.component.html'
 })
 export class NewAssistantComponent implements OnInit {

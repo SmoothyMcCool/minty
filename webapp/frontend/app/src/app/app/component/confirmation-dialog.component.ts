@@ -1,9 +1,9 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 @Component({
   selector: 'minty-confirmation-dialog',
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './confirmation-dialog.component.html'
 })
 export class ConfirmationDialogComponent {

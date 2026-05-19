@@ -19,10 +19,7 @@
 						"main": "src/main.ts",
 						"polyfills": "src/polyfills.ts",
 						"tsConfig": "src/tsconfig.app.json",
-						"assets": [
-							"src/favicon.ico",
-							"src/assets"
-						],
+						"assets": ["src/favicon.ico", "src/assets"],
 						"styles": [
 							"node_modules/bootstrap/dist/css/bootstrap.min.css",
 							"node_modules/bootstrap-icons/font/bootstrap-icons.css",
@@ -104,10 +101,7 @@
 					"builder": "@angular-eslint/builder:lint",
 					"options": {
 						"eslintConfig": ".eslintrc.json",
-						"lintFilePatterns": [
-							"**/*.spec.ts",
-							"**/*.ts"
-						]
+						"lintFilePatterns": ["**/*.spec.ts", "**/*.ts"]
 					}
 				}
 			}

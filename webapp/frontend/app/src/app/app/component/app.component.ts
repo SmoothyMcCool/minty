@@ -2,7 +2,7 @@ import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { Event, NavigationEnd, NavigationStart, Router, RouterEvent, RouterModule } from '@angular/router';
 import { Alert, AlertService, AlertType } from '../../alert.service';
 import { filter } from 'rxjs/operators';
-import { CommonModule } from '@angular/common';
+
 import { UserService } from '../../user.service';
 import { Popover } from 'bootstrap';
 import { User } from '../../model/user';
@@ -11,7 +11,7 @@ import { trigger, transition, style, animate } from '@angular/animations';
 
 @Component({
 	selector: 'minty-app',
-	imports: [CommonModule, RouterModule],
+	imports: [RouterModule],
 	encapsulation: ViewEncapsulation.None,
 	templateUrl: 'app.component.html',
 	styleUrls: ['./app.component.css'],

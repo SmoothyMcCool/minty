@@ -5,37 +5,43 @@
 			<form>
 				<div class="form-check">
 					<input class="form-check-input" type="radio" name="orderLastUsed" id="orderLastUsed"
-						[(ngModel)]="conversationSortOrder" value="lastUsed" (ngModelChange)="sortConversationsBy('lastUsed')">
+						[(ngModel)]="conversationSortOrder" value="lastUsed"
+						(ngModelChange)="sortConversationsBy('lastUsed')">
 					<label class="form-check-label" for="orderLastUsed">
 						Order by Last Used
 					</label>
 				</div>
 				<div class="form-check">
 					<input class="form-check-input" type="radio" name="orderAlphabetical" id="orderAlphabetical"
-						[(ngModel)]="conversationSortOrder" value="alpha" (ngModelChange)="sortConversationsBy('alpha')">
+						[(ngModel)]="conversationSortOrder" value="alpha"
+						(ngModelChange)="sortConversationsBy('alpha')">
 					<label class="form-check-label" for="orderAlphabetical">
 						Order A-Z
 					</label>
 				</div>
 			</form>
 			<ul class="list-group">
-				<li class="list-group-item list-group-item-action position-relative text-bg-light"
-					*ngFor="let conversation of conversations" style="height: 2.5rem">
-					<div class="d-flex align-items-center h-100">
-						<span class="text-truncate clickable-text" (click)="selectConversation(conversation)">
-							{{getConversationTitle(conversation)}}
-						</span>
-						<span class="badge text-bg-secondary mx-2">{{getConversationAssistantName(conversation)}}</span>
-						<span class="flex-grow-1"></span>
-						<button class="btn btn-sm" style="font-size: 14px;" (click)="renameConversation(conversation)">
-							<i class="bi bi-pencil-square"></i>
-						</button>
-						<button type="button" class="btn btn-sm p-0" style="font-size: 14px; color: red"
-							[disabled]="deleteInProgress" (click)="deleteConversation(conversation)">
-							<i class="bi bi-trash"></i>
-						</button>
-					</div>
-				</li>
+				@for (conversation of conversations; track conversation) {
+					<li class="list-group-item list-group-item-action position-relative text-bg-light"
+						style="height: 2.5rem">
+						<div class="d-flex align-items-center h-100">
+							<span class="text-truncate clickable-text" (click)="selectConversation(conversation)">
+								{{getConversationTitle(conversation)}}
+							</span>
+							<span
+								class="badge text-bg-secondary mx-2">{{getConversationAssistantName(conversation)}}</span>
+							<span class="flex-grow-1"></span>
+							<button class="btn btn-sm" style="font-size: 14px;"
+								(click)="renameConversation(conversation)">
+								<i class="bi bi-pencil-square"></i>
+							</button>
+							<button type="button" class="btn btn-sm p-0" style="font-size: 14px; color: red"
+								[disabled]="deleteInProgress" (click)="deleteConversation(conversation)">
+								<i class="bi bi-trash"></i>
+							</button>
+						</div>
+					</li>
+				}
 			</ul>
 		</div>
 		<div class="col-8 col-sm-6">
@@ -47,46 +53,49 @@
 						<input type="text" class="form-control mb-2" id="assistantFilter" name="assistantFilter"
 							[(ngModel)]="assistantFilter">
 						<div class="form-check form-switch">
-							<input class="form-check-input" type="checkbox" id="ownedAssistantsSwitch" name="ownedAssistantsSwitch" [(ngModel)]="onlyOwnedAssistants">
+							<input class="form-check-input" type="checkbox" id="ownedAssistantsSwitch"
+								name="ownedAssistantsSwitch" [(ngModel)]="onlyOwnedAssistants">
 							<label class="form-check-label" for="ownedAssistantsSwitch">Show only my assistants</label>
 						</div>
 					</div>
 				</form>
 				<h4>Assistants</h4>
-				<ng-container *ngIf="assistants.length > 0; else noAssistants">
+				@if (assistants.length > 0) {
 					<ul class="list-group">
-						<li class="list-group-item list-group-item-action position-relative text-bg-light"
-							style="height: 2.5rem" *ngFor="let assistant of filteredAssistants()">
-							<div class="position-absolute top-0 end-0" *ngIf="isOwned(assistant)">
-								<button class="btn btn-sm" style="font-size: 14px;"
-									(click)="editAssistant(assistant.id)">
-									<i class="bi bi-pencil-square"></i>
-								</button>
-								<button
-									class="btn btn-sm"
-									style="font-size: 14px;"
-									(click)="shareAssistant(assistant)">
-									<i class="bi bi-share"></i>
-								</button>
-								<button class="btn btn-sm" style="font-size: 14px; color: red;"
-									[disabled]="deleteInProgress" (click)="deleteAssistant(assistant)">
-									<i class="bi bi-trash"></i>
-								</button>
-							</div>
-							<div class="row align-items-center g-2">
-								<span class="text-truncate clickable-text col-auto" (click)="startConversation(assistant)">
-									{{assistant.name}}
-								</span>
-								<div class="col-auto">
-									<span class="badge text-bg-secondary mx-2">{{assistant.model}}</span>
+						@for (assistant of filteredAssistants(); track assistant.id) {
+							<li class="list-group-item list-group-item-action position-relative text-bg-light"
+								style="height: 2.5rem">
+								@if (isOwned(assistant)) {
+									<div class="position-absolute top-0 end-0">
+										<button class="btn btn-sm" style="font-size: 14px;"
+											(click)="editAssistant(assistant.id)">
+											<i class="bi bi-pencil-square"></i>
+										</button>
+										<button class="btn btn-sm" style="font-size: 14px;"
+											(click)="shareAssistant(assistant)">
+											<i class="bi bi-share"></i>
+										</button>
+										<button class="btn btn-sm" style="font-size: 14px; color: red;"
+											[disabled]="deleteInProgress" (click)="deleteAssistant(assistant)">
+											<i class="bi bi-trash"></i>
+										</button>
+									</div>
+								}
+								<div class="row align-items-center g-2">
+									<span class="text-truncate clickable-text col-auto"
+										(click)="startConversation(assistant)">
+										{{assistant.name}}
+									</span>
+									<div class="col-auto">
+										<span class="badge text-bg-secondary mx-2">{{assistant.model}}</span>
+									</div>
 								</div>
-							</div>
-						</li>
+							</li>
+						}
 					</ul>
-				</ng-container>
-				<ng-template #noAssistants>
+				} @else {
 					<p class="font-monospace ms-4">If you had any assistants they would be listed here.</p>
-				</ng-template>
+				}
 			</div>
 		</div>
 	</div>
@@ -102,24 +111,29 @@
 	(confirm)="confirmDeleteConversation()" (cancel)="confirmDeleteConversationVisible = false">
 </minty-confirmation-dialog>
 
-<div class="modal show d-block" tabindex="-1" *ngIf="renameConversationVisible">
-	<div class="modal-dialog">
-		<div class="modal-content">
-			<div class="modal-header">
-				<h5 class="modal-title">What's the new Title?</h5>
-				<button type="button" class="btn-close" (click)="onCancel()" aria-label="Close"></button>
-			</div>
-			<div class="modal-body">
-				<input class="form-control" type="text" name="conversationName" maxlength="50"
-					[(ngModel)]="renamedConversationTitle">
-			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-secondary" (click)="onCancelConversationRename()"><i class="bi bi-x-lg"></i></button>
-				<button type="button" class="btn btn-primary" (click)="onConfirmConversationRename()"><i class="bi bi-check-lg"></i></button>
+@if (renameConversationVisible) {
+	<div class="modal show d-block" tabindex="-1">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">What's the new Title?</h5>
+					<button type="button" class="btn-close" (click)="onCancel()" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<input class="form-control" type="text" name="conversationName" maxlength="50"
+						[(ngModel)]="renamedConversationTitle">
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" (click)="onCancelConversationRename()"><i
+							class="bi bi-x-lg"></i></button>
+					<button type="button" class="btn btn-primary" (click)="onConfirmConversationRename()"><i
+							class="bi bi-check-lg"></i></button>
+				</div>
 			</div>
 		</div>
 	</div>
-</div>
+}
 
-<minty-user-select-dialog [visible]="userSelectDialogVisible" (confirm)="onUsersConfirmed($event)" [initialSelection]="sharingSelection" (cancel)="userSelectDialogVisible = false">
+<minty-user-select-dialog [visible]="userSelectDialogVisible" (confirm)="onUsersConfirmed($event)"
+	[initialSelection]="sharingSelection" (cancel)="userSelectDialogVisible = false">
 </minty-user-select-dialog>

@@ -1,4 +1,4 @@
-import { CommonModule } from "@angular/common";
+
 import { Component, Input, Output, EventEmitter } from "@angular/core";
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from "@angular/forms";
 import { WorkflowStateService } from "./services/workflow-state.service";
@@ -13,7 +13,7 @@ import { TaskEditorComponent } from "../task-editor/task-editor.component";
 @Component({
 	selector: 'minty-workflow-task-editor-modal',
 	standalone: true,
-	imports: [CommonModule, FormsModule, TaskEditorComponent, ConfirmationDialogComponent],
+	imports: [FormsModule, TaskEditorComponent, ConfirmationDialogComponent],
 	templateUrl: './workflow-task-editor-modal.component.html',
 	providers: [
 		{

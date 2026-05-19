@@ -1,12 +1,12 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { MarkdownModule } from 'ngx-markdown';
 
 
 @Component({
 	selector: 'minty-workflows-pug-help',
-	imports: [CommonModule, RouterLink, RouterLinkActive, MarkdownModule],
+	imports: [RouterLink, RouterLinkActive, MarkdownModule],
 	templateUrl: 'workflows-pug-help.component.html',
 	styleUrl: 'workflows-pug-help.component.css'
 })

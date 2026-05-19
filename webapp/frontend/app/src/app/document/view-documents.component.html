@@ -3,33 +3,35 @@
 		<h1>Documents</h1>
 
 		<div class="alert alert-danger">
-			Documents aren't available right now as I can only run a single model until I get FlexLlama set up. Try this instead:
+			Documents aren't available right now as I can only run a single model until I get FlexLlama set up. Try this
+			instead:
 			<ol>
 				<li>Create a project and make sure its set as default.</li>
-				<li>Go into the project, and add the file as markdown (or, for large docs, split & summarize as markdown)</li>
-				<li>Use an assistant that has the project tools attached, and ask the assistant about your document.</li>
+				<li>Go into the project, and add the file as markdown (or, for large docs, split & summarize as
+					markdown)</li>
+				<li>Use an assistant that has the project tools attached, and ask the assistant about your document.
+				</li>
 			</ol>
 		</div>
-		<ng-template #addNewDoc>
-			<form role="form" (submit)="submitNewDocument()" class="row well mb-2">
-				<minty-document-editor name="document-editor" [(ngModel)]="docProperties"></minty-document-editor>
-
-				<div class="mb-2">
-					<button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i></button>
-					<button type="button" id="submitButton" class="btn btn-danger float-end"
-						(click)="cancelNewDocument()"><i class="bi bi-arrow-counterclockwise"></i></button>
-				</div>
-			</form>
-		</ng-template>
 
 		<form>
 			<div class="row mb-2">
-				<ng-container *ngIf="!addingDocument; else addNewDoc">
+				@if (!addingDocument) {
 					<div class="col-auto my-auto">
 						<button class="btn btn-primary" (click)="addNewDocument()"><i
 								class="bi bi-file-earmark-plus"></i></button>
 					</div>
-				</ng-container>
+				} @else {
+					<form role="form" (submit)="submitNewDocument()" class="row well mb-2">
+						<minty-document-editor name="document-editor"
+							[(ngModel)]="docProperties"></minty-document-editor>
+						<div class="mb-2">
+							<button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i></button>
+							<button type="button" id="submitButton" class="btn btn-danger float-end"
+								(click)="cancelNewDocument()"><i class="bi bi-arrow-counterclockwise"></i></button>
+						</div>
+					</form>
+				}
 				<div class="form-floating col">
 					<input type="text" id="docFilter" class="form-control" name="docFilter" [ngModel]="filter"
 						(ngModelChange)="filterChanged($event)">
@@ -39,32 +41,40 @@
 		</form>
 		<div class="d-flex flex-column bd-highlight">
 			<ul class="list-group">
-				<li class="list-group-item p-2 bd-highlight opacity-75" *ngFor="let document of displayDocuments">
-					<div class="d-flex align-items-center">
-						<div class="p-1" *ngIf="document.state === 'NO_CONTENT'"><strong
-								class="text-danger">Processing...</strong></div>
-						<div class="p-1" *ngIf="document.state === 'FAILED'"><strong class="text-danger">Document Failed
-								to Process!</strong><i class="bi bi-exclamation-triangle"></i></div>
-						<div class="p-1"><strong>Title: </strong>{{document.title}}</div>
-						<ng-container
-							*ngIf="document.associatedAssistantIds && document.associatedAssistantIds.length > 0">
-							<div class="p-1 ms-2"><strong>Used in Assistants: </strong></div>
-							<span class="badge bg-secondary rounded p-1 me-2"
-								*ngFor="let assistant of document.associatedAssistantIds">{{findAssistant(assistant)?.name}}</span>
-						</ng-container>
-
-						<button *ngIf="isOwned(document.ownerId)" type="button"
-							class="position-absolute end-0 top-0 z-1 m-1" style="font-size: 20px; color: red"
-							[disabled]="deleteInProgress" (click)="deleteDocument(document)">
-							<i class="bi bi-trash"></i>
-						</button>
-
-					</div>
-				</li>
+				@for (document of displayDocuments; track document.documentId) {
+					<li class="list-group-item p-2 bd-highlight opacity-75">
+						<div class="d-flex align-items-center">
+							@if (document.state === 'NO_CONTENT') {
+								<div class="p-1"><strong class="text-danger">Processing...</strong></div>
+							}
+							@if (document.state === 'FAILED') {
+								<div class="p-1"><strong class="text-danger">Document Failed
+										to Process!</strong><i class="bi bi-exclamation-triangle"></i></div>
+							}
+							<div class="p-1"><strong>Title: </strong>{{document.title}}</div>
+							@if (document.associatedAssistantIds && document.associatedAssistantIds.length > 0) {
+								<div class="p-1 ms-2"><strong>Used in Assistants: </strong></div>
+								@for (assistant of document.associatedAssistantIds; track assistant) {
+									<span
+										class="badge bg-secondary rounded p-1 me-2">{{findAssistant(assistant)?.name}}</span>
+								}
+							}
+							@if (isOwned(document.ownerId)) {
+								<button type="button" class="position-absolute end-0 top-0 z-1 m-1"
+									style="font-size: 20px; color: red" [disabled]="deleteInProgress"
+									(click)="deleteDocument(document)">
+									<i class="bi bi-trash"></i>
+								</button>
+							}
+						</div>
+					</li>
+				}
 			</ul>
-			<div class="well p-3" *ngIf="!displayDocuments || displayDocuments.length === 0">
-				No Documents!
-			</div>
+			@if (!displayDocuments || displayDocuments.length === 0) {
+				<div class="well p-3">
+					No Documents!
+				</div>
+			}
 		</div>
 	</div>
 </div>

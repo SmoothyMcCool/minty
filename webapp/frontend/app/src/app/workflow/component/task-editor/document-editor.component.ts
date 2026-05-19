@@ -1,11 +1,11 @@
-import { CommonModule } from "@angular/common";
+
 import { Component, forwardRef } from "@angular/core";
 import { FormsModule, NG_VALUE_ACCESSOR, ControlValueAccessor } from "@angular/forms";
 
 @Component({
 	selector: 'minty-document-editor',
 	templateUrl: 'document-editor.component.html',
-	imports: [CommonModule, FormsModule],
+	imports: [FormsModule],
 	providers: [
 		{
 			provide: NG_VALUE_ACCESSOR,

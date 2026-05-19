@@ -23,9 +23,9 @@
 						data-bs-target=".navbar-collapse.show">Documents</a>
 				</li>
 				<!--li class="nav-item">
-					<a class="nav-link" (click)="navigateTo('/diagrams')" data-bs-toggle="collapse"
-						data-bs-target=".navbar-collapse.show">Diagramming</a>
-				</li-->
+        <a class="nav-link" (click)="navigateTo('/diagrams')" data-bs-toggle="collapse"
+        data-bs-target=".navbar-collapse.show">Diagramming</a>
+      </li-->
 			</ul>
 		</div>
 		<ul class="navbar-nav">
@@ -41,10 +41,12 @@
 				<a class="nav-link" (click)="navigateTo('/help')" data-bs-toggle="collapse"
 					data-bs-target=".navbar-collapse.show">Help</a>
 			</li>
-			<li class="nav-item" *ngIf="user && user.name == 'tom'">
-				<a class="nav-link" (click)="navigateTo('/statistics')" data-bs-toggle="collapse"
-					data-bs-target=".navbar-collapse.show">Stats</a>
-			</li>
+			@if (user && user.name == 'tom') {
+				<li class="nav-item">
+					<a class="nav-link" (click)="navigateTo('/statistics')" data-bs-toggle="collapse"
+						data-bs-target=".navbar-collapse.show">Stats</a>
+				</li>
+			}
 			<li class="nav-item">
 				<a class="nav-link" (click)="navigateTo('/user')" data-bs-toggle="collapse"
 					data-bs-target=".navbar-collapse.show">User</a>
@@ -60,35 +62,47 @@
 	<div class="container-top">
 
 		<!-- SUCCESS -->
-		<div class="alert alert-primary" *ngIf="alerts.success.length > 0" @alertAnim>
-			<strong *ngFor="let alert of alerts.success">{{alert}}</strong>
-		</div>
+		@if (alerts.success.length > 0) {
+			<div class="alert alert-primary" @alertAnim>
+				@for (alert of alerts.success; track alert) {
+					<strong>{{alert}}</strong>
+				}
+			</div>
+		}
 
 		<!-- INFO -->
-		<div class="alert alert-info" *ngIf="alerts.info.length > 0" @alertAnim>
-			<strong *ngFor="let alert of alerts.info">{{alert}}</strong>
-		</div>
+		@if (alerts.info.length > 0) {
+			<div class="alert alert-info" @alertAnim>
+				@for (alert of alerts.info; track alert) {
+					<strong>{{alert}}</strong>
+				}
+			</div>
+		}
 
 		<!-- FAILURE -->
-		<div class="alert alert-danger" *ngIf="alerts.failure.length > 0" @alertAnim>
-			<div class="row mb-3 mb-0">
-				<div class="col me-auto align-middle">
-					<div class="row" *ngFor="let alert of alerts.failure">
-						<label class="col-form-label">
-							<strong>Oh no!&nbsp;</strong>
-							<span>
-								<pre [innerHTML]="alert"></pre>
-							</span>
-						</label>
+		@if (alerts.failure.length > 0) {
+			<div class="alert alert-danger" @alertAnim>
+				<div class="row mb-3 mb-0">
+					<div class="col me-auto align-middle">
+						@for (alert of alerts.failure; track alert) {
+							<div class="row">
+								<label class="col-form-label">
+									<strong>Oh no!&nbsp;</strong>
+									<span>
+										<pre [innerHTML]="alert"></pre>
+									</span>
+								</label>
+							</div>
+						}
+					</div>
+					<div class="col-auto">
+						<button class="btn btn-danger" (click)="hideError()">
+							Dismiss
+						</button>
 					</div>
 				</div>
-				<div class="col-auto">
-					<button class="btn btn-danger" (click)="hideError()">
-						Dismiss
-					</button>
-				</div>
 			</div>
-		</div>
+		}
 	</div>
 </div>
 <router-outlet></router-outlet>

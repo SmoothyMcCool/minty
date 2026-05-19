@@ -6,7 +6,7 @@ import { MintyDoc } from '../model/minty-doc';
 import { UserService } from '../user.service';
 import { AssistantService } from '../assistant.service';
 import { AlertService } from '../alert.service';
-import { CommonModule } from '@angular/common';
+
 import { DocProperties, DocumentEditorComponent } from './document-editor.component';
 import { FormsModule } from '@angular/forms';
 import { Assistant } from '../model/assistant';
@@ -15,7 +15,7 @@ import { User } from '../model/user';
 
 @Component({
 	selector: 'minty-view-documents',
-	imports: [CommonModule, FormsModule, RouterModule, ConfirmationDialogComponent, DocumentEditorComponent],
+	imports: [FormsModule, RouterModule, ConfirmationDialogComponent, DocumentEditorComponent],
 	templateUrl: 'view-documents.component.html'
 })
 export class ViewDocumentsComponent implements OnInit, OnDestroy {

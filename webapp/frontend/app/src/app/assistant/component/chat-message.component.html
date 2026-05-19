@@ -1,34 +1,42 @@
-
-
 <div class="row m-2" [class.flex-row-reverse]="message.user">
 	<div class="col-11 p-2" [class.well-user]="message.user" [class.well-bot]="!message.user">
-		<div *ngIf="responsePending && isFirst && !message.user">
-			<minty-spinner></minty-spinner>
-			<span *ngIf="queueDepth === 1; else depthOne">Waiting... You're next!</span>
-			<ng-template #depthOne>
-				<span *ngIf="queueDepth === 2; else depthLargerThanOne">Waiting... There is one request ahead of you.</span>
-			</ng-template>
-			<ng-template #depthLargerThanOne>
-				<span *ngIf="queueDepth !== undefined">Waiting... There are {{queueDepth - 1}} requests ahead of you.</span>
-			</ng-template>
-		</div>
-		<ng-container *ngIf="useMarkdown; else noMarkdown">
-			<markdown clipboard mermaidClipboard [mermaid]="useMermaid" [data]="message.message" [clipboardButtonTemplate]="clipboardTemplate"></markdown>
+		@if (responsePending && isFirst && !message.user) {
+			<div>
+				<minty-spinner></minty-spinner>
+				@if (queueDepth === 1) {
+					<span>Waiting... You're next!</span>
+				} @else {
+					@if (queueDepth === 2) {
+						<span>Waiting... There is one request ahead of you.</span>
+					} @else {
+						@if (queueDepth !== undefined) {
+							<span>Waiting... There are {{queueDepth - 1}} requests ahead of you.</span>
+						}
+					}
+				}
+			</div>
+		}
+		@if (useMarkdown) {
+			<markdown clipboard mermaidClipboard [mermaid]="useMermaid" [data]="message.message"
+				[clipboardButtonTemplate]="clipboardTemplate"></markdown>
 			<!--markdown clipboard mermaidClipboard [mermaid]="useMermaid" [data]="processedMessage"
-				[clipboardButtonTemplate]="clipboardTemplate"-->
-			<minty-spinner *ngIf="!responsePending && !responseComplete && isFirst && !message.user"></minty-spinner>
-		</ng-container>
-		<ng-template #noMarkdown>
+      [clipboardButtonTemplate]="clipboardTemplate"-->
+			@if (!responsePending && !responseComplete && isFirst && !message.user) {
+				<minty-spinner></minty-spinner>
+			}
+		} @else {
 			<pre>{{message.message}}</pre>
-		</ng-template>
+		}
 	</div>
 </div>
 
 <ng-template #clipboardTemplate>
-	<button class="btn btn-sm btn-light clipboard-button"
-		#copyButton
-		(click)="onCopyClick(copyButton)">
-		<i *ngIf="!isCopied(copyButton)" class="bi bi-copy"></i>
-		<i *ngIf="isCopied(copyButton)" class="bi bi-check-circle-fill text-success"></i>
+	<button class="btn btn-sm btn-light clipboard-button" #copyButton (click)="onCopyClick(copyButton)">
+		@if (!isCopied(copyButton)) {
+			<i class="bi bi-copy"></i>
+		}
+		@if (isCopied(copyButton)) {
+			<i class="bi bi-check-circle-fill text-success"></i>
+		}
 	</button>
 </ng-template>

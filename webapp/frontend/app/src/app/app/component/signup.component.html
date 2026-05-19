@@ -2,16 +2,20 @@
 	<h1 class="well blue rounded text-center">{{applicationName}}</h1>
 	<div class="big-margin well rounded p-3 vertical-centre">
 
-		<div *ngIf="messages.length > 0" class="alert alert-danger container">
-			<div class="row">
-				<div class="col me-auto align-middle">
-					<p class="col-form-label" *ngFor="let message of messages">{{message}}</p>
-				</div>
-				<div class="col-auto">
-					<button (click)="messages = []" class="btn btn-danger">&times;</button>
+		@if (messages.length > 0) {
+			<div class="alert alert-danger container">
+				<div class="row">
+					<div class="col me-auto align-middle">
+						@for (message of messages; track message) {
+							<p class="col-form-label">{{message}}</p>
+						}
+					</div>
+					<div class="col-auto">
+						<button (click)="messages = []" class="btn btn-danger">&times;</button>
+					</div>
 				</div>
 			</div>
-		</div>
+		}
 
 		<div class="header">
 			<h1 class="blue">Sign Up!</h1>
@@ -29,9 +33,9 @@
 			<div class="mb-3 row">
 				<label for="password" class="col-sm-6 col-form-label">Password</label>
 				<div class="col-sm-6" required>
-					<input id="password" name="password" type="password" size="10" maxlength="50"
-						placeholder="Password" class="form-control" [class.is-invalid]="passwordMismatch"
-						[(ngModel)]="user.password" (input)="passwordUpdated()" required>
+					<input id="password" name="password" type="password" size="10" maxlength="50" placeholder="Password"
+						class="form-control" [class.is-invalid]="passwordMismatch" [(ngModel)]="user.password"
+						(input)="passwordUpdated()" required>
 				</div>
 			</div>
 			<div class="mb-3 row">

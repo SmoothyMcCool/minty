@@ -1,4 +1,4 @@
-import { CommonModule } from "@angular/common";
+
 import { Component, OnInit } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { Router, RouterModule } from "@angular/router";
@@ -10,7 +10,7 @@ import { UserService } from "../../user.service";
 
 @Component({
 	selector: 'minty-project-list',
-	imports: [CommonModule, FormsModule, RouterModule, ConfirmationDialogComponent],
+	imports: [FormsModule, RouterModule, ConfirmationDialogComponent],
 	templateUrl: 'project-list.component.html'
 })
 export class ProjectListComponent implements OnInit {
