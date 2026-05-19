@@ -5,96 +5,129 @@
 		<label class="form-check-label" for="textMode">Text Mode</label>
 	</div>
 
-	<ng-container *ngIf="!textMode; else showText">
-		<ng-container *ngIf="packets?.length">
-			<div *ngFor="let packet of packets; let i = index" class="card mb-4">
-				<div class="card-header d-flex justify-content-between align-items-center">
-					<h5 class="mb-0">Packet {{i + 1}}</h5>
-					<button class="btn btn-sm btn-outline-danger" (click)="removePacket(i)">
-						Remove Packet
-					</button>
-				</div>
-
-				<div class="card shadow-sm mb-3">
-
-					<!-- Header -->
-					<div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
-						<div class="d-flex align-items-center gap-2">
-							<div>
-								<div class="fw-semibold">
-									{{packet.id || 'New Packet'}}
-								</div>
-								<div class="small opacity-75">
-									Packet Configuration
+	@if (!textMode) {
+		@if (packets?.length) {
+			@for (packet of packets; track packet; let i = $index) {
+				<div class="card mb-4">
+					<div class="card-header d-flex justify-content-between align-items-center">
+						<h5 class="mb-0">Packet {{i + 1}}</h5>
+						<button class="btn btn-sm btn-outline-danger" (click)="removePacket(i)">
+							Remove Packet
+						</button>
+					</div>
+					<div class="card shadow-sm mb-3">
+						<!-- Header -->
+						<div
+							class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
+							<div class="d-flex align-items-center gap-2">
+								<div>
+									<div class="fw-semibold">
+										{{packet.id || 'New Packet'}}
+									</div>
+									<div class="small opacity-75">
+										Packet Configuration
+									</div>
 								</div>
 							</div>
-						</div>
-
-						<div class="btn-group btn-group-sm">
-							<button type="button" class="btn btn-warning" (click)="showPacketDescription()">
-								<i class="bi bi-question-circle"></i>
-							</button>
-							<button type="button" class="btn btn-danger" (click)="removePacket(packet)">
-								<i class="bi bi-x-lg"></i>
-							</button>
-
-						</div>
-					</div>
-
-
-					<!-- Body -->
-					<div class="card-body">
-
-						<!-- Packet ID -->
-						<div class="mb-4">
-							<label class="form-label">Packet ID</label>
-							<input type="text" class="form-control" [(ngModel)]="packet.id"
-								(ngModelChange)="onIdChange(packet, $event)" placeholder="Enter packet ID" />
-						</div>
-
-
-						<!-- Text Entries -->
-						<div class="mb-4">
-							<div class="d-flex justify-content-between align-items-center mb-2">
-								<label class="form-label mb-0">
-									Text Entries
-								</label>
-								<button type="button" class="btn btn-outline-primary btn-sm" (click)="addText(packet)">
-									<i class="bi bi-plus"></i>
-									Add Text
+							<div class="btn-group btn-group-sm">
+								<button type="button" class="btn btn-warning" (click)="showPacketDescription()">
+									<i class="bi bi-question-circle"></i>
+								</button>
+								<button type="button" class="btn btn-danger" (click)="removePacket(packet)">
+									<i class="bi bi-x-lg"></i>
 								</button>
 							</div>
-
-
-							<div *ngIf="packet.text?.length === 0" class="alert alert-light mb-0">
-								No text entries added.
+						</div>
+						<!-- Body -->
+						<div class="card-body">
+							<!-- Packet ID -->
+							<div class="mb-4">
+								<label class="form-label">Packet ID</label>
+								<input type="text" class="form-control" [(ngModel)]="packet.id"
+									(ngModelChange)="onIdChange(packet, $event)" placeholder="Enter packet ID" />
 							</div>
-
-
-							<div *ngIf="packet.text?.length">
-								<div *ngFor="let txt of packet.text; let j = index; trackBy: trackByIndex"
-									class="input-group mb-2">
-									<input type="text" class="form-control" [(ngModel)]="packet.text[j]"
-										(ngModelChange)="onTextChange(packet, j, $event)" placeholder="Enter text" />
-									<button type="button" class="btn btn-outline-danger"
-										(click)="removeText(packet, j)">
-										<i class="bi bi-x-lg"></i>
+							<!-- Text Entries -->
+							<div class="mb-4">
+								<div class="d-flex justify-content-between align-items-center mb-2">
+									<label class="form-label mb-0">
+										Text Entries
+									</label>
+									<button type="button" class="btn btn-outline-primary btn-sm"
+										(click)="addText(packet)">
+										<i class="bi bi-plus"></i>
+										Add Text
 									</button>
 								</div>
+								@if (packet.text?.length === 0) {
+									<div class="alert alert-light mb-0">
+										No text entries added.
+									</div>
+								}
+								@if (packet.text?.length) {
+									<div>
+										@for (txt of packet.text; track trackByIndex(j, txt); let j = $index) {
+											<div class="input-group mb-2">
+												<input type="text" class="form-control" [(ngModel)]="packet.text[j]"
+													(ngModelChange)="onTextChange(packet, j, $event)"
+													placeholder="Enter text" />
+												<button type="button" class="btn btn-outline-danger"
+													(click)="removeText(packet, j)">
+													<i class="bi bi-x-lg"></i>
+												</button>
+											</div>
+										}
+									</div>
+								}
 							</div>
-						</div>
-
-
-						<!-- Data Entries -->
-						<div>
-							<div class="d-flex justify-content-between align-items-center mb-2">
-								<label class="form-label mb-0">
-									Data Items
-								</label>
-								<button type="button" class="btn btn-outline-primary btn-sm" (click)="addData(packet)">
-									<i class="bi bi-plus"></i>
-									Add Item
-								</button>
+							<!-- Data Entries -->
+							<div>
+								<div class="d-flex justify-content-between align-items-center mb-2">
+									<label class="form-label mb-0">
+										Data Items
+									</label>
+									<button type="button" class="btn btn-outline-primary btn-sm"
+										(click)="addData(packet)">
+										<i class="bi bi-plus"></i>
+										Add Item
+									</button>
+								</div>
+								@if (packet.data?.length === 0) {
+									<div class="alert alert-light mb-0">
+										No data items added.
+									</div>
+								}
+								@if (packet.data?.length) {
+									<div>
+										@for (d of packet.data; track trackByIndex(k, d); let k = $index) {
+											<div class="card mb-3 border">
+												<div
+													class="card-header d-flex justify-content-between align-items-center py-2">
+													<span class="small text-muted">
+														Item {{k + 1}}
+													</span>
+													<button type="button" class="btn btn-outline-danger btn-sm"
+														(click)="removeData(packet, k)">
+														<i class="bi bi-trash"></i>
+													</button>
+												</div>
+												<div class="card-body">
+													<textarea id="packetDataInput-{{i}}-{{j}}-{{k}}"
+														name="packetDataInput-{{i}}-{{j}}-{{k}}"
+														class="form-control font-monospace" rows="6"
+														[ngModel]="packetAsString(d)"
+														(ngModelChange)="onValueChange(packet, k, $event)"
+														autocomplete="off" required
+														[class.is-invalid]="!valid"></textarea>
+													@if (!valid) {
+														<div class="invalid-feedback d-block">
+															Invalid value
+														</div>
+													}
+												</div>
+											</div>
+										}
+									</div>
+								}
 							</div>
 
 
@@ -127,29 +160,29 @@
 								</div>
 							</div>
 						</div>
-					</div>
-
-					<!-- Footer -->
-					<div class="card-footer bg-light text-end">
-						<button type="button" class="btn btn-outline-primary btn-sm" (click)="duplicatePacket(packet)">
-							<i class="bi bi-copy"></i>
-							Duplicate Packet
-						</button>
+						<!-- Footer -->
+						<div class="card-footer bg-light text-end">
+							<button type="button" class="btn btn-outline-primary btn-sm"
+								(click)="duplicatePacket(packet)">
+								<i class="bi bi-copy"></i>
+								Duplicate Packet
+							</button>
+						</div>
 					</div>
 				</div>
-			</div>
-		</ng-container>
-
+			}
+		}
 		<!-- Add new item button -->
 		<button class="btn btn-primary" (click)="addPacket()">Add Packet</button>
-	</ng-container>
-	<ng-template #showText>
+	} @else {
 		<div class="mb-3">
-			<div *ngIf="!valid" class="d-flex alert alert-danger justify-content-center"><i class="bi bi-bug ms-3"></i>
-				JSON not valid!</div>
+			@if (!valid) {
+				<div class="d-flex alert alert-danger justify-content-center"><i class="bi bi-bug ms-3"></i>
+					JSON not valid!</div>
+			}
 			<textarea id="packetInput-text" name="packetInput-text" type="text" style="height: 200px;"
 				class="form-control form-control-sm font-monospace" [ngModel]="packetsAsString()"
 				(ngModelChange)="packetTextChanged($event)" autocomplete="off" required></textarea>
 		</div>
-	</ng-template>
+	}
 </div>

@@ -4,13 +4,18 @@
 			(ngModelChange)="useCustomAssistantChanged($event)">
 		<label class="form-check-label" for="useCustomAssistant">Custom Assistant</label>
 	</div>
-	<div class="mb-3" *ngIf="useCustomAssistant">
-		<minty-assistant-editor name="assistantInput" [allowHistory]="false" [models]="models" [documents]="documents" [tools]="tools" [ngModel]="assistant"
-			(ngModelChange)="onAssistantEditorChange($event)"></minty-assistant-editor>
-	</div>
-	<div class="mb-3" *ngIf="!useCustomAssistant">
-		<label for="enumListInput">Assistant</label>
-		<minty-enumlist-editor name="enumListInput" [choices]="choices" [ngModel]="assistantId"
-			(ngModelChange)="idChanged($event)"></minty-enumlist-editor>
-	</div>
+	@if (useCustomAssistant) {
+		<div class="mb-3">
+			<minty-assistant-editor name="assistantInput" [allowHistory]="false" [models]="models"
+				[documents]="documents" [tools]="tools" [ngModel]="assistant"
+				(ngModelChange)="onAssistantEditorChange($event)"></minty-assistant-editor>
+		</div>
+	}
+	@if (!useCustomAssistant) {
+		<div class="mb-3">
+			<label for="enumListInput">Assistant</label>
+			<minty-enumlist-editor name="enumListInput" [choices]="choices" [ngModel]="assistantId"
+				(ngModelChange)="idChanged($event)"></minty-enumlist-editor>
+		</div>
+	}
 </div>

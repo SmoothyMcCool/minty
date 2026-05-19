@@ -1,6 +1,6 @@
 import { Component, forwardRef, Input } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+
 import { Assistant, createAssistant } from '../../model/assistant';
 import { RouterModule } from '@angular/router';
 import { FilterPipe } from '../../pipe/filter-pipe';
@@ -13,7 +13,7 @@ import { TooltipDirective } from '../../pipe/tooltip-directive';
 
 @Component({
 	selector: 'minty-assistant-editor',
-	imports: [CommonModule, FormsModule, RouterModule, FilterPipe, SliderComponent, AutoResizeDirective, TooltipDirective],
+	imports: [FormsModule, RouterModule, FilterPipe, SliderComponent, AutoResizeDirective, TooltipDirective],
 	templateUrl: 'assistant-editor.component.html',
 	providers: [
 		{

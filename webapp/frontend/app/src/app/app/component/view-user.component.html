@@ -1,127 +1,133 @@
 <div>
 	<div class="container">
-		<div *ngIf="messages.length > 0" class="alert alert-danger container">
-			<div class="row">
-				<div class="col me-auto align-middle">
-					<p class="col-form-label" *ngFor="let message of messages">{{message}}</p>
-				</div>
-				<div class="col-auto">
-					<button (click)="messages = []" class="btn btn-danger">&times;</button>
+		@if (messages.length > 0) {
+			<div class="alert alert-danger container">
+				<div class="row">
+					<div class="col me-auto align-middle">
+						@for (message of messages; track message) {
+							<p class="col-form-label">{{message}}</p>
+						}
+					</div>
+					<div class="col-auto">
+						<button (click)="messages = []" class="btn btn-danger">&times;</button>
+					</div>
 				</div>
 			</div>
-		</div>
+		}
 
 		<h1>Update Yourself</h1>
-		<div class="well p-2" *ngIf="user">
-			<form role="form" #userForm="ngForm" class="container" (submit)="update()">
-				<div class="mb-3 row">
-					<label for="account" class="col-sm-6 col-form-label">User Name</label>
-					<div class="col-sm-6" required>
-						<input id="account" name="account" type="text" size="20" maxlength="50" placeholder="User name"
-							class="form-control opacity-75" [class.is-invalid]="user.name.length === 0"
-							[(ngModel)]="user.name" required>
-					</div>
-				</div>
-
-				<div class="mb-3 row">
-					<label for="account" class="col-sm-6 col-form-label">Chat Display Order</label>
-					<div class="col-sm-6" required>
-						<div class="form-check">
-							<input class="form-check-input" type="radio" name="orderNewestFirst" id="orderNewestFirst"
-								[(ngModel)]="messageOrder" value="NewestFirst" (change)="sortConversationsBy('NewestFirst')" checked>
-							<label class="form-check-label" for="orderNewestFirst">
-								Newest at Top (Discord-style)
-							</label>
-						</div>
-						<div class="form-check">
-							<input class="form-check-input" type="radio" name="orderOldestFirst" id="orderOldestFirst"
-								[(ngModel)]="messageOrder" value="OldestFirst" (change)="sortConversationsBy('OldestFirst')">
-							<label class="form-check-label" for="orderOldestFirst">
-								Newest at Bottom (Chat-style)
-							</label>
-						</div>
-					</div>
-				</div>
-
-				<div class="mb-3 row">
-					<label for="account" class="col-sm-6 col-form-label">Button Alignment</label>
-					<div class="col-sm-6 btn-group" role="group">
-						<input type="radio" class="btn-check" name="leftAligned" id="leftAligned" autocomplete="off" [checked]="buttonAlignment == 'Left'" (click)="useAlignment('Left')">
-						<label class="btn btn-outline-primary" for="leftAligned">Left</label>
-
-						<input type="radio" class="btn-check" name="rightAligned" id="rightAligned" autocomplete="off" [checked]="buttonAlignment == 'Right'" (click)="useAlignment('Right')">
-						<label class="btn btn-outline-primary" for="rightAligned">Right</label>
-					</div>
-				</div>
-
-				<div class="mb-3 row">
-					<label for="theme" class="col-sm-6 col-form-label">Theme</label>
-					<div class="col-sm-6">
-						<select class="form-select bg-opacity-75" name="theme" [ngModel]="theme" (ngModelChange)="useTheme($event)">
-							<option>Light Mode</option>
-							<option>Dark Mode</option>
-						</select>
-					</div>
-				</div>
-
-				<ng-container *ngIf="updatePassword; else noPassword">
+		@if (user) {
+			<div class="well p-2">
+				<form role="form" #userForm="ngForm" class="container" (submit)="update()">
 					<div class="mb-3 row">
-						<label for="password" class="col-sm-6 col-form-label">Password</label>
+						<label for="account" class="col-sm-6 col-form-label">User Name</label>
 						<div class="col-sm-6" required>
-							<input id="password" name="password" type="password" size="10" maxlength="50"
-								placeholder="Password" class="form-control opacity-75" [class.is-invalid]="passwordMismatch"
-								[(ngModel)]="user.password" (input)="passwordUpdated()" required>
+							<input id="account" name="account" type="text" size="20" maxlength="50"
+								placeholder="User name" class="form-control opacity-75"
+								[class.is-invalid]="user.name.length === 0" [(ngModel)]="user.name" required>
 						</div>
 					</div>
 					<div class="mb-3 row">
-						<label for="password" class="col-sm-6 col-form-label">Type It
-							Again.</label>
+						<label for="account" class="col-sm-6 col-form-label">Chat Display Order</label>
 						<div class="col-sm-6" required>
-							<input id="passwordRepeated" name="password" type="password" size="10" maxlength="50"
-								placeholder="Password" class="form-control opacity-75" [class.is-invalid]="passwordMismatch"
-								[(ngModel)]="repeatPassword" (input)="passwordUpdated()" required>
+							<div class="form-check">
+								<input class="form-check-input" type="radio" name="orderNewestFirst"
+									id="orderNewestFirst" [(ngModel)]="messageOrder" value="NewestFirst"
+									(change)="sortConversationsBy('NewestFirst')" checked>
+								<label class="form-check-label" for="orderNewestFirst">
+									Newest at Top (Discord-style)
+								</label>
+							</div>
+							<div class="form-check">
+								<input class="form-check-input" type="radio" name="orderOldestFirst"
+									id="orderOldestFirst" [(ngModel)]="messageOrder" value="OldestFirst"
+									(change)="sortConversationsBy('OldestFirst')">
+								<label class="form-check-label" for="orderOldestFirst">
+									Newest at Bottom (Chat-style)
+								</label>
+							</div>
 						</div>
 					</div>
-				</ng-container>
-				<ng-template #noPassword>
-					<button class="btn btn-primary mb-3" (click)="updatePassword = true">Update Password</button>
-				</ng-template>
-				<div class="mb-3 row">
-					<table class="table table-bordered table-sm align-middle">
-						<thead class="table-light">
-							<tr>
-								<th style="width: 50%;">Configuration Thingy</th>
-								<th style="width: 50%;">Value of Thingy</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr *ngFor="let entry of defaultValues; let i = index; trackBy: trackByKey">
-								<td>
-									<label
-										class="form-label"
-										id="key-{{i}}">
-									{{entry.key}}
-									</label>
-								</td>
-								<td>
-									<input
-										[type]	="entry.key?.toLowerCase().includes('password') ? 'password' : 'text'"
-										class="form-control form-control-sm"
-										name="value-{{i}}"
-										[ngModel]="entry.value"
-										(ngModelChange)="updateConfig(entry.key, $event)"
-										placeholder="{{entry.value}}"
-									/>
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-				<div class="centred space-after">
-					<button type="submit" id="updateButton" class="btn btn-primary" [class.disabled]="!formValid()"
-						[disabled]="!formValid()">Update!</button>
-				</div>
-			</form>
-		</div>
+					<div class="mb-3 row">
+						<label for="account" class="col-sm-6 col-form-label">Button Alignment</label>
+						<div class="col-sm-6 btn-group" role="group">
+							<input type="radio" class="btn-check" name="leftAligned" id="leftAligned" autocomplete="off"
+								[checked]="buttonAlignment == 'Left'" (click)="useAlignment('Left')">
+							<label class="btn btn-outline-primary" for="leftAligned">Left</label>
+							<input type="radio" class="btn-check" name="rightAligned" id="rightAligned"
+								autocomplete="off" [checked]="buttonAlignment == 'Right'"
+								(click)="useAlignment('Right')">
+							<label class="btn btn-outline-primary" for="rightAligned">Right</label>
+						</div>
+					</div>
+					<div class="mb-3 row">
+						<label for="theme" class="col-sm-6 col-form-label">Theme</label>
+						<div class="col-sm-6">
+							<select class="form-select bg-opacity-75" name="theme" [ngModel]="theme"
+								(ngModelChange)="useTheme($event)">
+								<option>Light Mode</option>
+								<option>Dark Mode</option>
+							</select>
+						</div>
+					</div>
+					@if (updatePassword) {
+						<div class="mb-3 row">
+							<label for="password" class="col-sm-6 col-form-label">Password</label>
+							<div class="col-sm-6" required>
+								<input id="password" name="password" type="password" size="10" maxlength="50"
+									placeholder="Password" class="form-control opacity-75"
+									[class.is-invalid]="passwordMismatch" [(ngModel)]="user.password"
+									(input)="passwordUpdated()" required>
+							</div>
+						</div>
+						<div class="mb-3 row">
+							<label for="password" class="col-sm-6 col-form-label">Type It
+								Again.</label>
+							<div class="col-sm-6" required>
+								<input id="passwordRepeated" name="password" type="password" size="10" maxlength="50"
+									placeholder="Password" class="form-control opacity-75"
+									[class.is-invalid]="passwordMismatch" [(ngModel)]="repeatPassword"
+									(input)="passwordUpdated()" required>
+							</div>
+						</div>
+					} @else {
+						<button class="btn btn-primary mb-3" (click)="updatePassword = true">Update Password</button>
+					}
+					<div class="mb-3 row">
+						<table class="table table-bordered table-sm align-middle">
+							<thead class="table-light">
+								<tr>
+									<th style="width: 50%;">Configuration Thingy</th>
+									<th style="width: 50%;">Value of Thingy</th>
+								</tr>
+							</thead>
+							<tbody>
+								@for (entry of defaultValues; track trackByKey(i, entry); let i = $index) {
+									<tr>
+										<td>
+											<label class="form-label" id="key-{{i}}">
+												{{entry.key}}
+											</label>
+										</td>
+										<td>
+											<input
+												[type]="entry.key?.toLowerCase().includes('password') ? 'password' : 'text'"
+												class="form-control form-control-sm" name="value-{{i}}"
+												[ngModel]="entry.value"
+												(ngModelChange)="updateConfig(entry.key, $event)"
+												placeholder="{{entry.value}}" />
+										</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					</div>
+					<div class="centred space-after">
+						<button type="submit" id="updateButton" class="btn btn-primary" [class.disabled]="!formValid()"
+							[disabled]="!formValid()">Update!</button>
+					</div>
+				</form>
+			</div>
+		}
 	</div>
 </div>

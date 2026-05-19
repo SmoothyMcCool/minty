@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import { UserService } from '../../user.service';
 
@@ -9,7 +9,7 @@ export interface UserSelection {
 
 @Component({
 	selector: 'minty-user-select-dialog',
-	imports: [CommonModule],
+	imports: [],
 	templateUrl: './user-select-dialog.component.html'
 })
 export class UserSelectDialogComponent implements OnChanges {

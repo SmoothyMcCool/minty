@@ -1,5 +1,5 @@
 import { CdkDragMove, DragDropModule } from "@angular/cdk/drag-drop";
-import { CommonModule } from "@angular/common";
+
 import { Component, ElementRef, EventEmitter, forwardRef, Output, ViewChild } from "@angular/core";
 import { NG_VALUE_ACCESSOR } from "@angular/forms";
 import { TaskWidgetComponent } from "../task-widget.component";
@@ -11,7 +11,7 @@ import { Workflow } from "../../../model/workflow/workflow";
 
 @Component({
 	selector: 'minty-canvas',
-	imports: [CommonModule, DragDropModule, TaskWidgetComponent],
+	imports: [DragDropModule, TaskWidgetComponent],
 	templateUrl: 'workflow-canvas.component.html',
 	styleUrls: ['./workflow-canvas.component.css'],
 	providers: [

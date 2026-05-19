@@ -11,11 +11,15 @@
 				<!-- Section heading -->
 				<li class="nav-item">
 					<!-- Nested list of links -->
-					<ul class="nav flex-column nav-pills ms-3" *ngIf="taskHelpFiles">
-						<li class="nav-item" *ngFor="let entry of taskHelpFiles | keyvalue: compareKeys">
-							<a class="nav-link" (click)="displayTaskHelp(entry.key)">{{entry.key}}</a>
-						</li>
-					</ul>
+					@if (taskHelpFiles) {
+						<ul class="nav flex-column nav-pills ms-3">
+							@for (entry of taskHelpFiles | keyvalue: compareKeys; track entry) {
+								<li class="nav-item">
+									<a class="nav-link" (click)="displayTaskHelp(entry.key)">{{entry.key}}</a>
+								</li>
+							}
+						</ul>
+					}
 				</li>
 			</ul>
 			<h6>Output Tasks</h6>
@@ -23,11 +27,15 @@
 				<!-- Section heading -->
 				<li class="nav-item">
 					<!-- Nested list of links -->
-					<ul class="nav flex-column nav-pills ms-3" *ngIf="outputHelpFiles">
-						<li class="nav-item" *ngFor="let entry of outputHelpFiles | keyvalue: compareKeys">
-							<a class="nav-link" (click)="displayOutputHelp(entry.key)">{{entry.key}}</a>
-						</li>
-					</ul>
+					@if (outputHelpFiles) {
+						<ul class="nav flex-column nav-pills ms-3">
+							@for (entry of outputHelpFiles | keyvalue: compareKeys; track entry) {
+								<li class="nav-item">
+									<a class="nav-link" (click)="displayOutputHelp(entry.key)">{{entry.key}}</a>
+								</li>
+							}
+						</ul>
+					}
 				</li>
 			</ul>
 		</nav>

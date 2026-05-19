@@ -1,11 +1,11 @@
 import { Component, forwardRef } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+
 
 @Component({
 	selector: 'minty-stringlist-editor',
 	templateUrl: 'stringlist-editor.component.html',
-	imports: [CommonModule, FormsModule],
+	imports: [FormsModule],
 	providers: [
 		{
 			provide: NG_VALUE_ACCESSOR,

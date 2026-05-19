@@ -8,14 +8,16 @@ public class PipelineOperationRegistry {
 	private static final Map<String, TransformOperation> registry = new HashMap<>();
 
 	static {
+		register(new ClearDataOperation());
+		register(new ClearTextOperation());
 		register(new ExpressionOperation());
+		register(new FlattenOperation());
 		register(new KeepFieldsOperation());
 		register(new RemoveEmptyOperation());
 		register(new RemoveFieldsOperation());
 		register(new RemoveNullsOperation());
 		register(new RenameFieldsOperation());
 		register(new SetFieldOperation());
-		register(new FlattenOperation());
 	}
 
 	public static void register(TransformOperation op) {

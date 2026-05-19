@@ -1,12 +1,12 @@
 import { Component, forwardRef, Input } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+
 import { EnumList } from '../../../model/workflow/enum-list';
 
 @Component({
 	selector: 'minty-enumlist-editor',
 	templateUrl: 'enumlist-editor.component.html',
-	imports: [CommonModule, FormsModule],
+	imports: [FormsModule],
 	providers: [
 		{
 			provide: NG_VALUE_ACCESSOR,

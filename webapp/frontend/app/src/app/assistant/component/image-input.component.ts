@@ -1,9 +1,9 @@
 import { Component, EventEmitter, HostListener, Input, NgZone, Output } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 
 @Component({
 	selector: 'minty-image-input',
-	imports: [CommonModule],
+	imports: [],
 	templateUrl: 'image-input.component.html'
 })
 export class ImageInputComponent {
@@ -55,7 +55,7 @@ export class ImageInputComponent {
 		const files = e.dataTransfer?.files;
 		if (!files || files.length === 0) return;
 
-		// Grab the first image file (ignore non‑image drops)
+		// Grab the first image file (ignore non-image drops)
 		const file = Array.from(files).find(f => f.type.startsWith('image/'));
 		if (!file) {
 			return;

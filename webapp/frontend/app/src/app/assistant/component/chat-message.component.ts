@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, Input } from '@angular/core';
 import { MarkdownModule } from 'ngx-markdown';
 import { FormsModule } from '@angular/forms';
@@ -8,7 +8,7 @@ import { SpinnerComponent } from '../../app/component/spinner.component';
 
 @Component({
 	selector: 'minty-chat-message',
-	imports: [CommonModule, MarkdownModule, FormsModule, SpinnerComponent, MermaidClipboardDirective],
+	imports: [MarkdownModule, FormsModule, SpinnerComponent, MermaidClipboardDirective],
 	templateUrl: 'chat-message.component.html',
 	styleUrls: ['conversation.component.css'],
 })

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { DiagramService } from '../diagram.service';
 import { MarkdownModule } from 'ngx-markdown';
 import { Diagram } from '../../model/diagram/diagram';
@@ -8,7 +8,7 @@ import { UserService } from '../../user.service';
 
 @Component({
 	selector: 'minty-view-diagrams',
-	imports: [CommonModule, MarkdownModule],
+	imports: [MarkdownModule],
 	templateUrl: 'view-diagrams.component.html'
 })
 export class ViewDiagramsComponent implements OnInit {

@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, forwardRef, Input } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { MarkdownModule } from 'ngx-markdown';
@@ -7,7 +7,7 @@ import { ProjectNode } from '../../model/project/project-node';
 
 @Component({
 	selector: 'minty-project-node-viewer',
-	imports: [CommonModule, FormsModule, MarkdownModule, MermaidClipboardDirective],
+	imports: [FormsModule, MarkdownModule, MermaidClipboardDirective],
 	templateUrl: 'project-node-viewer.component.html',
 	providers: [
 		{

@@ -15,15 +15,17 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr *ngFor="let user of metadata">
-						<th scope="row">{{user.id}}</th>
-						<td>{{user.totalAssistantsCreated}}</td>
-						<td>{{user.totalConversations}}</td>
-						<td>{{user.totalWorkflowsCreated}}</td>
-						<td>{{user.totalWorkflowRuns}}</td>
-						<td>{{user.totalLogins}}</td>
-						<td>{{user.lastLogin | date}}</td>
-					</tr>
+					@for (user of metadata; track user) {
+						<tr>
+							<th scope="row">{{user.id}}</th>
+							<td>{{user.totalAssistantsCreated}}</td>
+							<td>{{user.totalConversations}}</td>
+							<td>{{user.totalWorkflowsCreated}}</td>
+							<td>{{user.totalWorkflowRuns}}</td>
+							<td>{{user.totalLogins}}</td>
+							<td>{{user.lastLogin | date}}</td>
+						</tr>
+					}
 				</tbody>
 			</table>
 

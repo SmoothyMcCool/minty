@@ -8,57 +8,63 @@
 		<div class="col-3 border-end">
 			<h5 class="mb-3">Skills</h5>
 			<ul class="list-group">
-				<li class="list-group-item list-group-item-action d-flex position-relative text-bg-light bg-opacity-75"
-					*ngFor="let skill of skills" [class.active]="skill.name === selectedSkill?.metadata?.name"
-					(click)="onSelectSkill(skill)" style="cursor: pointer">
-					{{skill.name}}
-					<button class="ms-auto me-3" (click)="shareSkill(skill.name)" *ngIf="skill.owned">
-						<i class="bi bi-share"></i>
-					</button>
-					<button (click)="deleteSkill(skill.name)" *ngIf="skill.owned">
-						<i class="bi bi-trash" style="font-size: 14px; color: red"></i>
-					</button>
-				</li>
+				@for (skill of skills; track skill) {
+					<li class="list-group-item list-group-item-action d-flex position-relative text-bg-light bg-opacity-75"
+						[class.active]="skill.name === selectedSkill?.metadata?.name" (click)="onSelectSkill(skill)"
+						style="cursor: pointer">
+						{{skill.name}}
+						@if (skill.owned) {
+							<button class="ms-auto me-3" (click)="shareSkill(skill.name)">
+								<i class="bi bi-share"></i>
+							</button>
+						}
+						@if (skill.owned) {
+							<button (click)="deleteSkill(skill.name)">
+								<i class="bi bi-trash" style="font-size: 14px; color: red"></i>
+							</button>
+						}
+					</li>
+				}
 			</ul>
 		</div>
 
 		<!-- Right panes -->
-		<div class="col-9" *ngIf="selectedSkill; else noSelection">
-
-			<!-- Skill header -->
-			<div class="mb-3 pb-2 border-bottom">
-				<h5 class="mb-1">{{selectedSkill.metadata.name}}</h5>
-				<p class="text-muted mb-0">{{selectedSkill.metadata.description}}</p>
-			</div>
-
-			<div class="row">
-				<!-- File list -->
-				<div class="col-4 border-end">
-					<h6 class="mb-3">Files</h6>
-					<ul class="list-group">
-						<li class="list-group-item list-group-item-action text-bg-light bg-opacity-75"
-							*ngFor="let file of selectedSkill.files" [class.active]="file === selectedFile"
-							(click)="onSelectFile(file)" style="cursor: pointer">
-							<i class="bi bi-file-earmark me-2"></i>{{file.relativePath}}
-						</li>
-					</ul>
+		@if (selectedSkill) {
+			<div class="col-9">
+				<!-- Skill header -->
+				<div class="mb-3 pb-2 border-bottom">
+					<h5 class="mb-1">{{selectedSkill.metadata.name}}</h5>
+					<p class="text-muted mb-0">{{selectedSkill.metadata.description}}</p>
 				</div>
-
-				<!-- File contents -->
-				<div class="col-8" *ngIf="selectedFile; else noFileSelection">
-					<h6 class="text-muted mb-3">{{ selectedFile.relativePath }}</h6>
-					<markdown mermaid [data]="renderContent(selectedFile.content)"></markdown>
+				<div class="row">
+					<!-- File list -->
+					<div class="col-4 border-end">
+						<h6 class="mb-3">Files</h6>
+						<ul class="list-group">
+							@for (file of selectedSkill.files; track file) {
+								<li class="list-group-item list-group-item-action text-bg-light bg-opacity-75"
+									[class.active]="file === selectedFile" (click)="onSelectFile(file)"
+									style="cursor: pointer">
+									<i class="bi bi-file-earmark me-2"></i>{{file.relativePath}}
+								</li>
+							}
+						</ul>
+					</div>
+					<!-- File contents -->
+					@if (selectedFile) {
+						<div class="col-8">
+							<h6 class="text-muted mb-3">{{ selectedFile.relativePath }}</h6>
+							<markdown mermaid [data]="renderContent(selectedFile.content)"></markdown>
+						</div>
+					} @else {
+						<h5 class="col-8 text-muted">Select a file to view its contents</h5>
+					}
 				</div>
-
-				<ng-template #noFileSelection>
-					<h5 class="col-8 text-muted">Select a file to view its contents</h5>
-				</ng-template>
 			</div>
-		</div>
-
-		<ng-template #noSelection>
+		} @else {
 			<h5 class="col-9 text-muted">Select a skill to view its files</h5>
-		</ng-template>
+		}
+
 
 	</div>
 </div>
@@ -89,5 +95,6 @@
 	[visible]="deleteSkillDialogVisible" (confirm)="confirmDeleteSkill()" (cancel)="deleteSkillDialogVisible = false">
 </minty-confirmation-dialog>
 
-<minty-user-select-dialog [visible]="userSelectDialogVisible" (confirm)="onUsersConfirmed($event)" [initialSelection]="sharingSelection" (cancel)="userSelectDialogVisible = false">
+<minty-user-select-dialog [visible]="userSelectDialogVisible" (confirm)="onUsersConfirmed($event)"
+	[initialSelection]="sharingSelection" (cancel)="userSelectDialogVisible = false">
 </minty-user-select-dialog>

@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RouterModule } from '@angular/router';
 
 
 @Component({
 	selector: 'minty-assistants-help-editing',
-	imports: [CommonModule, RouterModule],
+	imports: [RouterModule],
 	templateUrl: 'assistants-help-editing.component.html',
 	styleUrl: 'help.component.css'
 

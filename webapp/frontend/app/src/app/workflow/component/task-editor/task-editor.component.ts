@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, EventEmitter, forwardRef, Input, OnInit, Output } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { AttributeMapEditorComponent } from './attribute-map-editor.component';
@@ -7,7 +7,7 @@ import { WorkflowService } from '../../workflow.service';
 
 @Component({
 	selector: 'minty-task-editor',
-	imports: [CommonModule, FormsModule, AttributeMapEditorComponent],
+	imports: [FormsModule, AttributeMapEditorComponent],
 	templateUrl: 'task-editor.component.html',
 	styleUrls: [],
 	providers: [{

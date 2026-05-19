@@ -1,5 +1,5 @@
 // data-editor.component.ts
-import { CommonModule } from '@angular/common';
+
 import { Component, forwardRef } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { Packet } from '../../../model/workflow/packet';
@@ -7,7 +7,7 @@ import { Packet } from '../../../model/workflow/packet';
 @Component({
 	selector: 'minty-packet-editor',
 	templateUrl: './packet-editor.component.html',
-	imports: [CommonModule, FormsModule],
+	imports: [FormsModule],
 	providers: [
 		{
 			provide: NG_VALUE_ACCESSOR,

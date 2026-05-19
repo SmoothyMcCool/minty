@@ -4,16 +4,18 @@
 			<h1 class="well blue rounded text-center">{{applicationName}}</h1>
 			<div class="big-margin well rounded p-3 vertical-centre">
 
-				<div *ngIf="loginFailed" class="alert alert-danger container">
-					<div class="row">
-						<div class="col me-auto align-middle">
-							<label class="col-form-label">Couldn't log in :( Try again.</label>
-						</div>
-						<div class="col-auto">
-							<button (click)="loginFailed = false" class="btn btn-danger">&times;</button>
+				@if (loginFailed) {
+					<div class="alert alert-danger container">
+						<div class="row">
+							<div class="col me-auto align-middle">
+								<label class="col-form-label">Couldn't log in :( Try again.</label>
+							</div>
+							<div class="col-auto">
+								<button (click)="loginFailed = false" class="btn btn-danger">&times;</button>
+							</div>
 						</div>
 					</div>
-				</div>
+				}
 
 				<div class="header">
 					<button type="submit" id="accountButton" (click)="signup()" class="btn btn-primary btn-float">Sign

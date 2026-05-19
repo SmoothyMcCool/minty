@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, ElementRef, forwardRef, HostListener, ViewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
@@ -17,7 +17,7 @@ import { TaskEditorComponent } from '../task-editor/task-editor.component';
 
 @Component({
 	selector: 'minty-workflow-editor',
-	imports: [CommonModule, DragDropModule, FormsModule, TaskEditorComponent, WorkflowCanvasComponent, FilterPipe, ConfirmationDialogComponent, AutoResizeDirective, WorkflowNodePaletteComponent, WorkflowTaskEditorModalComponent],
+	imports: [DragDropModule, FormsModule, TaskEditorComponent, WorkflowCanvasComponent, FilterPipe, ConfirmationDialogComponent, AutoResizeDirective, WorkflowNodePaletteComponent, WorkflowTaskEditorModalComponent],
 	templateUrl: 'workflow-editor.component.html',
 	styleUrls: ['../workflow.component.css', 'workflow-editor.component.css'],
 	providers: [

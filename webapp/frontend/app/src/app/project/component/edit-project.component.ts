@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -8,7 +8,7 @@ import { ProjectService } from '../project.service';
 
 @Component({
 	selector: 'minty-edit-project',
-	imports: [CommonModule, FormsModule, ProjectEditorComponent],
+	imports: [FormsModule, ProjectEditorComponent],
 	templateUrl: 'edit-project.component.html'
 })
 export class EditProjectComponent implements OnInit {

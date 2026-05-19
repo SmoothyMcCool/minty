@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
-import { CommonModule } from '@angular/common';
+
 
 @Component({
 	selector: 'minty-view-help',
-	imports: [CommonModule, RouterModule],
+	imports: [RouterModule],
 	templateUrl: 'view-help.component.html'
 })
 export class ViewHelpComponent {

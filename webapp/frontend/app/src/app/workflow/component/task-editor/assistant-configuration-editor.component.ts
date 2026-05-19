@@ -1,4 +1,4 @@
-import { CommonModule } from "@angular/common";
+
 import { Component, forwardRef, Input, OnInit } from "@angular/core";
 import { FormsModule, NG_VALUE_ACCESSOR, ControlValueAccessor } from "@angular/forms";
 import { EnumListEditorComponent } from "./enumlist-editor.component";
@@ -14,7 +14,7 @@ import { EnumList } from "../../../model/workflow/enum-list";
 @Component({
 	selector: 'minty-assistant-configuration-editor',
 	templateUrl: 'assistant-configuration-editor.component.html',
-	imports: [CommonModule, FormsModule, AssistantEditorComponent, EnumListEditorComponent],
+	imports: [FormsModule, AssistantEditorComponent, EnumListEditorComponent],
 	providers: [
 		{
 			provide: NG_VALUE_ACCESSOR,

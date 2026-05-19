@@ -1,5 +1,9 @@
 <div class="row g-1">
-	<select class="form-select" [ngModel]="selection" (ngModelChange)="valueChanged($event)" *ngIf="choices">
-		<option *ngFor="let choice of choices.values" [value]="choice.value">{{choice.name}}</option>
-	</select>
+	@if (choices) {
+		<select class="form-select" [ngModel]="selection" (ngModelChange)="valueChanged($event)">
+			@for (choice of choices.values; track choice) {
+				<option [value]="choice.value">{{choice.name}}</option>
+			}
+		</select>
+	}
 </div>
