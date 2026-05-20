@@ -1,20 +1,20 @@
 <div class="container-fluid position-relative">
-  <h1>Projects</h1>
-  @if (anyTaskCompleted) {
-    <div>
-      <div class="alert alert-warning" >
-        <strong>A task completed. You should reload this page.</strong>
-      </div>
-    </div>
-  }
-  <router-outlet></router-outlet>
+	<h1>Projects</h1>
+	@if (anyTaskCompleted) {
+		<div>
+			<div class="alert alert-warning">
+				<strong>A task completed. You should reload this page.</strong>
+			</div>
+		</div>
+	}
+	<router-outlet></router-outlet>
 
-  <div class="toast-container position-absolute top-0 end-0 p-3" style="z-index: 1050;">
-    @for (task of tasks; track task) {
-      <div class="toast show" role="alert">
-        <div class="toast-header">
-          <strong class="me-auto">Processing {{task}}</strong>
-        </div>
-      </div>
-    }
-  </div>
+	<div class="toast-container position-absolute top-0 end-0 p-3" style="z-index: 1050;">
+		@for (task of tasks; track task) {
+			<div class="toast show" role="alert">
+				<div class="toast-header">
+					<strong class="me-auto">Processing {{task}}</strong>
+				</div>
+			</div>
+		}
+	</div>

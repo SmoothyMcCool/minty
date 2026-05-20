@@ -1,75 +1,86 @@
-<li class="folder-item" [class.selected]="node === selected">
-  @if (node.type === 'Folder') {
-    <span class="folder-toggle" (click)="toggle()">
-      <i class="bi" [ngClass]="{'bi-folder': isExpanded, 'bi-folder2': !isExpanded}"></i>
-    </span>
-  }
+<li class="folder-item py-0 px-1" [class.selected]="node === selected">
+	@if (node.type === 'Folder') {
+		<span class="folder-toggle" (click)="toggle()">
+			<i class="bi" [ngClass]="{'bi-folder2-open': isExpanded, 'bi-folder': !isExpanded}"></i>
+		</span>
+	} @else {
+		<span>
+			<i class="bi" class="bi-file-earmark"></i>
+		</span>
+	}
 
-  <span class="clickable-text" (click)="onSelect(node)">
-    {{getFileName(node.path)}}
-  </span>
+	<span class="clickable-text small" (click)="onSelect(node)">
+		{{getFileName(node.path)}}
+	</span>
 
   <span class="flex-grow-1"></span>
 
-  <button class="btn btn-sm" style="font-size: 14px;" (click)="editNodeInfo(); onSelect(node)">
-    <i class="bi bi-pencil-square"></i>
-  </button>
-  <button type="button" class="btn btn-sm p-0" style="font-size: 14px; color: red" (click)="deleteNode()">
-    <i class="bi bi-trash"></i>
-  </button>
+	<button class="btn btn-sm p-0 me-1" style="font-size: 12px;" (click)="editNodeInfo(); onSelect(node)">
+		<i class="bi bi-pencil-square"></i>
+	</button>
+	<button type="button" class="btn btn-sm p-0" style="font-size: 12px; color: red" (click)="deleteNode()">
+		<i class="bi bi-trash"></i>
+	</button>
 </li>
 
 @if (node.type === 'Folder' && isExpanded) {
-  <ul class="list-unstyled ps-3">
-    @for (child of childNodesOf(node.path); track child) {
-      <minty-project-node [node]="child" [selected]="selected" [nodes]="nodes" (nodeSelected)="onSelect($event)"
-        (update)="update.emit($event)" (delete)="delete.emit($event)">
-      </minty-project-node>
-    }
-  </ul>
+	<ul class="list-unstyled ps-4">
+		@for (child of childNodesOf(node.path); track child) {
+			<minty-project-node [node]="child" [selected]="selected" [nodes]="nodes" (nodeSelected)="onSelect($event)"
+				(update)="update.emit($event)" (delete)="delete.emit($event)">
+			</minty-project-node>
+		}
+	</ul>
 }
 
+
 @if (editNodeInfoVisible) {
-  <div class="modal show d-block" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Edit Project Entry</h5>
-          <button type="button" class="btn-close" (click)="onCancelEditNodeInfo()" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form role="form row">
-            <div class="col-12">
-              <label for="nameInput" class="form-label">Name</label>
-              <input type="text" class="form-control" id="nameInput" name="nameInput" [(ngModel)]="editName" required>
-            </div>
-            @if (editNodeType === 'File') {
-              <div class="col">
-                <label for="fileTypeSelect" class="form-label">File Type</label>
-                <select class="form-select" id="fileTypeSelect" [(ngModel)]="editFileType" name="fileTypeSelect" required>
-                  <option>code</option>
-                  <option>markdown</option>
-                  <option>json</option>
-                  <option>text</option>
-                  <option>diagram</option>
-                </select>
-              </div>
-            }
-            <div class="col">
-              <label for="typeSelect" class="form-label">Parent</label>
-              <select class="form-select" id="typeSelect" [(ngModel)]="editParent" name="parentSelect" required>
-                @for (folder of listFolders(); track folder) {
-                  <option>{{folder.path}}</option>
-                }
-              </select>
-            </div>
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" (click)="onCancelEditNodeInfo()"><i class="bi bi-arrow-counterclockwise"></i></button>
-          <button type="button" class="btn btn-primary" (click)="onConfirmNodeInfo()"><i class="bi bi-check-lg"></i></button>
-        </div>
-      </div>
-    </div>
-  </div>
+	<div class="modal show d-block" tabindex="-1">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Edit Project Entry</h5>
+					<button type="button" class="btn-close" (click)="onCancelEditNodeInfo()"
+						aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<form role="form row">
+						<div class="col-12">
+							<label for="nameInput" class="form-label">Name</label>
+							<input type="text" class="form-control" id="nameInput" name="nameInput"
+								[(ngModel)]="editName" required>
+						</div>
+						@if (editNodeType === 'File') {
+							<div class="col">
+								<label for="fileTypeSelect" class="form-label">File Type</label>
+								<select class="form-select" id="fileTypeSelect" [(ngModel)]="editFileType"
+									name="fileTypeSelect" required>
+									<option>code</option>
+									<option>markdown</option>
+									<option>json</option>
+									<option>text</option>
+									<option>diagram</option>
+								</select>
+							</div>
+						}
+						<div class="col">
+							<label for="typeSelect" class="form-label">Parent</label>
+							<select class="form-select" id="typeSelect" [(ngModel)]="editParent" name="parentSelect"
+								required>
+								@for (folder of listFolders(); track folder) {
+									<option>{{folder.path}}</option>
+								}
+							</select>
+						</div>
+					</form>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" (click)="onCancelEditNodeInfo()"><i
+							class="bi bi-arrow-counterclockwise"></i></button>
+					<button type="button" class="btn btn-primary" (click)="onConfirmNodeInfo()"><i
+							class="bi bi-check-lg"></i></button>
+				</div>
+			</div>
+		</div>
+	</div>
 }

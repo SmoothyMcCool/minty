@@ -129,36 +129,6 @@
 									</div>
 								}
 							</div>
-
-
-							<div *ngIf="packet.data?.length === 0" class="alert alert-light mb-0">
-								No data items added.
-							</div>
-
-							<div *ngIf="packet.data?.length">
-								<div *ngFor="let d of packet.data; let k = index; trackBy: trackByIndex"
-									class="card mb-3 border">
-									<div class="card-header d-flex justify-content-between align-items-center py-2">
-										<span class="small text-muted">
-											Item {{k + 1}}
-										</span>
-										<button type="button" class="btn btn-outline-danger btn-sm"
-											(click)="removeData(packet, k)">
-											<i class="bi bi-trash"></i>
-										</button>
-									</div>
-									<div class="card-body">
-										<textarea id="packetDataInput-{{i}}-{{j}}-{{k}}"
-											name="packetDataInput-{{i}}-{{j}}-{{k}}" class="form-control font-monospace"
-											rows="6" [ngModel]="packetAsString(d)"
-											(ngModelChange)="onValueChange(packet, k, $event)" autocomplete="off"
-											required [class.is-invalid]="!valid"></textarea>
-										<div *ngIf="!valid" class="invalid-feedback d-block">
-											Invalid value
-										</div>
-									</div>
-								</div>
-							</div>
 						</div>
 						<!-- Footer -->
 						<div class="card-footer bg-light text-end">

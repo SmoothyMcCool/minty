@@ -1,13 +1,13 @@
 <div class="container-fluid py-3 h-100">
-  <div class="row h-100">
-    <!-- Left pane - tree view -->
-    <div class="col-3 border-end d-flex flex-column" style="height: 100%;">
-      <h5 class="mb-2">Files</h5>
+	<div class="row h-100">
+		<!-- Left pane - tree view -->
+		<div class="col-3 border-end d-flex flex-column" style="height: 100%;">
+			<h6 class="mb-1 ps-2">Files</h6>
 
-      <!-- Menu Bar -->
-      <ul class="list-group flex-shrink-0">
-        <li class="list-group-item text-bg-light bg-opacity-75 p-0" style="height: 2.5rem;">
-          <div class="d-flex align-items-stretch h-100">
+			<!-- Menu Bar -->
+			<ul class="list-group flex-shrink-0">
+				<li class="list-group-item text-bg-light bg-opacity-75 p-0" style="height: 2rem;">
+					<div class="d-flex align-items-stretch h-100">
 
             <!-- File Menu -->
             <div class="dropdown">
@@ -63,47 +63,47 @@
         </li>
       </ul>
 
-      <!-- File Tree -->
-      <ul class="list-group flex-grow-1">
-        @for (node of rootNodes(); track node) {
-          <li class="list-group-item position-relative text-bg-light bg-opacity-75"
-            >
-            <minty-project-node [node]="node" [selected]="selectedNode" [nodes]="nodes"
-              (nodeSelected)="onSelected($event)" (update)="onUpdateNode($event)"
-              (delete)="onDeleteNode($event)">
-            </minty-project-node>
-          </li>
-        }
-      </ul>
-    </div>
+			<!-- File Tree -->
+			<ul class="list-group flex-grow-1">
+				@for (node of rootNodes(); track node) {
+					<li class="list-group-item p-0 border-0 text-bg-light bg-opacity-75">
+						<minty-project-node [node]="node" [selected]="selectedNode" [nodes]="nodes"
+							(nodeSelected)="onSelected($event)" (update)="onUpdateNode($event)"
+							(delete)="onDeleteNode($event)">
+						</minty-project-node>
+					</li>
+				}
+			</ul>
+		</div>
 
-    <!-- Right pane - file viewer -->
-    @if (selectedNode) {
-      <div class="col-9">
-        <div class="row">
-          <div class="col-auto">
-            @if (!editFile) {
-              <button class="btn" (click)="editCurrentFile()" title="edit">
-                <i class="bi bi-pencil-square"></i>
-              </button>
-            } @else {
-              <button class="btn" (click)="saveChangesToCurrentFile()" title="save">
-                <i class="bi bi-floppy"></i>
-              </button>
-              <button class="btn" (click)="cancelEditingCurrentFile()" title="cancel">
-                <i class="bi bi-x-circle"></i>
-              </button>
-            }
-          </div>
-        </div>
-        <h1>{{selectedNode.path}}</h1>
-        <minty-project-node-viewer [ngModel]="selectedNode" (ngModelChange)="onFileContentsChanged($event)"
-        [edit]="editFile"></minty-project-node-viewer>
-      </div>
-    } @else {
-      <h5 class="col-9 text-muted">Select a file to view its contents</h5>
-    }
-  </div>
+
+		<!-- Right pane - file viewer -->
+		@if (selectedNode) {
+			<div class="col-9">
+				<div class="row">
+					<div class="col-auto">
+						@if (!editFile) {
+							<button class="btn" (click)="editCurrentFile()" title="edit">
+								<i class="bi bi-pencil-square"></i>
+							</button>
+						} @else {
+							<button class="btn" (click)="saveChangesToCurrentFile()" title="save">
+								<i class="bi bi-floppy"></i>
+							</button>
+							<button class="btn" (click)="cancelEditingCurrentFile()" title="cancel">
+								<i class="bi bi-x-circle"></i>
+							</button>
+						}
+					</div>
+				</div>
+				<h1>{{selectedNode.path}}</h1>
+				<minty-project-node-viewer [ngModel]="selectedNode" (ngModelChange)="onFileContentsChanged($event)"
+					[edit]="editFile"></minty-project-node-viewer>
+			</div>
+		} @else {
+			<h5 class="col-9 text-muted">Select a file to view its contents</h5>
+		}
+	</div>
 </div>
 
 <div class="modal fade" tabindex="-1" [ngClass]="{'show d-block': mdFileDialogVisible}"
@@ -132,25 +132,26 @@
 </div>
 
 <div class="modal fade" tabindex="-1" [ngClass]="{'show d-block': mermaidFileDialogVisible}"
-  [style.display]="mermaidFileDialogVisible ? 'block' : 'none'">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Convert Diagrams to Mermaid</h5>
-        <button type="button" class="btn-close" (click)="mermaidFileDialogVisible = false"></button>
-      </div>
-      <div class="modal-body">
-        <div class="mb-3">
-          <label for="mdFilename" class="form-label">Filename</label>
-          <input class="form-control" type="file" id="mdFile" (change)="fileSelected($event)">
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="mermaidFileDialogVisible = false">Cancel</button>
-        <button type="button" class="btn btn-primary" (click)="convertToMermaid()">Convert</button>
-      </div>
-    </div>
-  </div>
+	[style.display]="mermaidFileDialogVisible ? 'block' : 'none'">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">Convert Diagrams to Mermaid</h5>
+				<button type="button" class="btn-close" (click)="mermaidFileDialogVisible = false"></button>
+			</div>
+			<div class="modal-body">
+				<div class="mb-3">
+					<label for="mdFilename" class="form-label">Filename</label>
+					<input class="form-control" type="file" id="mdFile" (change)="fileSelected($event)">
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary"
+					(click)="mermaidFileDialogVisible = false">Cancel</button>
+				<button type="button" class="btn btn-primary" (click)="convertToMermaid()">Convert</button>
+			</div>
+		</div>
+	</div>
 </div>
 
 <div class="modal fade" tabindex="-1" [ngClass]="{'show d-block': zipFileDialogVisible}"
