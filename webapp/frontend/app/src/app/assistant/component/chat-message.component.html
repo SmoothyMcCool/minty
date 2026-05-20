@@ -1,31 +1,34 @@
 <div class="row m-2" [class.flex-row-reverse]="message.user">
-	<div class="col-11 p-2" [class.well-user]="message.user" [class.well-bot]="!message.user">
+	<div class="col-11 p-3 rounded-3 shadow-sm" [class.well-user]="message.user" [class.well-bot]="!message.user"
+		style="max-width: 85%; border: 1px solid rgba(0,0,0,0.05);">
+
 		@if (responsePending && isFirst && !message.user) {
-			<div>
+			<div class="d-flex align-items-center gap-2 text-muted small">
 				<minty-spinner></minty-spinner>
 				@if (queueDepth === 1) {
 					<span>Waiting... You're next!</span>
-				} @else {
-					@if (queueDepth === 2) {
-						<span>Waiting... There is one request ahead of you.</span>
-					} @else {
-						@if (queueDepth !== undefined) {
-							<span>Waiting... There are {{queueDepth - 1}} requests ahead of you.</span>
-						}
-					}
+				} @else if (queueDepth === 2) {
+					<span>Waiting... There is one request ahead of you.</span>
+				} @else if (queueDepth !== undefined) {
+					<span>Waiting... There are {{queueDepth - 1}} requests ahead of you.</span>
 				}
 			</div>
 		}
-		@if (useMarkdown) {
+
+		@if (useMarkdown && !message.user) {
 			<markdown clipboard mermaidClipboard [mermaid]="useMermaid" [data]="message.message"
 				[clipboardButtonTemplate]="clipboardTemplate"></markdown>
-			<!--markdown clipboard mermaidClipboard [mermaid]="useMermaid" [data]="processedMessage"
-      [clipboardButtonTemplate]="clipboardTemplate"-->
+
 			@if (!responsePending && !responseComplete && isFirst && !message.user) {
-				<minty-spinner></minty-spinner>
+				<div class="mt-2">
+					<minty-spinner></minty-spinner>
+				</div>
 			}
 		} @else {
-			<pre>{{message.message}}</pre>
+			<!-- The key change: white-space: pre-wrap allows wrapping while keeping line breaks -->
+			<div class="message-text" style="white-space: pre-wrap; word-break: break-word;">
+				{{message.message}}
+			</div>
 		}
 	</div>
 </div>
