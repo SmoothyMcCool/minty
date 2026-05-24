@@ -4,6 +4,7 @@ import java.util.List;
 
 import tom.api.AssistantId;
 import tom.api.ConversationId;
+import tom.api.ProjectId;
 import tom.api.UserId;
 import tom.api.model.conversation.Conversation;
 import tom.api.services.ConversationService;
@@ -20,10 +21,14 @@ public interface ConversationServiceInternal extends ConversationService {
 
 	Conversation newConversation(UserId userId, AssistantId assistantId);
 
+	Conversation newConversation(UserId userId, AssistantId assistantId, ProjectId projectId);
+
 	Conversation renameConversation(UserId userId, ConversationId conversationId, String title);
 
 	boolean resetConversation(UserId userId, ConversationId conversationId);
 
 	void updateLastUsed(ConversationId conversationId);
+
+	List<Conversation> listConversationsForProject(UserId userId, ProjectId projectId);
 
 }

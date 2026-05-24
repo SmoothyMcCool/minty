@@ -1,4 +1,4 @@
-package tom.project.repository;
+package tom.project.model;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -11,11 +11,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import tom.api.ProjectId;
 import tom.api.UserId;
-import tom.api.model.project.Project;
 
 @Entity
 @Table(name = "Project")
-public class ProjectEntity {
+public class Project {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
@@ -32,12 +31,12 @@ public class ProjectEntity {
 	@Column(nullable = false)
 	private Instant updated;
 
-	public UUID getId() {
-		return id;
+	public ProjectId getId() {
+		return new ProjectId(id);
 	}
 
-	public void setId(UUID id) {
-		this.id = id;
+	public void setId(ProjectId id) {
+		this.id = id == null ? null : id.value();
 	}
 
 	public UserId getOwnerId() {
@@ -72,8 +71,8 @@ public class ProjectEntity {
 		this.updated = updated;
 	}
 
-	public Project toModel() {
-		return new Project(new ProjectId(id), name);
+	public tom.api.model.project.Project toModel() {
+		return new tom.api.model.project.Project(new ProjectId(id), name);
 	}
 
 }

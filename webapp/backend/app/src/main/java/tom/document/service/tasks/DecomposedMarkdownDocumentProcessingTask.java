@@ -180,7 +180,7 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 		query.setQuery(s.content);
 		Conversation conversation = conversationService.newConversation(UserService.DefaultId,
 				AssistantManagementService.DocumentSummarizingAssistantId);
-		query.setConversationId(conversation.getConversationId());
+		query.setConversationId(conversation.getId());
 
 		String summary = "";
 
@@ -215,7 +215,7 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 		}
 
 		summary = summary.strip();
-		conversationService.deleteConversation(conversation.getOwnerId(), conversation.getConversationId());
+		conversationService.deleteConversation(conversation.getOwnerId(), conversation.getId());
 
 		return summary;
 	}

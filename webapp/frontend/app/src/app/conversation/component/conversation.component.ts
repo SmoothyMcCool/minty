@@ -1,8 +1,8 @@
 
 import { Component, Input } from '@angular/core';
 import { ChatMessage } from '../../model/conversation/chat-message';
-import { ChatMessageComponent } from './chat-message.component';
 import { FormsModule } from '@angular/forms';
+import { ChatMessageComponent } from './chat-message.component';
 
 @Component({
 	selector: 'minty-conversation',

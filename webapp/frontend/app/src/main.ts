@@ -9,8 +9,6 @@ import { AuthorizedInterceptor } from './app/auth.interceptor';
 import { LoginComponent } from './app/app/component/login.component';
 import { SignupComponent } from './app/app/component/signup.component';
 import { ViewUserComponent } from './app/app/component/view-user.component';
-import { ViewConversationComponent } from './app/assistant/component/view-conversation.component';
-import { AssistantsListComponent } from './app/assistant/component/assistants-list.component';
 import { NewAssistantComponent } from './app/assistant/component/new-assistant.component';
 import { ViewStatisticsComponent } from './app/app/component/view-statistics.component';
 import { ViewWorkflowComponent } from './app/workflow/component/view-workflow.component';
@@ -35,8 +33,9 @@ import { WorkflowsEditingHelpComponent } from './app/help/component/workflows-ed
 import { WorkflowsTasksCreateComponent } from './app/help/component/workflows-tasks-create.component';
 import { ViewProjectComponent } from './app/project/component/view-project.component';
 import { ProjectListComponent } from './app/project/component/project-list.component';
-import { EditProjectComponent } from './app/project/component/edit-project.component';
 import { ViewSkillsComponent } from './app/skills/component/view-skills.component';
+import { ViewConversationComponent } from './app/conversation/component/view-conversation.component';
+import { ChatComponent } from './app/assistant/component/chat.component';
 
 export function clipboardOptionsFactory(): ClipboardOptions {
 	return {};
@@ -59,7 +58,7 @@ bootstrapApplication(AppComponent, {
 				children: [
 					{
 						path: '',
-						component: AssistantsListComponent
+						component: ChatComponent,
 					},
 					{
 						path: 'edit/:id',
@@ -148,10 +147,6 @@ bootstrapApplication(AppComponent, {
 					{
 						path: '',
 						component: ProjectListComponent
-					},
-					{
-						path: ':id',
-						component: EditProjectComponent
 					},
 				]
 			},

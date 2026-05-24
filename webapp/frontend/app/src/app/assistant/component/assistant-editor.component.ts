@@ -4,7 +4,7 @@ import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/f
 import { Assistant, createAssistant } from '../../model/assistant';
 import { RouterModule } from '@angular/router';
 import { FilterPipe } from '../../pipe/filter-pipe';
-import { SliderComponent } from './slider.component';
+import { SliderComponent } from '../../conversation/component/slider.component';
 import { MintyDoc } from '../../model/minty-doc';
 import { MintyTool } from '../../model/minty-tool';
 import { Model } from '../../model/model';

@@ -7,10 +7,11 @@ import { Project } from "../../model/project/project";
 import { ConfirmationDialogComponent } from "../../app/component/confirmation-dialog.component";
 import { User } from "../../model/user";
 import { UserService } from "../../user.service";
+import { ProjectEditorComponent } from "./project-editor.component";
 
 @Component({
 	selector: 'minty-project-list',
-	imports: [FormsModule, RouterModule, ConfirmationDialogComponent],
+	imports: [FormsModule, RouterModule, ConfirmationDialogComponent, ProjectEditorComponent],
 	templateUrl: 'project-list.component.html'
 })
 export class ProjectListComponent implements OnInit {
@@ -18,14 +19,13 @@ export class ProjectListComponent implements OnInit {
 	user: User | null = null;
 
 	projects: Project[] = [];
+	activeProject: Project | undefined = undefined;
 
 	confirmDeleteProjectVisible = false;
 	projectPendingDeletion: Project | undefined = undefined;
 
 	newProjectVisible = false;
 	newProjectName = '';
-
-	activeProject: string | undefined = undefined;
 
 	constructor(private router: Router,
 		private userService: UserService,
@@ -35,7 +35,6 @@ export class ProjectListComponent implements OnInit {
 	ngOnInit() {
 		this.userService.getUser().subscribe((user: User) => {
 			this.user = user;
-			this.activeProject = user.defaults['defaultProject'];
 		});
 		this.projectService.listProjects().subscribe((projects: Project[]) => {
 			this.projects = projects;
@@ -53,8 +52,8 @@ export class ProjectListComponent implements OnInit {
 		this.newProjectVisible = false;
 		this.newProjectName = '';
 	}
-	navigateToProject(id: string) {
-		this.router.navigate(['/projects', id]);
+	openProject(project: Project) {
+		this.activeProject = project;
 	}
 
 	downloadProject(project: Project) {
@@ -75,12 +74,4 @@ export class ProjectListComponent implements OnInit {
 		});
 	}
 
-	setActive(project: Project) {
-		if (this.user) {
-			this.user.defaults['defaultProject'] = project.id;
-			this.userService.update(this.user).subscribe(() => {
-				this.activeProject = project.id;
-			});
-		}
-	}
 }

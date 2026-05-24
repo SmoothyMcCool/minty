@@ -1,15 +1,11 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, ElementRef, forwardRef, Input, OnDestroy, ViewChild } from '@angular/core';
+import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
 import { retry } from 'rxjs';
 import { AssistantService } from '../../assistant.service';
 import { AgentStepResult, Assistant, createAssistant } from '../../model/assistant';
 import { ConversationService } from '../../conversation.service';
-import { ConversationComponent } from './conversation.component';
 import { ChatMessage } from '../../model/conversation/chat-message';
-import { ImageInputComponent } from './image-input.component';
-import { SliderComponent } from './slider.component';
 import { ConfirmationDialogComponent } from '../../app/component/confirmation-dialog.component';
 import { Conversation } from '../../model/conversation/conversation';
 import { LlmMetric } from '../../model/conversation/llm-metric';
@@ -21,17 +17,32 @@ import { UserService } from '../../user.service';
 import { ProjectService } from '../../project/project.service';
 import { ProjectNode } from '../../model/project/project-node';
 import { NodeViewerComponent } from '../../project/component/project-node-viewer.component';
+import { ConversationComponent } from './conversation.component';
+import { ImageInputComponent } from './image-input.component';
+import { SliderComponent } from './slider.component';
 
 
 @Component({
-	selector: 'minty-view-conversation',
+	selector: 'minty-conversation-viewer',
 	imports: [CommonModule, FormsModule, ConversationComponent, ConfirmationDialogComponent, ImageInputComponent, SliderComponent, AutoResizeDirective, NodeViewerComponent],
-	templateUrl: 'view-conversation.component.html',
-	styleUrl: 'view-conversation.component.css'
+	templateUrl: 'conversation-viewer.component.html',
+	styleUrl: 'conversation-viewer.component.css',
+	providers: [
+		{
+			provide: NG_VALUE_ACCESSOR,
+			useExisting: forwardRef(() => ConversationViewerComponent),
+			multi: true
+		}
+	]
 })
-export class ViewConversationComponent implements OnInit, OnDestroy {
+export class ConversationViewerComponent implements ControlValueAccessor, OnDestroy {
+
+	conversation: Conversation | undefined = undefined;
 
 	@ViewChild('aiQueryEl') aiQueryEl!: ElementRef<HTMLTextAreaElement>;
+
+	onChange = (_: any) => { };
+	onTouched: any = () => { };
 
 	user!: User;
 
@@ -49,8 +60,6 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 	showFilesColumn: boolean = true;
 
 	assistant: Assistant = createAssistant();
-	private conversationId: string = '';
-	conversation: Conversation | undefined = undefined;
 	showChatOptions = false;
 	newestMessagesFirst = true;
 	reverseButtons = false;
@@ -64,63 +73,60 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 	private conversationTimeoutId: NodeJS.Timeout | undefined = undefined;
 	confirmRestartConversationVisible: boolean = false;
 
-	constructor(private route: ActivatedRoute,
-		private userService: UserService,
+	constructor(private userService: UserService,
 		private conversationService: ConversationService,
 		private assistantService: AssistantService,
 		private projectService: ProjectService) {
 	}
 
-	ngOnInit(): void {
+	initialize(): void {
 		this.userService.getUser().subscribe(user => {
+
 			this.user = user;
 			this.newestMessagesFirst = user.settings['Message Order'] ? user.settings['Message Order'] == 'NewestFirst' : false;
 			this.reverseButtons = user.settings['Button Alignment'] ? user.settings['Button Alignment'] == 'Right' : false;
 
 			this.activeProject = user.defaults['defaultProject'];
 
-			this.route.params.subscribe(params => {
+			this.assistantService.getAssistantForConversation(this.conversation?.id!).subscribe((assistant: Assistant) => {
 
-				this.conversationId = params['id'];
+				this.assistant = assistant;
+				this.contextSize = this.assistant.contextSize;
 
-				this.assistantService.getAssistantForConversation(this.conversationId).subscribe((assistant: Assistant) => {
-
-					this.assistant = assistant;
-					this.contextSize = this.assistant.contextSize;
-
-					this.assistantService.models().subscribe(models => {
-						this.model = models.find(model => model.name.localeCompare(this.assistant.model) === 0);
-					});
-
-					if (this.assistant.hasMemory) {
-						this.conversationService.history(this.conversationId).subscribe((chatHistory: ChatMessage[]) => {
-							this.chatHistory = chatHistory;
-							chatHistory.forEach(message => {
-								if (!message.user) {
-									this.addFiles(this.assistantService.getFileListFromMessage(message.message));
-								}
-							})
-
-							// If the last message in the chathistory is from the user, a query is (almost certainly) in progress.
-							// Try to resume it.
-							if (this.chatHistory && this.chatHistory.length > 0 && this.chatHistory[0].user) {
-								this.waitingForResponse = true;
-								this.stream(this.conversationId);
-							}
-						});
-						this.pollConversation();
-					}
-
+				this.assistantService.models().subscribe(models => {
+					this.model = models.find(model => model.name.localeCompare(this.assistant.model) === 0);
 				});
+
+				if (this.assistant.hasMemory) {
+					this.conversationService.history(this.conversation!.id).subscribe((chatHistory: ChatMessage[]) => {
+						this.chatHistory = chatHistory;
+						chatHistory.forEach(message => {
+							if (!message.user) {
+								this.addFiles(this.assistantService.getFileListFromMessage(message.message));
+							}
+						})
+
+						// If the last message in the chathistory is from the user, a query is (almost certainly) in progress.
+						// Try to resume it.
+						if (this.chatHistory && this.chatHistory.length > 0 && this.chatHistory[0].user) {
+							this.waitingForResponse = true;
+							this.stream(this.conversation!.id);
+						}
+					});
+					this.pollConversation();
+				}
+
 			});
 		});
 	}
 
 	pollConversation() {
 		if (!this.conversation?.title) {
-			this.conversationService.getConversation(this.conversationId).subscribe((conversation: Conversation) => {
+			this.conversationService.getConversation(this.conversation!.id).subscribe((conversation: Conversation) => {
 				if (conversation?.title) {
 					this.conversation = conversation;
+					this.onTouched();
+					this.onChange(this.conversation);
 					return;
 				}
 				this.conversationTimeoutId = setTimeout(() => this.pollConversation(), 5000);
@@ -135,7 +141,7 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 	submit(text: string) {
 		this.chatHistory.unshift({ user: true, message: text });
 
-		this.assistantService.ask(this.conversationId, this.assistant.id, text, this.image ?? null, this.contextSize).subscribe(streamId => {
+		this.assistantService.ask(this.conversation!.id, this.assistant.id, text, this.image ?? null, this.contextSize).subscribe(streamId => {
 			this.waitingForResponse = true;
 			this.responseComplete = false;
 
@@ -251,14 +257,14 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 		if (!this.waitingForResponse && this.responseComplete) { // Streaming in progress
 			this.cancelStream();
 		}
-		this.conversationService.reset(this.conversationId).subscribe(() => {
+		this.conversationService.reset(this.conversation!.id).subscribe(() => {
 			this.chatHistory = [];
 		});
 	}
 
 	confirmRestartConversation() {
 		this.confirmRestartConversationVisible = false;
-		this.conversationService.reset(this.conversationId).subscribe(() => {
+		this.conversationService.reset(this.conversation!.id).subscribe(() => {
 			this.chatHistory = [];
 			this.statusMessages = [];
 			this.files = [];
@@ -270,7 +276,7 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 	}
 
 	cancelStream() {
-		this.assistantService.cancelStream(this.conversationId).subscribe(() => {
+		this.assistantService.cancelStream(this.conversation!.id).subscribe(() => {
 			this.statusMessages = [];
 		});
 	}
@@ -285,5 +291,22 @@ export class ViewConversationComponent implements OnInit, OnDestroy {
 
 	toggleStep(i: number) {
 		this.expandedSteps[i] = !this.expandedSteps[i];
+	}
+
+	writeValue(obj: any): void {
+		if (obj == null) {
+			return;
+		}
+		this.conversation = { ...obj as Conversation }
+		this.initialize();
+	}
+	registerOnChange(fn: any): void {
+		this.onChange = fn;
+	}
+	registerOnTouched(fn: any): void {
+		this.onTouched = fn;
+	}
+	setDisabledState(isDisabled: boolean): void {
+		// Nah.
 	}
 }

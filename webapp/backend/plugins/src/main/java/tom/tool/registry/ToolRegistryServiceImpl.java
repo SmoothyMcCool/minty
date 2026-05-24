@@ -10,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
+import tom.api.ConversationId;
 import tom.api.UserId;
 import tom.api.model.services.ConfigurationConsumer;
 import tom.api.model.services.ServiceConsumer;
@@ -38,7 +39,7 @@ public class ToolRegistryServiceImpl implements ToolRegistryService {
 	}
 
 	@Override
-	public MintyTool getTool(String toolName, UserId userId) {
+	public MintyTool getTool(String toolName, UserId userId, ConversationId conversationId) {
 		if (!tools.containsKey(toolName)) {
 			return null;
 		}
@@ -54,12 +55,13 @@ public class ToolRegistryServiceImpl implements ToolRegistryService {
 				o.setPluginConfiguration(pluginConfig.configuration());
 			}
 
-			if (o instanceof ServiceConsumer) {
-				((ServiceConsumer) o).setPluginServices(pluginServices);
-				((ServiceConsumer) o).setUserId(userId);
+			if (o instanceof ServiceConsumer sc) {
+				sc.setPluginServices(pluginServices);
+				sc.setUserId(userId);
+				sc.setConversationId(conversationId);
 			}
-			if (o instanceof ConfigurationConsumer) {
-				((ConfigurationConsumer) o).setProperties(configuration.getSystemDefaults());
+			if (o instanceof ConfigurationConsumer cc) {
+				cc.setProperties(configuration.getSystemDefaults());
 			}
 			o.initialize();
 			return o;

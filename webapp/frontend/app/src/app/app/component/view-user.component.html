@@ -102,7 +102,7 @@
 								</tr>
 							</thead>
 							<tbody>
-								@for (entry of defaultValues; track trackByKey(i, entry); let i = $index) {
+								@for (entry of defaultValues; track entry.key; let i = $index) {
 									<tr>
 										<td>
 											<label class="form-label" id="key-{{i}}">

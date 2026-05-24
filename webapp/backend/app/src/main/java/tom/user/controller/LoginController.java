@@ -14,8 +14,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import tools.jackson.core.JacksonException;
-
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import tom.ApiError;
@@ -27,6 +25,7 @@ import tom.model.security.UserDetailsUser;
 import tom.user.model.User;
 import tom.user.repository.UserRepository;
 import tom.user.service.UserServiceInternal;
+import tools.jackson.core.JacksonException;
 
 @RestController
 @RequestMapping("/api/login")
@@ -66,7 +65,9 @@ public class LoginController {
 		// object.
 		List<String> defaults = new ArrayList<>(properties.getUserDefaults().keySet());
 		// Make sure we also account for known global user settings.
-		defaults.addAll(properties.getConfig().userDefaults());
+		if (properties.getConfig().userDefaults() != null) {
+			defaults.addAll(properties.getConfig().userDefaults());
+		}
 
 		boolean anythingRemoved = result.getDefaults().entrySet().removeIf(entry -> !defaults.contains(entry.getKey()));
 

@@ -5,11 +5,13 @@ import java.util.Objects;
 import org.springframework.core.io.ByteArrayResource;
 
 import tom.api.ConversationId;
+import tom.api.ProjectId;
 
 public class AssistantQuery {
 
 	private AssistantSpec assistantSpec;
 	private ConversationId conversationId;
+	private ProjectId projectId;
 	private String query;
 	private int contextSize;
 	private ByteArrayResource imageData;
@@ -21,6 +23,14 @@ public class AssistantQuery {
 
 	public void setConversationId(ConversationId conversationId) {
 		this.conversationId = conversationId;
+	}
+
+	public ProjectId getProjectId() {
+		return projectId;
+	}
+
+	public void setProjectId(ProjectId projectId) {
+		this.projectId = projectId;
 	}
 
 	public String getQuery() {
@@ -62,7 +72,7 @@ public class AssistantQuery {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(assistantSpec, conversationId, query);
+		return Objects.hash(assistantSpec, conversationId, projectId, query);
 	}
 
 	@Override
@@ -75,14 +85,15 @@ public class AssistantQuery {
 			return false;
 		AssistantQuery other = (AssistantQuery) obj;
 		return Objects.equals(assistantSpec, other.assistantSpec)
-				&& Objects.equals(conversationId, other.conversationId) && Objects.equals(query, other.query);
+				&& Objects.equals(conversationId, other.conversationId) && Objects.equals(query, other.query)
+				&& Objects.equals(projectId, other.projectId);
 	}
 
 	@Override
 	public String toString() {
-		return "AssistantQuery [assistantSpec=" + assistantSpec + ", conversationId=" + conversationId + ", query="
-				+ query + ", contextSize=" + contextSize + ", imageData=" + imageData + ", imageContentType="
-				+ imageContentType + "]";
+		return "AssistantQuery [assistantSpec=" + assistantSpec + ", conversationId=" + conversationId + ", projectId="
+				+ projectId + ", query=" + query + ", contextSize=" + contextSize + ", imageData=" + imageData
+				+ ", imageContentType=" + imageContentType + "]";
 	}
 
 }

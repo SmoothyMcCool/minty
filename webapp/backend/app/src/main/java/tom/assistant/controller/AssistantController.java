@@ -33,6 +33,7 @@ import tom.api.MintyObjectMapper;
 import tom.api.model.assistant.Assistant;
 import tom.api.model.assistant.AssistantQuery;
 import tom.api.model.assistant.AssistantSpec;
+import tom.api.model.conversation.Conversation;
 import tom.api.model.user.ResourceSharingSelection;
 import tom.api.model.user.UserSelection;
 import tom.api.services.assistant.AssistantQueryService;
@@ -200,9 +201,8 @@ public class AssistantController {
 
 	@PostMapping(value = "/ask", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<ResponseWrapper<ConversationId>> ask(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam String conversationId,
-			@RequestPart("assistant") AssistantSpec assistantSpec, @RequestParam String query,
-			@RequestParam int contextSize,
+			@RequestParam String conversationId, @RequestPart("assistant") AssistantSpec assistantSpec,
+			@RequestParam String query, @RequestParam int contextSize,
 			@RequestParam(value = "image", required = false) MultipartFile imageFile) throws IOException {
 
 		Assistant assistant;
@@ -224,12 +224,14 @@ public class AssistantController {
 
 		ConversationId cId = new ConversationId(conversationId);
 		if (conversationService.conversationOwnedBy(user.getId(), cId)) {
+			Conversation conversation = conversationService.getConversation(user.getId(), cId);
 			ConversationId requestUuid;
 			try {
 
 				AssistantQuery aq = new AssistantQuery();
 				aq.setAssistantSpec(assistantSpec);
 				aq.setConversationId(cId);
+				aq.setProjectId(conversation.getProject());
 				aq.setQuery(query);
 				aq.setContextSize(contextSize);
 

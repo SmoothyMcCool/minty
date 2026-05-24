@@ -514,7 +514,8 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		}
 
 		List<MintyTool> tools = assistant.tools().stream()
-				.map(toolName -> toolRegistryService.getTool(toolName, user.getId())).filter(Objects::nonNull).toList();
+				.map(toolName -> toolRegistryService.getTool(toolName, user.getId(), query.getConversationId()))
+				.filter(Objects::nonNull).toList();
 
 		ChatClient chatClient = buildChatClient(assistant, computeContextSize(assistant, query, tools), query);
 

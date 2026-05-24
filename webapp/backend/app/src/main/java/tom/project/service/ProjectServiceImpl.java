@@ -22,14 +22,13 @@ import tom.api.model.project.FileType;
 import tom.api.model.project.NodeContent;
 import tom.api.model.project.NodeInfo;
 import tom.api.model.project.NodeType;
-import tom.api.model.project.Project;
 import tom.api.services.ProjectService;
 import tom.api.services.exception.NotFoundException;
 import tom.api.services.exception.NotOwnedException;
-import tom.project.repository.ProjectEntity;
-import tom.project.repository.ProjectFileContent;
+import tom.project.model.Project;
+import tom.project.model.ProjectFileContent;
+import tom.project.model.ProjectNodeEntity;
 import tom.project.repository.ProjectFileContentRepository;
-import tom.project.repository.ProjectNodeEntity;
 import tom.project.repository.ProjectNodeRepository;
 import tom.project.repository.ProjectRepository;
 
@@ -49,8 +48,8 @@ public class ProjectServiceImpl implements ProjectService {
 
 	@Override
 	@Transactional
-	public Project createProject(UserId userId, String name) {
-		ProjectEntity project = new ProjectEntity();
+	public tom.api.model.project.Project createProject(UserId userId, String name) {
+		Project project = new Project();
 		project.setName(name);
 		project.setOwnerId(userId);
 		project.setCreated(Instant.now());
@@ -60,9 +59,9 @@ public class ProjectServiceImpl implements ProjectService {
 		return project.toModel();
 	}
 
-	private void createRoot(UserId userId, ProjectEntity project) {
+	private void createRoot(UserId userId, Project project) {
 		ProjectNodeEntity root = new ProjectNodeEntity();
-		root.setProjectId(project.getId());
+		root.setProjectId(project.getId().value());
 		root.setParentId(null);
 		root.setOwnerId(userId);
 		root.setName("/");
@@ -83,8 +82,8 @@ public class ProjectServiceImpl implements ProjectService {
 	}
 
 	@Override
-	public Project getProject(UserId userId, ProjectId projectId) throws NotFoundException {
-		Optional<ProjectEntity> maybeProject = projectRepository.findById(projectId.getValue());
+	public tom.api.model.project.Project getProject(UserId userId, ProjectId projectId) throws NotFoundException {
+		Optional<Project> maybeProject = projectRepository.findById(projectId.getValue());
 
 		if (maybeProject.isPresent() && maybeProject.get().getOwnerId().equals(userId)) {
 			return maybeProject.get().toModel();
@@ -93,12 +92,12 @@ public class ProjectServiceImpl implements ProjectService {
 	}
 
 	@Override
-	public List<Project> listProjects(UserId id) {
+	public List<tom.api.model.project.Project> listProjects(UserId id) {
 		return projectRepository.findByOwnerId(id).stream().map(project -> project.toModel()).toList();
 	}
 
 	private void validateProjectAccess(UserId userId, ProjectId projectId) throws NotFoundException, NotOwnedException {
-		Optional<ProjectEntity> project = projectRepository.findById(projectId.getValue());
+		Optional<Project> project = projectRepository.findById(projectId.getValue());
 
 		if (project.isEmpty()) {
 			throw new NotFoundException("Project " + projectId.toString() + " does not exist");
@@ -289,6 +288,19 @@ public class ProjectServiceImpl implements ProjectService {
 
 		return nodeRepository.findByProjectIdAndParentIdAndOwnerId(projectId.getValue(), folder.getId(), userId)
 				.stream().map(n -> new NodeInfo(n.getType(), n.getFileType(), n.getPath(), n.getVersion()))
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public List<NodeInfo> searchByFilter(UserId userId, ProjectId projectId, String filter) {
+		// Wrap the filter in % wildcards to allow for substring matching (SQL LIKE
+		// %filter%)
+		String pattern = "%" + filter + "%";
+
+		// Call the repository method using the pattern
+		List<ProjectNodeEntity> matchingNodes = nodeRepository.searchByFilter(projectId.getValue(), userId, pattern);
+
+		return matchingNodes.stream().map(n -> new NodeInfo(n.getType(), n.getFileType(), n.getPath(), n.getVersion()))
 				.collect(Collectors.toList());
 	}
 

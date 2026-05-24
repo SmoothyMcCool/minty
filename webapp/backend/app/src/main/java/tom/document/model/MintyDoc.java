@@ -20,7 +20,7 @@ public class MintyDoc {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
-	private UUID documentId;
+	private UUID id;
 	private String title;
 	private DocumentState state = DocumentState.NO_CONTENT;
 	private UserId ownerId;
@@ -49,11 +49,11 @@ public class MintyDoc {
 	}
 
 	public DocumentId getDocumentId() {
-		return new DocumentId(documentId);
+		return new DocumentId(id);
 	}
 
-	public void setDocumentId(DocumentId documentId) {
-		this.documentId = documentId == null ? null : documentId.value();
+	public void setDocumentId(DocumentId id) {
+		this.id = id == null ? null : id.value();
 	}
 
 	public UserId getOwnerId() {

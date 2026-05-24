@@ -1,17 +1,17 @@
 import { CommonModule } from "@angular/common";
 import { Component, EventEmitter, Input, Output } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { ProjectNode } from "../../model/project/project-node";
+import { ProjectFileType, ProjectNode, ProjectNodeType } from "../../model/project/project-node";
 import { AlertService } from "../../alert.service";
 
 @Component({
 	selector: 'minty-project-node',
+	standalone: true,
 	imports: [CommonModule, FormsModule],
 	templateUrl: 'project-node.component.html',
 	styleUrl: 'project-node.component.css'
 })
 export class ProjectNodeComponent {
-
 	@Input() node!: ProjectNode;
 	@Input() selected!: ProjectNode | null;
 	@Input() nodes!: ProjectNode[];
@@ -21,12 +21,12 @@ export class ProjectNodeComponent {
 
 	editNodeInfoVisible = false;
 	editName: string | undefined = undefined;
-	editNodeType: 'Folder' | 'File' = 'File';
-	editFileType: 'code' | 'markdown' | 'json' | 'text' | 'diagram' = 'code';
+	editNodeType: ProjectNodeType = 'File';
+	editFileType: ProjectFileType = 'text';
 	editParent: string | undefined = undefined;
 	isExpanded = true;
 
-	public constructor(private alertService: AlertService) {}
+	public constructor(private alertService: AlertService) { }
 
 	getParentPath(input: string): string {
 		if (!input) return '';
@@ -55,13 +55,8 @@ export class ProjectNodeComponent {
 
 	editNodeInfo(event?: MouseEvent) {
 		event?.stopPropagation();
-
 		this.editName = this.getFileName(this.node.path);
-		if (this.node.fileType) {
-			this.editFileType = this.node.fileType;
-		} else {
-			console.error('editNodeInfo: node.fileType not set');
-		}
+		this.editFileType = this.node.fileType || 'text';
 		this.editNodeType = this.node.type;
 		this.editParent = this.getParentPath(this.node.path);
 		this.editNodeInfoVisible = true;
@@ -69,10 +64,10 @@ export class ProjectNodeComponent {
 
 	onConfirmNodeInfo() {
 		const nodeInfo: ProjectNode = {
-			type: this.editNodeType,
+			type: this.editNodeType as any,
 			path: (this.editParent ? this.editParent + '/' : '/') + this.editName,
 			version: this.node.version + 1,
-			fileType: this.editFileType,
+			fileType: this.editFileType as any,
 			content: this.node.content
 		};
 		this.update.emit(nodeInfo);
@@ -84,8 +79,7 @@ export class ProjectNodeComponent {
 	}
 
 	onSelect(node: ProjectNode) {
-		// Guard against processing events from children.
-		if (this.node.path === node.path && node.type === 'Folder') {
+		if (this.node.path === node.path && this.node.type === 'Folder') {
 			this.toggle();
 		}
 		this.nodeSelected.emit(node);
@@ -93,7 +87,7 @@ export class ProjectNodeComponent {
 
 	deleteNode() {
 		if (this.node.path === '/') {
-			this.alertService.postAlert({ type: 'failure', message: 'You can\'t delete the rood node.'});
+			this.alertService.postAlert({ type: 'failure', message: 'You can\'t delete the root node.' });
 		} else {
 			this.delete.emit(this.node);
 		}
