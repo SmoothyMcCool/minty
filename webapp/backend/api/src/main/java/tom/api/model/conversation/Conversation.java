@@ -4,15 +4,17 @@ import java.time.Instant;
 
 import tom.api.AssistantId;
 import tom.api.ConversationId;
+import tom.api.ProjectId;
 import tom.api.UserId;
 
 public class Conversation {
 
+	private ConversationId id;
 	private String title;
-	private ConversationId conversationId;
 	private UserId ownerId;
 	private AssistantId associatedAssistantId;
 	private Instant lastUsed;
+	private ProjectId linkedProject;
 
 	public String getTitle() {
 		return title;
@@ -22,12 +24,12 @@ public class Conversation {
 		this.title = title;
 	}
 
-	public ConversationId getConversationId() {
-		return conversationId;
+	public ConversationId getId() {
+		return id;
 	}
 
-	public void setConversationId(ConversationId conversationId) {
-		this.conversationId = conversationId;
+	public void setId(ConversationId id) {
+		this.id = id;
 	}
 
 	public UserId getOwnerId() {
@@ -52,6 +54,14 @@ public class Conversation {
 
 	public void setLastUsed(Instant lastUsed) {
 		this.lastUsed = lastUsed;
+	}
+
+	public ProjectId getProject() {
+		return linkedProject;
+	}
+
+	public void setProjectId(ProjectId id) {
+		linkedProject = id;
 	}
 
 }

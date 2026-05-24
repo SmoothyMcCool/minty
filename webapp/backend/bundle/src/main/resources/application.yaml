@@ -35,47 +35,24 @@ llm:
   #uri: http://192.168.2.106:8081
   openaiApiKey: dummy-key
   modelDefinitions:
-    - name: gemma3:4b
-      defaultContext: 32768
-      maximumContext: 131072
-      maxConcurrent: 12
-      imageSupport: true
-    - name: gemma3:12b
-      defaultContext: 16384
-      maximumContext: 131072
-      maxConcurrent: 8
-      imageSupport: true
     - name: gpt-oss:20b
       defaultContext: 32768
       maximumContext: 131072
       maxConcurrent: 6
       imageSupport: false
-    - name: gpt-oss:120b
-      defaultContext: 4096
-      maximumContext: 131072
+    - name: gemma4:e4b-it-q4_K_M
+      defaultContext: 16384
+      maximumContext: 262144
       maxConcurrent: 2
-      imageSupport: false
-    - name: llama3.2:3b
-      defaultContext: 65536
-      maximumContext: 131072
-      maxConcurrent: 16
-      imageSupport: false
+      imageSupport: true
     - name: gemma4:26b
       defaultContext: 16384
       maximumContext: 262144
       maxConcurrent: 2
       imageSupport: true
-    - name: gemma4:31b
-      defaultContext: 16384
-      maximumContext: 262144
-      maxConcurrent: 2
-      imageSupport: true
   activeModels:
-    - gemma3:4b
-    - gemma3:12b
     - gpt-oss:20b
-    - gpt-oss:120b
-    - gemma4:31b
+    - gemma4:e4b-it-q4_K_M
     - gemma4:26b
   chatMemoryDepth: 100
   # The number of documents to retrieve when doing RAG.
@@ -87,7 +64,7 @@ llm:
   # Embedding Parameters
   embedding:
     model: nomic-embed-text
-    summarizingModel: gemma3:12b
+    summarizingModel: gemma4:e4b-it-q4_K_M
     keywordsPerDocument: 5
     encoding: o200k_base
     macroTargetChunkSize: 5000
@@ -155,7 +132,6 @@ pluginConfiguration:
 
 # List of default properties that each use should have that isn't tied to a task spec.
 userDefaults:
-  - defaultProject
 
 # System default values for various Tasks
 systemDefaults:

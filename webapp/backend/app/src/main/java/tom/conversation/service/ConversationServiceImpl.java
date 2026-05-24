@@ -20,13 +20,13 @@ import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import tom.api.AssistantId;
 import tom.api.ConversationId;
+import tom.api.ProjectId;
 import tom.api.UserId;
 import tom.api.model.assistant.Assistant;
 import tom.api.model.conversation.ChatMessage;
 import tom.api.model.conversation.Conversation;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.assistant.service.management.AssistantManagementServiceInternal;
-import tom.conversation.model.ConversationEntity;
 import tom.conversation.repository.ConversationRepository;
 import tom.llm.service.LlmService;
 
@@ -55,7 +55,7 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 
 	@Override
 	public Conversation getConversation(UserId userId, ConversationId conversationId) {
-		Optional<ConversationEntity> ce = conversationRepository.findById(conversationId.value());
+		Optional<tom.conversation.model.Conversation> ce = conversationRepository.findById(conversationId.value());
 		if (ce.isPresent()) {
 			Conversation c = ce.get().fromEntity();
 			if (c.getOwnerId().equals(userId)) {
@@ -68,24 +68,24 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 	@Override
 	@Transactional
 	public void deleteConversationsForAssistant(UserId userId, AssistantId assistantId) {
-		List<ConversationEntity> conversations = conversationRepository.findAllByOwnerIdAndAssociatedAssistantId(userId,
-				assistantId);
+		List<tom.conversation.model.Conversation> conversations = conversationRepository
+				.findAllByOwnerIdAndAssociatedAssistantId(userId, assistantId);
 		ChatMemoryRepository chatMemoryRepository = llmService.getChatMemoryRepository();
 
 		conversations.forEach(conversation -> {
-			chatMemoryRepository.deleteByConversationId(conversation.getConversationId().toString());
+			chatMemoryRepository.deleteByConversationId(conversation.getId().toString());
 		});
 
 	}
 
 	@Override
 	public AssistantId getAssistantIdFromConversationId(UserId userId, ConversationId conversationId) {
-		Conversation conversation;
+		tom.api.model.conversation.Conversation conversation;
 		if (fakeConversationMap.containsKey(conversationId)) {
 			conversation = fakeConversationMap.get(conversationId);
 		} else {
 
-			Optional<ConversationEntity> ce = conversationRepository.findById(conversationId.value());
+			Optional<tom.conversation.model.Conversation> ce = conversationRepository.findById(conversationId.value());
 			if (ce.isEmpty()) {
 				return null;
 			}
@@ -133,7 +133,8 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 			}
 		}
 
-		Optional<ConversationEntity> conversation = conversationRepository.findById(conversationId.value());
+		Optional<tom.conversation.model.Conversation> conversation = conversationRepository
+				.findById(conversationId.value());
 		if (conversation.isPresent() && !conversation.get().getOwnerId().equals(userId)) {
 			logger.warn("Conversation " + conversationId + " not owned by " + userId);
 			return false;
@@ -150,7 +151,8 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 	@Override
 	@Transactional
 	public boolean resetConversation(UserId userId, ConversationId conversationId) {
-		Optional<ConversationEntity> conversation = conversationRepository.findById(conversationId.value());
+		Optional<tom.conversation.model.Conversation> conversation = conversationRepository
+				.findById(conversationId.value());
 		if (conversation.isPresent() && !conversation.get().getOwnerId().equals(userId)) {
 			logger.warn("Conversation " + conversationId + " not owned by " + userId);
 			return false;
@@ -170,11 +172,12 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 			return null;
 		}
 
-		Optional<ConversationEntity> conversation = conversationRepository.findById(conversationId.value());
+		Optional<tom.conversation.model.Conversation> conversation = conversationRepository
+				.findById(conversationId.value());
 		if (conversation.isEmpty()) {
 			return null;
 		}
-		ConversationEntity ce = conversation.get();
+		tom.conversation.model.Conversation ce = conversation.get();
 		ce.setTitle(title);
 		ce = conversationRepository.save(ce);
 
@@ -188,7 +191,8 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 			Conversation conversation = fakeConversationMap.get(conversationId);
 			return conversation.getOwnerId().equals(userId);
 		}
-		Optional<ConversationEntity> conversation = conversationRepository.findById(conversationId.value());
+		Optional<tom.conversation.model.Conversation> conversation = conversationRepository
+				.findById(conversationId.value());
 		if (conversation.isEmpty()) {
 			return false;
 		}
@@ -198,6 +202,12 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 	@Override
 	@Transactional
 	public Conversation newConversation(UserId userId, AssistantId assistantId) {
+		return newConversation(userId, assistantId, null);
+	}
+
+	@Override
+	@Transactional
+	public Conversation newConversation(UserId userId, AssistantId assistantId, ProjectId projectId) {
 		Assistant assistant = assistantManagementService.findAssistant(userId, assistantId);
 
 		if (!assistant.hasMemory()) {
@@ -211,15 +221,16 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 			Conversation conversation = new Conversation();
 			conversation.setOwnerId(userId);
 			conversation.setAssociatedAssistantId(assistantId);
-			conversation.setConversationId(conversationId);
+			conversation.setId(conversationId);
 			conversation.setTitle(null);
 			fakeConversationMap.put(conversationId, conversation);
 			return conversation;
 		}
 
-		ConversationEntity conversation = new ConversationEntity();
+		tom.conversation.model.Conversation conversation = new tom.conversation.model.Conversation();
 		conversation.setAssociatedAssistantId(assistantId);
-		conversation.setConversationId(null);
+		conversation.setId(null);
+		conversation.setProjectId(projectId);
 		conversation.setOwnerId(userId);
 		conversation.setTitle(null);
 
@@ -239,9 +250,16 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 	}
 
 	@Override
+	public List<Conversation> listConversationsForProject(UserId userId, ProjectId projectId) {
+		return conversationRepository.findByProjectIdAndOwnerId(projectId, userId).stream()
+				.map(conversation -> conversation.fromEntity()).toList();
+	}
+
+	@Override
 	@Transactional
 	public void updateLastUsed(ConversationId conversationId) {
-		ConversationEntity conversation = conversationRepository.findById(conversationId.value()).orElse(null);
+		tom.conversation.model.Conversation conversation = conversationRepository.findById(conversationId.value())
+				.orElse(null);
 		if (conversation != null) {
 			conversation.setLastUsed(Instant.now());
 			conversationRepository.save(conversation);

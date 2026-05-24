@@ -31,7 +31,10 @@ export class AssistantService {
 	private static readonly GetConversationQueryId = 'api/assistant/queryId';
 	private static readonly GetDiagrammingAssistant = 'api/assistant/diagram';
 
+	private assistantCache: Assistant[] | undefined = undefined;
+
 	constructor(private http: HttpClient, private alertService: AlertService) {
+		this.list();
 	}
 
 	create(assistant: Assistant): Observable<Assistant> {
@@ -92,9 +95,14 @@ export class AssistantService {
 					return EMPTY;
 				}),
 				map((result: ApiResult) => {
+					this.assistantCache = result.data as Assistant[];
 					return result.data as Assistant[];
 				})
 			);
+	}
+
+	find(associatedAssistantId: string): Assistant | undefined {
+		return this.assistantCache?.find( assistant => assistant.id === associatedAssistantId);
 	}
 
 	share(name: string, userSelection: UserSelection): Observable<string> {

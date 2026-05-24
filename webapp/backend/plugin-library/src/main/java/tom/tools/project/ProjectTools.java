@@ -1,15 +1,16 @@
 package tom.tools.project;
 
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import tom.api.ConversationId;
 import tom.api.ProjectId;
 import tom.api.UserId;
+import tom.api.model.conversation.Conversation;
 import tom.api.model.project.FileType;
 import tom.api.model.project.NodeContent;
 import tom.api.model.project.NodeInfo;
@@ -23,6 +24,7 @@ public class ProjectTools implements MintyTool, ServiceConsumer {
 
 	private PluginServices pluginServices;
 	private UserId userId;
+	private ConversationId conversationId;
 	private ProjectId projectId;
 
 	public static final String prompt = """
@@ -88,12 +90,11 @@ public class ProjectTools implements MintyTool, ServiceConsumer {
 	public void initialize() {
 		projectId = null;
 
-		Map<String, String> userDefaults = pluginServices.getUserService().getUserDefaults(userId);
-
-		String projectIdStr = userDefaults.getOrDefault("defaultProject", "");
-
-		if (!projectIdStr.isBlank()) {
-			projectId = new ProjectId(projectIdStr);
+		if (conversationId != null) {
+			Conversation conversation = pluginServices.getConversationService().getConversation(userId, conversationId);
+			projectId = conversation.getProject();
+		} else {
+			projectId = null;
 		}
 	}
 
@@ -375,6 +376,44 @@ public class ProjectTools implements MintyTool, ServiceConsumer {
 	}
 
 	// ---------------------------------------
+	// SEARCH FOR FILES
+	// ---------------------------------------
+
+	@Tool(description = """
+			Searches the entire project filesystem using a specialized filter criteria.
+			This tool delegates the search query to the backend service for efficiency,
+			returning only nodes (files or folders) that match the filter.
+
+			INPUT:
+			- filter: The substring or pattern to search for (case-insensitive).
+
+			RETURNS:
+			- A list of NodeInfo objects representing all matching nodes.
+
+			USE THIS:
+			- When the user needs to locate a file or folder by partial name or path fragment,
+			  relying on the optimized backend search capability.
+
+			This is a read-only inspection tool.
+			""")
+	@Transactional(readOnly = true)
+	public MintyToolResponse<List<NodeInfo>> searchFilesBySubstring(String filter) {
+		try {
+			ensureProjectSelected();
+
+			// 1. Call the dedicated backend search method
+			// This call is assumed to handle filtering efficiently at the database level.
+			List<NodeInfo> results = pluginServices.getProjectService().searchByFilter(userId, projectId, filter);
+
+			// 2. Return success response
+			return MintyToolResponse.SuccessResponse(results);
+
+		} catch (Exception e) {
+			return MintyToolResponse.FailureResponse("Error during search: " + e.getMessage());
+		}
+	}
+
+	// ---------------------------------------
 
 	@Override
 	public String name() {
@@ -404,5 +443,10 @@ public class ProjectTools implements MintyTool, ServiceConsumer {
 	@Override
 	public void setUserId(UserId userId) {
 		this.userId = userId;
+	}
+
+	@Override
+	public void setConversationId(ConversationId conversationId) {
+		this.conversationId = conversationId;
 	}
 }

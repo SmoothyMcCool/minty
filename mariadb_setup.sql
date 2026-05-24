@@ -58,14 +58,6 @@ CREATE TABLE IF NOT EXISTS Assistant (
     PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS UserAssistantLinks (
-    userId      UUID NOT NULL,
-    assistantId UUID NOT NULL,
-    PRIMARY KEY (userId, assistantId),
-    FOREIGN KEY (userId)      REFERENCES User(id)      ON DELETE CASCADE,
-    FOREIGN KEY (assistantId) REFERENCES Assistant(id) ON DELETE CASCADE
-);
-
 -- =============================================================
 -- CONVERSATION & MEMORY
 -- =============================================================
@@ -75,7 +67,7 @@ CREATE TABLE IF NOT EXISTS Conversation (
     conversationId         UUID NOT NULL,
     ownerId                UUID,
     associatedAssistantId  UUID,
-    associatedWorkflow     TEXT,
+    projectId              UUID,
     lastUsed               TIMESTAMP,
     PRIMARY KEY (conversationId)
 );
@@ -92,19 +84,11 @@ CREATE TABLE IF NOT EXISTS SPRING_AI_CHAT_MEMORY (
 -- =============================================================
 
 CREATE TABLE IF NOT EXISTS Document (
-    documentId UUID NOT NULL,
+    id UUID NOT NULL,
     title      TEXT,
     state      INTEGER,
     ownerId    UUID,
-    PRIMARY KEY (documentId)
-);
-
-CREATE TABLE IF NOT EXISTS DocumentAssistantLinks (
-    assistantId UUID NOT NULL,
-    documentId  UUID NOT NULL,
-    PRIMARY KEY (assistantId, documentId),
-    FOREIGN KEY (assistantId) REFERENCES Assistant(id),
-    FOREIGN KEY (documentId)  REFERENCES Document(documentId)
+    PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS Tag (
@@ -135,14 +119,6 @@ CREATE TABLE IF NOT EXISTS Workflow (
     connections JSON         NOT NULL,
     outputStep  JSON,
     PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS UserWorkflowLinks (
-    userId     UUID NOT NULL,
-    workflowId UUID NOT NULL,
-    PRIMARY KEY (userId, workflowId),
-    FOREIGN KEY (userId)     REFERENCES User(id)     ON DELETE CASCADE,
-    FOREIGN KEY (workflowId) REFERENCES Workflow(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS WorkflowRecord (
@@ -196,7 +172,7 @@ CREATE TABLE IF NOT EXISTS ProjectNode (
     name      VARCHAR(255)  NOT NULL,
     path      VARCHAR(512)  NOT NULL,
     type      ENUM('Folder', 'File') NOT NULL,
-    fileType  ENUM('code', 'markdown', 'text', 'diagram', 'json') NULL,
+    fileType  ENUM('code', 'markdown', 'text', 'diagram', 'json', 'yaml','html') NULL,
     version   INT           NOT NULL DEFAULT 0,
     created   TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
     updated   TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -233,14 +209,6 @@ CREATE TABLE IF NOT EXISTS Skills (
     PRIMARY KEY (id),
     INDEX idx_skills_owner (ownerId),
     INDEX idx_skills_name  (name)
-);
-
-CREATE TABLE IF NOT EXISTS UserSkillsLinks (
-    userId  UUID NOT NULL,
-    skillId UUID NOT NULL,
-    PRIMARY KEY (userId, skillId),
-    FOREIGN KEY (userId)  REFERENCES User(id)   ON DELETE CASCADE,
-    FOREIGN KEY (skillId) REFERENCES Skills(id) ON DELETE CASCADE
 );
 
 -- =============================================================
@@ -337,6 +305,50 @@ CREATE TABLE IF NOT EXISTS LlmRequestMetrics (
     CONSTRAINT fk_metrics_request
         FOREIGN KEY (id) REFERENCES LlmRequests(id)
         ON DELETE CASCADE
+);
+
+-- =============================================================
+-- LINK TABLES
+-- =============================================================
+
+-- -------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS DocumentAssistantLinks (
+    assistantId UUID NOT NULL,
+    documentId  UUID NOT NULL,
+    PRIMARY KEY (assistantId, documentId),
+    FOREIGN KEY (assistantId) REFERENCES Assistant(id),
+    FOREIGN KEY (documentId)  REFERENCES Document(documentId)
+);
+
+-- -------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS UserAssistantLinks (
+    userId      UUID NOT NULL,
+    assistantId UUID NOT NULL,
+    PRIMARY KEY (userId, assistantId),
+    FOREIGN KEY (userId)      REFERENCES User(id)      ON DELETE CASCADE,
+    FOREIGN KEY (assistantId) REFERENCES Assistant(id) ON DELETE CASCADE
+);
+
+-- -------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS UserSkillsLinks (
+    userId  UUID NOT NULL,
+    skillId UUID NOT NULL,
+    PRIMARY KEY (userId, skillId),
+    FOREIGN KEY (userId)  REFERENCES User(id)   ON DELETE CASCADE,
+    FOREIGN KEY (skillId) REFERENCES Skills(id) ON DELETE CASCADE
+);
+
+-- -------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS UserWorkflowLinks (
+    userId     UUID NOT NULL,
+    workflowId UUID NOT NULL,
+    PRIMARY KEY (userId, workflowId),
+    FOREIGN KEY (userId)     REFERENCES User(id)     ON DELETE CASCADE,
+    FOREIGN KEY (workflowId) REFERENCES Workflow(id) ON DELETE CASCADE
 );
 
 -- =============================================================

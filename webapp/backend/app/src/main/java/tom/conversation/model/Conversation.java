@@ -11,25 +11,27 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import tom.api.AssistantId;
 import tom.api.ConversationId;
+import tom.api.ProjectId;
 import tom.api.UserId;
-import tom.api.model.conversation.Conversation;
+import tom.repository.converter.ProjectIdConverter;
 import tom.repository.converter.UserIdConverter;
 
 @Entity
 @Table(name = "Conversation")
-public class ConversationEntity {
+public class Conversation {
 
 	private String title;
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
-	private UUID conversationId;
+	private UUID id;
 	@Convert(converter = UserIdConverter.class)
 	private UserId ownerId;
 	private AssistantId associatedAssistantId;
 	private Instant lastUsed;
+	@Convert(converter = ProjectIdConverter.class)
+	private ProjectId projectId;
 
-	public ConversationEntity() {
-
+	public Conversation() {
 	}
 
 	public String getTitle() {
@@ -40,12 +42,12 @@ public class ConversationEntity {
 		this.title = title;
 	}
 
-	public ConversationId getConversationId() {
-		return new ConversationId(conversationId);
+	public ConversationId getId() {
+		return new ConversationId(id);
 	}
 
-	public void setConversationId(ConversationId conversationId) {
-		this.conversationId = conversationId == null ? null : conversationId.value();
+	public void setId(ConversationId id) {
+		this.id = id == null ? null : id.value();
 	}
 
 	public UserId getOwnerId() {
@@ -72,13 +74,22 @@ public class ConversationEntity {
 		this.lastUsed = lastUsed;
 	}
 
-	public Conversation fromEntity() {
-		Conversation convo = new Conversation();
+	public ProjectId getProjectId() {
+		return projectId;
+	}
+
+	public void setProjectId(ProjectId projectId) {
+		this.projectId = projectId;
+	}
+
+	public tom.api.model.conversation.Conversation fromEntity() {
+		tom.api.model.conversation.Conversation convo = new tom.api.model.conversation.Conversation();
 		convo.setAssociatedAssistantId(associatedAssistantId);
-		convo.setConversationId(new ConversationId(conversationId));
+		convo.setId(new ConversationId(id));
 		convo.setOwnerId(ownerId);
 		convo.setTitle(title);
 		convo.setLastUsed(lastUsed);
+		convo.setProjectId(projectId);
 		return convo;
 	}
 

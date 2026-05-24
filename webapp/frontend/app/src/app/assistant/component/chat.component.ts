@@ -13,13 +13,15 @@ import { User } from '../../model/user';
 import { FilterPipe } from '../../pipe/filter-pipe';
 import { PredicatePipe } from '../../pipe/predicate-pipe';
 import { UserService } from '../../user.service';
+import { ConversationListComponent } from '../../conversation/component/conversation-list.component';
+import { AssistantListComponent } from './assistant-list.component';
 
 @Component({
-	selector: 'minty-assistants-list',
-	imports: [FormsModule, RouterModule, FilterPipe, ConfirmationDialogComponent, PredicatePipe, UserSelectDialogComponent],
-	templateUrl: 'assistants-list.component.html'
+	selector: 'minty-chat',
+	imports: [FormsModule, RouterModule, FilterPipe, ConfirmationDialogComponent, PredicatePipe, UserSelectDialogComponent, AssistantListComponent, ConversationListComponent],
+	templateUrl: 'chat.component.html'
 })
-export class AssistantsListComponent implements OnInit {
+export class ChatComponent implements OnInit {
 
 	conversations: Conversation[] = [];
 	selectedChat: string = '';
@@ -29,7 +31,6 @@ export class AssistantsListComponent implements OnInit {
 	assistantFilter: string = '';
 	conversationSortOrder: string = 'lastUsed';
 
-	fileList: File[] = [];
 	workingAssistant: Assistant = createAssistant();
 
 	deleteInProgress = false;
@@ -103,7 +104,7 @@ export class AssistantsListComponent implements OnInit {
 		return conversations.sort((left, right) => {
 			if (this.conversationSortOrder === 'alpha') {
 				if (!left.title && !right.title) {
-					return left.conversationId.localeCompare(right.conversationId);
+					return left.id.localeCompare(right.id);
 				}
 				if (!left.title) {
 					return 1;
@@ -114,7 +115,7 @@ export class AssistantsListComponent implements OnInit {
 				return left.title.localeCompare(right.title);
 			} else {
 				if (!left.lastUsed && ! right.lastUsed) {
-					return left.conversationId.localeCompare(right.conversationId);
+					return left.id.localeCompare(right.id);
 				}
 				if (!left.lastUsed) {
 					return 1;
@@ -123,7 +124,7 @@ export class AssistantsListComponent implements OnInit {
 					return -1;
 				}
 				const diff = new Date(right.lastUsed).getTime() - new Date(left.lastUsed).getTime();
-				return diff || left.conversationId.localeCompare(right.conversationId)
+				return diff || left.id.localeCompare(right.id)
 			}
 		});
 	}
@@ -174,19 +175,19 @@ export class AssistantsListComponent implements OnInit {
 
 	}
 
-	startConversation(assistant: Assistant): void {
-		this.conversationService.create(assistant).subscribe( conversation => {
-			this.router.navigate(['/conversation', conversation.conversationId]);
+	startConversation(event: { assistant: Assistant, projectId: string }): void {
+		this.conversationService.create(event.assistant).subscribe( conversation => {
+			this.router.navigate(['/conversation', conversation.id]);
 		});
 	}
 
 	selectConversation(conversation: Conversation) {
-		this.router.navigate(['/conversation', conversation.conversationId]);
+		this.router.navigate(['/conversation', conversation.id]);
 	}
 
 	deleteConversation(conversation: Conversation) {
 		this.confirmDeleteConversationVisible = true;
-		this.conversationPendingDeletionId = conversation.conversationId;
+		this.conversationPendingDeletionId = conversation.id;
 	}
 
 	confirmDeleteConversation() {
@@ -202,19 +203,7 @@ export class AssistantsListComponent implements OnInit {
 				this.sortConversations(this.conversations);
 			});
 		});
-		this.conversations = this.conversations.filter(item => item.conversationId === this.conversationPendingDeletionId);
-	}
-
-	fileListChanged(event: Event) {
-		const newFiles = (event.target as HTMLInputElement).files;
-		if (newFiles) {
-			this.fileList = Array.from(newFiles).concat(Array.from(this.fileList));
-			this.fileList = [...new Set(this.fileList)];
-		}
-	}
-
-	removeFile(filename: string) {
-		this.fileList = this.fileList.filter(element => element.name != filename);
+		this.conversations = this.conversations.filter(item => item.id === this.conversationPendingDeletionId);
 	}
 
 	isOwned(assistant: Assistant): boolean {
@@ -225,7 +214,7 @@ export class AssistantsListComponent implements OnInit {
 		if (conversation.title !== null && conversation.title.length > 0) {
 			return conversation.title;
 		}
-		return conversation.conversationId;
+		return conversation.id;
 	}
 
 	getConversationAssistantName(conversation: Conversation): string {

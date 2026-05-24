@@ -10,18 +10,41 @@
 			<ul class="list-group">
 				@for (skill of skills; track skill) {
 					<li class="list-group-item list-group-item-action d-flex position-relative text-bg-light bg-opacity-75"
-						[class.active]="skill.name === selectedSkill?.metadata?.name" (click)="onSelectSkill(skill)"
-						style="cursor: pointer">
-						{{skill.name}}
+						[class.active]="skill.name === selectedSkill?.metadata?.name"
+						style="height: 2.5rem">
+
+						<span class="text-truncate"
+							(click)="onSelectSkill(skill)" style="cursor: pointer">
+							{{skill.name}}
+						</span>
+
 						@if (skill.owned) {
-							<button class="ms-auto me-3" (click)="shareSkill(skill.name)">
-								<i class="bi bi-share"></i>
-							</button>
-						}
-						@if (skill.owned) {
-							<button (click)="deleteSkill(skill.name)">
-								<i class="bi bi-trash" style="font-size: 14px; color: red"></i>
-							</button>
+
+							<div class="position-absolute top-0 end-0 p-1">
+								<div class="dropdown">
+									<button class="btn btn-sm p-0" type="button" data-bs-toggle="dropdown"
+										aria-expanded="false">
+										<i class="bi bi-three-dots-vertical" style="font-size: 18px;"></i>
+									</button>
+									<ul class="dropdown-menu dropdown-menu-end">
+										<li>
+											<button class="dropdown-item" type="button"
+												(click)="shareSkill(skill.name)">
+												<i class="bi bi-share me-2"></i> Share
+											</button>
+										</li>
+										<li>
+											<hr class="dropdown-divider">
+										</li>
+										<li>
+											<button class="dropdown-item text-danger" type="button"
+												(click)="deleteSkill(skill.name)">
+												<i class="bi bi-trash me-2"></i> Delete
+											</button>
+										</li>
+									</ul>
+								</div>
+							</div>
 						}
 					</li>
 				}
@@ -64,7 +87,6 @@
 		} @else {
 			<h5 class="col-9 text-muted">Select a skill to view its files</h5>
 		}
-
 
 	</div>
 </div>

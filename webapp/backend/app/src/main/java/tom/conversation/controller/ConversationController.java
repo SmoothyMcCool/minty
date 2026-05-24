@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import tom.ApiError;
 import tom.api.AssistantId;
 import tom.api.ConversationId;
+import tom.api.ProjectId;
 import tom.api.model.conversation.ChatMessage;
 import tom.api.model.conversation.Conversation;
 import tom.api.services.assistant.AssistantQueryService;
@@ -53,11 +54,21 @@ public class ConversationController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@GetMapping({ "new" })
+	@GetMapping({ "/new" })
 	public ResponseEntity<ResponseWrapper<Conversation>> startNewConversation(
 			@AuthenticationPrincipal UserDetailsUser user, @RequestParam AssistantId assistantId) {
 		ResponseWrapper<Conversation> response = ResponseWrapper
 				.SuccessResponse(conversationService.newConversation(user.getId(), assistantId));
+		metadataService.newConversation(user.getId());
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@GetMapping({ "/new/project" })
+	public ResponseEntity<ResponseWrapper<Conversation>> startNewConversationInProject(
+			@AuthenticationPrincipal UserDetailsUser user, @RequestParam AssistantId assistantId,
+			@RequestParam ProjectId projectId) {
+		ResponseWrapper<Conversation> response = ResponseWrapper
+				.SuccessResponse(conversationService.newConversation(user.getId(), assistantId, projectId));
 		metadataService.newConversation(user.getId());
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
@@ -67,6 +78,16 @@ public class ConversationController {
 			@AuthenticationPrincipal UserDetailsUser user) {
 
 		List<Conversation> conversations = conversationService.listConversationsForUser(user.getId());
+
+		ResponseWrapper<List<Conversation>> response = ResponseWrapper.SuccessResponse(conversations);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@GetMapping({ "/list/project" })
+	public ResponseEntity<ResponseWrapper<List<Conversation>>> listChatsForProject(
+			@AuthenticationPrincipal UserDetailsUser user, @RequestParam ProjectId projectId) {
+
+		List<Conversation> conversations = conversationService.listConversationsForProject(user.getId(), projectId);
 
 		ResponseWrapper<List<Conversation>> response = ResponseWrapper.SuccessResponse(conversations);
 		return new ResponseEntity<>(response, HttpStatus.OK);

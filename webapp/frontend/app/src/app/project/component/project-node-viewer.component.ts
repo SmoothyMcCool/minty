@@ -2,7 +2,7 @@
 import { Component, forwardRef, Input } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { MarkdownModule } from 'ngx-markdown';
-import { MermaidClipboardDirective } from '../../assistant/component/mermaid-clipboard.directive';
+import { MermaidClipboardDirective } from '../../conversation/component/mermaid-clipboard.directive';
 import { ProjectNode } from '../../model/project/project-node';
 
 @Component({

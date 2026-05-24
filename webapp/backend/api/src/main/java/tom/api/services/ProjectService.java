@@ -43,4 +43,6 @@ public interface ProjectService {
 
 	void importZip(UserId userId, ProjectId projectId, InputStream zipStream)
 			throws IOException, NotFoundException, NotOwnedException;
+
+	List<NodeInfo> searchByFilter(UserId userId, ProjectId projectId, String filter);
 }

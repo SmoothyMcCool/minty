@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 import tom.api.model.assistant.AssistantQuery;
 import tom.api.model.assistant.AssistantSpec;
-import tom.api.model.conversation.Conversation;
 import tom.api.services.UserService;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
@@ -21,7 +20,7 @@ import tom.api.services.assistant.ConversationInUseException;
 import tom.api.services.assistant.QueueFullException;
 import tom.assistant.service.management.AssistantRegistry;
 import tom.config.MintyConfiguration;
-import tom.conversation.model.ConversationEntity;
+import tom.conversation.model.Conversation;
 import tom.conversation.repository.ConversationRepository;
 import tom.llm.service.LlmService;
 
@@ -47,17 +46,16 @@ public class ConversationNamingService {
 	@Scheduled(fixedDelay = 5000)
 	@Transactional
 	void nameConversations() {
-		List<ConversationEntity> conversations = conversationRepository.findAllByTitle(null);
+		List<Conversation> conversations = conversationRepository.findAllByTitle(null);
 
 		conversations = conversations.stream().filter(conversation -> conversation
 				.getAssociatedAssistantId() != AssistantManagementService.DefaultAssistantId).toList();
 
 		conversations.forEach(conversation -> {
-			List<Message> messages = llmService.getChatMemory()
-					.get(conversation.getConversationId().value().toString());
+			List<Message> messages = llmService.getChatMemory().get(conversation.getId().value().toString());
 
 			if (messages.size() > 1 || (messages.size() == 1 && messages.get(0).getText().length() > 80)) {
-				logger.info("Starting on conversation ID " + conversation.getConversationId().value().toString());
+				logger.info("Starting on conversation ID " + conversation.getId().value().toString());
 				StringBuilder sb = new StringBuilder();
 				messages.forEach(message -> {
 					String speaker = message.getMessageType().getValue();
@@ -69,9 +67,9 @@ public class ConversationNamingService {
 				AssistantSpec assistantSpec = new AssistantSpec(
 						AssistantManagementService.ConversationNamingAssistantId);
 				assistantQuery.setAssistantSpec(assistantSpec);
-				Conversation namingConversation = conversationService.newConversation(UserService.DefaultId,
-						AssistantManagementService.ConversationNamingAssistantId);
-				assistantQuery.setConversationId(namingConversation.getConversationId());
+				tom.api.model.conversation.Conversation namingConversation = conversationService.newConversation(
+						UserService.DefaultId, AssistantManagementService.ConversationNamingAssistantId);
+				assistantQuery.setConversationId(namingConversation.getId());
 				assistantQuery.setQuery(sb.toString());
 
 				String summary = null;
@@ -112,8 +110,7 @@ public class ConversationNamingService {
 
 				conversationRepository.save(conversation);
 
-				conversationService.deleteConversation(namingConversation.getOwnerId(),
-						namingConversation.getConversationId());
+				conversationService.deleteConversation(namingConversation.getOwnerId(), namingConversation.getId());
 			}
 		});
 	}

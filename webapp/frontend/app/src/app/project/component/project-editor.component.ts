@@ -1,41 +1,56 @@
-import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProjectService } from '../project.service';
 import { ProjectNodeComponent } from './project-node.component';
 import { NodeViewerComponent } from './project-node-viewer.component';
 import { AlertService } from '../../alert.service';
 import { ConfirmationDialogComponent } from '../../app/component/confirmation-dialog.component';
-import { DocProperties } from '../../document/document-editor.component';
 import { ProjectNode } from '../../model/project/project-node';
 import { Project } from '../../model/project/project';
+import { DocProperties } from '../../document/document-editor.component';
+import { AssistantListComponent } from '../../assistant/component/assistant-list.component';
+import { Assistant } from '../../model/assistant';
+import { ConversationService } from '../../conversation.service';
+import { Conversation } from '../../model/conversation/conversation';
+import { ConversationListComponent } from '../../conversation/component/conversation-list.component';
+import { ConversationViewerComponent } from '../../conversation/component/conversation-viewer.component';
 
 @Component({
 	selector: 'minty-project-editor',
-	imports: [CommonModule, FormsModule, ProjectNodeComponent, NodeViewerComponent, ConfirmationDialogComponent],
+	imports: [CommonModule, FormsModule, ProjectNodeComponent, NodeViewerComponent, ConfirmationDialogComponent, AssistantListComponent, ConversationListComponent, ConversationViewerComponent],
 	templateUrl: 'project-editor.component.html',
 	styleUrl: 'project-editor.component.css'
 })
 export class ProjectEditorComponent {
 
-	private _project!: Project;
+	private _project: Project | undefined = undefined;
 	@Input()
-		set project(value: Project) {
-			if (value) {
-				this._project = value;
-			}
+	set project(value: Project) {
+		if (value) {
+			this._project = value;
 			this.refresh();
 		}
-		get project(): Project {
-			return this._project;
-		}
+	}
+	get project(): Project {
+		return this._project!;
+	}
 
 	onChange = (_: any) => { };
 	onTouched: any = () => { };
 
-	nodes: ProjectNode[] = [];
+	readonly RootFolders: ProjectNode[] = [
+		{ path: 'Conversations', version: 1, type: 'Folder' },
+		{ path: 'Workflows', version: 1, type: 'Folder' },
+		{ path: 'Files', version: 1, type: 'Folder' }
+	];
 
+	nodes: ProjectNode[] = [];
 	selectedNode: ProjectNode | undefined = undefined;
+
+	conversations: Conversation[] = [];
+	selectedConversation: Conversation | undefined = undefined;
+
 	editFile: boolean = false;
 	currentFileContents: string | undefined = undefined;
 
@@ -45,13 +60,15 @@ export class ProjectEditorComponent {
 	mdFileDialogVisible = false;
 	zipFileDialogVisible = false
 	mermaidFileDialogVisible = false;
+	newChatDialogVisible = false;
 	document: DocProperties = {
 		title: '',
 		file: undefined
 	};
 
-	constructor(private projectService: ProjectService, private alertService: AlertService) {
-	}
+	constructor(private projectService: ProjectService,
+		private conversationService: ConversationService,
+		private alertService: AlertService) { }
 
 	refresh() {
 		this.nodes = [];
@@ -61,12 +78,37 @@ export class ProjectEditorComponent {
 			this.projectService.describeTree(this.project.id).subscribe((nodes: ProjectNode[]) => {
 				this.nodes = nodes;
 			});
+
+			this.conversationService.listForProject(this.project.id).subscribe((conversations: Conversation[]) => {
+				this.conversations = conversations;
+			});
 		}
 	}
 
-	onSelected(node: ProjectNode) {
+	startConversation(event: { assistant: Assistant, projectId: string }): void {
+		this.conversationService.createInProject(event.assistant, event.projectId).subscribe( conversation => {
+			this.conversationService.listForProject(event.projectId).subscribe(conversations => {
+				this.conversations = conversations;
+				this.onConversationSelected(conversation);
+			})
+		});
+		this.newChatDialogVisible = false;
+	}
+
+	onConversationSelected(conversation: Conversation) {
+		this.selectedNode = undefined;
+		this.selectedConversation = conversation;
+	}
+
+	onConversationChanged(conversation: Conversation) {
+		this.conversations = this.conversations.map(c => c.id === conversation.id ? { ...c, ...conversation } : c );
+		this.selectedConversation = this.conversations.find(c => c.id === conversation.id);
+	}
+
+	onNodeSelected(node: ProjectNode) {
 		if (node.type !== 'Folder') {
 			this.selectedNode = node;
+			this.selectedConversation = undefined;
 			if (this.selectedNode) {
 				this.projectService.readNode(this.project.id, this.selectedNode.path).subscribe(node => {
 					this.selectedNode = node;
@@ -78,16 +120,19 @@ export class ProjectEditorComponent {
 	}
 
 	onUpdateNode(updatedNode: ProjectNode) {
-
 		if (!this.selectedNode) {
 			return;
 		}
 
-		this.projectService.updateNodeMetadata(this.project.id, this.selectedNode.path, updatedNode.path, updatedNode.fileType).subscribe(() => {
+		this.projectService.updateNodeMetadata(
+			this.project.id,
+			this.selectedNode.path,
+			updatedNode.path,
+			updatedNode.fileType
+		).subscribe(() => {
 			this.refresh();
 		});
 	}
-
 
 	onDeleteNode(node: ProjectNode) {
 		this.nodeToDelete = node;
@@ -131,7 +176,7 @@ export class ProjectEditorComponent {
 		this.selectedNode.content = this.currentFileContents;
 		this.projectService.writeFile(this.project.id, this.selectedNode).subscribe(() => {
 			this.refresh();
-			this.onSelected(currentNode);
+			this.onNodeSelected(currentNode);
 		});
 	}
 
@@ -145,8 +190,10 @@ export class ProjectEditorComponent {
 		};
 
 		this.projectService.writeFile(this.project.id, node).subscribe(() => {
-			this.refresh();
-			this.alertService.postSuccess('Added file ' + node.path);
+			this.projectService.deleteNode(this.project.id, this.nodeToDelete!.path).subscribe(() => {
+				this.refresh();
+				this.alertService.postSuccess('Added file ' + node.path);
+			});
 		});
 	}
 
@@ -222,6 +269,10 @@ export class ProjectEditorComponent {
 		}
 	}
 
+	downloadProject(project: Project) {
+		this.projectService.downloadProjectZip(project.id);
+	}
+
 	fileSelected(event: Event) {
 		const newFiles = (event.target as HTMLInputElement).files;
 		if (newFiles && newFiles.length > 0) {
@@ -243,5 +294,9 @@ export class ProjectEditorComponent {
 
 	randomId(length: number) {
 		return Math.random().toString(36).substring(2, length + 2);
-	};
+	}
+
+	newChat() {
+		this.newChatDialogVisible = true;
+	}
 }

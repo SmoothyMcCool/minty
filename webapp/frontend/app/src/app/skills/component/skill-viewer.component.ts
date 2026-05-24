@@ -5,7 +5,7 @@ import { MarkdownModule } from 'ngx-markdown';
 import { AlertService } from '../../alert.service';
 import { ConfirmationDialogComponent } from '../../app/component/confirmation-dialog.component';
 import { UserSelectDialogComponent, UserSelection } from '../../app/component/user-select-dialog.component';
-import { MermaidClipboardDirective } from '../../assistant/component/mermaid-clipboard.directive';
+import { MermaidClipboardDirective } from '../../conversation/component/mermaid-clipboard.directive';
 import { SkillMetadata, Skill, SkillFile } from '../../model/skills/skill';
 
 @Component({

@@ -15,7 +15,9 @@ import { Conversation } from './model/conversation/conversation';
 export class ConversationService {
 
 	private static readonly NewConversation = 'api/conversation/new';
+	private static readonly NewProjectConversation = 'api/conversation/new/project';
 	private static readonly ListConversations = 'api/conversation/list';
+	private static readonly ListConversationsForProject = 'api/conversation/list/project';
 	private static readonly GetConversation = 'api/conversation';
 	private static readonly GetConversationHistory = 'api/conversation/history';
 	private static readonly DeleteConversation = 'api/conversation/delete';
@@ -41,8 +43,41 @@ export class ConversationService {
 			);
 	}
 
+	createInProject(assistant: Assistant, projectId: string): Observable<Conversation> {
+		let params: HttpParams = new HttpParams();
+		params = params.append('assistantId', assistant.id);
+		params = params.append('projectId', projectId);
+
+		return this.http.get<ApiResult>(ConversationService.NewProjectConversation, { params: params })
+			.pipe(
+				catchError(error => {
+					this.alertService.postFailure(JSON.stringify(error));
+					return EMPTY;
+				}),
+				map((result: ApiResult) => {
+					return result.data as Conversation;
+				})
+			);
+	}
+
 	list(): Observable<Conversation[]> {
 		return this.http.get<ApiResult>(ConversationService.ListConversations)
+			.pipe(
+				catchError(error => {
+					this.alertService.postFailure(JSON.stringify(error));
+					return EMPTY;
+				}),
+				map((result: ApiResult) => {
+					return result.data as Conversation[];
+				})
+			);
+	}
+
+	listForProject(projectId: string): Observable<Conversation[]> {
+		let params: HttpParams = new HttpParams();
+		params = params.append('projectId', projectId);
+
+		return this.http.get<ApiResult>(ConversationService.ListConversationsForProject, { params: params })
 			.pipe(
 				catchError(error => {
 					this.alertService.postFailure(JSON.stringify(error));
@@ -120,7 +155,7 @@ export class ConversationService {
 
 	rename(conversation: Conversation) {
 		let params: HttpParams = new HttpParams();
-		params = params.append('conversationId', conversation.conversationId);
+		params = params.append('conversationId', conversation.id);
 		params = params.append('title', conversation.title);
 
 		return this.http.get<ApiResult>(ConversationService.RenameConversation, { params: params })

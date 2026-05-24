@@ -1,4 +1,4 @@
-package tom.project.repository;
+package tom.project.model;
 
 import java.time.Instant;
 import java.util.UUID;

@@ -172,8 +172,7 @@ public class ProjectController {
 
 	@PostMapping("/node/move")
 	public ResponseEntity<ResponseWrapper<NodeInfo>> moveNode(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam ProjectId projectId, @RequestParam String sourcePath,
-			@RequestParam String targetPath) {
+			@RequestParam ProjectId projectId, @RequestParam String sourcePath, @RequestParam String targetPath) {
 
 		try {
 			NodeInfo info = projectService.moveNode(user.getId(), projectId, sourcePath, targetPath);
@@ -205,8 +204,7 @@ public class ProjectController {
 
 	@PostMapping("/node/meta")
 	public ResponseEntity<ResponseWrapper<Boolean>> updateNodeMetadata(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam ProjectId projectId, @RequestParam String oldPath,
-			@RequestParam String newPath,
+			@RequestParam ProjectId projectId, @RequestParam String oldPath, @RequestParam String newPath,
 			@RequestParam(required = false) String fileType) {
 
 		try {
