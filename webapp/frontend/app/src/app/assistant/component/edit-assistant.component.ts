@@ -58,7 +58,7 @@ export class EditAssistantComponent implements OnInit {
 	}
 
 	navigateTo(url: string): void {
-		this.router.navigateByUrl(url);
+		this.router.navigate([url], { queryParamsHandling: 'merge' });
 	}
 
 }

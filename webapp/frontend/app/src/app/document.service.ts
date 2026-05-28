@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResult } from './model/api-result';
 import { catchError, map, shareReplay, switchMap } from 'rxjs/operators';
-import { EMPTY, Observable, of, Subscription, timer } from 'rxjs';
+import { EMPTY, Observable, of, timer } from 'rxjs';
 import { AlertService } from './alert.service';
 import { MintyDoc } from './model/minty-doc';
 import { TrackableSubject } from './trackable-subject';

@@ -1,35 +1,34 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { Assistant, createAssistant } from '../../model/assistant';
 import { AssistantService } from '../../assistant.service';
 import { Router, RouterModule } from '@angular/router';
 import { ConversationService } from '../../conversation.service';
-import { AlertService } from '../../alert.service';
+import { Alert, AlertService } from '../../alert.service';
 import { ConfirmationDialogComponent } from '../../app/component/confirmation-dialog.component';
 import { UserSelectDialogComponent, UserSelection } from '../../app/component/user-select-dialog.component';
 import { Conversation } from '../../model/conversation/conversation';
-import { User } from '../../model/user';
 import { FilterPipe } from '../../pipe/filter-pipe';
 import { PredicatePipe } from '../../pipe/predicate-pipe';
-import { UserService } from '../../user.service';
 import { ConversationListComponent } from '../../conversation/component/conversation-list.component';
 import { AssistantListComponent } from './assistant-list.component';
+import { ProjectService } from '../../project/project.service';
+import { Subscription } from 'rxjs';
+import { Project } from '@playwright/test';
 
 @Component({
 	selector: 'minty-chat',
 	imports: [FormsModule, RouterModule, FilterPipe, ConfirmationDialogComponent, PredicatePipe, UserSelectDialogComponent, AssistantListComponent, ConversationListComponent],
 	templateUrl: 'chat.component.html'
 })
-export class ChatComponent implements OnInit {
+export class ChatComponent implements OnInit, OnDestroy {
 
 	conversations: Conversation[] = [];
-	selectedChat: string = '';
 
 	assistants: Assistant[] = [];
 	sharedAssistants: Assistant[] = [];
 	assistantFilter: string = '';
-	conversationSortOrder: string = 'lastUsed';
 
 	workingAssistant: Assistant = createAssistant();
 
@@ -37,8 +36,6 @@ export class ChatComponent implements OnInit {
 
 	confirmDeleteAssistantVisible = false;
 	assistantPendingDeletion!: Assistant;
-	confirmDeleteConversationVisible = false;
-	conversationPendingDeletionId: string  | undefined = undefined;
 
 	conversationToRename: Conversation | undefined = undefined;
 	renamedConversationTitle: string  | undefined = undefined;
@@ -50,34 +47,38 @@ export class ChatComponent implements OnInit {
 
 	onlyOwnedAssistants = false;
 
-	user!: User;
+	activeProjectSubscription: Subscription | undefined = undefined;
+	activeProject: Project | undefined = undefined;
 
 	constructor(
 		private assistantService: AssistantService,
 		private conversationService: ConversationService,
+		private projectService: ProjectService,
 		private alertService: AlertService,
-		private userService: UserService,
 		private router: Router) {
 	}
 
 	ngOnInit() {
-		this.userService.getUser().subscribe(user => {
-			this.user = user;
-
-			this.assistantService.list().subscribe(assistants => {
-				setTimeout(() => {
-					this.sortAssistants(assistants);
-					this.assistants = assistants;
-					this.sharedAssistants = assistants.filter(assistant => assistant.owned === false);
-				}, 0);
-			});
-
-			this.conversationService.list().subscribe(conversations => {
-				this.sortConversations(conversations);
-				this.conversations = conversations;
-			});
-
+		this.assistantService.list().subscribe(assistants => {
+			setTimeout(() => {
+				this.sortAssistants(assistants);
+				this.assistants = assistants;
+				this.sharedAssistants = assistants.filter(assistant => assistant.owned === false);
+			}, 0);
 		});
+
+		this.conversationService.list().subscribe(conversations => {
+			this.conversations = conversations;
+		});
+
+		this.activeProjectSubscription = this.projectService.activeProject$.subscribe(activeProject => {
+			this.activeProject = activeProject;
+		});
+	}
+
+	ngOnDestroy(): void {
+		this.activeProjectSubscription?.unsubscribe();
+		this.activeProjectSubscription = undefined;
 	}
 
 	filteredAssistants() {
@@ -92,40 +93,6 @@ export class ChatComponent implements OnInit {
 			}
 			const name = (a.name ?? '').toString().toLowerCase();
 			return name.includes(text);
-		});
-	}
-
-	sortConversationsBy(ordering: string) {
-		this.conversationSortOrder = ordering;
-		this.conversations = [...this.sortConversations(this.conversations)];
-	}
-
-	sortConversations(conversations: Conversation[]): Conversation[] {
-		return conversations.sort((left, right) => {
-			if (this.conversationSortOrder === 'alpha') {
-				if (!left.title && !right.title) {
-					return left.id.localeCompare(right.id);
-				}
-				if (!left.title) {
-					return 1;
-				}
-				if (!right.title) {
-					return -1;
-				}
-				return left.title.localeCompare(right.title);
-			} else {
-				if (!left.lastUsed && ! right.lastUsed) {
-					return left.id.localeCompare(right.id);
-				}
-				if (!left.lastUsed) {
-					return 1;
-				}
-				if (!right.lastUsed) {
-					return -1;
-				}
-				const diff = new Date(right.lastUsed).getTime() - new Date(left.lastUsed).getTime();
-				return diff || left.id.localeCompare(right.id)
-			}
 		});
 	}
 
@@ -145,7 +112,7 @@ export class ChatComponent implements OnInit {
 	}
 
 	editAssistant(assistantId: number) {
-		this.router.navigate(['/assistants/edit', assistantId]);
+		this.router.navigate(['/assistants/edit', assistantId], { queryParamsHandling: 'merge' });
 	}
 
 	deleteAssistant(assistant: Assistant) {
@@ -165,7 +132,6 @@ export class ChatComponent implements OnInit {
 			});
 			this.conversationService.list().subscribe(conversations => {
 				this.conversations = conversations;
-				this.sortConversations(this.conversations);
 			});
 		});
 
@@ -176,34 +142,22 @@ export class ChatComponent implements OnInit {
 	}
 
 	startConversation(event: { assistant: Assistant, projectId: string }): void {
-		this.conversationService.create(event.assistant).subscribe( conversation => {
-			this.router.navigate(['/conversation', conversation.id]);
+		if (!event.projectId) {
+			this.alertService.postAlert({ type: 'info', message: 'You need to select a project before you start a conversation.' });
+		}
+		this.conversationService.createInProject(event.assistant, event.projectId).subscribe(conversation => {
+			this.projectService.initialDisplayItem = { type: 'conversation', id: conversation.id };
+			this.router.navigate(['/projects'], { queryParamsHandling: 'merge' });
 		});
 	}
 
 	selectConversation(conversation: Conversation) {
-		this.router.navigate(['/conversation', conversation.id]);
-	}
-
-	deleteConversation(conversation: Conversation) {
-		this.confirmDeleteConversationVisible = true;
-		this.conversationPendingDeletionId = conversation.id;
-	}
-
-	confirmDeleteConversation() {
-		this.confirmDeleteConversationVisible = false;
-		this.conversationService.delete(this.conversationPendingDeletionId!).subscribe(() => {
-			this.assistantService.list().subscribe(assistants => {
-				this.sortAssistants(assistants);
-				this.assistants = assistants;
-				this.sharedAssistants = this.assistants.filter(assistant => assistant.owned === false);
-			});
-			this.conversationService.list().subscribe(conversations => {
-				this.conversations = conversations;
-				this.sortConversations(this.conversations);
-			});
-		});
-		this.conversations = this.conversations.filter(item => item.id === this.conversationPendingDeletionId);
+		if (!conversation.projectId) {
+			this.alertService.postAlert({ type: 'info', message: 'You must associate this conversation with a project. Click the <span><i class="bi bi-three-dots-vertical"></i></span> button.' });
+			return;
+		}
+		this.projectService.initialDisplayItem = {type: 'conversation', id: conversation.id};
+		this.router.navigate(['/projects'], { queryParams: { projectId: conversation.projectId }, queryParamsHandling: 'merge' });
 	}
 
 	isOwned(assistant: Assistant): boolean {
@@ -215,14 +169,6 @@ export class ChatComponent implements OnInit {
 			return conversation.title;
 		}
 		return conversation.id;
-	}
-
-	getConversationAssistantName(conversation: Conversation): string {
-		const assistant = this.assistants.find( assistant => assistant.id === conversation.associatedAssistantId);
-		if (assistant) {
-			return assistant.name;
-		}
-		return '';
 	}
 
 	renameConversation(conversation: Conversation) {

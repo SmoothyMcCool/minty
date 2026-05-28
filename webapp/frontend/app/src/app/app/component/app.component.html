@@ -1,31 +1,36 @@
 <nav class="navbar navbar-expand-md sticky-top minty-navbar">
 	<div class="container-fluid">
 		<div class="collapse navbar-collapse" id="navbarContent">
-			<ul class="navbar-nav">
-				<li class="nav-item">
-					<a class="nav-link" (click)="navigateTo('/assistants')" data-bs-toggle="collapse"
-						data-bs-target=".navbar-collapse.show">Assistants</a>
+			<ul class="navbar-nav ">
+				<li class="nav-item d-flex align-items-center mx-lg-3">
+					<div class="d-flex align-items-center gap-2 px-2">
+						<select id="projectSelector" class="form-select form-select-sm" style="min-width: 220px;"
+							[ngModel]="activeProject?.id" (ngModelChange)="projectChanged($event)">
+							@for (project of projects; track project.id) {
+								<option [value]="project.id">
+									{{project.name ? project.name : project.id}}
+								</option>
+							}
+						</select>
+						<button class="btn btn-primary" (click)="newProjectVisible = true"><i class="bi bi-folder-plus"></i></button>
+					</div>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" (click)="navigateTo('/workflow')" data-bs-toggle="collapse"
-						data-bs-target=".navbar-collapse.show">Workflows</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link" (click)="navigateTo('/projects')" data-bs-toggle="collapse"
+					<a class="nav-link" [class.active]="isRouteActive('/projects')" (click)="navigateTo('/projects')" data-bs-toggle="collapse"
 						data-bs-target=".navbar-collapse.show">Projects</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" (click)="navigateTo('/skills')" data-bs-toggle="collapse"
-						data-bs-target=".navbar-collapse.show">Skills</a>
+					<a class="nav-link" [class.active]="isRouteActive('/assistants')" (click)="navigateTo('/assistants')" data-bs-toggle="collapse"
+						data-bs-target=".navbar-collapse.show">Assistants</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" (click)="navigateTo('/documents')" data-bs-toggle="collapse"
-						data-bs-target=".navbar-collapse.show">Documents</a>
+					<a class="nav-link" [class.active]="isRouteActive('/workflow')" (click)="navigateTo('/workflow')" data-bs-toggle="collapse"
+						data-bs-target=".navbar-collapse.show">Workflows</a>
 				</li>
-				<!--li class="nav-item">
-        <a class="nav-link" (click)="navigateTo('/diagrams')" data-bs-toggle="collapse"
-        data-bs-target=".navbar-collapse.show">Diagramming</a>
-      </li-->
+				<li class="nav-item">
+					<a class="nav-link" [class.active]="isRouteActive('/skill')" (click)="navigateTo('/skills')" data-bs-toggle="collapse"
+						data-bs-target=".navbar-collapse.show">Skills</a>
+				</li>
 			</ul>
 		</div>
 		<ul class="navbar-nav">
@@ -34,7 +39,7 @@
 					data-bs-toggle="collapse" data-bs-target=".navbar-collapse.show">New Assistant</button>
 			</li>
 			<li class="nav-item">
-				<button class="btn btn-outline-secondary me-2" (click)="navigateTo('/workflow/edit?new=true')"
+				<button class="btn btn-outline-secondary me-2" (click)="navigateTo('/workflow/edit', { new: true })"
 					data-bs-toggle="collapse" data-bs-target=".navbar-collapse.show">New Workflow</button>
 			</li>
 			<li class="nav-item">
@@ -65,7 +70,7 @@
 		@if (alerts.success.length > 0) {
 			<div class="alert alert-primary" @alertAnim>
 				@for (alert of alerts.success; track alert) {
-					<strong>{{alert}}</strong>
+					<strong [innerHTML]="alert"></strong>
 				}
 			</div>
 		}
@@ -74,7 +79,7 @@
 		@if (alerts.info.length > 0) {
 			<div class="alert alert-info" @alertAnim>
 				@for (alert of alerts.info; track alert) {
-					<strong>{{alert}}</strong>
+					<strong [innerHTML]="alert"></strong>
 				}
 			</div>
 		}
@@ -105,4 +110,34 @@
 		}
 	</div>
 </div>
+
+@if (newProjectVisible) {
+	<div class="modal show d-block" tabindex="-1">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">New Project</h5>
+					<button type="button" class="btn-close" (click)="cancelNewProject()"
+						aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<form role="form row">
+						<div class="col-12">
+							<label for="nameInput" class="form-label">Name</label>
+							<input type="text" class="form-control" id="nameInput" name="nameInput"
+								[(ngModel)]="newProjectName" required>
+						</div>
+					</form>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" (click)="cancelNewProject()"><i
+							class="bi bi-arrow-counterclockwise"></i></button>
+					<button type="button" class="btn btn-primary" (click)="createNewProject()"><i
+							class="bi bi-check-lg"></i></button>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
 <router-outlet></router-outlet>

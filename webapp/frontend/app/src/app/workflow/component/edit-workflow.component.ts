@@ -67,6 +67,14 @@ export class EditWorkflowComponent implements OnInit {
 					connections: [],
 					outputStep: undefined
 				};
+				this.router.navigate([], {
+					relativeTo: this.route,
+					queryParams: {
+						new: null
+					},
+					queryParamsHandling: 'merge',
+					replaceUrl: true
+				});
 			}
 
 		});
@@ -106,7 +114,7 @@ export class EditWorkflowComponent implements OnInit {
 		this.workflowService.execute(this.workflow, this.logLevel).subscribe((result: string) => {
 			this.alertService.postSuccess(result);
 		});
-		this.router.navigateByUrl('workflow');
+		this.router.navigate(['workflow'], { queryParamsHandling: 'merge' });
 	}
 
 	cancel() {
@@ -117,7 +125,7 @@ export class EditWorkflowComponent implements OnInit {
 	}
 
 	confirmCancel() {
-		this.router.navigateByUrl('workflow');
+		this.router.navigate(['workflow'], { queryParamsHandling: 'merge' });
 	}
 
 	workflowUpdated(workflow: Workflow) {

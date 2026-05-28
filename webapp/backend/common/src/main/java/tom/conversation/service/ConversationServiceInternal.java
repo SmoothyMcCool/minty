@@ -25,6 +25,8 @@ public interface ConversationServiceInternal extends ConversationService {
 
 	Conversation renameConversation(UserId userId, ConversationId conversationId, String title);
 
+	Conversation associateProject(UserId userId, ConversationId conversationId, ProjectId projectId);
+
 	boolean resetConversation(UserId userId, ConversationId conversationId);
 
 	void updateLastUsed(ConversationId conversationId);

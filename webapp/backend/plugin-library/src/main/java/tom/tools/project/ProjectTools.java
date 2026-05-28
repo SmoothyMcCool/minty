@@ -27,74 +27,12 @@ public class ProjectTools implements MintyTool, ServiceConsumer {
 	private ConversationId conversationId;
 	private ProjectId projectId;
 
-	public static final String prompt = """
-			You are operating on a structured project filesystem stored in a database.
-
-			You MUST use tools to inspect and modify the project.
-			Never invent file paths.
-			Never assume folders exist.
-			Always verify structure before modifying it.
-
-			PATH RULES
-			- Paths must be absolute.
-			- Paths must start with "/".
-			- Paths must NOT contain "..".
-			- Do not use relative paths.
-			- "/" is the root folder and cannot be deleted.
-
-			WORKFLOW RULES
-
-			Before modifying:
-			1. Inspect structure using describeProjectStructure or listDirectory.
-			2. If editing a file:
-			   - First call readNode.
-			   - Then produce full updated content.
-			   - Then call writeFile with the COMPLETE content.
-
-			WRITE BEHAVIOR
-			- writeFile replaces the entire file.
-			- writeFile automatically increments version.
-			- createFolder fails if parent does not exist.
-			- deleteNode deletes folders recursively.
-			- moveNode moves entire subtree.
-
-			ERROR HANDLING
-			If a tool returns status="error":
-			- Read the error message.
-			- Adjust the plan.
-			- Retry with corrected parameters.
-			- Do NOT repeat the same failing call.
-
-			GOAL
-			Maintain a consistent, well-structured project tree.
-			Avoid duplicates.
-			Avoid invalid paths.
-			Make deliberate, minimal changes.
-
-			END OF PROMPT
-
-			ALWAYS end your reply with a JSON block that lists every file path that was changed.
-			The block must be the very last thing in the reply and must look exactly like this:
-
-			```json
-			{
-			  "files": ["path/to/file1", "path/to/file2", "..."]
-			}
-			```
-
-			Do not add any other prose, code fences, or comments after the closing fence.
-			If no files were modified, do not include this JSON.
-			""";
-
 	@Override
 	public void initialize() {
 		projectId = null;
-
 		if (conversationId != null) {
 			Conversation conversation = pluginServices.getConversationService().getConversation(userId, conversationId);
-			projectId = conversation.getProject();
-		} else {
-			projectId = null;
+			projectId = conversation.getProjectId();
 		}
 	}
 
@@ -104,111 +42,141 @@ public class ProjectTools implements MintyTool, ServiceConsumer {
 		}
 	}
 
-	// ---------------------------------------
+	// ---------------------------------------------------------------------
 	// LIST DIRECTORY
-	// ---------------------------------------
+	// ---------------------------------------------------------------------
 
-	@Tool(description = """
-			List the direct children of a folder.
+	@Tool(name = "project_list_folder", description = """
+			List direct children of a folder.
 
-			INPUT:
-			- path: Absolute folder path starting with "/".
+			Arguments:
+			- path: absolute folder path
 
-			BEHAVIOR:
-			- Returns only immediate children (not recursive).
-			- Fails if path does not exist.
-			- Fails if path is not a folder.
+			Returns:
+			- immediate child files and folders
 
-			USE THIS:
-			- To check whether a folder exists.
-			- Before creating files inside a folder.
-			- Before structural changes.
+			Not recursive.
+
+			Fails if:
+			- path does not exist
+			- path is not a folder
+
+			Examples:
+			- "/src"
+			- "/docs"
 			""")
 	@Transactional(readOnly = true)
-	public MintyToolResponse<List<NodeInfo>> listDirectory(String path) {
+	public MintyToolResponse<List<NodeInfo>> listDirectory(
+			@ToolParam(description = "Absolute folder path") String path) {
 		try {
 			ensureProjectSelected();
 			PathValidator.validate(path);
-
 			return MintyToolResponse
 					.SuccessResponse(pluginServices.getProjectService().listChildren(userId, projectId, path));
-
 		} catch (Exception e) {
 			return MintyToolResponse.FailureResponse(e.getMessage());
 		}
 	}
 
-	// ---------------------------------------
-	// READ NODE (file OR folder)
-	// ---------------------------------------
+	// ---------------------------------------------------------------------
+	// GET PROJECT TREE
+	// ---------------------------------------------------------------------
 
-	@Tool(description = """
-			Read a node at an absolute path.
+	@Tool(name = "project_get_tree", description = """
+			Return the complete project tree.
 
-			INPUT:
-			- path: Absolute path starting with "/".
+			Returns:
+			- all project nodes
+			- node types
+			- versions
 
-			RETURNS:
-			- If file: returns full file content and version.
-			- If folder: returns metadata only (no content).
-
-			FAILS IF:
-			- Path does not exist.
-
-			USE THIS:
-			- Before modifying a file.
-			- To confirm file version.
+			Useful for inspecting overall project structure.
 			""")
 	@Transactional(readOnly = true)
-	public MintyToolResponse<NodeContent> readNode(String path) {
+	public MintyToolResponse<List<NodeInfo>> getProjectTree() {
 		try {
 			ensureProjectSelected();
-			PathValidator.validate(path);
-
 			return MintyToolResponse
-					.SuccessResponse(pluginServices.getProjectService().readNode(userId, projectId, path));
-
+					.SuccessResponse(pluginServices.getProjectService().describeTree(userId, projectId));
 		} catch (Exception e) {
 			return MintyToolResponse.FailureResponse(e.getMessage());
 		}
 	}
 
-	// ---------------------------------------
-	// WRITE FILE (create or overwrite)
-	// ---------------------------------------
+	// ---------------------------------------------------------------------
+	// READ FILE
+	// ---------------------------------------------------------------------
 
-	@Tool(description = """
-			Create or overwrite a file at an absolute path.
+	@Tool(name = "project_read_file", description = """
+			Read a file.
 
-			INPUT:
-			- path: Absolute path starting with "/".
-			- fileType: One of: code, markdown, json, text, diagram.
-			- content: FULL file content (not partial).
+			Arguments:
+			- path: absolute file path
 
-			BEHAVIOR:
-			- Creates file if it does not exist.
-			- Overwrites entire file if it exists.
-			- Automatically increments file version.
-			- Parent folder MUST already exist.
+			Returns:
+			- full file contents
+			- metadata
+			- version
 
-			FAILS IF:
-			- Parent folder does not exist.
-			- Path refers to a folder.
-			- fileType is invalid.
+			Fails if:
+			- path does not exist
+			- path is a folder
 
-			IMPORTANT:
-			You must send the COMPLETE updated content.
-			This does not patch or append.
+			Examples:
+			- "/src/Main.java"
+			- "/README.md"
 			""")
-	@Transactional
-	public MintyToolResponse<NodeInfo> writeFile(String path,
-			@ToolParam(description = "Must be one of exactly these strings: code, markdown, json, text, diagram") String fileType,
-			String content) {
-
+	@Transactional(readOnly = true)
+	public MintyToolResponse<NodeContent> readFile(@ToolParam(description = "Absolute file path") String path) {
 		try {
 			ensureProjectSelected();
 			PathValidator.validate(path);
+			NodeContent result = pluginServices.getProjectService().readNode(userId, projectId, path);
+			if (result.getFileType() == null) {
+				return MintyToolResponse.FailureResponse("Path refers to a folder.");
+			}
+			return MintyToolResponse.SuccessResponse(result);
+		} catch (Exception e) {
+			return MintyToolResponse.FailureResponse(e.getMessage());
+		}
+	}
 
+	// ---------------------------------------------------------------------
+	// WRITE FILE
+	// ---------------------------------------------------------------------
+
+	@Tool(name = "project_write_file", description = """
+			Create or fully replace a file.
+
+			Arguments:
+			- path: absolute file path
+			- fileType: code | markdown | json | text | diagram
+			- content: complete final file contents
+
+			Behavior:
+			- creates missing files
+			- fully replaces existing files
+			- does not append
+			- does not patch
+
+			Parent folder must already exist.
+
+			Fails if:
+			- parent folder does not exist
+			- path is a folder
+			- fileType is invalid
+
+			Examples:
+			- "/src/App.java"
+			- "/docs/design.md"
+			""")
+	@Transactional
+	public MintyToolResponse<NodeInfo> writeFile(@ToolParam(description = "Absolute file path") String path,
+			@ToolParam(description = "One of: code, markdown, json, text, diagram") String fileType,
+			@ToolParam(description = "Complete final file contents") String content) {
+		try {
+			ensureProjectSelected();
+			PathValidator.validate(path);
 			FileType parsedType;
 			try {
 				parsedType = FileType.valueOf(fileType);
@@ -216,204 +184,165 @@ public class ProjectTools implements MintyTool, ServiceConsumer {
 				return MintyToolResponse
 						.FailureResponse("Invalid fileType. Must be one of: code, markdown, json, text, diagram");
 			}
-
 			return MintyToolResponse.SuccessResponse(
 					pluginServices.getProjectService().writeFile(userId, projectId, path, parsedType, content));
-
 		} catch (Exception e) {
 			return MintyToolResponse.FailureResponse(e.getMessage());
 		}
 	}
 
-	// ---------------------------------------
+	// ---------------------------------------------------------------------
 	// CREATE FOLDER
-	// ---------------------------------------
+	// ---------------------------------------------------------------------
 
-	@Tool(description = """
-			Create a folder at an absolute path.
+	@Tool(name = "project_create_folder", description = """
+			Create a folder.
 
-			INPUT:
-			- path: Absolute path starting with "/".
+			Arguments:
+			- path: absolute folder path
 
-			BEHAVIOR:
-			- Parent folder must already exist.
-			- Version is initialized to 0.
+			Parent folder must already exist.
 
-			FAILS IF:
-			- Parent does not exist.
-			- Path already exists.
+			Fails if:
+			- parent does not exist
+			- path already exists
 
-			USE THIS:
-			- Before writing files into new directories.
+			Examples:
+			- "/src"
+			- "/src/components"
 			""")
 	@Transactional
-	public MintyToolResponse<NodeInfo> createFolder(String path) {
+	public MintyToolResponse<NodeInfo> createFolder(@ToolParam(description = "Absolute folder path") String path) {
 		try {
 			ensureProjectSelected();
 			PathValidator.validate(path);
-
 			return MintyToolResponse
 					.SuccessResponse(pluginServices.getProjectService().createFolder(userId, projectId, path));
-
 		} catch (Exception e) {
 			return MintyToolResponse.FailureResponse(e.getMessage());
 		}
 	}
 
-	// ---------------------------------------
-	// DELETE NODE (recursive for folders)
-	// ---------------------------------------
+	// ---------------------------------------------------------------------
+	// DELETE PATH
+	// ---------------------------------------------------------------------
 
-	@Tool(description = """
-			Delete a file or folder at an absolute path.
+	@Tool(name = "project_delete_path", description = """
+			Delete a file or folder.
 
-			INPUT:
-			- path: Absolute path starting with "/".
+			Arguments:
+			- path: absolute file or folder path
 
-			BEHAVIOR:
-			- If folder: deletes entire subtree recursively.
-			- Returns number of deleted nodes.
+			Behavior:
+			- deleting a folder removes the full subtree recursively
 
-			FAILS IF:
-			- Path does not exist.
-			- Path is "/".
-
-			WARNING:
 			This operation is permanent.
+
+			Fails if:
+			- path does not exist
+			- path is "/"
+
+			Examples:
+			- "/old.txt"
+			- "/tmp"
 			""")
 	@Transactional
-	public MintyToolResponse<Integer> deleteNode(String path) {
+	public MintyToolResponse<Integer> deletePath(@ToolParam(description = "Absolute file or folder path") String path) {
 		try {
 			ensureProjectSelected();
 			PathValidator.validate(path);
-
 			if ("/".equals(path)) {
 				return MintyToolResponse.FailureResponse("Cannot delete root folder.");
 			}
-
 			return MintyToolResponse
 					.SuccessResponse(pluginServices.getProjectService().deleteNode(userId, projectId, path));
-
 		} catch (Exception e) {
 			return MintyToolResponse.FailureResponse(e.getMessage());
 		}
 	}
 
-	// ---------------------------------------
-	// MOVE NODE
-	// ---------------------------------------
+	// ---------------------------------------------------------------------
+	// MOVE PATH
+	// ---------------------------------------------------------------------
 
-	@Tool(description = """
+	@Tool(name = "project_move_path", description = """
 			Move or rename a file or folder.
 
-			INPUT:
-			- sourcePath: Existing absolute path.
-			- targetPath: New absolute path.
+			Arguments:
+			- sourcePath: existing absolute path
+			- targetPath: new absolute path
 
-			BEHAVIOR:
-			- Moves entire subtree if folder.
-			- Increments version of moved nodes.
-			- Target must not already exist.
+			Behavior:
+			- moving a folder moves the full subtree
+			- moved nodes receive new versions
 
-			FAILS IF:
-			- Source does not exist.
-			- Target already exists.
-			- Attempting to move a folder inside itself.
+			Fails if:
+			- source does not exist
+			- target already exists
+			- moving a folder inside itself
 
-			USE THIS:
-			- To rename files.
-			- To reorganize folder structure.
+			Examples:
+
+			Rename file:
+			sourcePath="/src/A.java"
+			targetPath="/src/B.java"
+
+			Move folder:
+			sourcePath="/old"
+			targetPath="/archive/old"
 			""")
 	@Transactional
-	public MintyToolResponse<NodeInfo> moveNode(String sourcePath, String targetPath) {
-
+	public MintyToolResponse<NodeInfo> movePath(@ToolParam(description = "Existing absolute path") String sourcePath,
+			@ToolParam(description = "New absolute path") String targetPath) {
 		try {
 			ensureProjectSelected();
 			PathValidator.validate(sourcePath);
 			PathValidator.validate(targetPath);
-
 			if (targetPath.startsWith(sourcePath + "/")) {
 				return MintyToolResponse.FailureResponse("Cannot move a folder inside itself.");
 			}
-
 			return MintyToolResponse.SuccessResponse(
 					pluginServices.getProjectService().moveNode(userId, projectId, sourcePath, targetPath));
-
 		} catch (Exception e) {
 			return MintyToolResponse.FailureResponse(e.getMessage());
 		}
 	}
 
-	// ---------------------------------------
-	// DESCRIBE PROJECT STRUCTURE
-	// ---------------------------------------
+	// ---------------------------------------------------------------------
+	// SEARCH FILES
+	// ---------------------------------------------------------------------
 
-	@Tool(description = """
-			Return the full project tree.
+	@Tool(name = "project_search_paths", description = """
+			Search files and folders by partial name or path.
 
-			BEHAVIOR:
-			- Returns all nodes ordered by path.
-			- Includes node type and version.
+			Arguments:
+			- filter: partial filename or path fragment
 
-			USE THIS:
-			- Before large structural changes.
-			- When unsure about project layout.
-			- To get a global view of the project.
+			Behavior:
+			- case-insensitive
+			- searches the entire project
 
-			This is a read-only inspection tool.
+			Returns:
+			- matching files and folders
+
+			Examples:
+			- "controller"
+			- "README"
+			- "service"
 			""")
 	@Transactional(readOnly = true)
-	public MintyToolResponse<List<NodeInfo>> describeProjectStructure() {
+	public MintyToolResponse<List<NodeInfo>> searchFilesBySubstring(
+			@ToolParam(description = "Partial filename or path fragment") String filter) {
 		try {
 			ensureProjectSelected();
-
-			return MintyToolResponse
-					.SuccessResponse(pluginServices.getProjectService().describeTree(userId, projectId));
-
-		} catch (Exception e) {
-			return MintyToolResponse.FailureResponse(e.getMessage());
-		}
-	}
-
-	// ---------------------------------------
-	// SEARCH FOR FILES
-	// ---------------------------------------
-
-	@Tool(description = """
-			Searches the entire project filesystem using a specialized filter criteria.
-			This tool delegates the search query to the backend service for efficiency,
-			returning only nodes (files or folders) that match the filter.
-
-			INPUT:
-			- filter: The substring or pattern to search for (case-insensitive).
-
-			RETURNS:
-			- A list of NodeInfo objects representing all matching nodes.
-
-			USE THIS:
-			- When the user needs to locate a file or folder by partial name or path fragment,
-			  relying on the optimized backend search capability.
-
-			This is a read-only inspection tool.
-			""")
-	@Transactional(readOnly = true)
-	public MintyToolResponse<List<NodeInfo>> searchFilesBySubstring(String filter) {
-		try {
-			ensureProjectSelected();
-
-			// 1. Call the dedicated backend search method
-			// This call is assumed to handle filtering efficiently at the database level.
 			List<NodeInfo> results = pluginServices.getProjectService().searchByFilter(userId, projectId, filter);
-
-			// 2. Return success response
 			return MintyToolResponse.SuccessResponse(results);
-
 		} catch (Exception e) {
 			return MintyToolResponse.FailureResponse("Error during search: " + e.getMessage());
 		}
 	}
 
-	// ---------------------------------------
+	// ---------------------------------------------------------------------
 
 	@Override
 	public String name() {
@@ -423,16 +352,9 @@ public class ProjectTools implements MintyTool, ServiceConsumer {
 	@Override
 	public String description() {
 		return """
-				Tools allowing the LLM to interact with a structured
-				project filesystem stored in a database.
-				Supports reading, writing, moving, deleting,
-				and inspecting files and folders.
+				Filesystem tools for reading and modifying
+				project files and folders.
 				""";
-	}
-
-	@Override
-	public String prompt() {
-		return prompt;
 	}
 
 	@Override

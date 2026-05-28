@@ -70,10 +70,8 @@ export class ViewDocumentsComponent implements OnInit, OnDestroy {
 	}
 
 	ngOnDestroy(): void {
-		if (this.subscription) {
-			this.subscription.unsubscribe();
-			this.subscription = undefined;
-		}
+		this.subscription?.unsubscribe();
+		this.subscription = undefined;
 	}
 
 	addNewDocument() {

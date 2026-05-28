@@ -21,17 +21,14 @@ export class UserService {
 	private static readonly GetUser = 'api/user';
 	private static readonly ListUsers = 'api/user/list';
 
-	private user: User = null;
-	private userDefaults: AttributeMap;
-	private systemDefaults: AttributeMap;
+	private user: User | undefined = undefined;
+	private userDefaults: AttributeMap | undefined = undefined;
+	private systemDefaults: AttributeMap | undefined = undefined;
 
 	private timeoutTimer$ = new Subject<'start' | 'stop'>();
 
 	constructor(private alertService: AlertService, private http: HttpClient, private router: Router) {
 		this.startSessionTimeout();
-
-		this.systemDefaults = null;
-		this.userDefaults = null;
 	}
 
 	loggedIn(): boolean {
@@ -47,7 +44,7 @@ export class UserService {
 				})
 			).subscribe(systemDefaults => this.systemDefaults = systemDefaults);
 
-		if (this.user === null) {
+		if (!this.user) {
 			return this.http.get<ApiResult>(UserService.GetUser)
 				.pipe(
 					map((result: ApiResult) => {
@@ -57,7 +54,7 @@ export class UserService {
 					})
 				);
 		}
-		return of(this.user);
+		return of(this.user!);
 	}
 
 	listUsers(): Observable<string[]> {
@@ -134,7 +131,7 @@ export class UserService {
 					this.timeoutTimer$.next('stop');
 					this.user = null;
 					sessionStorage.clear();
-					this.router.navigateByUrl('/login');
+					this.router.navigate(['/login']);
 				})
 			).subscribe();
 	}

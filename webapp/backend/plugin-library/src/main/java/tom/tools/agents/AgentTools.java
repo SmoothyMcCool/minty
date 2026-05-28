@@ -23,11 +23,6 @@ public class AgentTools implements MintyTool, ServiceConsumer {
 	}
 
 	@Override
-	public String prompt() {
-		return "";
-	}
-
-	@Override
 	public void setPluginServices(PluginServices pluginServices) {
 		this.pluginServices = pluginServices;
 	}

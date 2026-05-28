@@ -40,7 +40,7 @@ export class SignupComponent {
 						this.userService.login(this.user.name, this.user.password)
 							.subscribe({
 								next: () => {
-									this.router.navigateByUrl('/assistants');
+									this.router.navigate(['/projects'], { queryParamsHandling: 'merge' });
 									return true;
 								},
 								error: (error) => this.messages = error

@@ -31,6 +31,11 @@
 				<span class="clickable-text text-truncate flex-grow-1" (click)="selectConversation(conversation)" stlye="min-width: 0;">
 					{{getConversationTitle(conversation)}}
 				</span>
+				@if (!projectMode) {
+					<span class="badge text-bg-primary flex-shrink-0 ms-2">
+						{{getProjectName(conversation)}}
+					</span>
+				}
 				<span class="badge text-bg-secondary flex-shrink-0 ms-2">
 					{{getConversationAssistantName(conversation)}}
 				</span>
@@ -40,6 +45,11 @@
 					<i class="bi bi-three-dots-vertical" style="font-size: 18px;"></i>
 				</button>
 				<ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton">
+					<li>
+						<button class="dropdown-item" type="button" (click)="associateProject(conversation)">
+							<i class="bi bi-pencil-square me-2"></i> Set Project
+						</button>
+					</li>
 					<li>
 						<button class="dropdown-item" type="button" (click)="renameConversation(conversation)">
 							<i class="bi bi-pencil-square me-2"></i> Rename
@@ -78,7 +88,38 @@
 						[(ngModel)]="renamedConversationTitle">
 				</div>
 				<div class="modal-footer">
-					<button type="button" class="btn btn-secondary" (click)="onCancelConversationRename()">
+					<button type="button" class="btn btn-secondary" (click)="renameConversationVisible = false">
+						<i class="bi bi-x-lg"></i>
+					</button>
+					<button type="button" class="btn btn-primary" (click)="onConfirmConversationRename()">
+						<i class="bi bi-check-lg"></i>
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+@if (associateProjectVisible) {
+	<div class="modal show d-block" tabindex="-1">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Which project?</h5>
+					<button type="button" class="btn-close" (click)="onCancel()" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<select id="projectSelector" class="form-select form-select-sm" style="min-width: 220px;"
+						[ngModel]="conversationToEdit?.projectId" (ngModelChange)="projectIdToAssociate = $event">
+						@for (project of projects; track project.id) {
+							<option [value]="project.id">
+								{{project.name ? project.name : project.id}}
+							</option>
+						}
+					</select>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" (click)="associateProjectVisible = false">
 						<i class="bi bi-x-lg"></i>
 					</button>
 					<button type="button" class="btn btn-primary" (click)="onConfirmConversationRename()">

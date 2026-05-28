@@ -185,6 +185,25 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 	}
 
 	@Override
+	@Transactional
+	public Conversation associateProject(UserId userId, ConversationId conversationId, ProjectId projectId) {
+		if (!conversationOwnedBy(userId, conversationId)) {
+			return null;
+		}
+
+		Optional<tom.conversation.model.Conversation> conversation = conversationRepository
+				.findById(conversationId.value());
+		if (conversation.isEmpty()) {
+			return null;
+		}
+		tom.conversation.model.Conversation ce = conversation.get();
+		ce.setProjectId(projectId);
+		ce = conversationRepository.save(ce);
+
+		return ce.fromEntity();
+	}
+
+	@Override
 	public boolean conversationOwnedBy(UserId userId, ConversationId conversationId) {
 
 		if (fakeConversationMap.containsKey(conversationId)) {

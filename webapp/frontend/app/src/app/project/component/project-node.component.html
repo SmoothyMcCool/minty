@@ -1,5 +1,4 @@
-<div class="folder-item py-0 px-1 d-flex align-items-center" [class.selected]="node === selected"
-	style="overflow: hidden;">
+<div class="folder-item py-0 px-1 d-flex align-items-center" [class.selected]="node === selected">
 
 	<span class="flex-shrink-0 me-2" style="width: 20px; text-align: center;">
 		@if (node.type === 'Folder') {
@@ -19,13 +18,28 @@
 		{{getFileName(node.path)}}
 	</span>
 
-	<button class="btn btn-sm p-0 me-1 flex-shrink-0" style="font-size: 12px;" (click)="editNodeInfo(); onSelect(node)">
-		<i class="bi bi-pencil-square"></i>
-	</button>
-	<button type="button" class="btn btn-sm p-0 flex-shrink-0" style="font-size: 12px; color: red"
-		(click)="deleteNode()">
-		<i class="bi bi-trash"></i>
-	</button>
+	<div class="d-flex align-items-center">
+		<!-- Action Dropdown -->
+		<div class="dropdown">
+			<button class="btn p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false"
+				data-bs-boundary="viewport">
+				<i class="bi bi-three-dots-vertical" style="font-size: 18px;"></i>
+			</button>
+			<ul class="dropdown-menu dropdown-menu-end">
+				<li>
+					<button class="dropdown-item d-flex align-items-center gap-2" (click)="editNodeInfo(); onSelect(node)">
+						<i class="bi bi-pencil-square"></i> Edit
+					</button>
+				</li>
+				<li>
+					<button class="dropdown-item d-flex align-items-center gap-2" style="color: red"
+						(click)="deleteNode()">
+						<i class="bi bi-trash"></i> Delete
+					</button>
+				</li>
+			</ul>
+		</div>
+	</div>
 </div>
 
 @if (node.type === 'Folder' && isExpanded) {

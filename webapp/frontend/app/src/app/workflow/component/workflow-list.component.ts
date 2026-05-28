@@ -109,10 +109,8 @@ export class WorkflowListComponent implements AfterViewChecked, OnInit, OnDestro
 	}
 
 	ngOnDestroy(): void {
-		if (this.subscription) {
-			this.subscription.unsubscribe();
-			this.subscription = undefined;
-		}
+		this.subscription?.unsubscribe();
+		this.subscription = undefined;
 		clearTimeout(this.workflowStateTimeoutId);
 	}
 
@@ -251,7 +249,7 @@ export class WorkflowListComponent implements AfterViewChecked, OnInit, OnDestro
 
 	viewFullscreen() {
 		if (this.currentResult) {
-		this.router.navigate(['/workflow/result', this.currentResult.id]);
+		this.router.navigate(['/workflow/result', this.currentResult.id], { queryParamsHandling: 'merge' });
 		} else {
 			console.log('curerntResult is undefined')
 		}
@@ -262,15 +260,15 @@ export class WorkflowListComponent implements AfterViewChecked, OnInit, OnDestro
 	}
 
 	navigateTo(url: string) {
-		this.router.navigateByUrl(url);
+		this.router.navigate([url], { queryParamsHandling: 'merge' });
 	}
 
 	navigateToWorkflow(taskId: number): void {
-		this.router.navigate(['workflow/', taskId]);
+		this.router.navigate(['workflow/', taskId], { queryParamsHandling: 'merge' });
 	}
 
 	editWorkflow(workflow: Workflow) {
-		this.router.navigate(['/workflow/edit', workflow.id]);
+		this.router.navigate(['/workflow/edit', workflow.id], { queryParamsHandling: 'merge' });
 	}
 
 	duplicateWorkflow(workflow: Workflow) {
@@ -284,7 +282,7 @@ export class WorkflowListComponent implements AfterViewChecked, OnInit, OnDestro
 		if (w && w.id) {
 			this.workflowService.getWorkflow(w.id).subscribe(workflow => {
 				this.workflowService.newWorkflow(workflow).subscribe(workflow => {
-					this.router.navigate(['/workflow/edit', workflow.id]);
+					this.router.navigate(['/workflow/edit', workflow.id], { queryParamsHandling: 'merge' });
 				});
 			})
 		} else {

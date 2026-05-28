@@ -76,7 +76,7 @@ llm:
 pandoc:
   path: D:\Applications\pandoc\pandoc.exe
   outputFormat: gfm
-  luaFilter: pandoc-clean.lua
+  luaFilter: D:\projects\Minty\working\scripts\pandoc-clean.lua
   noHighlight: true
   stripComments: true
   wrap: none

@@ -32,7 +32,7 @@ export class LoginComponent {
 		this.userService.login(this.credentials.account, this.credentials.password)
 			.subscribe({
 				next: () => {
-					this.router.navigateByUrl('/assistants');
+					this.router.navigate(['/projects'], { queryParamsHandling: 'merge' });
 				},
 				error: () => {
 					this.loginFailed = true;

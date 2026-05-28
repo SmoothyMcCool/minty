@@ -13,6 +13,6 @@ export class ViewHelpComponent {
 	}
 
 	navigateTo(route: string) {
-		this.router.navigateByUrl(route);
+		this.router.navigate([route], { queryParamsHandling: 'merge' });
 	}
 }

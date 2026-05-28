@@ -86,8 +86,6 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 			this.newestMessagesFirst = user.settings['Message Order'] ? user.settings['Message Order'] == 'NewestFirst' : false;
 			this.reverseButtons = user.settings['Button Alignment'] ? user.settings['Button Alignment'] == 'Right' : false;
 
-			this.activeProject = user.defaults['defaultProject'];
-
 			this.assistantService.getAssistantForConversation(this.conversation?.id!).subscribe((assistant: Assistant) => {
 
 				this.assistant = assistant;

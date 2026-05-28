@@ -172,6 +172,12 @@
 	color: #fff;
 }
 
+.minty-navbar .nav-link.active {
+	color: #d5ffc9 !important; 
+	font-weight: 600;
+	text-shadow: 0px 0px 5px rgba(255, 255, 255, 0.3);
+}
+
 .minty-table thead th {
 	background-color: #3d6b52;
 	color: #fff;
