@@ -19,7 +19,7 @@ export class AuthorizedInterceptor implements HttpInterceptor {
 						if (event.url.endsWith('login')) {
 							throw { message: 'Login Failed!' };
 						}
-						this.router.navigate([this.loginUrl]);
+						this.router.navigate([this.loginUrl], { queryParamsHandling: 'merge' });
 						return EMPTY;
 					}
 					throw event;

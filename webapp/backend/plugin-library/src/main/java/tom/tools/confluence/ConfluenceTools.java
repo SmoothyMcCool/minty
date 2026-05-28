@@ -30,104 +30,19 @@ public class ConfluenceTools implements MintyTool, ServiceConsumer, Configuratio
 
 	private static final Logger logger = LogManager.getLogger(ConfluenceTools.class);
 
-	private static final String prompt = """
-			You are a tool-using Confluence assistant.
-			Your job is to retrieve accurate information from Confluence.
-			You must never invent or guess Confluence data.
-
-			CORE RULES
-
-			Never fabricate page IDs, titles, labels, snippets, content, or timestamps.
-
-			Never guess a page ID. Always search first if the ID is unknown.
-
-			If information may exist in Confluence, use a tool.
-
-			If a tool fails, report the failure clearly. Do not invent fallback data.
-
-			If the question is general knowledge and not Confluence-specific, answer directly without tools.
-
-			Be concise and structured.
-
-			TOOLS AND WHEN TO USE THEM
-
-			confluence_search_pages
-			Use when you do not know the page ID and need to find pages by keyword or topic.
-			Default limit: 5 to 10.
-			If multiple results are returned, summarize briefly and ask the user which one to open.
-
-			confluence_get_page
-			Use only when you have a valid page ID.
-			Never call with a guessed ID.
-			Summarize large pages unless full text is requested.
-
-			confluence_get_pages
-			Use when you have multiple known page IDs and need to fetch them all at once.
-			Prefer this over calling confluence_get_page repeatedly.
-			Never call with guessed IDs.
-
-			confluence_get_children
-			Use when the user asks for subpages, children, or hierarchy.
-			Default limit: 10.
-
-			confluence_search_by_label
-			Use when the user refers to labels or tags.
-			Default limit: 5 to 10.
-
-			get_current_local_time
-			Use only when the user explicitly asks for the current local time.
-			Never guess the time.
-
-			DECISION LOGIC
-
-			If page ID unknown → search first.
-			If label mentioned → search by label.
-			If subpages requested → get children.
-			If page ID provided → get page.
-			If time requested → get current local time.
-			If unsure → search first.
-
-			RESPONSE FORMAT
-
-			For single page results:
-
-			Page: <Title with link>
-			Space: <Space if available>
-			Summary:
-			<Concise relevant summary>
-
-			For multiple results:
-
-			List titles with short snippets.
-			Ask which one to open.
-
-			FAILURE BEHAVIOR
-
-			If a tool returns failure:
-
-			State that the request failed.
-
-			Ask whether to retry or refine the query.
-
-			Do not hallucinate content.
-
-			PRIORITIES
-
-			Accuracy over completeness.
-			Tools over guessing.
-			Clarify rather than assume.
-			Never hallucinate.
-
-			You are a retrieval assistant, not a speculative writer.
-						""";
-
 	private PluginServices pluginServices;
+
 	private String accessToken;
 	private boolean useBearerAuth;
 	private UserId userId;
 	private String confluenceUrl;
 	private int maxPageCharacters;
+
 	private ConfluenceClient confluenceClient;
+
+	// ---------------------------------------------------------------------
+	// INITIALIZATION
+	// ---------------------------------------------------------------------
 
 	@Override
 	public void initialize() {
@@ -135,7 +50,6 @@ public class ConfluenceTools implements MintyTool, ServiceConsumer, Configuratio
 			accessToken = pluginServices.getUserService().getUserDefaults(userId)
 					.get(ConfluenceQueryConfig.AccessToken);
 		}
-
 		String username = pluginServices.getUserService().getUserDefaults(userId).get(ConfluenceQueryConfig.Username);
 		if (username == null) {
 			username = "";
@@ -150,7 +64,6 @@ public class ConfluenceTools implements MintyTool, ServiceConsumer, Configuratio
 			throw new PropertyNotFoundException(ConfluenceQueryConfig.BaseURL);
 		}
 		confluenceUrl = systemProperties.get(ConfluenceQueryConfig.BaseURL);
-
 		if (!systemProperties.containsKey(ConfluenceQueryConfig.UseBearerAuth)) {
 			throw new PropertyNotFoundException(ConfluenceQueryConfig.UseBearerAuth);
 		}
@@ -164,76 +77,116 @@ public class ConfluenceTools implements MintyTool, ServiceConsumer, Configuratio
 		}
 	}
 
-	@Tool(name = "confluence_search_pages", description = "Search Confluence pages by keyword when you do not know the page id. Returns page ids, titles, and snippets.")
-	public MintyToolResponse<SearchResponse> searchPages(@ToolParam String query, @ToolParam List<String> spaces,
-			@ToolParam int limit) {
+	// ---------------------------------------------------------------------
+	// SEARCH PAGES
+	// ---------------------------------------------------------------------
+
+	@Tool(name = "confluence_search_pages", description = """
+			Search Confluence pages by keyword.
+
+			Returns:
+			- page id
+			- title
+			- snippet
+			""")
+	public MintyToolResponse<SearchResponse> searchPages(@ToolParam(description = "Search query") String query,
+			@ToolParam(description = "Spaces to search in") List<String> spaces,
+			@ToolParam(description = "Max results") int limit) {
 		logger.info("confluence_search_pages: {} {} {}", query, spaces, limit);
 		try {
 			return MintyToolResponse.SuccessResponse(confluenceClient.search(new SearchRequest(query, spaces, limit)));
 		} catch (Exception e) {
-			return MintyToolResponse.FailureResponse("Confluence search failed.");
+			return MintyToolResponse.FailureResponse("Search failed.");
 		}
 	}
 
-	@Tool(name = "confluence_get_page", description = "Fetch a Confluence page by id, including full text content and metadata.")
-	public MintyToolResponse<PageResponse> getPage(
-			@ToolParam(description = "The ID of the page to fetch") String pageId) {
+	// ---------------------------------------------------------------------
+	// GET PAGE
+	// ---------------------------------------------------------------------
+
+	@Tool(name = "confluence_get_page", description = """
+			Get a Confluence page by id.
+
+			Returns:
+			- full page content
+			- metadata
+			""")
+	public MintyToolResponse<PageResponse> getPage(@ToolParam(description = "Page id") String pageId) {
 		logger.info("confluence_get_page: {}", pageId);
 		try {
 			return MintyToolResponse.SuccessResponse(confluenceClient.getPage(pageId));
 		} catch (Exception e) {
-			return MintyToolResponse.FailureResponse("Confluence get page failed.");
+			return MintyToolResponse.FailureResponse("Failed to get page.");
 		}
 	}
 
-	@Tool(name = "confluence_get_pages", description = "Fetch multiple Confluence pages by id in a single call. Use this instead of confluence_get_page when you need to retrieve several known pages at once.")
-	public MintyToolResponse<List<PageResponse>> getPages(
-			@ToolParam(description = "The IDs of the pages to fetch") List<String> pageIds) {
+	// ---------------------------------------------------------------------
+	// GET PAGES (BATCH)
+	// ---------------------------------------------------------------------
+
+	@Tool(name = "confluence_get_pages", description = """
+			Get multiple Confluence pages by id.
+
+			Use this instead of repeated single-page calls.
+			""")
+	public MintyToolResponse<List<PageResponse>> getPages(@ToolParam(description = "Page ids") List<String> pageIds) {
 		logger.info("confluence_get_pages: {}", pageIds);
 		try {
 			List<PageResponse> pages = pageIds.stream().map(id -> {
 				try {
 					return confluenceClient.getPage(id);
 				} catch (Exception e) {
-					logger.warn("confluence_get_pages: failed to fetch page {}", id);
+					logger.warn("failed page fetch {}", id);
 					return null;
 				}
 			}).filter(Objects::nonNull).toList();
 			return MintyToolResponse.SuccessResponse(pages);
 		} catch (Exception e) {
-			return MintyToolResponse.FailureResponse("Confluence get pages failed.");
+			return MintyToolResponse.FailureResponse("Failed to get pages.");
 		}
 	}
 
-	@Tool(name = "confluence_get_children", description = "List child pages of a Confluence page.")
-	public MintyToolResponse<ChildrenResponse> getChildren(
-			@ToolParam(description = "The ID of the parent page.") String pageId,
-			@ToolParam(description = "The maximum number of child pages to return. Defaults to 10 if not positive.") int limit) {
+	// ---------------------------------------------------------------------
+	// GET CHILDREN
+	// ---------------------------------------------------------------------
+
+	@Tool(name = "confluence_get_children", description = "Get child pages of a Confluence page.")
+	public MintyToolResponse<ChildrenResponse> getChildren(@ToolParam(description = "Parent page id") String pageId,
+			@ToolParam(description = "Max results") int limit) {
 		logger.info("confluence_get_children: {} {}", pageId, limit);
 		try {
 			return MintyToolResponse.SuccessResponse(confluenceClient.getChildren(pageId, limit));
 		} catch (Exception e) {
-			return MintyToolResponse.FailureResponse("Failed to get any child pages.");
+			return MintyToolResponse.FailureResponse("Failed to get children.");
 		}
 	}
 
-	@Tool(name = "confluence_search_by_label", description = "Search Confluence pages by label.")
-	public MintyToolResponse<SearchResponse> searchByLabel(
-			@ToolParam(description = "The labels to search for") List<String> labels,
-			@ToolParam(description = "Maximum number of results to return") int limit) {
+	// ---------------------------------------------------------------------
+	// SEARCH BY LABEL
+	// ---------------------------------------------------------------------
+
+	@Tool(name = "confluence_search_by_label", description = "Search pages by label.")
+	public MintyToolResponse<SearchResponse> searchByLabel(@ToolParam(description = "Labels") List<String> labels,
+			@ToolParam(description = "Max results") int limit) {
 		logger.info("confluence_search_by_label: {} {}", labels, limit);
 		try {
 			return MintyToolResponse.SuccessResponse(confluenceClient.searchByLabels(labels, limit));
 		} catch (Exception e) {
-			return MintyToolResponse.FailureResponse("Search by label failed.");
+			return MintyToolResponse.FailureResponse("Label search failed.");
 		}
 	}
 
-	@Tool(name = "get_current_local_time", description = "Get the current local time")
-	public MintyToolResponse<String> getCurrentLocalTime(int dummy) {
+	// ---------------------------------------------------------------------
+	// TIME TOOL
+	// ---------------------------------------------------------------------
+
+	@Tool(name = "confluence_get_current_time", description = "Get current local time")
+	public MintyToolResponse<String> getCurrentLocalTime(int ignored) {
 		String result = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);
 		return MintyToolResponse.SuccessResponse(result);
 	}
+
+	// ---------------------------------------------------------------------
 
 	@Override
 	public String name() {
@@ -242,12 +195,7 @@ public class ConfluenceTools implements MintyTool, ServiceConsumer, Configuratio
 
 	@Override
 	public String description() {
-		return "A suite of tools for interacting with Confluence.";
-	}
-
-	@Override
-	public String prompt() {
-		return prompt;
+		return "Tools for interacting with Confluence.";
 	}
 
 	@Override
@@ -259,5 +207,4 @@ public class ConfluenceTools implements MintyTool, ServiceConsumer, Configuratio
 	public void setUserId(UserId userId) {
 		this.userId = userId;
 	}
-
 }

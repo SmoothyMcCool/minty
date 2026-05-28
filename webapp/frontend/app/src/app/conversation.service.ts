@@ -23,6 +23,7 @@ export class ConversationService {
 	private static readonly DeleteConversation = 'api/conversation/delete';
 	private static readonly ResetConversation = 'api/conversation/reset';
 	private static readonly RenameConversation = 'api/conversation/rename';
+	private static readonly AssociateConversation = 'api/conversation/associate';
 
 	constructor(private http: HttpClient, private alertService: AlertService) {
 	}
@@ -159,6 +160,23 @@ export class ConversationService {
 		params = params.append('title', conversation.title);
 
 		return this.http.get<ApiResult>(ConversationService.RenameConversation, { params: params })
+			.pipe(
+				catchError(error => {
+					this.alertService.postFailure(JSON.stringify(error));
+					return EMPTY;
+				}),
+				map((result: ApiResult) => {
+					return result.data as Conversation;
+				})
+			);
+	}
+
+	associateProject(conversation: Conversation) {
+		let params: HttpParams = new HttpParams();
+		params = params.append('conversationId', conversation.id);
+		params = params.append('projectId', conversation.projectId);
+
+		return this.http.get<ApiResult>(ConversationService.AssociateConversation, { params: params })
 			.pipe(
 				catchError(error => {
 					this.alertService.postFailure(JSON.stringify(error));

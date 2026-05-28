@@ -14,7 +14,7 @@ public class Conversation {
 	private UserId ownerId;
 	private AssistantId associatedAssistantId;
 	private Instant lastUsed;
-	private ProjectId linkedProject;
+	private ProjectId projectId;
 
 	public String getTitle() {
 		return title;
@@ -56,12 +56,12 @@ public class Conversation {
 		this.lastUsed = lastUsed;
 	}
 
-	public ProjectId getProject() {
-		return linkedProject;
+	public ProjectId getProjectId() {
+		return projectId;
 	}
 
 	public void setProjectId(ProjectId id) {
-		linkedProject = id;
+		projectId = id;
 	}
 
 }

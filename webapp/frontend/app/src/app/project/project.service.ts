@@ -1,11 +1,12 @@
 import { Injectable } from "@angular/core";
-import { catchError, EMPTY, map, Observable } from "rxjs";
+import { BehaviorSubject, catchError, combineLatest, EMPTY, map, Observable } from "rxjs";
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { AlertService } from "../alert.service";
 import { ApiResult } from "../model/api-result";
 import { Project } from "../model/project/project";
 import { ProjectNode } from "../model/project/project-node";
 import { DocProperties } from "../document/document-editor.component";
+import { ActivatedRoute, Router } from "@angular/router";
 
 @Injectable({
 	providedIn: 'root'
@@ -38,12 +39,57 @@ export class ProjectService {
 	private static readonly DescribeTree = 'api/project/node/tree';
 	private static readonly ListChildren = 'api/project/node/children';
 
+	activeProject$: Observable<Project | undefined>;
+
+	private _projectList: BehaviorSubject<Project[]> = new BehaviorSubject<Project[]>([]);
+	projectList$ = this._projectList.asObservable();
+
+	private _initialDisplayItem: { type: 'conversation' | 'workflow' | 'file', id: string } | undefined;
+	get initialDisplayItem(): { type: 'conversation' | 'workflow' | 'file', id: string } | undefined {
+		const item = this._initialDisplayItem;
+		this._initialDisplayItem = undefined;
+		return item;
+	}
+	set initialDisplayItem(item: { type: 'conversation' | 'workflow' | 'file', id: string }) {
+		this._initialDisplayItem = item;
+	}
+
 	constructor(private http: HttpClient,
-		private alertService: AlertService) { }
+				private router: Router,
+				private route: ActivatedRoute,
+				private alertService: AlertService) {
+
+		this.activeProject$ = combineLatest([
+			this.projectList$,
+			this.route.queryParams
+		]).pipe(
+			map(([projects, params]) => {
+
+				const projectId = params['projectId'];
+
+				if (!projectId) {
+					return undefined;
+				}
+
+				return projects.find(p => p.id === projectId);
+			})
+		);
+
+		this.listProjects().subscribe();
+	}
 
 	// -------------------------
 	// PROJECTS
 	// -------------------------
+
+	setActiveProject(project: Project) {
+		this.router.navigate([], {
+			queryParams: {
+				projectId: project?.id ?? null
+			},
+			queryParamsHandling: 'merge'
+		});
+	}
 
 	createProject(name: string): Observable<Project> {
 
@@ -54,18 +100,25 @@ export class ProjectService {
 
 		return this.http.post<ApiResult>(ProjectService.CreateProject, project).pipe(
 			this.handleError(),
-			map((result: ApiResult) => result.data as Project)
+			map((result: ApiResult) => {
+				this._projectList.next([...this._projectList.value, result.data as Project]);
+				return result.data as Project;
+			})
 		);
 	}
 
 	deleteProject(projectId: string): Observable<boolean> {
-
 		const params = new HttpParams()
 			.set('projectId', projectId);
 
 		return this.http.delete<ApiResult>(ProjectService.DeleteProject, { params: params }).pipe(
 			this.handleError(),
-			map((result: ApiResult) => result.data as boolean)
+			map((result: ApiResult) => {
+				this._projectList.next(this._projectList.value.filter(
+					project => project.id !== projectId
+				));
+				return result.data as boolean
+			})
 		);
 	}
 
@@ -84,7 +137,10 @@ export class ProjectService {
 
 		return this.http.get<ApiResult>(ProjectService.ListProjects).pipe(
 			this.handleError(),
-			map((result: ApiResult) => result.data as Project[])
+			map((result: ApiResult) => {
+				this._projectList.next(result.data as Project[]);
+				return result.data as Project[];
+			})
 		);
 	}
 

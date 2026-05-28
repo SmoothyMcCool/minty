@@ -1,12 +1,14 @@
-import { Component, EventEmitter, forwardRef, Input, Output } from '@angular/core';
+import { Component, EventEmitter, forwardRef, Input, OnInit, Output } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
-
 import { AssistantService } from '../../assistant.service';
 import { ConversationService } from '../../conversation.service';
 import { ConfirmationDialogComponent } from '../../app/component/confirmation-dialog.component';
 import { Conversation } from '../../model/conversation/conversation';
 import { FilterPipe } from '../../pipe/filter-pipe';
 import { PredicatePipe } from '../../pipe/predicate-pipe';
+import { ProjectService } from '../../project/project.service';
+import { Project } from '../../model/project/project';
+import { Subscription } from 'rxjs';
 
 @Component({
 	selector: 'minty-conversation-list',
@@ -20,17 +22,17 @@ import { PredicatePipe } from '../../pipe/predicate-pipe';
 		}
 	]
 })
-export class ConversationListComponent implements ControlValueAccessor {
+export class ConversationListComponent implements OnInit, ControlValueAccessor {
 
 	@Input() projectMode: boolean = false;
 	@Output() showConversation = new EventEmitter<Conversation>();
 
 	conversations: Conversation[] = [];
+	projects: Project[] = [];
+	projectSubscription: Subscription | undefined = undefined;
 
 	onChange = (_: any) => { };
 	onTouched: any = () => { };
-
-	selectedChat: string = '';
 
 	conversationSortOrder: string = 'lastUsed';
 
@@ -39,17 +41,35 @@ export class ConversationListComponent implements ControlValueAccessor {
 	confirmDeleteConversationVisible = false;
 	conversationPendingDeletionId: string  | undefined = undefined;
 
-	conversationToRename: Conversation | undefined = undefined;
+	conversationToEdit: Conversation | undefined = undefined;
 	renamedConversationTitle: string  | undefined = undefined;
 	renameConversationVisible = false;
 
+	associateProjectVisible = false;
+	projectIdToAssociate: string | undefined = undefined;
+
 	constructor(
 		private conversationService: ConversationService,
+		private projectService: ProjectService,
 		private assistantService: AssistantService) {
+	}
+
+	ngOnInit() {
+		this.projectSubscription = this.projectService.projectList$.subscribe(projects => {
+			this.projects = projects;
+		});
+	}
+
+	ngOnDestroy(): void {
+		this.projectSubscription?.unsubscribe();
+		this.projectSubscription = undefined;
 	}
 
 	writeValue(conversations: Conversation[]): void {
 		this.conversations = conversations;
+		if (this.conversations) {
+			this.sortConversationsBy(this.conversationSortOrder);
+		}
 	}
 	registerOnChange(fn: any): void {
 		this.onChange = fn;
@@ -108,6 +128,8 @@ export class ConversationListComponent implements ControlValueAccessor {
 		this.confirmDeleteConversationVisible = false;
 		this.conversationService.delete(this.conversationPendingDeletionId!).subscribe(_ => {
 			this.conversations = this.conversations.filter(item => item.id != this.conversationPendingDeletionId);
+			this.onTouched();
+			this.onChange(this.conversations);
 		});
 	}
 
@@ -126,24 +148,38 @@ export class ConversationListComponent implements ControlValueAccessor {
 		return '';
 	}
 
+	getProjectName(conversation: Conversation): string {
+		const project = this.projects.find(project => project.id === conversation.projectId);
+		if (project) {
+			return project.name;
+		}
+		return 'No associated project';
+	}
+
 	renameConversation(conversation: Conversation) {
 		this.renameConversationVisible = true;
-		this.conversationToRename = conversation;
+		this.conversationToEdit = conversation;
 		this.renamedConversationTitle = conversation.title;
 	}
 
 	onConfirmConversationRename() {
-		if (this.conversationToRename) {
-			this.conversationToRename.title = this.renamedConversationTitle!;
+		if (this.conversationToEdit) {
+			this.conversationToEdit.title = this.renamedConversationTitle!;
 			this.renameConversationVisible = false;
-			this.conversationService.rename(this.conversationToRename!).subscribe();
-		} else {
-			console.log('onConfirmConversationRename: no conversation to rename set');
+			this.conversationService.rename(this.conversationToEdit!).subscribe();
 		}
 	}
 
-	onCancelConversationRename() {
-		this.renameConversationVisible = false;
+	associateProject(conversation: Conversation) {
+		this.associateProjectVisible = true;
+		this.conversationToEdit = conversation;
 	}
 
+	onConfirmAssociateProject() {
+		if (this.conversationToEdit && this.projectIdToAssociate) {
+			this.conversationToEdit.projectId = this.projectIdToAssociate;
+			this.associateProjectVisible = false;
+			this.conversationService.associateProject(this.conversationToEdit).subscribe();
+		}
+	}
 }

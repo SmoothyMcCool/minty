@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProjectService } from '../project.service';
@@ -15,6 +15,7 @@ import { ConversationService } from '../../conversation.service';
 import { Conversation } from '../../model/conversation/conversation';
 import { ConversationListComponent } from '../../conversation/component/conversation-list.component';
 import { ConversationViewerComponent } from '../../conversation/component/conversation-viewer.component';
+import { forkJoin, interval, startWith, Subscription, switchMap } from 'rxjs';
 
 @Component({
 	selector: 'minty-project-editor',
@@ -22,7 +23,7 @@ import { ConversationViewerComponent } from '../../conversation/component/conver
 	templateUrl: 'project-editor.component.html',
 	styleUrl: 'project-editor.component.css'
 })
-export class ProjectEditorComponent {
+export class ProjectEditorComponent implements OnInit, OnDestroy {
 
 	private _project: Project | undefined = undefined;
 	@Input()
@@ -66,23 +67,76 @@ export class ProjectEditorComponent {
 		file: undefined
 	};
 
+	sidebarVisible: boolean = true;
+
+	processingTaskSubscription: Subscription | undefined;
+	tasks: string[] = [];
+	anyTaskCompleted: boolean = false;
+
+	confirmDeleteProjectVisible = false;
+	projectPendingDeletion: Project | undefined = undefined;
+
 	constructor(private projectService: ProjectService,
 		private conversationService: ConversationService,
 		private alertService: AlertService) { }
+
+	ngOnInit(): void {
+		this.processingTaskSubscription = interval(5000)
+			.pipe(
+				startWith(0), // fires immediately, then every 5s
+				switchMap(() => this.projectService.listTasks())
+			)
+			.subscribe(tasks => {
+				const removed = this.tasks.filter(
+					task => !tasks.some(t => t === task)
+				);
+				if (removed.length > 0) {
+					this.anyTaskCompleted = true;
+				}
+				this.tasks = tasks;
+			});
+	}
+
+	ngOnDestroy(): void {
+		this.processingTaskSubscription?.unsubscribe();
+	}
+
+	toggleSidebar() {
+		this.sidebarVisible = !this.sidebarVisible;
+	}
 
 	refresh() {
 		this.nodes = [];
 		this.selectedNode = undefined;
 		this.editFile = false;
-		if (this.project) {
-			this.projectService.describeTree(this.project.id).subscribe((nodes: ProjectNode[]) => {
-				this.nodes = nodes;
-			});
 
-			this.conversationService.listForProject(this.project.id).subscribe((conversations: Conversation[]) => {
-				this.conversations = conversations;
-			});
-		}
+		forkJoin([
+			this.projectService.describeTree(this.project.id),
+			this.conversationService.listForProject(this.project.id)
+		]).subscribe(([nodes, conversations]) => {
+			this.nodes = nodes;
+			this.conversations = conversations;
+
+			const displayItem = this.projectService.initialDisplayItem;
+			if (displayItem) {
+				switch (displayItem.type) {
+					case 'conversation':
+						const conversation = this.conversations.find(item => item.id === displayItem.id);
+						if (conversation) {
+							this.onConversationSelected(conversation);
+						}
+						break;
+					case 'file':
+						const node = this.nodes.find(item => item.path === displayItem.id);
+						if (node) {
+							this.onNodeSelected(node);
+						}
+						break;
+					case 'workflow':
+						break;
+				}
+			}
+		});
 	}
 
 	startConversation(event: { assistant: Assistant, projectId: string }): void {
@@ -103,6 +157,12 @@ export class ProjectEditorComponent {
 	onConversationChanged(conversation: Conversation) {
 		this.conversations = this.conversations.map(c => c.id === conversation.id ? { ...c, ...conversation } : c );
 		this.selectedConversation = this.conversations.find(c => c.id === conversation.id);
+	}
+
+	conversationsChanged(conversations: Conversation[]) {
+		if (!conversations.find(conversation => this.selectedConversation?.id === conversation.id)) {
+			this.selectedConversation = undefined;
+		}
 	}
 
 	onNodeSelected(node: ProjectNode) {
@@ -298,5 +358,15 @@ export class ProjectEditorComponent {
 
 	newChat() {
 		this.newChatDialogVisible = true;
+	}
+
+	deleteProject(project: Project) {
+		this.projectPendingDeletion = project;
+		this.confirmDeleteProjectVisible = true;
+	}
+
+	confirmDeleteProject() {
+		this.confirmDeleteProjectVisible = false;
+		this.projectService.deleteProject(this.projectPendingDeletion!.id).subscribe();
 	}
 }

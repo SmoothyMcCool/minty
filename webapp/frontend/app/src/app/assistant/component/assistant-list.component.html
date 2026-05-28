@@ -13,48 +13,42 @@
 	</form>
 	<h4>Assistants</h4>
 	@if (assistants.length > 0) {
-		<ul class="list-group">
+		<ul class="list-group py-0">
 			@for (assistant of filteredAssistants(); track assistant.id) {
-				<li class="list-group-item list-group-item-action position-relative text-bg-light"
-					style="height: 2.5rem">
+				<li class="list-group-item list-group-item-action px-2 position-relative text-bg-light py-0" style="height: 2.5rem">
 
-					@if (isOwned(assistant)) {
-						<div class="position-absolute top-0 end-0 p-1">
-							<div class="dropdown">
-								<button class="btn btn-sm p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-									<i class="bi bi-three-dots-vertical" style="font-size: 18px;"></i>
-								</button>
-								<ul class="dropdown-menu dropdown-menu-end">
-									<li>
-										<button class="dropdown-item" type="button" (click)="editAssistant(assistant.id)">
-											<i class="bi bi-pencil-square me-2"></i> Edit
-										</button>
-									</li>
-									<li>
-										<button class="dropdown-item" type="button" (click)="shareAssistant(assistant)">
-											<i class="bi bi-share me-2"></i> Share
-										</button>
-									</li>
-									<li><hr class="dropdown-divider"></li>
-									<li>
-										<button class="dropdown-item text-danger" type="button"
-											[disabled]="deleteInProgress" (click)="deleteAssistant(assistant)">
-											<i class="bi bi-trash me-2"></i> Delete
-										</button>
-									</li>
-								</ul>
-							</div>
-						</div>
-					}
-
-					<div class="row align-items-center g-2">
-						<span class="text-truncate clickable-text col-auto"
-							(click)="startConversation(assistant)">
+					<div class="d-flex align-items-center h-100 w-100 overflow-hidden">
+						<span class="clickable-text text-truncate flex-grow-1" (click)="startConversation(assistant)" stlye="min-width: 0;">
 							{{assistant.name}}
 						</span>
-						<div class="col-auto">
-							<span class="badge text-bg-secondary mx-2">{{assistant.model}}</span>
-						</div>
+						<span class="badge text-bg-secondary flex-shrink-0 ms-2">
+							{{assistant.model}}
+						</span>
+
+						@if (isOwned(assistant)) {
+							<button class="btn btn-sm p-0 flex-shrink-0 ms-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+								<i class="bi bi-three-dots-vertical" style="font-size: 18px;"></i>
+							</button>
+							<ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton">
+								<li>
+									<button class="dropdown-item" type="button" (click)="editAssistant(assistant.id)">
+										<i class="bi bi-pencil-square me-2"></i> Edit
+									</button>
+								</li>
+								<li>
+									<button class="dropdown-item" type="button" (click)="shareAssistant(assistant)">
+										<i class="bi bi-share me-2"></i> Share
+									</button>
+								</li>
+								<li><hr class="dropdown-divider"></li>
+								<li>
+									<button class="dropdown-item text-danger" type="button"
+										[disabled]="deleteInProgress" (click)="deleteAssistant(assistant)">
+										<i class="bi bi-trash me-2"></i> Delete
+									</button>
+								</li>
+							</ul>
+						}
 					</div>
 				</li>
 			}

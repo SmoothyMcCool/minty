@@ -19,19 +19,14 @@ import { UserService } from '../../user.service';
 })
 export class AssistantListComponent implements OnInit {
 
-	@Input() projectId!: string;
-	@Output() conversationRequest = new EventEmitter<{ assistant : Assistant, projectId: string }>();
+	@Input() projectId: string | undefined = undefined;
+	@Output() conversationRequest = new EventEmitter<{ assistant : Assistant, projectId: string | undefined }>();
 
 	assistants: Assistant[] = [];
 	sharedAssistants: Assistant[] = [];
 	assistantFilter: string = '';
 
 	workingAssistant: Assistant = createAssistant();
-
-	deleteInProgress = false;
-
-	confirmDeleteAssistantVisible = false;
-	assistantPendingDeletion!: Assistant;
 
 	userSelectDialogVisible = false;
 	assistantToShare: string | undefined = undefined;
@@ -97,30 +92,7 @@ export class AssistantListComponent implements OnInit {
 	}
 
 	editAssistant(assistantId: number) {
-		this.router.navigate(['/assistants/edit', assistantId]);
-	}
-
-	deleteAssistant(assistant: Assistant) {
-		this.confirmDeleteAssistantVisible = true;
-		this.assistantPendingDeletion = assistant;
-	}
-
-	confirmDeleteAssistant() {
-		this.deleteInProgress = true;
-		this.confirmDeleteAssistantVisible = false;
-		this.assistantService.delete(this.assistantPendingDeletion).subscribe(() => {
-			this.assistantService.list().subscribe(assistants => {
-				this.assistants = assistants;
-				this.sortAssistants(this.assistants);
-				this.sharedAssistants = this.assistants.filter(assistant => assistant.owned === false);
-				this.deleteInProgress = false;
-			});
-		});
-
-		this.sortAssistants(this.assistants);
-		this.assistants = this.assistants.filter(item => item.id === this.assistantPendingDeletion.id);
-		this.sharedAssistants = this.assistants.filter(assistant => assistant.owned === false);
-
+		this.router.navigate(['/assistants/edit', assistantId], { queryParamsHandling: 'merge' });
 	}
 
 	isOwned(assistant: Assistant): boolean {

@@ -21,31 +21,6 @@ public class WorkflowTools implements MintyTool, ServiceConsumer {
 	private PluginServices pluginServices;
 	private UserId userId;
 
-	public static final String prompt = """
-			## Workflows
-			You can create, manage, and run workflows using the workflow tools.
-			Workflows are data pipelines made up of steps (tasks) connected together.
-
-			How to build and run a workflow:
-			1. Use the workflow-builder skill to generate the workflow JSON from a plain-English description.
-			   Call list_skills and load the workflow-builder skill before writing any workflow JSON.
-			2. Call create_workflow with the generated JSON to save the workflow.
-			3. Call execute_workflow with a WorkflowRequest to run it.
-			4. Call list_workflows to see all existing workflows.
-			5. Call get_workflow to inspect a specific workflow by ID.
-			6. Call update_workflow to modify an existing workflow.
-			7. Call delete_workflow to remove a workflow permanently.
-			8. Call cancel_workflow to stop a running workflow by name.
-
-			Important rules:
-			- Always use the workflow-builder skill to produce workflow JSON - do not write it from memory.
-			- Never reuse step IDs in the same workflow. Every step must have a unique UUID.
-			- The workflow JSON must be valid before calling create_workflow or update_workflow.
-			  Use the generation checklist in workflow-schema.md to verify it first.
-			- execute_workflow runs the workflow asynchronously. The returned execution ID can be
-			  used to track progress.
-			""";
-
 	@Tool(name = "list_workflows", description = """
 			Returns a list of all workflows belonging to the current user.
 			Each entry includes the workflow ID, name, and description.
@@ -156,11 +131,6 @@ public class WorkflowTools implements MintyTool, ServiceConsumer {
 	 * "Error: you do not have permission to cancel this workflow."; } catch
 	 * (Exception e) { return "Error cancelling workflow: " + e.getMessage(); } }
 	 */
-
-	@Override
-	public String prompt() {
-		return prompt;
-	}
 
 	@Override
 	public void setPluginServices(PluginServices pluginServices) {

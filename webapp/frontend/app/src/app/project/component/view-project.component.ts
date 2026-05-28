@@ -1,42 +1,26 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-
+import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { ProjectService } from '../project.service';
-import { interval, startWith, Subscription, switchMap } from 'rxjs';
+import { Project } from '../../model/project/project';
+import { FormsModule } from '@angular/forms';
+import { ConfirmationDialogComponent } from '../../app/component/confirmation-dialog.component';
+import { ProjectEditorComponent } from './project-editor.component';
 
 @Component({
 	selector: 'minty-view-project',
-	imports: [FormsModule, RouterModule],
+	imports: [FormsModule, RouterModule, ConfirmationDialogComponent, ProjectEditorComponent],
 	templateUrl: 'view-project.component.html'
 })
-export class ViewProjectComponent implements OnInit, OnDestroy {
+export class ViewProjectComponent {
+	activeProject: Project | undefined = undefined;
 
-	subscription: Subscription | undefined;
-	tasks: string[] = [];
-	anyTaskCompleted: boolean = false;
-
-	public constructor(private projectService: ProjectService) {
+	constructor(private projectService: ProjectService) {
 	}
 
-	public ngOnInit(): void {
-		this.subscription = interval(5000)
-			.pipe(
-				startWith(0), // fires immediately, then every 5s
-				switchMap(() => this.projectService.listTasks())
-			)
-			.subscribe(tasks => {
-				const removed = this.tasks.filter(
-					task => !tasks.some(t => t === task)
-				);
-				if (removed.length > 0) {
-					this.anyTaskCompleted = true;
-				}
-				this.tasks = tasks;
-			});
+	ngOnInit() {
+		this.projectService.activeProject$.subscribe(activeProject => {
+			this.activeProject = activeProject;
+		});
 	}
 
-	public ngOnDestroy(): void {
-		this.subscription?.unsubscribe();
-	}
 }

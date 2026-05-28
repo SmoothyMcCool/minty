@@ -152,4 +152,19 @@ public class ConversationController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
+	@GetMapping({ "/associate" })
+	public ResponseEntity<ResponseWrapper<Conversation>> associateProjectToConversation(
+			@AuthenticationPrincipal UserDetailsUser user, @RequestParam ConversationId conversationId,
+			@RequestParam ProjectId projectId) {
+
+		Conversation conversation = conversationService.associateProject(user.getId(), conversationId, projectId);
+		if (conversation == null) {
+			ResponseWrapper<Conversation> response = ResponseWrapper.ApiFailureResponse(HttpStatus.FORBIDDEN.value(),
+					List.of(ApiError.NOT_OWNED));
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}
+
+		ResponseWrapper<Conversation> response = ResponseWrapper.SuccessResponse(conversation);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
 }

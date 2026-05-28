@@ -231,7 +231,7 @@ public class AssistantController {
 				AssistantQuery aq = new AssistantQuery();
 				aq.setAssistantSpec(assistantSpec);
 				aq.setConversationId(cId);
-				aq.setProjectId(conversation.getProject());
+				aq.setProjectId(conversation.getProjectId());
 				aq.setQuery(query);
 				aq.setContextSize(contextSize);
 

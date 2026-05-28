@@ -524,12 +524,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		ChatClientRequestSpec spec = chatClient.prompt();
 
 		if (!tools.isEmpty()) {
-			for (MintyTool tool : tools) {
-				String sysPrompt = tool.prompt();
-				if (sysPrompt != null && !sysPrompt.strip().isBlank()) {
-					systemPrompt.append(sysPrompt).append("\n\n\n");
-				}
-			}
+			systemPrompt.append(MintyTool.ToolPrompt).append("\n\n\n");
 			spec.tools(tools.toArray());
 		}
 

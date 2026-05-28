@@ -32,7 +32,6 @@ import { WorkflowsTasksHelpComponent } from './app/help/component/workflows-task
 import { WorkflowsEditingHelpComponent } from './app/help/component/workflows-editing-help.component';
 import { WorkflowsTasksCreateComponent } from './app/help/component/workflows-tasks-create.component';
 import { ViewProjectComponent } from './app/project/component/view-project.component';
-import { ProjectListComponent } from './app/project/component/project-list.component';
 import { ViewSkillsComponent } from './app/skills/component/view-skills.component';
 import { ViewConversationComponent } from './app/conversation/component/view-conversation.component';
 import { ChatComponent } from './app/assistant/component/chat.component';
@@ -49,7 +48,7 @@ bootstrapApplication(AppComponent, {
 		provideRouter([
 			{
 				path: '',
-				redirectTo: 'assistants',
+				redirectTo: 'projects',
 				pathMatch: 'full'
 			},
 			{
@@ -69,18 +68,6 @@ bootstrapApplication(AppComponent, {
 						component: NewAssistantComponent
 					}
 				]
-			},
-			{
-				path: 'conversation/:id',
-				component: ViewConversationComponent
-			},
-			{
-				path: 'diagrams',
-				component: ViewDiagramsComponent
-			},
-			{
-				path: 'documents',
-				component: ViewDocumentsComponent
 			},
 			{
 				path: 'skills',
@@ -143,12 +130,6 @@ bootstrapApplication(AppComponent, {
 			{
 				path: 'projects',
 				component: ViewProjectComponent,
-				children: [
-					{
-						path: '',
-						component: ProjectListComponent
-					},
-				]
 			},
 			{
 				path: 'signup',
