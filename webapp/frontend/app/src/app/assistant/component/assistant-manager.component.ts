@@ -20,9 +20,9 @@ import { Project } from '@playwright/test';
 @Component({
 	selector: 'minty-chat',
 	imports: [FormsModule, RouterModule, FilterPipe, ConfirmationDialogComponent, PredicatePipe, UserSelectDialogComponent, AssistantListComponent, ConversationListComponent],
-	templateUrl: 'chat.component.html'
+	templateUrl: 'assistant-manager.component.html'
 })
-export class ChatComponent implements OnInit, OnDestroy {
+export class AssistantManagerComponent implements OnInit, OnDestroy {
 
 	conversations: Conversation[] = [];
 
@@ -31,11 +31,6 @@ export class ChatComponent implements OnInit, OnDestroy {
 	assistantFilter: string = '';
 
 	workingAssistant: Assistant = createAssistant();
-
-	deleteInProgress = false;
-
-	confirmDeleteAssistantVisible = false;
-	assistantPendingDeletion!: Assistant;
 
 	conversationToRename: Conversation | undefined = undefined;
 	renamedConversationTitle: string  | undefined = undefined;
@@ -115,35 +110,12 @@ export class ChatComponent implements OnInit, OnDestroy {
 		this.router.navigate(['/assistants/edit', assistantId], { queryParamsHandling: 'merge' });
 	}
 
-	deleteAssistant(assistant: Assistant) {
-		this.confirmDeleteAssistantVisible = true;
-		this.assistantPendingDeletion = assistant;
-	}
-
-	confirmDeleteAssistant() {
-		this.deleteInProgress = true;
-		this.confirmDeleteAssistantVisible = false;
-		this.assistantService.delete(this.assistantPendingDeletion).subscribe(() => {
-			this.assistantService.list().subscribe(assistants => {
-				this.assistants = assistants;
-				this.sortAssistants(this.assistants);
-				this.sharedAssistants = this.assistants.filter(assistant => assistant.owned === false);
-				this.deleteInProgress = false;
-			});
-			this.conversationService.list().subscribe(conversations => {
-				this.conversations = conversations;
-			});
-		});
-
-		this.sortAssistants(this.assistants);
-		this.assistants = this.assistants.filter(item => item.id === this.assistantPendingDeletion.id);
-		this.sharedAssistants = this.assistants.filter(assistant => assistant.owned === false);
-
-	}
-
 	startConversation(event: { assistant: Assistant, projectId: string }): void {
 		if (!event.projectId) {
-			this.alertService.postAlert({ type: 'info', message: 'You need to select a project before you start a conversation.' });
+			this.conversationService.create(event.assistant).subscribe(conversation => {
+				this.router.navigate(['/conversation', conversation.id], { queryParamsHandling: 'merge' });
+			});
+			return;
 		}
 		this.conversationService.createInProject(event.assistant, event.projectId).subscribe(conversation => {
 			this.projectService.initialDisplayItem = { type: 'conversation', id: conversation.id };
@@ -153,7 +125,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
 	selectConversation(conversation: Conversation) {
 		if (!conversation.projectId) {
-			this.alertService.postAlert({ type: 'info', message: 'You must associate this conversation with a project. Click the <span><i class="bi bi-three-dots-vertical"></i></span> button.' });
+			this.router.navigate(['/conversation', conversation.id], { queryParamsHandling: 'merge' });
 			return;
 		}
 		this.projectService.initialDisplayItem = {type: 'conversation', id: conversation.id};
@@ -205,6 +177,12 @@ export class ChatComponent implements OnInit, OnDestroy {
 		this.assistantService.share(this.assistantToShare!, selection).subscribe(response => {
 			this.alertService.postSuccess(response);
 			this.assistantToShare = undefined;
+		});
+	}
+
+	reloadConversationList() {
+		this.conversationService.list().subscribe(conversations => {
+			this.conversations = conversations;
 		});
 	}
 }

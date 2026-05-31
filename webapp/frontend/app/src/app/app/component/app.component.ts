@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { ActivatedRoute, Event, NavigationEnd, NavigationStart, Params, Router, RouterEvent, RouterModule } from '@angular/router';
 import { Alert, AlertService, AlertType } from '../../alert.service';
-import { combineLatest, filter } from 'rxjs/operators';
+import { filter } from 'rxjs/operators';
 
 import { UserService } from '../../user.service';
 import { Popover } from 'bootstrap';
@@ -105,7 +105,10 @@ export class AppComponent implements OnInit {
 		});
 
 		this.projectService.projectList$.subscribe(projects => {
-			this.projects = projects;
+			this.projects = [ {
+				id: '',
+				name: ''
+			}, ...projects ];
 		});
 
 		this.projectService.activeProject$.subscribe(activeProject => {
@@ -170,13 +173,23 @@ export class AppComponent implements OnInit {
 	projectChanged(projectId: string) {
 		const activeProject = this.projects.find(item => item.id === projectId);
 		if (activeProject) {
-			this.projectService.setActiveProject(activeProject);
-			this.router.navigate([], {
-				queryParams: {
-					projectId: activeProject.id
-				},
-				queryParamsHandling: 'merge'
-			});
+			if (activeProject.id !== '') {
+				this.projectService.setActiveProject(activeProject);
+				this.router.navigate([], {
+					queryParams: {
+						projectId: activeProject.id
+					},
+					queryParamsHandling: 'merge'
+				});
+			} else {
+				this.projectService.setActiveProject(undefined);
+				this.router.navigate([], {
+					queryParams: {
+						projectId: activeProject.id
+					},
+					queryParamsHandling: 'merge'
+				});
+			}
 		}
 	}
 

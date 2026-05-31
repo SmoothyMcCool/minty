@@ -153,7 +153,7 @@ export class ConversationListComponent implements OnInit, ControlValueAccessor {
 		if (project) {
 			return project.name;
 		}
-		return 'No associated project';
+		return '';
 	}
 
 	renameConversation(conversation: Conversation) {

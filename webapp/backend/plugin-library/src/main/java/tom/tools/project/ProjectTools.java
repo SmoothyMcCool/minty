@@ -371,4 +371,9 @@ public class ProjectTools implements MintyTool, ServiceConsumer {
 	public void setConversationId(ConversationId conversationId) {
 		this.conversationId = conversationId;
 	}
+
+	@Override
+	public boolean isPublic() {
+		return false;
+	}
 }
