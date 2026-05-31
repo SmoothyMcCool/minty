@@ -31,7 +31,7 @@
 				<span class="clickable-text text-truncate flex-grow-1" (click)="selectConversation(conversation)" stlye="min-width: 0;">
 					{{getConversationTitle(conversation)}}
 				</span>
-				@if (!projectMode) {
+				@if (!projectMode && getProjectName(conversation) != '') {
 					<span class="badge text-bg-primary flex-shrink-0 ms-2">
 						{{getProjectName(conversation)}}
 					</span>

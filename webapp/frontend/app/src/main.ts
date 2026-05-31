@@ -34,7 +34,7 @@ import { WorkflowsTasksCreateComponent } from './app/help/component/workflows-ta
 import { ViewProjectComponent } from './app/project/component/view-project.component';
 import { ViewSkillsComponent } from './app/skills/component/view-skills.component';
 import { ViewConversationComponent } from './app/conversation/component/view-conversation.component';
-import { ChatComponent } from './app/assistant/component/chat.component';
+import { AssistantManagerComponent } from './app/assistant/component/assistant-manager.component';
 
 export function clipboardOptionsFactory(): ClipboardOptions {
 	return {};
@@ -57,7 +57,7 @@ bootstrapApplication(AppComponent, {
 				children: [
 					{
 						path: '',
-						component: ChatComponent,
+						component: AssistantManagerComponent,
 					},
 					{
 						path: 'edit/:id',
@@ -68,6 +68,10 @@ bootstrapApplication(AppComponent, {
 						component: NewAssistantComponent
 					}
 				]
+			},
+			{
+				path: 'conversation/:id',
+				component: ViewConversationComponent
 			},
 			{
 				path: 'skills',

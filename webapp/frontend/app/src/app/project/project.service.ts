@@ -82,13 +82,19 @@ export class ProjectService {
 	// PROJECTS
 	// -------------------------
 
-	setActiveProject(project: Project) {
-		this.router.navigate([], {
-			queryParams: {
-				projectId: project?.id ?? null
-			},
-			queryParamsHandling: 'merge'
-		});
+	setActiveProject(project: Project | undefined) {
+		if (project) {
+			this.router.navigate([], {
+				queryParams: {
+					projectId: project?.id ?? null
+				},
+				queryParamsHandling: 'merge'
+			});
+		} else {
+			this.router.navigate([], {
+				queryParams: {}
+			});
+		}
 	}
 
 	createProject(name: string): Observable<Project> {

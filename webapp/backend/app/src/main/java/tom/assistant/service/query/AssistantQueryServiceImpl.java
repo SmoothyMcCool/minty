@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -513,9 +514,14 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			images.add(new Media(MediaType.parseMediaType(query.getContentType()), query.getImageData()));
 		}
 
-		List<MintyTool> tools = assistant.tools().stream()
-				.map(toolName -> toolRegistryService.getTool(toolName, user.getId(), query.getConversationId()))
-				.filter(Objects::nonNull).toList();
+		List<MintyTool> tools = Stream.concat(
+				assistant.tools().stream()
+						.map(toolName -> toolRegistryService.getTool(toolName, user.getId(), query.getConversationId()))
+						.filter(Objects::nonNull),
+				Stream.ofNullable(query.getProjectId() != null
+						? toolRegistryService.getProjectTools(user.getId(), query.getConversationId())
+						: null))
+				.toList();
 
 		ChatClient chatClient = buildChatClient(assistant, computeContextSize(assistant, query, tools), query);
 

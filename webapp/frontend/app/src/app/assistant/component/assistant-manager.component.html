@@ -1,0 +1,11 @@
+<div class="container-fluid">
+	<div class="row">
+		<div class="col-4 col-sm-6">
+			<h4>Active Conversations</h4>
+			<minty-conversation-list name="conversationList" [ngModel]="conversations" (showConversation)="selectConversation($event)"></minty-conversation-list>
+		</div>
+		<div class="col-8 col-sm-6">
+			<minty-assistant-list [projectId]="activeProject?.id" (conversationRequest)="startConversation($event)" (assistantsChanged)="reloadConversationList()"></minty-assistant-list>
+		</div>
+	</div>
+</div>

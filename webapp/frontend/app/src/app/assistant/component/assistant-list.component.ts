@@ -21,10 +21,15 @@ export class AssistantListComponent implements OnInit {
 
 	@Input() projectId: string | undefined = undefined;
 	@Output() conversationRequest = new EventEmitter<{ assistant : Assistant, projectId: string | undefined }>();
+	@Output() assistantsChanged = new EventEmitter<null>();
 
 	assistants: Assistant[] = [];
 	sharedAssistants: Assistant[] = [];
 	assistantFilter: string = '';
+
+	deleteInProgress = false;
+	confirmDeleteAssistantVisible = false;
+	assistantPendingDeletion!: Assistant;
 
 	workingAssistant: Assistant = createAssistant();
 
@@ -114,4 +119,29 @@ export class AssistantListComponent implements OnInit {
 			this.assistantToShare = undefined;
 		});
 	}
+
+	deleteAssistant(assistant: Assistant) {
+		this.confirmDeleteAssistantVisible = true;
+		this.assistantPendingDeletion = assistant;
+	}
+
+	confirmDeleteAssistant() {
+		this.deleteInProgress = true;
+		this.confirmDeleteAssistantVisible = false;
+		this.assistantService.delete(this.assistantPendingDeletion).subscribe(() => {
+			this.assistantService.list().subscribe(assistants => {
+				this.assistants = assistants;
+				this.sortAssistants(this.assistants);
+				this.sharedAssistants = this.assistants.filter(assistant => assistant.owned === false);
+				this.deleteInProgress = false;
+			});
+			this.assistantsChanged.emit();
+		});
+
+		this.sortAssistants(this.assistants);
+		this.assistants = this.assistants.filter(item => item.id === this.assistantPendingDeletion.id);
+		this.sharedAssistants = this.assistants.filter(assistant => assistant.owned === false);
+
+	}
+
 }
