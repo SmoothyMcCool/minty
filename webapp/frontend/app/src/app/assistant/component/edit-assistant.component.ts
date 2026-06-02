@@ -6,8 +6,6 @@ import { AssistantService } from '../../assistant.service';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FilterPipe } from '../../pipe/filter-pipe';
 import { AssistantEditorComponent } from './assistant-editor.component';
-import { DocumentService } from '../../document.service';
-import { MintyDoc } from '../../model/minty-doc';
 import { MintyTool } from '../../model/minty-tool';
 import { Model } from '../../model/model';
 import { ToolService } from '../../tool.service';
@@ -20,14 +18,12 @@ import { ToolService } from '../../tool.service';
 export class EditAssistantComponent implements OnInit {
 
 	models: Model[] = [];
-	documents: MintyDoc[] = [];
 	tools: MintyTool[] = [];
 	assistant: Assistant = createAssistant();
 
 	constructor(
 		private route: ActivatedRoute,
 		private assistantService: AssistantService,
-		private documentService: DocumentService,
 		private toolService: ToolService,
 		private router: Router) {
 	}
@@ -36,9 +32,6 @@ export class EditAssistantComponent implements OnInit {
 		this.route.params.subscribe(params => {
 			this.assistantService.getAssistant(params['id']).subscribe((assistant: Assistant) => {
 				this.assistant = assistant;
-				this.documentService.list().subscribe(docs => {
-					this.documents = docs;
-				});
 			});
 		});
 		this.assistantService.models().subscribe((models: Model[]) => {

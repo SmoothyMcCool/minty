@@ -1,19 +1,14 @@
 package tom.document.model;
 
-import java.util.List;
 import java.util.UUID;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.Transient;
-import tom.api.AssistantId;
 import tom.api.DocumentId;
+import tom.api.ProjectId;
 import tom.api.UserId;
-import tom.tag.model.MintyTag;
 
 @Entity(name = "Document")
 public class MintyDoc {
@@ -24,12 +19,18 @@ public class MintyDoc {
 	private String title;
 	private DocumentState state = DocumentState.NO_CONTENT;
 	private UserId ownerId;
-	@Transient
-	private List<AssistantId> associatedAssistantIds;
-	@ManyToMany(mappedBy = "associatedDocuments", fetch = FetchType.EAGER)
-	private List<MintyTag> associatedTags;
+	private ProjectId projectId;
+	private boolean vectorized;
 
 	public MintyDoc() {
+	}
+
+	public UUID getId() {
+		return id;
+	}
+
+	public void setId(UUID id) {
+		this.id = id;
 	}
 
 	public String getTitle() {
@@ -64,21 +65,20 @@ public class MintyDoc {
 		this.ownerId = ownerId;
 	}
 
-	@Transient
-	public List<AssistantId> getAssociatedAssistantIds() {
-		return associatedAssistantIds;
+	public ProjectId getProjectId() {
+		return projectId;
 	}
 
-	public void setAssociatedAssistants(List<AssistantId> associatedAssistantIds) {
-		this.associatedAssistantIds = associatedAssistantIds;
+	public void setProjectId(ProjectId projectId) {
+		this.projectId = projectId;
 	}
 
-	public List<MintyTag> getAssociatedTags() {
-		return associatedTags;
+	public boolean isVectorized() {
+		return vectorized;
 	}
 
-	public void setAssociatedTags(List<MintyTag> associatedTags) {
-		this.associatedTags = associatedTags;
+	public void setVectorized(boolean vectorized) {
+		this.vectorized = vectorized;
 	}
 
 }

@@ -16,6 +16,8 @@ import { Conversation } from '../../model/conversation/conversation';
 import { ConversationListComponent } from '../../conversation/component/conversation-list.component';
 import { ConversationViewerComponent } from '../../conversation/component/conversation-viewer.component';
 import { forkJoin, interval, startWith, Subscription, switchMap } from 'rxjs';
+import { MintyDoc } from '../../model/minty-doc';
+import { DocumentService } from '../../document.service';
 
 @Component({
 	selector: 'minty-project-editor',
@@ -46,11 +48,16 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 		{ path: 'Files', version: 1, type: 'Folder' }
 	];
 
+	sidebarVisible: boolean = true;
+
+	confirmDeleteProjectVisible = false;
+	projectPendingDeletion: Project | undefined = undefined;
+
+	// -------------------------
+	// FILES
+	// -------------------------
 	nodes: ProjectNode[] = [];
 	selectedNode: ProjectNode | undefined = undefined;
-
-	conversations: Conversation[] = [];
-	selectedConversation: Conversation | undefined = undefined;
 
 	editFile: boolean = false;
 	currentFileContents: string | undefined = undefined;
@@ -58,25 +65,33 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 	confirmDeleteNodeVisible = false;
 	nodeToDelete: ProjectNode | undefined = undefined;
 
+	// -------------------------
+	// CONVERSATIONS
+	// -------------------------
+	conversations: Conversation[] = [];
+	selectedConversation: Conversation | undefined = undefined;
+
+	// -------------------------
+	// DOCUMENTS
+	// -------------------------
+	documents: MintyDoc[] = [];
 	mdFileDialogVisible = false;
 	zipFileDialogVisible = false
 	mermaidFileDialogVisible = false;
-	newChatDialogVisible = false;
+	newConversationDialogVisible = false;
 	document: DocProperties = {
 		title: '',
 		file: undefined
 	};
-
-	sidebarVisible: boolean = true;
+	decomposeDocument = false;
+	summarizeDocument = false;
 
 	processingTaskSubscription: Subscription | undefined;
 	tasks: string[] = [];
 	anyTaskCompleted: boolean = false;
 
-	confirmDeleteProjectVisible = false;
-	projectPendingDeletion: Project | undefined = undefined;
-
 	constructor(private projectService: ProjectService,
+		private documentService: DocumentService,
 		private conversationService: ConversationService,
 		private alertService: AlertService) { }
 
@@ -84,7 +99,7 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 		this.processingTaskSubscription = interval(5000)
 			.pipe(
 				startWith(0), // fires immediately, then every 5s
-				switchMap(() => this.projectService.listTasks())
+				switchMap(() => this.documentService.listTasks())
 			)
 			.subscribe(tasks => {
 				const removed = this.tasks.filter(
@@ -101,6 +116,20 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 		this.processingTaskSubscription?.unsubscribe();
 	}
 
+	randomId(length: number) {
+		return Math.random().toString(36).substring(2, length + 2);
+	}
+
+	deleteProject(project: Project) {
+		this.projectPendingDeletion = project;
+		this.confirmDeleteProjectVisible = true;
+	}
+
+	confirmDeleteProject() {
+		this.confirmDeleteProjectVisible = false;
+		this.projectService.deleteProject(this.projectPendingDeletion!.id).subscribe();
+	}
+
 	toggleSidebar() {
 		this.sidebarVisible = !this.sidebarVisible;
 	}
@@ -112,9 +141,11 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 
 		forkJoin([
 			this.projectService.describeTree(this.project.id),
+			this.documentService.list(this.project.id),
 			this.conversationService.listForProject(this.project.id)
-		]).subscribe(([nodes, conversations]) => {
+		]).subscribe(([nodes, documents, conversations]) => {
 			this.nodes = nodes;
+			this.documents = documents;
 			this.conversations = conversations;
 
 			const displayItem = this.projectService.initialDisplayItem;
@@ -139,6 +170,9 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 		});
 	}
 
+	// -------------------------
+	// CONVERSATIONS
+	// -------------------------
 	startConversation(event: { assistant: Assistant, projectId: string }): void {
 		this.conversationService.createInProject(event.assistant, event.projectId).subscribe( conversation => {
 			this.conversationService.listForProject(event.projectId).subscribe(conversations => {
@@ -146,7 +180,7 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 				this.onConversationSelected(conversation);
 			})
 		});
-		this.newChatDialogVisible = false;
+		this.newConversationDialogVisible = false;
 	}
 
 	onConversationSelected(conversation: Conversation) {
@@ -165,6 +199,9 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 		}
 	}
 
+	// -------------------------
+	// FILES
+	// -------------------------
 	onNodeSelected(node: ProjectNode) {
 		if (node.type !== 'Folder') {
 			this.selectedNode = node;
@@ -257,70 +294,10 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 		});
 	}
 
-	addAndConvertToMd() {
-		this.mdFileDialogVisible = true;
-	}
-
-	addAndConvertToMermaid() {
-		this.mermaidFileDialogVisible = true;
-	}
-
-	addMarkdownFile() {
-		this.mdFileDialogVisible = false;
-		try {
-			this.projectService.convertAndAddMarkdown(this.project.id, this.document).subscribe((result: string) => {
-				this.alertService.postSuccess(result);
-				this.refresh();
-			});
-		} catch (error: unknown) {
-			this.alertService.postAlert({ type: 'failure', message: "Couldn't process your file. Did you forget to choose one?" });
-		}
-	}
-
-	decomposeMarkdown() {
-		this.mdFileDialogVisible = false;
-		try {
-			this.projectService.decomposeMarkdown(this.project.id, this.document).subscribe((result: string) => {
-				this.alertService.postSuccess(result);
-				this.refresh();
-			});
-		} catch (error: unknown) {
-			this.alertService.postAlert({ type: 'failure', message: "Couldn't process your file. Did you forget to choose one?" });
-		}
-	}
-
-	decomposeAndSummarizeMarkdown() {
-		this.mdFileDialogVisible = false;
-		try {
-			this.projectService.decomposeAndSummarizeMarkdown(this.project.id, this.document).subscribe((result: string) => {
-				this.alertService.postSuccess(result);
-				this.refresh();
-			});
-		} catch (error: unknown) {
-			this.alertService.postAlert({ type: 'failure', message: "Couldn't process your file. Did you forget to choose one?" });
-		}
-	}
-
-	addZipToProject() {
-		this.zipFileDialogVisible = true;
-	}
-
 	addZip() {
 		this.zipFileDialogVisible = false;
 		try {
 			this.projectService.writeZipFile(this.project.id, this.document).subscribe((result: string) => {
-				this.alertService.postSuccess(result);
-				this.refresh();
-			});
-		} catch (error: unknown) {
-			this.alertService.postAlert({ type: 'failure', message: "Couldn't process your file. Did you forget to choose one?" });
-		}
-	}
-
-	convertToMermaid() {
-		this.mermaidFileDialogVisible = false;
-		try {
-			this.projectService.convertToMermaid(this.project.id, this.document).subscribe((result: string) => {
 				this.alertService.postSuccess(result);
 				this.refresh();
 			});
@@ -352,21 +329,59 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 		return this.nodes && this.nodes.filter(node => node.path.split('/').length === 2 && node.path != '/');
 	}
 
-	randomId(length: number) {
-		return Math.random().toString(36).substring(2, length + 2);
+	// -------------------------
+	// DOCUMENTS
+	// -------------------------
+
+	documentList(): MintyDoc[] {
+		return this.documents;
 	}
 
-	newChat() {
-		this.newChatDialogVisible = true;
+	addMarkdownFile() {
+		this.mdFileDialogVisible = false;
+		try {
+			this.documentService.convertAndAddMarkdown(this.project.id, this.document).subscribe((result: string) => {
+				this.alertService.postSuccess(result);
+				this.refresh();
+			});
+		} catch (error: unknown) {
+			this.alertService.postAlert({ type: 'failure', message: "Couldn't process your file. Did you forget to choose one?" });
+		}
 	}
 
-	deleteProject(project: Project) {
-		this.projectPendingDeletion = project;
-		this.confirmDeleteProjectVisible = true;
+	decomposeMarkdown() {
+		this.mdFileDialogVisible = false;
+		try {
+			this.documentService.decomposeMarkdown(this.project.id, this.document).subscribe((result: string) => {
+				this.alertService.postSuccess(result);
+				this.refresh();
+			});
+		} catch (error: unknown) {
+			this.alertService.postAlert({ type: 'failure', message: "Couldn't process your file. Did you forget to choose one?" });
+		}
 	}
 
-	confirmDeleteProject() {
-		this.confirmDeleteProjectVisible = false;
-		this.projectService.deleteProject(this.projectPendingDeletion!.id).subscribe();
+	decomposeAndSummarizeMarkdown() {
+		this.mdFileDialogVisible = false;
+		try {
+			this.documentService.decomposeAndSummarizeMarkdown(this.project.id, this.document).subscribe((result: string) => {
+				this.alertService.postSuccess(result);
+				this.refresh();
+			});
+		} catch (error: unknown) {
+			this.alertService.postAlert({ type: 'failure', message: "Couldn't process your file. Did you forget to choose one?" });
+		}
+	}
+
+	convertToMermaid() {
+		this.mermaidFileDialogVisible = false;
+		try {
+			this.documentService.convertToMermaid(this.project.id, this.document).subscribe((result: string) => {
+				this.alertService.postSuccess(result);
+				this.refresh();
+			});
+		} catch (error: unknown) {
+			this.alertService.postAlert({ type: 'failure', message: "Couldn't process your file. Did you forget to choose one?" });
+		}
 	}
 }

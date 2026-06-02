@@ -259,10 +259,6 @@ export class WorkflowEditorComponent implements ControlValueAccessor {
 		this.editTask = undefined;
 	}
 
-	deleteStep() {
-		this.confirmDeleteStepVisible = true;
-	}
-
 	confirmDeleteStep() {
 		if (!this.editTask) {
 			console.error('confirmDeleteStep: editTask not set');

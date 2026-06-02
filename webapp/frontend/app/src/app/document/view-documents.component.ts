@@ -32,11 +32,13 @@ export class ViewDocumentsComponent implements OnInit, OnDestroy {
 	assistants: Assistant[] = [];
 	addingDocument = false;
 	newDocument: MintyDoc = {
+		id: '',
 		title: '',
 		state: '',
-		documentId: '',
 		ownerId: '',
-		associatedAssistantIds: []
+		projectId: '',
+		segments: [],
+		vectorized: false
 	};
 	docProperties: DocProperties = {
 		title: '',
@@ -56,17 +58,17 @@ export class ViewDocumentsComponent implements OnInit, OnDestroy {
 		this.userService.getUser().subscribe(user => {
 			this.user = user;
 		});
-		this.documentService.list().subscribe(documents => {
-			this.documents = documents;
-			this.filterChanged(this.filter!);
-		});
+		//this.documentService.list().subscribe(documents => {
+		//	this.documents = documents;
+		//	this.filterChanged(this.filter!);
+		//});
 		this.assistantService.list().subscribe(assistants => {
 			this.assistants = assistants;
 		});
-		this.subscription = this.documentService.mintyDocListList$.subscribe((value: MintyDoc[]) => {
-			this.documents = value;
-			this.filterChanged(this.filter!);
-		});
+		//this.subscription = this.documentService.mintyDocListList$.subscribe((value: MintyDoc[]) => {
+		//	this.documents = value;
+		//	this.filterChanged(this.filter!);
+		//});
 	}
 
 	ngOnDestroy(): void {
@@ -83,9 +85,11 @@ export class ViewDocumentsComponent implements OnInit, OnDestroy {
 		this.newDocument = {
 			title: '',
 			state: '',
-			documentId: '',
+			id: '',
 			ownerId: '',
-			associatedAssistantIds: []
+			projectId: '',
+			segments: [],
+			vectorized: false
 		};
 		this.docProperties = {
 			title: '',
@@ -102,13 +106,13 @@ export class ViewDocumentsComponent implements OnInit, OnDestroy {
 		}
 
 		this.documentService.add(this.newDocument).subscribe(newDoc => {
-			this.documentService.upload(newDoc.documentId, this.docProperties.file!).subscribe(() => {
+			this.documentService.upload(newDoc.id, this.docProperties.file!).subscribe(() => {
 				// Calling this now just cleans things up for the next go-around.
 				this.cancelNewDocument();
-				this.documentService.list().subscribe(documents => {
-					this.documents = documents;
-					this.filterChanged(this.filter!);
-				});
+				//this.documentService.list().subscribe(documents => {
+				//	this.documents = documents;
+				//	this.filterChanged(this.filter!);
+				//});
 			});
 		});
 	}
@@ -125,10 +129,10 @@ export class ViewDocumentsComponent implements OnInit, OnDestroy {
 		this.documentService.delete(this.documentToDelete!).subscribe(() => {
 			this.deleteInProgress = false;
 
-			this.documentService.list().subscribe(documents => {
-				this.documents = documents;
-				this.filterChanged(this.filter!); // Rerun the filter to trigger a screen refresh.
-			});
+			//this.documentService.list().subscribe(documents => {
+			//	this.documents = documents;
+			//	this.filterChanged(this.filter!); // Rerun the filter to trigger a screen refresh.
+			//});
 		});
 	}
 

@@ -36,7 +36,7 @@ class AssistantSpecJacksonTest {
 		// Arrange
 		AssistantId id = new AssistantId(UUID.randomUUID());
 
-		Assistant assistant = new Assistant(id, "Test Assistant", "gpt-5", 8192, 0.7, 5, "Test prompt", List.of(), // documentIds
+		Assistant assistant = new Assistant(id, "Test Assistant", "gpt-5", 8192, 0.7, 5, "Test prompt",
 				List.of("tool1"), // tools
 				true, false);
 

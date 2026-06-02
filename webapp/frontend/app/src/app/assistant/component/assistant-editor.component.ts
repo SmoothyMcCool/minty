@@ -26,17 +26,7 @@ import { TooltipDirective } from '../../pipe/tooltip-directive';
 export class AssistantEditorComponent implements ControlValueAccessor {
 
 	@Input() models: Model[] = [];
-	private _documents: MintyDoc[] = [];
-	@Input()
-	set documents(value: MintyDoc[]) {
-		if (value) {
-			this._documents = value;
-		}
-		this.update();
-	}
-	get documents(): MintyDoc[] {
-		return this._documents;
-	}
+
 	private _tools: MintyTool[] = [];
 	@Input()
 	set tools(value: MintyTool[]) {
@@ -70,11 +60,6 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 
 		if (this.assistant) {
 			this.modelChanged(this.assistant.model);
-		}
-
-		if (this.documents && this.assistant) {
-			this.usedDocs = this.documents.filter(doc => this.assistant!.documentIds.find(id => id === doc.documentId) != undefined);
-			this.unusedDocs = this.documents.filter(doc => this.usedDocs.find(asstDoc => asstDoc.documentId === doc.documentId) == undefined);
 		}
 
 		if (this.tools && this.assistant) {
@@ -157,32 +142,6 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 			return;
 		}
 		this.assistant.prompt = prompt;
-		this.onTouched();
-		this.onChange(createAssistant(this.assistant));
-	}
-	addDoc(doc: MintyDoc) {
-		if (!this.assistant) {
-			return;
-		}
-		if (this.assistant.documentIds.find(el => el === doc.documentId)) {
-			return;
-		}
-		this.assistant.documentIds.push(doc.documentId);
-		this.usedDocs.push(doc);
-		// New object for better chances at sane change detection.
-		this.usedDocs = [...this.usedDocs];
-		this.unusedDocs = this._documents.filter(doc => this.usedDocs.find(asstDoc => asstDoc.documentId === doc.documentId) == undefined);
-		this.onTouched();
-		this.onChange(createAssistant(this.assistant));
-	}
-
-	removeDoc(doc: MintyDoc) {
-		if (!this.assistant) {
-			return;
-		}
-		this.assistant.documentIds = this.assistant.documentIds.filter(el => el !== doc.documentId);
-		this.usedDocs = this.usedDocs.filter(doc => this.assistant! .documentIds.findIndex(id => id === doc.documentId) !== -1);
-		this.unusedDocs = this._documents.filter(doc => this.usedDocs.find(asstDoc => asstDoc.documentId === doc.documentId) == undefined);
 		this.onTouched();
 		this.onChange(createAssistant(this.assistant));
 	}

@@ -1,6 +1,5 @@
 package tom.assistant.model;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -9,9 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Transient;
 import tom.api.AssistantId;
-import tom.api.DocumentId;
 import tom.api.UserId;
 import tom.task.model.converters.StringListToStringConverter;
 
@@ -29,8 +26,6 @@ public class Assistant {
 	private Integer topK;
 	private UserId ownerId;
 	private boolean hasMemory;
-	@Transient
-	private List<DocumentId> associatedDocumentIds;
 
 	@Convert(converter = StringListToStringConverter.class)
 	private List<String> tools;
@@ -47,13 +42,12 @@ public class Assistant {
 		this.temperature = assistant.temperature();
 		this.topK = assistant.topK();
 		this.hasMemory = assistant.hasMemory();
-		this.associatedDocumentIds = new ArrayList<>();
 		this.tools = assistant.tools();
 	}
 
 	public tom.api.model.assistant.Assistant toTaskAssistant(UserId userId) {
 		return new tom.api.model.assistant.Assistant(new AssistantId(id), name, model.toString(), contextSize,
-				temperature, topK, prompt, associatedDocumentIds, tools, ownerId.equals(userId), hasMemory);
+				temperature, topK, prompt, tools, ownerId.equals(userId), hasMemory);
 	}
 
 	public Assistant updateWith(tom.api.model.assistant.Assistant assistant) {
@@ -64,7 +58,6 @@ public class Assistant {
 		setTemperature(assistant.temperature());
 		setTopK(assistant.topK());
 		setHasMemory(assistant.hasMemory());
-		setAssociatedDocuments(assistant.documentIds());
 		setTools(assistant.tools());
 		return this;
 	}
@@ -139,15 +132,6 @@ public class Assistant {
 
 	public void setHasMemory(boolean hasMemory) {
 		this.hasMemory = hasMemory;
-	}
-
-	@Transient
-	public List<DocumentId> getAssociatedDocumentIds() {
-		return associatedDocumentIds;
-	}
-
-	public void setAssociatedDocuments(List<DocumentId> associatedDocumentIds) {
-		this.associatedDocumentIds = associatedDocumentIds;
 	}
 
 	public List<String> getTools() {

@@ -21,17 +21,17 @@
 							</div>
 						</div>
 						<div class="col-auto">
-							<button type="button" class="btn"
-								(click)="downloadProject(project)">
+							<button type="button" class="btn" (click)="downloadProject(project)">
 								<i class="bi bi-download"></i>
 							</button>
-							<button type="button" class="btn" style="color: red"
-								[disabled]="deleteInProgress" (click)="deleteProject(project)">
+							<button type="button" class="btn" style="color: red" [disabled]="deleteInProgress"
+								(click)="deleteProject(project)">
 								<i class="bi bi-trash"></i>
 							</button>
 						</div>
 						<div class="col-auto">
-							<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-2" (click)="toggleSidebar()">
+							<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-2"
+								(click)="toggleSidebar()">
 								<i class="bi bi-chevron-bar-left"></i>
 							</button>
 						</div>
@@ -43,33 +43,73 @@
 						<span class="flex-grow-1" style="cursor: pointer">
 							<i class="bi bi-journal-text text-primary"></i> Conversations
 						</span>
-						<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-2" (click)="newChat()">
+						<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-2"
+							(click)="newConversationDialogVisible = true">
 							<i class="bi bi-chat"></i>
 						</button>
 					</div>
 					<!-- Nodes -->
 					<ul class="list-group flex-grow-1 mt-1">
 						@if (conversations.length > 0) {
-							<minty-conversation-list name="conversationList"
-								[projectMode]="true"
-								[ngModel]="conversations"
-								(ngModelChange)="conversationsChanged($event)"
+							<minty-conversation-list name="conversationList" [projectMode]="true"
+								[ngModel]="conversations" (ngModelChange)="conversationsChanged($event)"
 								(showConversation)="onConversationSelected($event)">
 							</minty-conversation-list>
 						} @else {
-							<div class="text-muted ps-1">Click <span><i class="bi bi-chat"></i></span> to create a new conversation.</div>
+							<div class="text-muted ps-1">Click <span><i class="bi bi-chat"></i></span> to create a new
+								conversation.</div>
 						}
 					</ul>
 				</li>
 
 				<li class="list-group-item text-bg-light bg-opacity-75">
-					<i class="bi bi-gear-wide-connected text-primary"></i> workflows
+					<i class="bi bi-gear-wide-connected text-primary"></i> Workflows
+				</li>
+
+				<li class="list-group-item text-bg-light bg-opacity-75">
+					<div class="d-flex align-items-center">
+						<span class="flex-grow-1" style="cursor: pointer">
+							<i class="bi bi-book text-primary"></i> Documents
+						</span>
+
+						<!-- Action Dropdown -->
+						<div class="dropdown">
+							<button class="btn btn-sm p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false"
+								data-bs-boundary="viewport">
+								<i class="bi bi-list" style="font-size: 18px;"></i>
+							</button>
+							<ul class="dropdown-menu dropdown-menu-end shadow-sm">
+								<li class="dropdown-header">Documents</li>
+								<li>
+									<button class="dropdown-item d-flex align-items-center gap-2"
+										(click)="mdFileDialogVisible = true">
+										<i class="bi bi-filetype-md"></i> Add Document
+									</button>
+								</li>
+								<!--li>
+									<button class="dropdown-item d-flex align-items-center gap-2"
+										(click)="mermaidFileDialogVisible = true">
+										<i class="bi bi-filetype-md"></i> XMI to Mermaid
+									</button>
+								</li-->
+							</ul>
+						</div>
+					</div>
+
+					<ul class="list-group flex-grow-1 mt-1">
+						@for (doc of documentList(); track doc) {
+							<li class="list-group-item p-0 border-0 text-bg-light bg-opacity-75">
+
+							</li>
+						}
+					</ul>
+
 				</li>
 
 				<li class="list-group-item text-bg-light bg-opacity-75 position-relative">
 					<div class="d-flex align-items-center">
 						<span class="flex-grow-1" style="cursor: pointer">
-							<i class="bi bi-folder text-primary me-2"></i> Files
+							<i class="bi bi-folder text-primary"></i> Files
 						</span>
 
 						<!-- Action Dropdown -->
@@ -92,34 +132,8 @@
 								</li>
 								<li>
 									<button class="dropdown-item d-flex align-items-center gap-2"
-										(click)="addZipToProject()">
+										(click)="zipFileDialogVisible = true">
 										<i class="bi bi-file-earmark-zip"></i> Import ZIP
-									</button>
-								</li>
-								<li>
-									<hr class="dropdown-divider">
-								</li>
-								<li class="dropdown-header">Conversions</li>
-								<li>
-									<button class="dropdown-item d-flex align-items-center gap-2"
-										(click)="addAndConvertToMd()">
-										<i class="bi bi-filetype-md"></i> Doc to Markdown
-									</button>
-								</li>
-								<li>
-									<button class="dropdown-item d-flex align-items-center gap-2"
-										(click)="addAndConvertToMermaid()">
-										<i class="bi bi-filetype-md"></i> XMI to Mermaid
-									</button>
-								</li>
-								<li>
-									<hr class="dropdown-divider">
-								</li>
-								<li class="dropdown-header">Export</li>
-								<li>
-									<button class="dropdown-item d-flex align-items-center gap-2"
-										(click)="downloadProject(project)">
-										<i class="bi bi-download"></i> Download Files
 									</button>
 								</li>
 							</ul>
@@ -171,11 +185,13 @@
 							</div>
 						</div>
 						<h1>{{selectedNode.path}}</h1>
-						<minty-project-node-viewer [ngModel]="selectedNode" (ngModelChange)="onFileContentsChanged($event)"
+						<minty-project-node-viewer [ngModel]="selectedNode"
+							(ngModelChange)="onFileContentsChanged($event)"
 							[edit]="editFile"></minty-project-node-viewer>
 					}
 					@else if (selectedConversation) {
-						<minty-conversation-viewer name="conversationViewer" [ngModel]="selectedConversation" (ngModelChange)="onConversationChanged($event)"></minty-conversation-viewer>
+						<minty-conversation-viewer name="conversationViewer" [ngModel]="selectedConversation"
+							(ngModelChange)="onConversationChanged($event)"></minty-conversation-viewer>
 					}
 					@else {
 						<h5 class="text-muted">Select an item to view it</h5>
@@ -199,13 +215,29 @@
 					<label for="mdFilename" class="form-label">Filename</label>
 					<input class="form-control" type="file" id="mdFile" (change)="fileSelected($event)">
 				</div>
+				<div class="form-check">
+					<input class="form-check-input" type="checkbox" [(ngModel)]="decomposeDocument" id="decomposeDocument" [disabled]="summarizeDocument">
+					<label class="form-check-label" for="decomposeDocument">
+						Decompose
+					</label>
+				</div>
+				<div class="form-check">
+					<input class="form-check-input" type="checkbox" [(ngModel)]="summarizeDocument" id="summarizeDocument" [disabled]="!decomposeDocument">
+					<label class="form-check-label" for="summarizeDocument">
+						Summarize
+					</label>
+				</div>
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-secondary" (click)="mdFileDialogVisible = false">Cancel</button>
-				<button type="button" class="btn btn-primary" (click)="addMarkdownFile()">Add</button>
-				<button type="button" class="btn btn-primary" (click)="decomposeMarkdown()">Decompose</button>
-				<button type="button" class="btn btn-primary" (click)="decomposeAndSummarizeMarkdown()">Decompose and
-					Summarize</button>
+				@if (!decomposeDocument && !summarizeDocument) {
+					<button type="button" class="btn btn-primary" (click)="addMarkdownFile()">Add</button>
+				} @else if (!summarizeDocument) {
+					<button type="button" class="btn btn-primary" (click)="decomposeMarkdown()">Add & Decompose</button>
+				} @else {
+					<button type="button" class="btn btn-primary" (click)="decomposeAndSummarizeMarkdown()">Add, Decompose &
+						Summarize</button>
+				}
 			</div>
 		</div>
 	</div>
@@ -256,19 +288,21 @@
 	</div>
 </div>
 
-<div class="modal fade" tabindex="-1" [ngClass]="{'show d-block': newChatDialogVisible}"
-	[style.display]="newChatDialogVisible ? 'block' : 'none'">
+<div class="modal fade" tabindex="-1" [ngClass]="{'show d-block': newConversationDialogVisible}"
+	[style.display]="newConversationDialogVisible ? 'block' : 'none'">
 	<div class="modal-dialog">
 		<div class="modal-content">
 			<div class="modal-header">
 				<h5 class="modal-title">New Conversation</h5>
-				<button type="button" class="btn-close" (click)="newChatDialogVisible = false"></button>
+				<button type="button" class="btn-close" (click)="newConversationDialogVisible = false"></button>
 			</div>
 			<div class="modal-body">
-				<minty-assistant-list [projectId]="project?.id" (conversationRequest)="startConversation($event)"></minty-assistant-list>
+				<minty-assistant-list [projectId]="project?.id"
+					(conversationRequest)="startConversation($event)"></minty-assistant-list>
 			</div>
 			<div class="modal-footer">
-				<button type="button" class="btn btn-secondary" (click)="newChatDialogVisible = false">Cancel</button>
+				<button type="button" class="btn btn-secondary"
+					(click)="newConversationDialogVisible = false">Cancel</button>
 			</div>
 		</div>
 	</div>

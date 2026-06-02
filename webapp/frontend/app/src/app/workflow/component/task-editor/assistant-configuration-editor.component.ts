@@ -5,7 +5,6 @@ import { EnumListEditorComponent } from "./enumlist-editor.component";
 import { WorkflowStateService } from "../workflow-editor/services/workflow-state.service";
 import { AssistantEditorComponent } from "../../../assistant/component/assistant-editor.component";
 import { Assistant, createAssistant } from "../../../model/assistant";
-import { MintyDoc } from "../../../model/minty-doc";
 import { MintyTool } from "../../../model/minty-tool";
 import { Model } from "../../../model/model";
 import { AssistantSpec } from "../../../model/workflow/assistant-spec";
@@ -27,7 +26,6 @@ export class AssistantConfigurationEditorComponent implements ControlValueAccess
 
 	@Input() choices: EnumList | undefined = undefined;
 	models: Model[] = [];
-	documents: MintyDoc[]  = [];
 	tools: MintyTool[] = [];
 
 	assistantSpec: AssistantSpec | undefined = undefined;
@@ -43,7 +41,6 @@ export class AssistantConfigurationEditorComponent implements ControlValueAccess
 
 	ngOnInit() {
 		this.models = this.workflowStateService.models;
-		this.documents = this.workflowStateService.documents;
 		this.tools = this.workflowStateService.tools;
 	}
 

@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { Assistant, createAssistant } from '../../model/assistant';
 import { AssistantService } from '../../assistant.service';
 import { Router, RouterModule } from '@angular/router';
-import { DocumentService } from '../../document.service';
 import { FilterPipe } from '../../pipe/filter-pipe';
 import { AssistantEditorComponent } from './assistant-editor.component';
 import { MintyDoc } from '../../model/minty-doc';
@@ -27,7 +26,6 @@ export class NewAssistantComponent implements OnInit {
 
 	constructor(
 		private assistantService: AssistantService,
-		private documentService: DocumentService,
 		private toolService: ToolService,
 		private router: Router) {
 		this.assistant.hasMemory = true;
@@ -36,9 +34,6 @@ export class NewAssistantComponent implements OnInit {
 	ngOnInit(): void {
 		this.assistantService.models().subscribe((models: Model[]) => {
 			this.models = models;
-		});
-		this.documentService.list().subscribe(docs => {
-			this.documents = docs;
 		});
 		this.toolService.list().subscribe(tools => this.tools = tools);
 	}

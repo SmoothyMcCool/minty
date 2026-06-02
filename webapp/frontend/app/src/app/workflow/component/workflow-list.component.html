@@ -1,8 +1,8 @@
 <div class="container">
 	<h2>Runnable Workflows</h2>
-	<div class="row" style="column-count: 3; display: block;">
+	<div class="row">
 		@for (workflow of workflows; track workflow) {
-			<div class="col-12" style="break-inside: avoid;">
+			<div class="col-md-4 col-sm-6 col-12" style="break-inside: avoid;">
 				<div class="card">
 					<div class="card-body p-2">
 						<div class="row align-items-center flex-nowrap">
@@ -19,7 +19,7 @@
 										<li>
 										<button class="dropdown-item" style="font-size: 16px;"
 											(click)="downloadWorkflow(workflow)">
-											<i class="bi bi-download"></i> Downlad
+											<i class="bi bi-download"></i> Download
 											</button>
 										</li>
 										<li>
@@ -81,6 +81,19 @@
 								</span>
 							}
 							<span class="flex-grow-1"></span>
+							@if (!result.id) {
+								<span class="badge text-bg-secondary mx-2">Result Not Ready</span>
+							}
+							<button type="button" class="btn btn-sm" style="font-size: 20px; color: saddlebrown;"
+								(click)="displayProgress(result.name)">
+								<i class="bi bi-pie-chart-fill"></i>
+							</button>
+							@if (!result.id) {
+								<button type="button" class="btn btn-sm" style="font-size: 20px; color: red;"
+									(click)="cancelWorkflow(result)">
+									<i class="bi bi-sign-stop-fill"></i>
+								</button>
+							}
 							@if (result.id) {
 								<div class="ms-auto dropdown">
 									<button class="btn btn-sm p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">

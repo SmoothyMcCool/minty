@@ -8,12 +8,12 @@
 		<input #searchInput class="form-control mb-2" placeholder="Search nodes..." [(ngModel)]="search"
 			(ngModelChange)="onSearchChange()">
 		<div class="node-list">
-			@for (group of groupedNodes; track group) {
+			@for (group of groupedNodes; track group.group) {
 				<div>
 					<h6 class="mt-3 border-bottom pb-1">
 						{{group.group}}
 					</h6>
-					@for (node of group.items; track node; let i = $index) {
+					@for (node of group.items; track node.item.taskName; let i = $index) {
 						<div class="node-item" [class.selected]="selectedIndexes[group.group] === i"
 							(click)="selectItem(node, group.group, i)">
 							{{node.item.taskName}}

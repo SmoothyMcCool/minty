@@ -5,7 +5,7 @@ import { Assistant, createAssistant } from '../../model/assistant';
 import { AssistantService } from '../../assistant.service';
 import { Router, RouterModule } from '@angular/router';
 import { ConversationService } from '../../conversation.service';
-import { Alert, AlertService } from '../../alert.service';
+import { AlertService } from '../../alert.service';
 import { ConfirmationDialogComponent } from '../../app/component/confirmation-dialog.component';
 import { UserSelectDialogComponent, UserSelection } from '../../app/component/user-select-dialog.component';
 import { Conversation } from '../../model/conversation/conversation';

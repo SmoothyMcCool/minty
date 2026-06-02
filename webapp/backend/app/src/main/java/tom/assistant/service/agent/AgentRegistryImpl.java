@@ -132,7 +132,7 @@ public class AgentRegistryImpl implements AgentRegistry {
 					.temperature((Double) data.get("temperature")).topK((Integer) data.get("topK"))
 					.prompt((String) data.get("prompt")).tools(tools).owned(false) // Assistants from the registry
 																					// are never owned by a user.
-					.hasMemory((Boolean) data.get("hasMemory")).documentIds(List.of());
+					.hasMemory((Boolean) data.get("hasMemory"));
 			return builder.build();
 		} catch (IllegalArgumentException e) {
 			logger.warn("Could not read agent file " + assistantFilePath.getFileName());

@@ -88,7 +88,20 @@ CREATE TABLE IF NOT EXISTS Document (
     title      TEXT,
     state      INTEGER,
     ownerId    UUID,
+    projectId  UUID,
+    vectorized BOOLEAN DEFAULT FALSE,
+    created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id)
+);
+
+CREATE TABLE DocumentSegment (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    docId UUID NOT NULL,
+    content TEXT NOT NULL,
+    sequenceOrder INT NOT NULL,
+    created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	FOREIGN KEY (docId) REFERENCES Document(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS Tag (
@@ -102,7 +115,7 @@ CREATE TABLE IF NOT EXISTS TagToDoc (
     documentId UUID NOT NULL,
     PRIMARY KEY (tagId, documentId),
     FOREIGN KEY (tagId)      REFERENCES Tag(id),
-    FOREIGN KEY (documentId) REFERENCES Document(documentId)
+    FOREIGN KEY (documentId) REFERENCES Document(id)
 );
 
 -- =============================================================
@@ -310,16 +323,6 @@ CREATE TABLE IF NOT EXISTS LlmRequestMetrics (
 -- =============================================================
 -- LINK TABLES
 -- =============================================================
-
--- -------------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS DocumentAssistantLinks (
-    assistantId UUID NOT NULL,
-    documentId  UUID NOT NULL,
-    PRIMARY KEY (assistantId, documentId),
-    FOREIGN KEY (assistantId) REFERENCES Assistant(id),
-    FOREIGN KEY (documentId)  REFERENCES Document(documentId)
-);
 
 -- -------------------------------------------------------------
 

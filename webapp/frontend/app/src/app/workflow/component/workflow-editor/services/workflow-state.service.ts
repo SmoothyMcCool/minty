@@ -1,8 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, forkJoin } from 'rxjs';
 import { AssistantService } from '../../../../assistant.service';
-import { DocumentService } from '../../../../document.service';
-import { MintyDoc } from '../../../../model/minty-doc';
 import { MintyTool } from '../../../../model/minty-tool';
 import { Model } from '../../../../model/model';
 import { EnumList } from '../../../../model/workflow/enum-list';
@@ -20,7 +18,6 @@ export class WorkflowStateService {
 
 	enumLists: EnumList[] = [];
 	models: Model[] = [];
-	documents: MintyDoc[] = [];
 	tools: MintyTool[] = [];
 	defaults: AttributeMap = {};
 	taskSpecifications: TaskSpecification[] = [];
@@ -32,20 +29,17 @@ export class WorkflowStateService {
 
 	public constructor(private workflowService: WorkflowService,
 		private assistantService: AssistantService,
-		private documentService: DocumentService,
 		private toolService: ToolService,
 		private userService: UserService,
 	) {
 		forkJoin({
 			models: this.assistantService.models(),
-			documents: this.documentService.list(),
 			tools: this.toolService.list(),
 			enumLists: this.workflowService.listEnumLists(),
 			taskSpecifications: this.workflowService.listTaskSpecifications(),
 			outputTaskSpecifications: this.workflowService.listOutputTaskSpecifications(),
-		}).subscribe(({ models, documents, tools, enumLists, taskSpecifications, outputTaskSpecifications }) => {
+		}).subscribe(({ models, tools, enumLists, taskSpecifications, outputTaskSpecifications }) => {
 			this.models = models;
-			this.documents = documents;
 			this.tools = tools;
 			this.enumLists = enumLists;
 			this.taskSpecifications = taskSpecifications;

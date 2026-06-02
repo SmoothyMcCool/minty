@@ -15,9 +15,7 @@ import { ViewWorkflowComponent } from './app/workflow/component/view-workflow.co
 import { WorkflowListComponent } from './app/workflow/component/workflow-list.component';
 import { ClipboardOptions, MERMAID_OPTIONS, provideMarkdown } from 'ngx-markdown';
 import { EditAssistantComponent } from './app/assistant/component/edit-assistant.component';
-import { ViewDocumentsComponent } from './app/document/view-documents.component';
 import { ResponseInterceptor } from './app/response-interceptor';
-import { ViewDiagramsComponent } from './app/diagram/component/view-diagrams.component';
 import { EditWorkflowComponent } from './app/workflow/component/edit-workflow.component';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { ViewHelpComponent } from './app/help/component/view-help.component';

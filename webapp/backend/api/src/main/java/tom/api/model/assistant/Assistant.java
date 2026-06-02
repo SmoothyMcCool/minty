@@ -4,11 +4,9 @@ import java.util.List;
 import java.util.Objects;
 
 import tom.api.AssistantId;
-import tom.api.DocumentId;
 
 public record Assistant(AssistantId id, String name, String model, Integer contextSize, Double temperature,
-		Integer topK, String prompt, List<DocumentId> documentIds, List<String> tools, Boolean owned,
-		Boolean hasMemory) {
+		Integer topK, String prompt, List<String> tools, Boolean owned, Boolean hasMemory) {
 
 	public Assistant {
 		Objects.requireNonNull(name, "name cannot be null");
@@ -17,7 +15,6 @@ public record Assistant(AssistantId id, String name, String model, Integer conte
 		Objects.requireNonNull(temperature, "temperature cannot be null");
 		Objects.requireNonNull(topK, "topK cannot be null");
 		Objects.requireNonNull(prompt, "prompt cannot be null");
-		Objects.requireNonNull(documentIds, "documentIds cannot be null");
 		Objects.requireNonNull(tools, "tools cannot be null");
 		Objects.requireNonNull(owned, "owned cannot be null");
 		Objects.requireNonNull(hasMemory, "hasMemory cannot be null");
@@ -25,8 +22,8 @@ public record Assistant(AssistantId id, String name, String model, Integer conte
 
 	public AssistantBuilder toBuilder() {
 		AssistantBuilder builder = new AssistantBuilder();
-		return builder.contextSize(contextSize).documentIds(documentIds).hasMemory(hasMemory).id(id).model(model)
-				.name(name).owned(owned).prompt(prompt).temperature(temperature).tools(tools).topK(topK);
+		return builder.contextSize(contextSize).hasMemory(hasMemory).id(id).model(model).name(name).owned(owned)
+				.prompt(prompt).temperature(temperature).tools(tools).topK(topK);
 
 	}
 
