@@ -269,10 +269,6 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 		});
 	}
 
-	restartConversation() {
-		this.confirmRestartConversationVisible = true;
-	}
-
 	cancelStream() {
 		this.assistantService.cancelStream(this.conversation!.id).subscribe(() => {
 			this.statusMessages = [];

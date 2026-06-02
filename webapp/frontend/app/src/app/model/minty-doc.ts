@@ -1,7 +1,9 @@
 export interface MintyDoc {
+	id: string;
 	title: string;
 	state: string;
-	documentId: string;
 	ownerId: string;
-	associatedAssistantIds: string[];
+	projectId: string;
+	segments: string[];
+	vectorized: boolean;
 }

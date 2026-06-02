@@ -56,7 +56,6 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 
 	private final ThreadPoolTaskExecutor fileProcessingExecutor;
 	private final LlmService llmService;
-	private final AssistantDocumentLinkService assistantDocumentLinkService;
 	private final DocumentRepository documentRepository;
 	private final JdbcTemplate vectorJdbcTemplate;
 	private final ConversationServiceInternal conversationService;
@@ -77,14 +76,13 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 
 	public DocumentServiceImpl(DocumentRepository documentRepository,
 			@Qualifier("fileProcessingExecutor") ThreadPoolTaskExecutor fileProcessingExecutor, LlmService llmService,
-			AssistantDocumentLinkService assistantDocumentLinkService, MintyConfiguration properties,
-			JdbcTemplate vectorJdbcTemplate, ConversationServiceInternal conversationService,
-			AssistantManagementService assistantManagementService, AssistantQueryService assistantQueryService,
-			DocumentExtractorService documentExtractorService, MintyConfiguration config) {
+			MintyConfiguration properties, JdbcTemplate vectorJdbcTemplate,
+			ConversationServiceInternal conversationService, AssistantManagementService assistantManagementService,
+			AssistantQueryService assistantQueryService, DocumentExtractorService documentExtractorService,
+			MintyConfiguration config) {
 		this.fileProcessingExecutor = fileProcessingExecutor;
 		this.llmService = llmService;
 		this.documentRepository = documentRepository;
-		this.assistantDocumentLinkService = assistantDocumentLinkService;
 		this.vectorJdbcTemplate = vectorJdbcTemplate;
 		this.conversationService = conversationService;
 		this.assistantManagementService = assistantManagementService;
@@ -229,6 +227,12 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 		}
 	}
 
+	@Override
+	public List<MintyDoc> listDocuments(UserId userId, ProjectId projectId) {
+		return null;
+
+	}
+
 	private List<Document> split(List<Document> documents, int targetChunkSize) {
 		TokenTextSplitter splitter = TokenTextSplitter.builder().withChunkSize(targetChunkSize).build();
 		return splitter.apply(documents);
@@ -334,15 +338,6 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 	public void markDocumentFailed(MintyDoc doc) {
 		doc.setState(DocumentState.FAILED);
 		documentRepository.save(doc);
-	}
-
-	@Override
-	public List<MintyDoc> listDocuments(UserId userId) {
-		List<MintyDoc> docs = documentRepository.findAllByOwnerId(userId);
-		docs.forEach(doc -> {
-			doc.setAssociatedAssistants(assistantDocumentLinkService.getAssistantIdsForDocument(doc.getDocumentId()));
-		});
-		return docs;
 	}
 
 	@Override

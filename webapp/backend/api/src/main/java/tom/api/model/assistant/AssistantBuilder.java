@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Objects;
 
 import tom.api.AssistantId;
-import tom.api.DocumentId;
 
 public class AssistantBuilder {
 	private AssistantId id;
@@ -16,7 +15,6 @@ public class AssistantBuilder {
 	private String prompt;
 	private boolean owned;
 	private boolean hasMemory;
-	private List<DocumentId> documentIds;
 	private List<String> tools;
 
 	public AssistantBuilder() {
@@ -33,7 +31,6 @@ public class AssistantBuilder {
 		prompt = assistant.prompt();
 		owned = assistant.owned();
 		hasMemory = assistant.hasMemory();
-		documentIds = assistant.documentIds();
 		tools = assistant.tools();
 	}
 
@@ -72,11 +69,6 @@ public class AssistantBuilder {
 		return this;
 	}
 
-	public AssistantBuilder documentIds(List<DocumentId> documentIds) {
-		this.documentIds = documentIds;
-		return this;
-	}
-
 	public AssistantBuilder tools(List<String> tools) {
 		this.tools = tools;
 		return this;
@@ -100,7 +92,6 @@ public class AssistantBuilder {
 				Objects.requireNonNull(temperature, "temperature must not be null"),
 				Objects.requireNonNull(topK, "topK must not be null"),
 				Objects.requireNonNull(prompt, "prompt must not be null"),
-				Objects.requireNonNull(documentIds, "documentIds must not be null"),
 				Objects.requireNonNull(tools, "tools must not be null"),
 				Objects.requireNonNull(owned, "ownerId must not be null"), hasMemory);
 	}

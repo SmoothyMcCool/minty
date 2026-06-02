@@ -45,11 +45,13 @@
 					<i class="bi bi-three-dots-vertical" style="font-size: 18px;"></i>
 				</button>
 				<ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton">
-					<li>
-						<button class="dropdown-item" type="button" (click)="associateProject(conversation)">
-							<i class="bi bi-pencil-square me-2"></i> Set Project
-						</button>
-					</li>
+					@if (!projectMode) {
+						<li>
+							<button class="dropdown-item" type="button" (click)="associateProject(conversation)">
+								<i class="bi bi-pencil-square me-2"></i> Set Project
+							</button>
+						</li>
+					}
 					<li>
 						<button class="dropdown-item" type="button" (click)="renameConversation(conversation)">
 							<i class="bi bi-pencil-square me-2"></i> Rename

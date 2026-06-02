@@ -3,7 +3,6 @@ import { Component, Input, Output, EventEmitter } from "@angular/core";
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from "@angular/forms";
 import { WorkflowStateService } from "./services/workflow-state.service";
 import { ConfirmationDialogComponent } from "../../../app/component/confirmation-dialog.component";
-import { MintyDoc } from "../../../model/minty-doc";
 import { MintyTool } from "../../../model/minty-tool";
 import { Model } from "../../../model/model";
 import { EnumList } from "../../../model/workflow/enum-list";
@@ -33,7 +32,6 @@ export class WorkflowTaskEditorModalComponent implements ControlValueAccessor {
 	enumLists: EnumList[] = [];
 	models: Model[] = [];
 	tools: MintyTool[] = [];
-	documents: MintyDoc[] = [];
 	defaults: AttributeMap | undefined = undefined;
 
 	// -------- Outputs --------
@@ -55,7 +53,6 @@ export class WorkflowTaskEditorModalComponent implements ControlValueAccessor {
 			this.enumLists = this.workflowStateService.enumLists;
 			this.models = this.workflowStateService.models;
 			this.tools = this.workflowStateService.tools;
-			this.documents = this.workflowStateService.documents;
 			this.defaults = this.workflowStateService.defaults;
 		}
 	}

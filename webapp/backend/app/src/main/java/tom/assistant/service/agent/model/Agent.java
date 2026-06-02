@@ -180,7 +180,7 @@ public class Agent {
 	public Assistant toAssistant() {
 		return new AssistantBuilder().contextSize(getContextSize()).hasMemory(isHasMemory()).model(getModel())
 				.name(getName()).prompt(getPrompt()).temperature(getTemperature()).tools(getTools()).topK(getTopK())
-				.id(GenericAgentId).documentIds(List.of()).build();
+				.id(GenericAgentId).build();
 	}
 
 }

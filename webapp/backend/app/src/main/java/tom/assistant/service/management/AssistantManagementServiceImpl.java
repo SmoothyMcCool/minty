@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
 import tom.api.AssistantId;
-import tom.api.DocumentId;
 import tom.api.UserId;
 import tom.api.model.assistant.Assistant;
 import tom.api.model.user.ResourceSharingSelection;
@@ -27,7 +26,6 @@ import tom.assistant.repository.AssistantRepository;
 import tom.assistant.repository.UserAssistantLinkRepository;
 import tom.config.MintyConfiguration;
 import tom.conversation.service.ConversationServiceInternal;
-import tom.document.service.AssistantDocumentLinkService;
 import tom.llm.service.LlmService;
 import tom.user.service.UserServiceInternal;
 
@@ -38,19 +36,16 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 
 	private final AssistantRepository assistantRepository;
 	private final UserAssistantLinkRepository linkRepository;
-	private final AssistantDocumentLinkService assistantDocumentLinkService;
 	private final AssistantRegistry assistantRegistry;
 	private final UserServiceInternal userService;
 	private final LlmService llmService;
 	private ConversationServiceInternal conversationService;
 
 	public AssistantManagementServiceImpl(AssistantRepository assistantRepository,
-			UserAssistantLinkRepository linkRepository, AssistantDocumentLinkService assistantDocumentLinkService,
-			AssistantRegistry assistantRegistry, UserServiceInternal userService, LlmService llmService,
-			MintyConfiguration properties) {
+			UserAssistantLinkRepository linkRepository, AssistantRegistry assistantRegistry,
+			UserServiceInternal userService, LlmService llmService, MintyConfiguration properties) {
 		this.assistantRepository = assistantRepository;
 		this.linkRepository = linkRepository;
-		this.assistantDocumentLinkService = assistantDocumentLinkService;
 		this.assistantRegistry = assistantRegistry;
 		this.userService = userService;
 		this.llmService = llmService;
@@ -95,13 +90,7 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 			return null;
 		}
 
-		assistantDocumentLinkService.updateLinksForAssistant(assistant.id(), assistant.documentIds());
-
 		repoAssistant = assistantRepository.save(repoAssistant.updateWith(assistant));
-
-		List<DocumentId> docs = assistantDocumentLinkService.getDocumentIdsForAssistant(repoAssistant.getId());
-		repoAssistant.setAssociatedDocuments(docs);
-
 		return repoAssistant.toTaskAssistant(userId);
 	}
 
@@ -116,12 +105,6 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 
 		List<Assistant> result = new ArrayList<>();
 		if (asstList != null && asstList.size() > 0) {
-			asstList = asstList.stream().map(assistant -> {
-				List<DocumentId> documentIds = assistantDocumentLinkService
-						.getDocumentIdsForAssistant(assistant.getId());
-				assistant.setAssociatedDocuments(documentIds);
-				return assistant;
-			}).toList();
 			result = asstList.stream().map(asst -> asst.toTaskAssistant(userId))
 					.collect(Collectors.toCollection(ArrayList::new));
 		}
@@ -153,8 +136,6 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 							List.of(userId.getValue(), ResourceSharingSelection.AllUsersId.getValue()))
 					.orElseThrow().getAssistant();
 
-			List<DocumentId> docIds = assistantDocumentLinkService.getDocumentIdsForAssistant(assistant.getId());
-			assistant.setAssociatedDocuments(docIds);
 			return assistant.toTaskAssistant(userId);
 
 		} catch (Exception e) {
@@ -269,7 +250,6 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 			return false;
 		}
 
-		assistantDocumentLinkService.removeAllLinksToAssistant(assistantId);
 		conversationService.deleteConversationsForAssistant(userId, assistantId);
 		assistantRepository.deleteById(assistantId.value());
 

@@ -14,7 +14,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
@@ -31,9 +30,6 @@ import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.content.Media;
-import org.springframework.ai.vectorstore.SearchRequest;
-import org.springframework.ai.vectorstore.SearchRequest.Builder;
-import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskRejectedException;
 import org.springframework.http.MediaType;
@@ -568,21 +564,24 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			advisors.add(MessageChatMemoryAdvisor.builder(chatMemory).build());
 		}
 
-		if (!assistant.documentIds().isEmpty()) {
-			VectorStore vectorStore = llmService.getVectorStore();
-
-			String documentIds = assistant.documentIds().stream().map(s -> "\"" + s.getValue().toString() + "\"")
-					.collect(Collectors.joining(", ", "[ ", " ]"));
-
-			Builder searchRequestBuilder = SearchRequest.builder().query(query);
-			if (!documentIds.isEmpty()) {
-				searchRequestBuilder = searchRequestBuilder.filterExpression("documentId IN " + documentIds);
-			}
-			SearchRequest searchRequest = searchRequestBuilder.topK(assistant.topK()).build();
-
-			Advisor ragAdvisor = QuestionAnswerAdvisor.builder(vectorStore).searchRequest(searchRequest).build();
-			advisors.add(ragAdvisor);
-		}
+		/*
+		 * if (!assistant.documentIds().isEmpty()) { VectorStore vectorStore =
+		 * llmService.getVectorStore();
+		 * 
+		 * String documentIds = assistant.documentIds().stream().map(s -> "\"" +
+		 * s.getValue().toString() + "\"") .collect(Collectors.joining(", ", "[ ",
+		 * " ]"));
+		 * 
+		 * Builder searchRequestBuilder = SearchRequest.builder().query(query); if
+		 * (!documentIds.isEmpty()) { searchRequestBuilder =
+		 * searchRequestBuilder.filterExpression("documentId IN " + documentIds); }
+		 * SearchRequest searchRequest =
+		 * searchRequestBuilder.topK(assistant.topK()).build();
+		 * 
+		 * Advisor ragAdvisor =
+		 * QuestionAnswerAdvisor.builder(vectorStore).searchRequest(searchRequest).build
+		 * (); advisors.add(ragAdvisor); }
+		 */
 
 		return advisors;
 	}

@@ -7,8 +7,7 @@
 	@if (useCustomAssistant) {
 		<div class="mb-3">
 			<minty-assistant-editor name="assistantInput" [allowHistory]="false" [models]="models"
-				[documents]="documents" [tools]="tools" [ngModel]="assistant"
-				(ngModelChange)="onAssistantEditorChange($event)"></minty-assistant-editor>
+				[tools]="tools" [ngModel]="assistant" (ngModelChange)="onAssistantEditorChange($event)"></minty-assistant-editor>
 		</div>
 	}
 	@if (!useCustomAssistant) {

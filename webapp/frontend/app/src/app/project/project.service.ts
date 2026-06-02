@@ -8,6 +8,14 @@ import { ProjectNode } from "../model/project/project-node";
 import { DocProperties } from "../document/document-editor.component";
 import { ActivatedRoute, Router } from "@angular/router";
 
+
+type DisplayItemType = 'conversation' | 'workflow' | 'file' | 'document';
+
+interface DisplayItem {
+	type: DisplayItemType;
+	id: string;
+}
+
 @Injectable({
 	providedIn: 'root'
 })
@@ -21,14 +29,9 @@ export class ProjectService {
 	private static readonly DeleteProject = 'api/project/delete';
 	private static readonly GetProject = 'api/project';
 	private static readonly ListProjects = 'api/project/list';
-	private static readonly ListTasks = 'api/project/tasks';
 
 	private static readonly ReadNode = 'api/project/node';
 	private static readonly WriteFile = 'api/project/node/file';
-	private static readonly ConvertToMarkdownAndAddFile = 'api/project/node/convert/markdown';
-	private static readonly ConvertToMarkdownDecomposeFile = 'api/project/node/convert/markdown/decompose';
-	private static readonly ConvertToMarkdownDecomposeAndSummarizeFile = 'api/project/node/convert/markdown/summarize';
-	private static readonly ConvertToMermaid = 'api/project/node/convert/mermaid';
 	private static readonly ExportZip = 'api/project/node/export/zip';
 	private static readonly ImportZip = 'api/project/node/import/zip';
 	private static readonly CreateFolder = 'api/project/node/folder';
@@ -44,13 +47,13 @@ export class ProjectService {
 	private _projectList: BehaviorSubject<Project[]> = new BehaviorSubject<Project[]>([]);
 	projectList$ = this._projectList.asObservable();
 
-	private _initialDisplayItem: { type: 'conversation' | 'workflow' | 'file', id: string } | undefined;
-	get initialDisplayItem(): { type: 'conversation' | 'workflow' | 'file', id: string } | undefined {
+	private _initialDisplayItem: DisplayItem | undefined;
+	get initialDisplayItem(): DisplayItem | undefined {
 		const item = this._initialDisplayItem;
 		this._initialDisplayItem = undefined;
 		return item;
 	}
-	set initialDisplayItem(item: { type: 'conversation' | 'workflow' | 'file', id: string }) {
+	set initialDisplayItem(item: DisplayItem) {
 		this._initialDisplayItem = item;
 	}
 
@@ -150,14 +153,6 @@ export class ProjectService {
 		);
 	}
 
-	listTasks(): Observable<string[]> {
-
-		return this.http.get<ApiResult>(ProjectService.ListTasks).pipe(
-			this.handleError(),
-			map((result: ApiResult) => result.data as string[])
-		);
-	}
-
 	// -------------------------
 	// TREE
 	// -------------------------
@@ -216,69 +211,6 @@ export class ProjectService {
 		);
 	}
 
-	convertAndAddMarkdown(projectId: string, doc: DocProperties): Observable<string> {
-		if (!doc || !doc.file || !doc.title) {
-			throw new Error('Invalid file information.');
-		}
-
-		const formData = new FormData();
-		formData.append('projectId', projectId);
-		formData.append('file', doc.file!, doc.title);
-
-		return this.http.post<ApiResult>(ProjectService.ConvertToMarkdownAndAddFile, formData)
-			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
-				map((result: ApiResult) => {
-					return result.data as string;
-				})
-			);
-	}
-
-	decomposeMarkdown(projectId: string, doc: DocProperties): Observable<string> {
-		if (!doc || !doc.file || !doc.title) {
-			throw new Error('Invalid file information.');
-		}
-
-		const formData = new FormData();
-		formData.append('projectId', projectId);
-		formData.append('file', doc.file!, doc.title);
-
-		return this.http.post<ApiResult>(ProjectService.ConvertToMarkdownDecomposeFile, formData)
-			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
-				map((result: ApiResult) => {
-					return result.data as string;
-				})
-			);
-	}
-
-	decomposeAndSummarizeMarkdown(projectId: string, doc: DocProperties): Observable<string> {
-		if (!doc || !doc.file || !doc.title) {
-			throw new Error('Invalid file information.');
-		}
-
-		const formData = new FormData();
-		formData.append('projectId', projectId);
-		formData.append('file', doc.file, doc.title);
-
-		return this.http.post<ApiResult>(ProjectService.ConvertToMarkdownDecomposeAndSummarizeFile, formData)
-			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
-				map((result: ApiResult) => {
-					return result.data as string;
-				})
-			);
-	}
-
 	writeZipFile(projectId: string, file: DocProperties): Observable<string> {
 		if (!file || !file.file || !file.title) {
 			throw new Error('Invalid file information.');
@@ -288,26 +220,6 @@ export class ProjectService {
 		formData.append('file', file.file, file.title);
 
 		return this.http.post<ApiResult>(ProjectService.ImportZip, formData)
-			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
-				map((result: ApiResult) => {
-					return result.data as string;
-				})
-			);
-	}
-
-	convertToMermaid(projectId: string, file: DocProperties): Observable<string> {
-		if (!file || !file.file || !file.title) {
-			throw new Error('Invalid file information.');
-		}
-		const formData = new FormData();
-		formData.append('projectId', projectId);
-		formData.append('file', file.file, file.title);
-
-		return this.http.post<ApiResult>(ProjectService.ConvertToMermaid, formData)
 			.pipe(
 				catchError(error => {
 					this.alertService.postFailure(JSON.stringify(error));

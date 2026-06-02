@@ -24,8 +24,6 @@ public interface DocumentServiceInternal extends DocumentService {
 
 	void markDocumentFailed(MintyDoc doc);
 
-	List<MintyDoc> listDocuments(UserId userId);
-
 	boolean documentExists(MintyDoc document);
 
 	MintyDoc addDocument(UserId userId, MintyDoc document);
@@ -39,5 +37,7 @@ public interface DocumentServiceInternal extends DocumentService {
 	List<String> getInProgressTaskNames(UserId userId);
 
 	void taskComplete(DecomposedMarkdownDocumentProcessingTask decomposedMarkdownDocumentProcessingTask);
+
+	List<MintyDoc> listDocuments(UserId userId, ProjectId projectId);
 
 }
