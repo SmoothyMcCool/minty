@@ -1,16 +1,110 @@
-.well-bot {
-	background-color: rgba(212, 232, 220, 0.75);
-	border-radius: 10px;
-	border: 0.5px solid #c5d4cb;
+.status-text {
+	font-weight: 500;
+	letter-spacing: 0.04em;
+	display: inline-block;
+
+	background: linear-gradient(90deg,
+			var(--mint-300, #7fd8be),
+			var(--mint-500, #4ecdc4),
+			var(--mint-300, #7fd8be));
+
+	background-size: 200% 100%;
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+
+	animation: status-gradient 4s ease-in-out infinite;
 }
 
-.well-user {
-	background-color: rgba(255, 255, 255, 0.85);
-	border-radius: 10px;
-	border: 0.5px solid #dde3df;
+@keyframes status-gradient {
+	0% {
+		background-position: 200% 50%;
+	}
+
+	100% {
+		background-position: 0% 50%;
+	}
 }
 
-.chat-container {
+/* --- Chat Stream Container --- */
+.chat-stream-container {
 	display: flex;
-	flex-direction: column-reverse;
+	flex-direction: column;
+	gap: 1rem;
+	/* Adds space between messages for a cleaner look */
+	padding: 10px;
+}
+
+/* Bot Bubble Style (Left Aligned)
+   Matches your .well and light background theme */
+.bot-bubble {
+	align-self: flex-start;
+	max-width: 85%;
+	background-color: #ffffff;
+	/* Clean white to pop against the #f0f2f1 body */
+	border: 1px solid #c5d4cb;
+	/* Matches your .well border color */
+	color: #1a2620;
+	/* Matches your body text color */
+	padding: 12px 16px;
+	border-radius: 12px;
+	border-bottom-left-radius: 2px !important;
+	/* Sharp corner for tail effect */
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+/* User Bubble Style (Right Aligned)
+   Matches your .well and markdown header theme */
+.user-bubble {
+	align-self: flex-end;
+	max-width: 85%;
+	background-color: #d4e8dc;
+	/* Matches your table header green */
+	border: 1px solid #a8c0b0;
+	/* Matches your .card border color */
+	color: #1a5c35;
+	/* Matches your heading color */
+	padding: 12px 16px;
+	border-radius: 12px;
+	border-bottom-right-radius: 2px !important;
+	/* Sharp corner for tail effect */
+	box-shadow: 0 2px 5px rgba(26, 92, 53, 0.1);
+}
+
+/* Markdown content spacing inside bubbles */
+.message-content {
+	line-height: 1.5;
+	font-size: 0.95rem;
+}
+
+/* Clipboard/Action button integration
+   Matches your existing 'button' styles but adds interaction */
+.clipboard-button {
+	transition: all 0.2s ease;
+	opacity: 0.6;
+	background-color: transparent !important;
+	/* Make it subtle inside the bubble */
+	border: none;
+}
+
+.clipboard-button:hover {
+	opacity: 1;
+	background-color: rgba(255, 255, 255, 0.4) !important;
+	transform: scale(1.05);
+}
+
+/* Ensure links inside bubbles match your theme */
+.bot-bubble a,
+.user-bubble a {
+	text-decoration: none;
+	font-weight: 500;
+}
+
+/* Responsive tweak for small screens */
+@media (max-width: 600px) {
+
+	.bot-bubble,
+	.user-bubble {
+		max-width: 95%;
+	}
 }

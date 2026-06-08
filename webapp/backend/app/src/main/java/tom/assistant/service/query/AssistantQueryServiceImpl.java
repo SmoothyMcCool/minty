@@ -514,9 +514,9 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 				assistant.tools().stream()
 						.map(toolName -> toolRegistryService.getTool(toolName, user.getId(), query.getConversationId()))
 						.filter(Objects::nonNull),
-				Stream.ofNullable(query.getProjectId() != null
-						? toolRegistryService.getProjectTools(user.getId(), query.getConversationId())
-						: null))
+				query.getProjectId() != null
+						? toolRegistryService.getProjectTools(user.getId(), query.getConversationId()).stream()
+						: Stream.empty())
 				.toList();
 
 		ChatClient chatClient = buildChatClient(assistant, computeContextSize(assistant, query, tools), query);

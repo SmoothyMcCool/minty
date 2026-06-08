@@ -9,9 +9,9 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
+import tom.api.model.document.SpreadsheetFormat;
 import tom.api.model.services.ServiceConsumer;
 import tom.api.services.PluginServices;
-import tom.api.services.document.SpreadsheetFormat;
 import tom.api.task.MintyTask;
 import tom.api.task.OutputPort;
 import tom.api.task.Packet;

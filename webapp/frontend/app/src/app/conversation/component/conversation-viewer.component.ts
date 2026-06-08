@@ -54,6 +54,8 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 	image: File | undefined = undefined;
 	shouldReset: boolean = false;
 
+	private nextId = 0;
+
 	files: string[] | null = [];
 	activeProject: string | undefined = undefined;
 	fileNode: ProjectNode | undefined = undefined;
@@ -97,7 +99,7 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 
 				if (this.assistant.hasMemory) {
 					this.conversationService.history(this.conversation!.id).subscribe((chatHistory: ChatMessage[]) => {
-						this.chatHistory = chatHistory;
+						this.chatHistory = chatHistory.map(msg => ({ ...msg, id: this.nextId++ }));
 						chatHistory.forEach(message => {
 							if (!message.user) {
 								this.addFiles(this.assistantService.getFileListFromMessage(message.message));
@@ -137,7 +139,7 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 	}
 
 	submit(text: string) {
-		this.chatHistory.unshift({ user: true, message: text });
+		this.chatHistory.unshift(this.newMessage(true, text));
 
 		this.assistantService.ask(this.conversation!.id, this.assistant.id, text, this.image ?? null, this.contextSize).subscribe(streamId => {
 			this.waitingForResponse = true;
@@ -164,7 +166,7 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 
 	stream(streamId: string) {
 		let response = '';
-		this.chatHistory.unshift({ user: false, message: response });
+		this.chatHistory.unshift(this.newMessage(false, ''));;
 
 		this.assistantService.getStream(streamId).pipe(
 			retry({
@@ -285,6 +287,10 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 
 	toggleStep(i: number) {
 		this.expandedSteps[i] = !this.expandedSteps[i];
+	}
+
+	private newMessage(user: boolean, message: string): ChatMessage {
+		return { id: this.nextId++, user, message };
 	}
 
 	writeValue(obj: any): void {

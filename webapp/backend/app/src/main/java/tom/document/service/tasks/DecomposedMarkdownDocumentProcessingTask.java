@@ -1,7 +1,7 @@
 package tom.document.service.tasks;
 
-import java.io.File;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -20,15 +20,14 @@ import tom.api.model.assistant.AssistantBuilder;
 import tom.api.model.assistant.AssistantQuery;
 import tom.api.model.assistant.AssistantSpec;
 import tom.api.model.conversation.Conversation;
-import tom.api.model.project.FileType;
-import tom.api.services.ProjectService;
+import tom.api.model.document.Document;
+import tom.api.model.document.DocumentSection;
+import tom.api.services.DocumentExtractorService;
 import tom.api.services.UserService;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
 import tom.api.services.assistant.ConversationInUseException;
 import tom.api.services.assistant.QueueFullException;
-import tom.api.services.document.extract.DocumentExtractorService;
-import tom.api.services.document.extract.Section;
 import tom.config.MintyConfiguration;
 import tom.conversation.service.ConversationServiceInternal;
 import tom.document.markdown.MarkdownSectionSplitter;
@@ -41,29 +40,24 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 
 	private static final Logger logger = LogManager.getLogger(DecomposedMarkdownDocumentProcessingTask.class);
 	private final UserId userId;
-	private final ProjectId projectId;
-	private final File file;
-	private final ProjectService projectService;
+	private final String markdown;
 	private final ConversationServiceInternal conversationService;
 	private final AssistantManagementService assistantManagementService;
 	private final AssistantQueryService assistantQueryService;
 	private final DocumentExtractorService documentExtractorService;
 	private final DocumentServiceInternal documentService;
 	private final String documentName;
-	private final String documentFolder;
 	private final MintyConfiguration config;
-	private List<Section> sections;
+	private Document.Builder documentBuilder;
+	private boolean summarize;
 	private boolean complete;
 
-	public DecomposedMarkdownDocumentProcessingTask(UserId userId, ProjectId projectId, File file,
-			ProjectService projectService, ConversationServiceInternal conversationService,
-			AssistantManagementService assistantManagementService, AssistantQueryService assistantQueryService,
-			DocumentExtractorService documentExtractorService, DocumentServiceInternal documentService,
-			MintyConfiguration config) {
+	public DecomposedMarkdownDocumentProcessingTask(UserId userId, ProjectId projectId, String docName, String markdown,
+			ConversationServiceInternal conversationService, AssistantManagementService assistantManagementService,
+			AssistantQueryService assistantQueryService, DocumentExtractorService documentExtractorService,
+			DocumentServiceInternal documentService, MintyConfiguration config, boolean summarize) {
 		this.userId = userId;
-		this.projectId = projectId;
-		this.file = file;
-		this.projectService = projectService;
+		this.markdown = markdown;
 		this.conversationService = conversationService;
 		this.assistantManagementService = assistantManagementService;
 		this.assistantQueryService = assistantQueryService;
@@ -71,59 +65,44 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 		this.documentService = documentService;
 		this.config = config;
 		complete = false;
+		this.summarize = summarize;
 
-		String filename = file.getName();
-		int lastDot = filename.lastIndexOf('.');
-		String baseName = (lastDot == -1) ? filename : filename.substring(0, lastDot);
-		documentName = slug(baseName + ".md");
-		this.documentFolder = "/documents/" + documentName;
-	}
-
-	public void decompose() throws Exception {
-		// Parse whole document to markdown.
-		String markdown = documentExtractorService.extract(file);
-
-		// Split into sections.
-		sections = MarkdownSectionSplitter.split(markdown, config.getConfig().pandoc().headingLevel(),
-				config.getConfig().pandoc().minimumSectionSize()).stream().map(section -> {
-					Section s = new Section();
-					s.content = section.content;
-					s.index = section.index;
-					s.level = section.level;
-					s.parentIndex = section.parentIndex;
-					s.title = section.title;
-					return s;
-				}).toList();
-		saveSections(sections);
+		documentBuilder = Document.builder().title(docName).ownerId(userId).projectId(projectId);
+		documentBuilder.title(docName);
+		documentName = slug(docName);
 	}
 
 	@Override
 	public void run() {
 		try {
-
 			logger.info("Started processing " + documentName);
 
-			String summary = writeSummary(sections);
+			List<DocumentSection> sections = decompose();
+			documentBuilder.sections(sections);
 
-			saveSummary(summary);
+			if (summarize) {
+				String summary = writeSummary(sections);
+				documentBuilder.summary(summary);
+			}
 
-			logger.info("Decomposed markdown processing complete for " + file.getName());
+			documentBuilder.created(Instant.now());
+			documentBuilder.updated(Instant.now());
+
+			Document doc = documentBuilder.build();
+			documentService.addDocument(userId, doc);
+
+			logger.info("Decomposed markdown processing complete for " + documentName);
 
 		} catch (Exception e) {
 			logger.error("Markdown processing failed: ", e);
 		} finally {
 			complete = true;
 			documentService.taskComplete(this);
-			file.delete();
 		}
 	}
 
 	public UserId getUserId() {
 		return userId;
-	}
-
-	public ProjectId getProjectId() {
-		return projectId;
 	}
 
 	public boolean isComplete() {
@@ -134,11 +113,18 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 		return documentName;
 	}
 
-	private String writeSummary(List<Section> sections) throws Exception {
+	private List<DocumentSection> decompose() throws Exception {
+		List<DocumentSection> sections = MarkdownSectionSplitter.split(markdown,
+				config.getConfig().pandoc().headingLevel(), config.getConfig().pandoc().minimumSectionSize());
+
+		return sections;
+	}
+
+	private String writeSummary(List<DocumentSection> sections) throws Exception {
 		ObjectMapper mapper = MintyObjectMapper.StandardJsonMapper;
 		List<SectionResult> results = new ArrayList<>();
 
-		for (Section s : sections) {
+		for (DocumentSection s : sections) {
 			String filename = sectionFilename(s);
 			String breadcrumb = documentExtractorService.buildBreadcrumb(sections, s);
 			String summaryStr = generateSummary(s, breadcrumb);
@@ -155,69 +141,74 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 				}
 			}
 
-			results.add(new SectionResult(s.index, s.title, filename, breadcrumb, summary));
+			results.add(new SectionResult(s.sequenceOrder(), s.title(), filename, breadcrumb, summary));
 		}
 
 		return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(results);
 	}
 
-	private String generateSummary(Section s, String breadcrumb) {
-		Assistant assistant = assistantManagementService.findAssistant(UserService.DefaultId,
-				AssistantManagementService.DocumentSummarizingAssistantId);
+	private String generateSummary(DocumentSection s, String breadcrumb) {
 
-		String prompt = assistant.prompt();
-		Map<String, String> values = Map.of("DOCUMENT_NAME", documentName, "SECTION_TITLE", s.title,
-				"SECTION_BREADCRUMB", breadcrumb);
-		StringSubstitutor sub = new StringSubstitutor(values);
-		String resolvedPrompt = sub.replace(prompt);
-
-		AssistantBuilder assistantBuilder = new AssistantBuilder(assistant);
-		assistantBuilder.prompt(resolvedPrompt);
-
-		AssistantSpec as = new AssistantSpec(assistantBuilder.build());
-		AssistantQuery query = new AssistantQuery();
-		query.setAssistantSpec(as);
-		query.setQuery(s.content);
 		Conversation conversation = conversationService.newConversation(UserService.DefaultId,
 				AssistantManagementService.DocumentSummarizingAssistantId);
-		query.setConversationId(conversation.getId());
 
-		String summary = "";
+		try {
+			Assistant assistant = assistantManagementService.findAssistant(UserService.DefaultId,
+					AssistantManagementService.DocumentSummarizingAssistantId);
 
-		while (true) {
-			try {
-				summary = assistantQueryService.ask(UserService.DefaultId, query).get();
-				break;
-			} catch (QueueFullException | ConversationInUseException e) {
-				// Thrown directly from ask() before reaching the executor
-				logger.warn("LLM queue full or conversation in use, retrying in 5 seconds.");
-				if (!sleepForRetry()) {
-					return "";
-				}
-			} catch (CancellationException e) {
-				logger.warn("Summary generation was cancelled.");
-				return "";
-			} catch (ExecutionException e) {
-				if (e.getCause() instanceof QueueFullException || e.getCause() instanceof ConversationInUseException) {
+			String prompt = assistant.prompt();
+			Map<String, String> values = Map.of("DOCUMENT_NAME", documentName, "SECTION_TITLE", s.title(),
+					"SECTION_BREADCRUMB", breadcrumb);
+			StringSubstitutor sub = new StringSubstitutor(values);
+			String resolvedPrompt = sub.replace(prompt);
+
+			AssistantBuilder assistantBuilder = new AssistantBuilder(assistant);
+			assistantBuilder.prompt(resolvedPrompt);
+
+			AssistantSpec as = new AssistantSpec(assistantBuilder.build());
+			AssistantQuery query = new AssistantQuery();
+			query.setAssistantSpec(as);
+			query.setQuery(s.content());
+			query.setConversationId(conversation.getId());
+
+			String summary = "";
+
+			while (true) {
+				try {
+					summary = assistantQueryService.ask(UserService.DefaultId, query).get();
+					break;
+				} catch (QueueFullException | ConversationInUseException e) {
+					// Thrown directly from ask() before reaching the executor
 					logger.warn("LLM queue full or conversation in use, retrying in 5 seconds.");
 					if (!sleepForRetry()) {
 						return "";
 					}
-				} else {
-					logger.warn("Summary generation failed with unexpected error.", e.getCause());
+				} catch (CancellationException e) {
+					logger.warn("Summary generation was cancelled.");
+					return "";
+				} catch (ExecutionException e) {
+					if (e.getCause() instanceof QueueFullException
+							|| e.getCause() instanceof ConversationInUseException) {
+						logger.warn("LLM queue full or conversation in use, retrying in 5 seconds.");
+						if (!sleepForRetry()) {
+							return "";
+						}
+					} else {
+						logger.warn("Summary generation failed with unexpected error.", e.getCause());
+						return "";
+					}
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+					logger.warn("Thread was interrupted while waiting for LLM.");
 					return "";
 				}
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-				logger.warn("Thread was interrupted while waiting for LLM.");
-				return "";
 			}
+
+			return summary.strip();
+
+		} finally {
+			conversationService.deleteConversation(conversation.getOwnerId(), conversation.getId());
 		}
-
-		summary = summary.strip();
-		conversationService.deleteConversation(conversation.getOwnerId(), conversation.getId());
-
-		return summary;
 	}
 
 	private boolean sleepForRetry() {
@@ -232,45 +223,13 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 		}
 	}
 
-	private void saveSummary(String summary) throws Exception {
-		try {
-			projectService.createFolder(userId, projectId, "/documents");
-		} catch (IllegalStateException e) {
-			// Nothing to do, this just means the folder already exists.
-		}
-		try {
-			projectService.createFolder(userId, projectId, documentFolder);
-		} catch (IllegalStateException e) {
-			// Nothing to do, this just means the folder already exists.
-		}
-
-		projectService.writeFile(userId, projectId, documentFolder + "/" + documentName, FileType.markdown, summary);
-	}
-
-	private void saveSections(List<Section> sections) throws Exception {
-		try {
-			projectService.createFolder(userId, projectId, "/documents");
-		} catch (IllegalStateException e) {
-			// Nothing to do, this just means the folder already exists.
-		}
-		try {
-			projectService.createFolder(userId, projectId, documentFolder);
-		} catch (IllegalStateException e) {
-			// Nothing to do, this just means the folder already exists.
-		}
-		for (Section s : sections) {
-			String name = sectionFilename(s);
-			projectService.writeFile(userId, projectId, documentFolder + "/" + name, FileType.markdown, s.content);
-		}
-	}
-
 	/**
 	 * Generates a filename that encodes both the section index and its level
 	 * indentation, so files sort naturally in the project explorer. e.g.
 	 * section-003-2-interface-design.md for a level-2 section at index 3
 	 */
-	private String sectionFilename(Section s) {
-		return "section-%03d-L%d-%s.md".formatted(s.index, s.level, slug(s.title));
+	private String sectionFilename(DocumentSection s) {
+		return "section-%03d-L%d-%s.md".formatted(s.sequenceOrder(), s.level(), slug(s.title()));
 	}
 
 	private static String slug(String text) {

@@ -11,7 +11,7 @@ public interface ToolRegistryService {
 
 	MintyTool getTool(String toolName, UserId userId, ConversationId conversationId);
 
-	MintyTool getProjectTools(UserId userId, ConversationId conversationId);
+	List<MintyTool> getProjectTools(UserId userId, ConversationId conversationId);
 
 	List<MintyToolDescription> listTools();
 

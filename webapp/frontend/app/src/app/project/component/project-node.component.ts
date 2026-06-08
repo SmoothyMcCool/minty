@@ -12,12 +12,32 @@ import { AlertService } from "../../alert.service";
 	styleUrl: 'project-node.component.css'
 })
 export class ProjectNodeComponent {
-	@Input() node!: ProjectNode;
+	@Input() set nodes(value: ProjectNode[]) {
+		this._nodes = value;
+		this._updateCaches();
+	}
+	get nodes(): ProjectNode[] { return this._nodes; }
+	private _nodes: ProjectNode[] = [];
+
+	@Input() set node(value: ProjectNode) {
+		this._node = value;
+		this._fileName = this.getFileName(value.path);
+		this._updateCaches();
+	}
+	get node(): ProjectNode { return this._node; }
+	private _node!: ProjectNode;
+
+	get children(): ProjectNode[] { return this._children; }
+	get fileName(): string { return this._fileName; }
+
 	@Input() selected!: ProjectNode | null;
-	@Input() nodes!: ProjectNode[];
 	@Output() nodeSelected = new EventEmitter<ProjectNode>();
 	@Output() update = new EventEmitter<ProjectNode>();
 	@Output() delete = new EventEmitter<ProjectNode>();
+
+	private _children: ProjectNode[] = [];
+	private _fileName: string = '';
+	private _cachedNodesRef: ProjectNode[] | null = null;
 
 	editNodeInfoVisible = false;
 	editName: string | undefined = undefined;
@@ -112,10 +132,20 @@ export class ProjectNodeComponent {
 	}
 
 	listFolders(): ProjectNode[] {
-		return this.nodes.filter(node => node.type === 'Folder' && node.path !== '/');
+		return this._nodes.filter(node => node.type === 'Folder' && node.path !== '/');
 	}
 
 	stopTreePropagation(event: KeyboardEvent) {
 		event.stopPropagation();
 	}
+
+	private _updateCaches(): void {
+		if (!this._node || !this._nodes) return;
+		this._children = this._nodes.filter(n =>
+			n.path !== this._node.path &&
+			n.path.startsWith(this._node.path + '/') &&
+			n.path.split('/').length === this._node.path.split('/').length + 1
+		);
+	}
+
 }

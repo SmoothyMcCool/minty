@@ -84,24 +84,30 @@ CREATE TABLE IF NOT EXISTS SPRING_AI_CHAT_MEMORY (
 -- =============================================================
 
 CREATE TABLE IF NOT EXISTS Document (
-    id UUID NOT NULL,
+    id         UUID      NOT NULL,
     title      TEXT,
     state      INTEGER,
     ownerId    UUID,
     projectId  UUID,
-    vectorized BOOLEAN DEFAULT FALSE,
-    created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    vectorized BOOLEAN   DEFAULT FALSE,
+    summary    TEXT,
+    created    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id)
 );
 
 CREATE TABLE DocumentSegment (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    docId UUID NOT NULL,
-    content TEXT NOT NULL,
-    sequenceOrder INT NOT NULL,
-    created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	FOREIGN KEY (docId) REFERENCES Document(id) ON DELETE CASCADE
+    id            UUID     NOT NULL,
+    documentId    UUID     NOT NULL,
+    content       LONGTEXT NOT NULL,
+    sequenceOrder INT      NOT NULL,
+    parentIndex   INT,
+    level         INT,
+    title         TEXT,
+    created       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	PRIMARY KEY (id),
+	FOREIGN KEY (docId) REFERENCES Document(id) ON DELETE CASCADE,
+    INDEX       idx_doc_segments_order (docId, sequenceOrder)
 );
 
 CREATE TABLE IF NOT EXISTS Tag (

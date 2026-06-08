@@ -1,45 +1,62 @@
-<div class="row m-2" [class.flex-row-reverse]="message.user">
-	<div class="col-11 p-3 rounded-3 shadow-sm" [class.well-user]="message.user" [class.well-bot]="!message.user"
-		style="max-width: 85%; border: 1px solid rgba(0,0,0,0.05);">
+<!-- Container: Uses flexbox to push user messages to the right -->
+<div class="d-flex mb-3 w-100" [class.justify-content-end]="message.user" [class.justify-content-start]="!message.user">
 
+	<!-- The Bubble -->
+	<div class="chat-bubble p-3 shadow-sm"
+		[class.user-bubble]="message.user"
+		[class.bot-bubble]="!message.user"
+		style="max-width: 85%; border-radius: 1.2rem;">
+
+		<!-- Status/Loading Indicator (Only for Bot) -->
 		@if (responsePending && isFirst && !message.user) {
-			<div class="d-flex align-items-center gap-2 text-muted small">
+			<div class="d-flex align-items-center gap-2 text-muted small mb-1">
 				<minty-spinner></minty-spinner>
-				@if (queueDepth === 1) {
-					<span>Waiting... You're next!</span>
-				} @else if (queueDepth === 2) {
-					<span>Waiting... There is one request ahead of you.</span>
-				} @else if (queueDepth !== undefined) {
-					<span>Waiting... There are {{queueDepth - 1}} requests ahead of you.</span>
-				}
+				<span class="fst-italic">
+					@if (queueDepth === 1) { Thinking... }
+					@else if (queueDepth === 2) { One request ahead... }
+					@else if (queueDepth !== undefined) { {{queueDepth - 1}} requests ahead... }
+				</span>
 			</div>
 		}
 
-		@if (useMarkdown && !message.user) {
-			<markdown clipboard mermaidClipboard [mermaid]="useMermaid" [data]="message.message"
-				[clipboardButtonTemplate]="clipboardTemplate"></markdown>
+		<!-- Content: Markdown or Plain Text -->
+		<div class="message-content">
+			@if (useMarkdown && !message.user) {
+				<markdown clipboard mermaidClipboard [mermaid]="useMermaid" [data]="message.message"
+					[clipboardButtonTemplate]="clipboardTemplate"></markdown>
 
-			@if (!responsePending && !responseComplete && isFirst && !message.user) {
-				<div class="mt-2">
-					<minty-spinner></minty-spinner>
+				<!-- Typing Indicator (The "pulsing" dots) -->
+				@if (!responsePending && !responseComplete && !message.user) {
+					<div class="mt-2 opacity-50">
+						<minty-spinner></minty-spinner>
+					</div>
+				}
+			} @else {
+				<div class="message-text" style="white-space: pre-wrap; word-break: break-word;">
+					{{message.message}}
 				</div>
 			}
-		} @else {
-			<!-- The key change: white-space: pre-wrap allows wrapping while keeping line breaks -->
-			<div class="message-text" style="white-space: pre-wrap; word-break: break-word;">
-				{{message.message}}
-			</div>
-		}
+		</div>
+
+		<!-- Small Timestamp or Role Indicator (Optional/Visual Polish) -->
+		<div class="mt-1 d-flex justify-content-end">
+			@if (message.user) {
+				<span class="badge rounded-pill bg-primary-subtle text-primary" style="font-size: 0.6rem; opacity: 0.7;">You</span>
+			} @else {
+				<span class="badge rounded-pill bg-light text-muted" style="font-size: 0.6rem; opacity: 0.7;">AI</span>
+			}
+		</div>
 	</div>
 </div>
 
+<!-- Copy Button Template -->
 <ng-template #clipboardTemplate>
-	<button class="btn btn-sm btn-light clipboard-button" #copyButton (click)="onCopyClick(copyButton)">
+	<button class="btn btn-sm btn-light border-0 clipboard-button" #copyButton (click)="onCopyClick(copyButton)" style="padding: 2px 5px;">
 		@if (!isCopied(copyButton)) {
-			<i class="bi bi-copy"></i>
+			<i class="bi bi-copy small text-muted"></i>
 		}
 		@if (isCopied(copyButton)) {
-			<i class="bi bi-check-circle-fill text-success"></i>
+			<i class="bi bi-check-circle-fill text-success small"></i>
 		}
 	</button>
 </ng-template>
