@@ -15,4 +15,6 @@ public interface DocumentServiceInternal extends DocumentService {
 
 	void vectorizationComplete(UserId userId, DocumentId documentId, boolean success);
 
+	List<MintyDoc> listDocuments(UserId userId, ProjectId projectId);
+
 }
