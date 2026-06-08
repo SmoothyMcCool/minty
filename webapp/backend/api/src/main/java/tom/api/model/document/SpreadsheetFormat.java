@@ -1,4 +1,4 @@
-package tom.api.services.document;
+package tom.api.model.document;
 
 public enum SpreadsheetFormat {
 	MARKDOWN, TSV

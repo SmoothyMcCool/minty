@@ -3,63 +3,72 @@ package tom.document.markdown;
 import java.util.ArrayList;
 import java.util.List;
 
-import tom.document.Section;
+import tom.api.model.document.DocumentSection;
 
 public class MarkdownSectionSplitter {
 
-	public static List<Section> split(String markdown, int maxHeadingLevel, int minimumSectionSize) {
-		List<Section> sections = new ArrayList<>();
+	public static List<DocumentSection> split(String markdown, int maxHeadingLevel, int minimumSectionSize) {
+		List<DocumentSection> sections = new ArrayList<>();
 
 		String normalized = markdown.replace("\uFEFF", "").replace("\r\n", "\n").replace("\r", "\n");
 
 		String[] lines = normalized.split("\n");
 
-		Section current = null;
+		DocumentSection.Builder current = null;
+		StringBuilder curContent = new StringBuilder();
 		StringBuilder preamble = new StringBuilder();
 
 		for (String line : lines) {
 			String trimmedLine = line.stripTrailing();
+
 			if (isHeading(trimmedLine, maxHeadingLevel)) {
+
 				if (current != null) {
-					current.content = current.content.trim();
-					sections.add(current);
+					current.content(curContent.toString().trim());
+					sections.add(current.build());
 				}
-				current = new Section();
-				current.level = countLeadingHashes(trimmedLine);
-				current.title = trimmedLine.replaceFirst("^#{1," + maxHeadingLevel + "}\\s+", "").trim();
-				current.content = "";
+
+				current = DocumentSection.builder();
+				int lvl = countLeadingHashes(trimmedLine);
+				String title = trimmedLine.replaceFirst("^#{1," + maxHeadingLevel + "}\\s+", "").trim();
+
+				current.level(lvl).title(title);
+
+				curContent.setLength(0);
 			} else if (current != null) {
-				current.content += line + "\n";
+				curContent.append(line).append('\n');
 			} else {
-				preamble.append(line).append("\n");
+				preamble.append(line).append('\n');
 			}
 		}
 
 		if (current != null) {
-			current.content = current.content.trim();
-			sections.add(current);
+			current.content(curContent.toString().trim());
+			sections.add(current.build());
 		}
 
 		String preambleText = preamble.toString().trim();
 		if (!preambleText.isEmpty()) {
-			Section pre = new Section();
-			pre.level = 0;
-			pre.title = "Preamble";
-			pre.content = preambleText;
-			sections.add(0, pre);
+			DocumentSection.Builder dsb = DocumentSection.builder();
+			dsb.level(0);
+			dsb.title("Preamble");
+			dsb.content(preambleText);
+			sections.add(0, dsb.build());
 		}
 
 		// Combine very small sections together.
 		sections = collapse(sections, minimumSectionSize);
 
+		List<DocumentSection> updated = new ArrayList<>(sections.size());
 		for (int i = 0; i < sections.size(); i++) {
-			sections.get(i).index = i + 1;
-		}
-		for (int i = 0; i < sections.size(); i++) {
-			sections.get(i).parentIndex = findParentIndex(sections, i);
+			DocumentSection old = sections.get(i);
+			int sequenceOrder = i + 1;
+			Integer parentIdx = findParentIndex(sections, i);
+			updated.add(old.toBuilder().sequenceOrder(sequenceOrder).title("Section " + sequenceOrder)
+					.parentIndex(parentIdx).build());
 		}
 
-		return sections;
+		return updated;
 	}
 
 	/**
@@ -68,26 +77,40 @@ public class MarkdownSectionSplitter {
 	 * remains navigable, and the predecessor's title is kept. Preamble sections
 	 * (level 0) are never used as a collapse target.
 	 */
-	private static List<Section> collapse(List<Section> sections, int minChars) {
+	private static List<DocumentSection> collapse(List<DocumentSection> sections, int minChars) {
 		if (minChars <= 0) {
 			return sections;
 		}
 
-		List<Section> result = new ArrayList<>();
+		List<DocumentSection> result = new ArrayList<>();
 
-		for (Section section : sections) {
+		for (DocumentSection section : sections) {
 			boolean isTooShort = contentLength(section) < minChars;
-			Section target = lastCollapsibleSection(result, section.level);
+			DocumentSection target = lastCollapsibleSection(result, section.level());
 
 			if (isTooShort && target != null) {
+				int targetIndex = result.indexOf(target);
+
+				String mergedContent = target.content();
+
 				// Prepend the target's own heading the first time it absorbs a section
-				if (!target.content.startsWith("#")) {
-					String targetHeading = "#".repeat(target.level) + " " + target.title;
-					target.content = target.content.isBlank() ? targetHeading : targetHeading + "\n\n" + target.content;
+				if (!mergedContent.startsWith("#")) {
+					String targetHeading = "#".repeat(target.level()) + " " + target.title();
+					mergedContent = mergedContent.isBlank() ? targetHeading : targetHeading + "\n\n" + mergedContent;
 				}
-				String incomingHeading = "#".repeat(section.level) + " " + section.title;
-				target.content = target.content.isBlank() ? incomingHeading + "\n\n" + section.content
-						: target.content + "\n\n" + incomingHeading + "\n\n" + section.content;
+
+				String incomingHeading = "#".repeat(section.level()) + " " + section.title();
+
+				if (mergedContent.isBlank()) {
+					mergedContent = incomingHeading + "\n\n" + section.content();
+				} else {
+					mergedContent = mergedContent + "\n\n" + incomingHeading + "\n\n" + section.content();
+				}
+
+				DocumentSection merged = target.toBuilder().content(mergedContent).build();
+
+				result.set(targetIndex, merged);
+
 			} else {
 				result.add(section);
 			}
@@ -101,18 +124,18 @@ public class MarkdownSectionSplitter {
 	 * preamble, and at an equal or higher level (lower number) than the incoming
 	 * section so we never fold a parent under a child.
 	 */
-	private static Section lastCollapsibleSection(List<Section> sections, int incomingLevel) {
+	private static DocumentSection lastCollapsibleSection(List<DocumentSection> sections, int incomingLevel) {
 		for (int i = sections.size() - 1; i >= 0; i--) {
-			Section candidate = sections.get(i);
-			if (candidate.level > 0 && candidate.level <= incomingLevel) {
+			DocumentSection candidate = sections.get(i);
+			if (candidate.level() > 0 && candidate.level() <= incomingLevel) {
 				return candidate;
 			}
 		}
 		return null;
 	}
 
-	private static int contentLength(Section section) {
-		return section.content == null ? 0 : section.content.length();
+	private static int contentLength(DocumentSection section) {
+		return section.content() == null ? 0 : section.content().length();
 	}
 
 	private static boolean isHeading(String line, int maxHeadingLevel) {
@@ -134,14 +157,14 @@ public class MarkdownSectionSplitter {
 		return count;
 	}
 
-	private static Integer findParentIndex(List<Section> sections, int i) {
-		int currentLevel = sections.get(i).level;
+	private static Integer findParentIndex(List<DocumentSection> sections, int i) {
+		int currentLevel = sections.get(i).level();
 		if (currentLevel == 0) {
 			return null;
 		}
 		for (int j = i - 1; j >= 0; j--) {
-			if (sections.get(j).level < currentLevel) {
-				return sections.get(j).index;
+			if (sections.get(j).level() < currentLevel) {
+				return sections.get(j).sequenceOrder();
 			}
 		}
 		return null;

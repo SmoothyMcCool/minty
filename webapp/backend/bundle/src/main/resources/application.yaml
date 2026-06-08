@@ -8,7 +8,6 @@ session:
 
 # File store locations (relative to output.directory)
 fileStores:
-  docs: ${output.directory}/working/docs
   temp: ${output.directory}/working/temp
   plugins: ${output.directory}/working/plugins
   workflowLogs: ${output.directory}/working/logs
@@ -50,10 +49,16 @@ llm:
       maximumContext: 262144
       maxConcurrent: 2
       imageSupport: true
+    - name: gemma4:26b-a4b-it-qat
+      defaultContext: 16384
+      maximumContext: 262144
+      maxConcurrent: 2
+      imageSupport: true
   activeModels:
     - gpt-oss:20b
     - gemma4:e4b-it-q4_K_M
     - gemma4:26b
+    - gemma4:26b-a4b-it-qat
   chatMemoryDepth: 100
   # The number of documents to retrieve when doing RAG.
   defaultTopK: 5

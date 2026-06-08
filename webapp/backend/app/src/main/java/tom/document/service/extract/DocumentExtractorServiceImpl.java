@@ -19,9 +19,9 @@ import org.apache.tika.sax.ToHTMLContentHandler;
 import org.springframework.stereotype.Service;
 import org.xml.sax.SAXException;
 
-import tom.api.services.document.SpreadsheetFormat;
-import tom.api.services.document.extract.DocumentExtractorService;
-import tom.api.services.document.extract.Section;
+import tom.api.model.document.DocumentSection;
+import tom.api.model.document.SpreadsheetFormat;
+import tom.api.services.DocumentExtractorService;
 import tom.config.MintyConfiguration;
 import tom.config.model.PandocConfig;
 import tom.document.extract.pandoc.PandocConverter;
@@ -45,34 +45,34 @@ public class DocumentExtractorServiceImpl implements DocumentExtractorService {
 	}
 
 	@Override
-	public String buildBreadcrumb(List<Section> sections, Section target) {
-		StringBuilder crumb = new StringBuilder(target.title);
-		Integer parentIndex = target.parentIndex;
+	public String buildBreadcrumb(List<DocumentSection> sections, DocumentSection target) {
+		StringBuilder crumb = new StringBuilder(target.title());
+		Integer parentIndex = target.parentIndex();
 
 		while (parentIndex != null) {
 			final int idx = parentIndex;
-			Section parent = sections.stream().filter(s -> s.index == idx).findFirst().orElse(null);
+			DocumentSection parent = sections.stream().filter(s -> s.sequenceOrder() == idx).findFirst().orElse(null);
 			if (parent == null)
 				break;
-			crumb.insert(0, parent.title + " > ");
-			parentIndex = parent.parentIndex;
+			crumb.insert(0, parent.title() + " > ");
+			parentIndex = parent.parentIndex();
 		}
 
 		return crumb.toString();
 	}
 
 	@Override
-	public List<Section> extractAndSplit(File file) {
+	public List<DocumentSection> extractAndSplit(File file) {
 		String markdown = extract(file);
 		return MarkdownSectionSplitter.split(markdown, config.headingLevel(), config.minimumSectionSize()).stream()
 				.map(section -> {
-					Section s = new Section();
-					s.content = section.content;
-					s.index = section.index;
-					s.level = section.level;
-					s.parentIndex = section.parentIndex;
-					s.title = section.title;
-					return s;
+					DocumentSection.Builder sb = DocumentSection.builder();
+					sb.content(section.content());
+					sb.sequenceOrder(section.sequenceOrder());
+					sb.level(section.level());
+					sb.parentIndex(section.parentIndex());
+					sb.title(section.title());
+					return sb.build();
 				}).toList();
 	}
 
@@ -99,8 +99,7 @@ public class DocumentExtractorServiceImpl implements DocumentExtractorService {
 				markdown = pandoc.convert(file);
 			} else if (isSpreadsheet) {
 				markdown = SpreadsheetExtractor.extract(file,
-						format == SpreadsheetFormat.MARKDOWN ? tom.document.SpreadsheetFormat.MARKDOWN
-								: tom.document.SpreadsheetFormat.TSV);
+						format == SpreadsheetFormat.MARKDOWN ? SpreadsheetFormat.MARKDOWN : SpreadsheetFormat.TSV);
 			} else if (isPdf) {
 				markdown = PdfExtractor.extract(file);
 			} else {

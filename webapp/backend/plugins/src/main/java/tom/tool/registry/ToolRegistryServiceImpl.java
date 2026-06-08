@@ -74,9 +74,13 @@ public class ToolRegistryServiceImpl implements ToolRegistryService {
 	}
 
 	@Override
-	public MintyTool getProjectTools(UserId userId, ConversationId conversationId) {
-		return getTool("Project Tools", userId, conversationId); // Kinda hacky hardcode but allows us to avoid
-																	// depending directly on the plugin-library.
+	public List<MintyTool> getProjectTools(UserId userId, ConversationId conversationId) {
+		// Kinda hacky hardcode but allows us to avoid depending directly on the
+		// plugin-library.
+		// return List.of(getTool("Project Tools", userId, conversationId),
+		// getTool("Document Tools", userId, conversationId));
+		return List.of(getTool("Knowledge Tools", userId, conversationId));// ,
+		// getTool("Document Tools", userId, conversationId));
 	}
 
 	@Override

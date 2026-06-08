@@ -1,4 +1,4 @@
-import { Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, Input, NgZone, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProjectService } from '../project.service';
@@ -8,7 +8,7 @@ import { AlertService } from '../../alert.service';
 import { ConfirmationDialogComponent } from '../../app/component/confirmation-dialog.component';
 import { ProjectNode } from '../../model/project/project-node';
 import { Project } from '../../model/project/project';
-import { DocProperties } from '../../document/document-editor.component';
+import { DocProperties, DocumentEditorComponent } from '../../document/document-editor.component';
 import { AssistantListComponent } from '../../assistant/component/assistant-list.component';
 import { Assistant } from '../../model/assistant';
 import { ConversationService } from '../../conversation.service';
@@ -19,9 +19,23 @@ import { forkJoin, interval, startWith, Subscription, switchMap } from 'rxjs';
 import { MintyDoc } from '../../model/minty-doc';
 import { DocumentService } from '../../document.service';
 
+const ProjectItemTypes = [
+	'Conversation',
+	'ProjectNode',
+	'Document',
+] as const;
+
+type ProjectItemType =
+	typeof ProjectItemTypes[number];
+
+interface ItemSelection {
+	type: ProjectItemType;
+	item: ProjectNode | Conversation | MintyDoc | undefined;
+}
+
 @Component({
 	selector: 'minty-project-editor',
-	imports: [CommonModule, FormsModule, ProjectNodeComponent, NodeViewerComponent, ConfirmationDialogComponent, AssistantListComponent, ConversationListComponent, ConversationViewerComponent],
+	imports: [CommonModule, FormsModule, ProjectNodeComponent, NodeViewerComponent, ConfirmationDialogComponent, AssistantListComponent, ConversationListComponent, ConversationViewerComponent, DocumentEditorComponent],
 	templateUrl: 'project-editor.component.html',
 	styleUrl: 'project-editor.component.css'
 })
@@ -53,11 +67,13 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 	confirmDeleteProjectVisible = false;
 	projectPendingDeletion: Project | undefined = undefined;
 
+	selectedItem: ItemSelection | undefined = undefined;
+
 	// -------------------------
 	// FILES
 	// -------------------------
+	rootNodes: ProjectNode[] = [];
 	nodes: ProjectNode[] = [];
-	selectedNode: ProjectNode | undefined = undefined;
 
 	editFile: boolean = false;
 	currentFileContents: string | undefined = undefined;
@@ -69,7 +85,6 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 	// CONVERSATIONS
 	// -------------------------
 	conversations: Conversation[] = [];
-	selectedConversation: Conversation | undefined = undefined;
 
 	// -------------------------
 	// DOCUMENTS
@@ -86,30 +101,40 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 	decomposeDocument = false;
 	summarizeDocument = false;
 
+	documentToDelete: MintyDoc | undefined = undefined;
+	confirmDeleteDocumentVisible = false;
+
 	processingTaskSubscription: Subscription | undefined;
 	tasks: string[] = [];
 	anyTaskCompleted: boolean = false;
 
-	constructor(private projectService: ProjectService,
+	constructor(private ngZone: NgZone,
+		private cdr: ChangeDetectorRef,
+		private projectService: ProjectService,
 		private documentService: DocumentService,
 		private conversationService: ConversationService,
 		private alertService: AlertService) { }
 
 	ngOnInit(): void {
-		this.processingTaskSubscription = interval(5000)
-			.pipe(
-				startWith(0), // fires immediately, then every 5s
-				switchMap(() => this.documentService.listTasks())
-			)
-			.subscribe(tasks => {
-				const removed = this.tasks.filter(
-					task => !tasks.some(t => t === task)
-				);
-				if (removed.length > 0) {
-					this.anyTaskCompleted = true;
-				}
-				this.tasks = tasks;
-			});
+		this.ngZone.runOutsideAngular(() => {
+			this.processingTaskSubscription = interval(5000)
+				.pipe(
+					startWith(0),
+					switchMap(() => this.documentService.listTasks())
+				)
+				.subscribe(tasks => {
+					const removed = this.tasks.filter(t => !this.tasks.some(t2 => t2 === t));
+					const added = tasks.filter(t => !this.tasks.some(t2 => t2 === t));
+					if (removed.length > 0 || added.length > 0) {
+						if (removed.length > 0) {
+							this.anyTaskCompleted = true;
+						}
+						this.tasks = tasks;
+						this.ngZone.run(() => { }); // re-enter zone only when tasks actually changed
+					}
+					// If nothing changed, we never re-enter the zone at all
+				});
+		});
 	}
 
 	ngOnDestroy(): void {
@@ -136,7 +161,7 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 
 	refresh() {
 		this.nodes = [];
-		this.selectedNode = undefined;
+		this.selectedItem = undefined;
 		this.editFile = false;
 
 		forkJoin([
@@ -145,6 +170,7 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 			this.conversationService.listForProject(this.project.id)
 		]).subscribe(([nodes, documents, conversations]) => {
 			this.nodes = nodes;
+			this.rootNodes = nodes.filter(node => node.path.split('/').length === 2 && node.path !== '/');
 			this.documents = documents;
 			this.conversations = conversations;
 
@@ -174,7 +200,7 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 	// CONVERSATIONS
 	// -------------------------
 	startConversation(event: { assistant: Assistant, projectId: string }): void {
-		this.conversationService.createInProject(event.assistant, event.projectId).subscribe( conversation => {
+		this.conversationService.createInProject(event.assistant, event.projectId).subscribe(conversation => {
 			this.conversationService.listForProject(event.projectId).subscribe(conversations => {
 				this.conversations = conversations;
 				this.onConversationSelected(conversation);
@@ -184,18 +210,19 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 	}
 
 	onConversationSelected(conversation: Conversation) {
-		this.selectedNode = undefined;
-		this.selectedConversation = conversation;
+		this.selectedItem = { type: 'Conversation', item: conversation };
 	}
 
 	onConversationChanged(conversation: Conversation) {
-		this.conversations = this.conversations.map(c => c.id === conversation.id ? { ...c, ...conversation } : c );
-		this.selectedConversation = this.conversations.find(c => c.id === conversation.id);
+		this.conversations = this.conversations.map(c => c.id === conversation.id ? { ...c, ...conversation } : c);
+		this.selectedItem = { type: 'Conversation', item: this.conversations.find(c => c.id === conversation.id) };
 	}
 
 	conversationsChanged(conversations: Conversation[]) {
-		if (!conversations.find(conversation => this.selectedConversation?.id === conversation.id)) {
-			this.selectedConversation = undefined;
+		if (this.selectedItem?.type === 'Conversation') {
+			if (!conversations.find(conversation => (this.selectedItem?.item as Conversation).id === conversation.id)) {
+				this.selectedItem = undefined;
+			}
 		}
 	}
 
@@ -204,26 +231,25 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 	// -------------------------
 	onNodeSelected(node: ProjectNode) {
 		if (node.type !== 'Folder') {
-			this.selectedNode = node;
-			this.selectedConversation = undefined;
-			if (this.selectedNode) {
-				this.projectService.readNode(this.project.id, this.selectedNode.path).subscribe(node => {
-					this.selectedNode = node;
+			this.selectedItem = undefined;
+			if (node) {
+				this.projectService.readNode(this.project.id, node.path).subscribe(node => {
+					this.selectedItem = { type: 'ProjectNode', item: node };
 				});
 			}
 		} else {
-			this.selectedNode = node;
+			this.selectedItem = { type: 'ProjectNode', item: node };
 		}
 	}
 
 	onUpdateNode(updatedNode: ProjectNode) {
-		if (!this.selectedNode) {
+		if (!this.selectedItem || this.selectedItem.type !== 'ProjectNode' || !this.selectedItem.item) {
 			return;
 		}
 
 		this.projectService.updateNodeMetadata(
 			this.project.id,
-			this.selectedNode.path,
+			(this.selectedItem.item as ProjectNode).path,
 			updatedNode.path,
 			updatedNode.fileType
 		).subscribe(() => {
@@ -249,11 +275,11 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 
 	editCurrentFile() {
 		this.editFile = true;
-		if (!this.selectedNode) {
+		if (!this.selectedItem || this.selectedItem.type !== 'ProjectNode' || !this.selectedItem.item) {
 			console.error('editCurrentFile: selectedNode not set');
 			return;
 		}
-		this.currentFileContents = this.selectedNode.content;
+		this.currentFileContents = (this.selectedItem.item as ProjectNode).content;
 	}
 
 	cancelEditingCurrentFile() {
@@ -265,13 +291,13 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 	}
 
 	saveChangesToCurrentFile() {
-		if (!this.selectedNode) {
+		if (!this.selectedItem || this.selectedItem.type !== 'ProjectNode' || !this.selectedItem.item) {
 			return;
 		}
 
-		const currentNode = this.selectedNode;
-		this.selectedNode.content = this.currentFileContents;
-		this.projectService.writeFile(this.project.id, this.selectedNode).subscribe(() => {
+		const currentNode = this.selectedItem.item as ProjectNode;
+		currentNode.content = this.currentFileContents;
+		this.projectService.writeFile(this.project.id, currentNode).subscribe(() => {
 			this.refresh();
 			this.onNodeSelected(currentNode);
 		});
@@ -325,16 +351,12 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 		});
 	}
 
-	rootNodes(): ProjectNode[] {
-		return this.nodes && this.nodes.filter(node => node.path.split('/').length === 2 && node.path != '/');
-	}
-
 	// -------------------------
 	// DOCUMENTS
 	// -------------------------
 
-	documentList(): MintyDoc[] {
-		return this.documents;
+	onDocumentSelected(document: MintyDoc) {
+		this.selectedItem = { type: 'Document', item: document };
 	}
 
 	addMarkdownFile() {
@@ -384,4 +406,13 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 			this.alertService.postAlert({ type: 'failure', message: "Couldn't process your file. Did you forget to choose one?" });
 		}
 	}
+
+	confirmDeleteDocument() {
+		if (this.documentToDelete) {
+			this.documentService.delete(this.documentToDelete).subscribe(_ => {
+				this.refresh();
+			});
+		}
+	}
+
 }

@@ -1,9 +1,21 @@
+export interface DocumentSection {
+	id: string;
+	documentId: string;
+	sequenceOrder: number;
+	parentIndex: number;
+	level: number;
+	title: string;
+	content: string;
+	created: Date;
+}
+
 export interface MintyDoc {
 	id: string;
 	title: string;
-	state: string;
 	ownerId: string;
 	projectId: string;
-	segments: string[];
 	vectorized: boolean;
-}
+	created: Date;
+	updated: Date;
+	summary: string;
+	sections: DocumentSection[];

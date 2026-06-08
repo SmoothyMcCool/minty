@@ -4,8 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,7 +18,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -25,13 +25,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 import tom.ApiError;
 import tom.api.DocumentId;
+import tom.api.DocumentSectionId;
 import tom.api.ProjectId;
-import tom.api.model.project.FileType;
-import tom.api.services.ProjectService;
-import tom.api.services.document.extract.DocumentExtractorService;
+import tom.api.model.document.Document;
+import tom.api.model.document.DocumentSection;
+import tom.api.model.document.SpreadsheetFormat;
+import tom.api.services.DocumentExtractorService;
 import tom.config.MintyConfiguration;
 import tom.controller.ResponseWrapper;
-import tom.document.model.MintyDoc;
 import tom.document.service.DocumentServiceInternal;
 import tom.model.security.UserDetailsUser;
 
@@ -43,66 +44,21 @@ public class DocumentController {
 
 	private final DocumentServiceInternal documentService;
 	private final DocumentExtractorService documentExtractorService;
-	private final ProjectService projectService;
-	private final Path docFileStore;
 	private final Path tempFileStore;
 
 	public DocumentController(DocumentServiceInternal documentService,
-			DocumentExtractorService documentExtractorService, ProjectService projectService,
-			MintyConfiguration properties) {
+			DocumentExtractorService documentExtractorService, MintyConfiguration properties) {
 		this.documentService = documentService;
 		this.documentExtractorService = documentExtractorService;
-		this.projectService = projectService;
-		docFileStore = properties.getConfig().fileStores().docs();
 		tempFileStore = properties.getConfig().fileStores().temp();
 	}
 
-	@PostMapping({ "/add" })
-	public ResponseEntity<ResponseWrapper<MintyDoc>> addDocument(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestBody MintyDoc document) {
-
-		boolean exists = documentService.documentExists(document);
-
-		if (exists) {
-			ResponseWrapper<MintyDoc> response = ResponseWrapper.ApiFailureResponse(HttpStatus.CONFLICT.value(),
-					List.of(ApiError.DOCUMENT_ALREADY_EXISTS));
-			return new ResponseEntity<>(response, HttpStatus.OK);
-		}
-
-		document.setDocumentId(new DocumentId(UUID.randomUUID()));
-		MintyDoc addedDoc = documentService.addDocument(user.getId(), document);
-		ResponseWrapper<MintyDoc> response = ResponseWrapper.SuccessResponse(addedDoc);
-		return new ResponseEntity<>(response, HttpStatus.OK);
-	}
-
-	@PostMapping(value = { "/upload" }, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<ResponseWrapper<String>> uploadDocument(@AuthenticationPrincipal UserDetailsUser user,
-			@RequestParam String documentId, @RequestPart("file") MultipartFile mpf) {
-
-		File file = new File(docFileStore + "/" + documentId);
-		try {
-			Files.createDirectories(file.toPath());
-			mpf.transferTo(file);
-			documentService.processFile(file);
-		} catch (IllegalStateException | IOException e) {
-			logger.error("Failed to store file: ", e);
-			ResponseWrapper<String> response = ResponseWrapper
-					.ApiFailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), List.of(ApiError.REQUEST_FAILED));
-			return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-		}
-
-		// The file will get processed asynchronously.
-
-		ResponseWrapper<String> response = ResponseWrapper.SuccessResponse("ok");
-		return new ResponseEntity<>(response, HttpStatus.OK);
-	}
-
 	@GetMapping({ "/list" })
-	public ResponseEntity<ResponseWrapper<List<MintyDoc>>> listDocuments(@AuthenticationPrincipal UserDetailsUser user,
+	public ResponseEntity<ResponseWrapper<List<Document>>> listDocuments(@AuthenticationPrincipal UserDetailsUser user,
 			@RequestParam ProjectId projectId) {
-		List<MintyDoc> documents = documentService.listDocuments(user.getId(), projectId);
+		List<Document> documents = documentService.listDocuments(user.getId(), projectId);
 
-		ResponseWrapper<List<MintyDoc>> response = ResponseWrapper.SuccessResponse(documents);
+		ResponseWrapper<List<Document>> response = ResponseWrapper.SuccessResponse(documents);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
@@ -118,6 +74,15 @@ public class DocumentController {
 
 		logger.info("User " + user.getId() + "deleted document " + documentId);
 		return new ResponseEntity<>(ResponseWrapper.SuccessResponse(true), HttpStatus.OK);
+	}
+
+	@GetMapping({ "/content" })
+	public ResponseEntity<ResponseWrapper<DocumentSection>> getDocumentSegment(
+			@AuthenticationPrincipal UserDetailsUser user, @RequestParam DocumentSectionId documentSectionId) {
+		DocumentSection documentSection = documentService.getDocumentSection(user.getId(), documentSectionId);
+
+		ResponseWrapper<DocumentSection> response = ResponseWrapper.SuccessResponse(documentSection);
+		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	@PostMapping(value = { "/convert/markdown" }, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -137,9 +102,16 @@ public class DocumentController {
 				String newName = baseName + ".md";
 				logger.info("Started processing " + newName);
 
-				String markdown = documentExtractorService.extract(file);
+				String markdown = documentService.fileToMarkdown(file, SpreadsheetFormat.MARKDOWN);
 
-				projectService.writeFile(user.getId(), projectId, "/" + newName, FileType.markdown, markdown);
+				DocumentSection section = DocumentSection.builder().content(markdown).created(LocalDateTime.now())
+						.documentId(null).id(null).level(0).parentIndex(null).sequenceOrder(0).title("document")
+						.build();
+				Document doc = Document.builder().ownerId(user.getId()).projectId(projectId).title(newName)
+						.vectorized(false).addSection(section).created(Instant.now()).updated(Instant.now()).build();
+
+				documentService.addDocument(user.getId(), doc);
+
 				logger.info("Markdown processing complete for " + file.getName());
 
 				ResponseWrapper<String> response = ResponseWrapper.SuccessResponse("File processed successfully.");
@@ -175,7 +147,7 @@ public class DocumentController {
 			mpf.transferTo(file);
 
 			logger.info("Markdown processing started for " + file.getName());
-			documentService.processFileToMarkdownAndDecompose(user.getId(), projectId, file, projectService, false);
+			documentService.fileToMarkdownAndDecompose(user.getId(), projectId, file, false);
 
 		} catch (Exception e) {
 			logger.error("Markdown processing failed: ", e);
@@ -187,7 +159,7 @@ public class DocumentController {
 		}
 
 		ResponseWrapper<String> response = ResponseWrapper
-				.SuccessResponse("Markdown conversion and decomposing complete.");
+				.SuccessResponse("Markdown conversion and decomposition started.");
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
@@ -203,7 +175,7 @@ public class DocumentController {
 			mpf.transferTo(file);
 
 			logger.info("Markdown processing started for " + file.getName());
-			documentService.processFileToMarkdownAndDecompose(user.getId(), projectId, file, projectService, true);
+			documentService.fileToMarkdownAndDecompose(user.getId(), projectId, file, true);
 			// Don't delete the file. Processing task will do that when it completes.
 
 		} catch (Exception e) {
@@ -240,8 +212,12 @@ public class DocumentController {
 					logger.info("Started processing " + newName);
 
 					String markdown = documentExtractorService.extract(file);
+					DocumentSection section = DocumentSection.builder().content(markdown).sequenceOrder(1).level(0)
+							.parentIndex(null).title("mermaid").build();
+					Document document = Document.builder().ownerId(user.getId()).projectId(projectId)
+							.sections(List.of(section)).title(newName).build();
 
-					projectService.writeFile(user.getId(), projectId, "/" + newName, FileType.markdown, markdown);
+					documentService.addDocument(user.getId(), document);
 					logger.info("Markdown processing complete for " + file.getName());
 
 					response = ResponseWrapper.SuccessResponse("File processed successfully.");

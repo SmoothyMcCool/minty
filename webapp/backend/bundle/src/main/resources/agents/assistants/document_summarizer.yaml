@@ -15,17 +15,10 @@ prompt: |
       Section Title: ${SECTION_TITLE}
       Section Location: ${SECTION_BREADCRUMB}
 
-      Analyze the section text below. If it is too short, too generic, or lacks
-      meaningful engineering content (e.g. blank, a single heading, boilerplate),
-      return exactly this JSON and nothing else:
-
-      {"insufficient": true}
-
-      Otherwise, return a single JSON object - no markdown, no explanation - using
+      Analyze the section text below. Return a single JSON object - no markdown, no explanation - using
       this schema:
 
       {
-        "insufficient": false,
         "type": "<one of: Requirements | Design | Interface | Configuration | Overview | Reference>",
         "summary": "<1-2 sentences. Mention specific requirements, constraints, interfaces, or design decisions present in this section>",
         "keywords": ["<domain terms, identifiers, acronyms, subsystem names found in this section>"],

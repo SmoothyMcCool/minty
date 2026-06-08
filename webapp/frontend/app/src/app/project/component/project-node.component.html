@@ -15,7 +15,7 @@
 	</span>
 
 	<span class="clickable-text small text-truncate flex-grow-1" (click)="onSelect(node)" style="min-width: 0;">
-		{{getFileName(node.path)}}
+		{{fileName}}
 	</span>
 
 	<div class="d-flex align-items-center">
@@ -44,7 +44,7 @@
 
 @if (node.type === 'Folder' && isExpanded) {
 	<ul class="list-unstyled ps-2">
-		@for (child of childNodesOf(node.path); track child) {
+		@for (child of children; track child.path) {
 			<minty-project-node [node]="child" [selected]="selected" [nodes]="nodes" (nodeSelected)="onSelect($event)"
 				(update)="update.emit($event)" (delete)="delete.emit($event)">
 			</minty-project-node>

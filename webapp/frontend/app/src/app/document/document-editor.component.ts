@@ -1,5 +1,9 @@
 import { Component, forwardRef } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { DocumentSection, MintyDoc } from '../model/minty-doc';
+import { DatePipe } from '@angular/common';
+import { DocumentService } from '../document.service';
+import { MarkdownModule } from 'ngx-markdown';
 
 
 export interface DocProperties {
@@ -9,7 +13,7 @@ export interface DocProperties {
 
 @Component({
 	selector: 'minty-document-editor',
-	imports: [FormsModule],
+	imports: [FormsModule, MarkdownModule, DatePipe],
 	templateUrl: 'document-editor.component.html',
 	providers: [
 		{
@@ -21,28 +25,19 @@ export interface DocProperties {
 })
 export class DocumentEditorComponent implements ControlValueAccessor {
 
-	document: DocProperties = {
-		title: '',
-		file: undefined
-	};
+	document: MintyDoc | undefined = undefined;
+	selectedSection: DocumentSection | null = null;
+	viewingMode: 'summary' | 'section' | 'none' = 'none';
 
 	onChange = (_: any) => { };
 	onTouched: any = () => {};
 
-	constructor() {
+	constructor(private documentService: DocumentService) {
 	}
 
 	onTitleChanged(title: string) {
-		this.document = { ...this.document, title: title};
+		this.document = { ...this.document!, title: title};
 		this.onChange(this.document);
-	}
-
-	fileListChanged(event: Event) {
-		const newFiles = (event.target as HTMLInputElement).files;
-		if (newFiles && newFiles.length > 0) {
-			this.document = { ...this.document, file: newFiles[0] };
-			this.onChange(this.document);
-		}
 	}
 
 	writeValue(obj: any): void {
@@ -56,5 +51,13 @@ export class DocumentEditorComponent implements ControlValueAccessor {
 	}
 	setDisabledState(isDisabled: boolean): void {
 		// Nah.
+	}
+
+	getContent(section: DocumentSection) {
+		this.documentService.getSectionContent(section.id).subscribe(content => {
+			if (this.selectedSection) {
+				this.selectedSection.content = content;
+			}
+		});
 	}
 }

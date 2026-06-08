@@ -1,82 +1,62 @@
 package tom.document.service.tasks;
 
-import java.io.File;
-import java.util.UUID;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import tom.api.DocumentId;
-import tom.document.model.DocumentState;
-import tom.document.model.MintyDoc;
+import tom.api.UserId;
+import tom.api.model.document.Document;
+import tom.document.service.DocumentEmbeddingService;
 import tom.document.service.DocumentServiceInternal;
 
 public class EmbedDocumentTask implements Runnable {
 
 	private static final Logger logger = LogManager.getLogger(EmbedDocumentTask.class);
-	private final File file;
-	private final DocumentServiceInternal documentService;
 
-	public EmbedDocumentTask(File file, DocumentServiceInternal documentService) {
-		this.file = file;
+	private final UserId userId;
+	private final Document doc;
+	private final DocumentServiceInternal documentService;
+	private final DocumentEmbeddingService documentEmbeddingService;
+
+	public EmbedDocumentTask(UserId userId, Document doc, DocumentServiceInternal documentService,
+			DocumentEmbeddingService documentEmbeddingService) {
+		this.userId = userId;
+		this.doc = doc;
 		this.documentService = documentService;
+		this.documentEmbeddingService = documentEmbeddingService;
 	}
 
 	@Override
 	public void run() {
-		MintyDoc doc = null;
-		try {
-			String filename = file.getName();
-			logger.info("Started processing " + filename);
+		if (doc == null) {
+			logger.error("EmbedDocumentTask attempted to run with a null document.");
+		}
 
-			doc = documentService.findByDocumentId(new DocumentId(UUID.fromString(filename)));
-			if (doc != null) {
-				if (doc.getState() == DocumentState.READY) {
-					// No good, this document is already processed. Log a warning and delete this
-					// file.
-					logger.warn(
-							"Attempt to reprocess already processed document " + doc.getTitle() + ". Deleting file.");
-					file.delete();
-					return;
-				}
-			} else {
-				logger.warn("Found file " + filename
-						+ " for processing but no associated document record was found. Deleting file.");
-				file.delete();
+		try {
+			logger.info("Started processing " + doc.title());
+
+			if (doc.vectorized()) {
+				// No good, this document is already processed. Log a warning and delete this
+				// file.
+				logger.warn("Attempt to reprocess already processed document " + doc.title() + ". Deleting file.");
 				return;
 			}
 
-			documentService.transformAndStore(file, doc);
-
-			synchronized (EmbedDocumentTask.class) {
-				String parent = file.getParent();
-				if (parent != null) {
-					File parentPath = new File(parent);
-					if (parentPath.isDirectory()) {
-						String[] files = parentPath.list();
-						if (files.length == 0) {
-							parentPath.delete();
-						}
-					}
-				}
-			}
+			documentEmbeddingService.embed(doc);
 
 			// Transformation might take a long time and there could be many threads, so we
 			// have to update the assistant in a synchronized manner.
-			documentService.markDocumentComplete(doc);
+			documentService.vectorizationComplete(userId, doc.id(), true);
 
-			logger.info("Processing complete for " + file.getName());
+			logger.info("Processing complete for " + doc.title());
 
 		} catch (Exception e) {
 			logger.error("File processing failed: ", e);
 			if (doc != null) {
-				logger.info("Marked document as failed: " + doc.getTitle());
-				documentService.markDocumentFailed(doc);
+				logger.info("Marked document as failed: " + doc.title());
+				documentService.vectorizationComplete(userId, doc.id(), false);
 			} else {
 				logger.warn("doc was null, could not mark as failed.");
 			}
-		} finally {
-			file.delete();
 		}
 	}
 
