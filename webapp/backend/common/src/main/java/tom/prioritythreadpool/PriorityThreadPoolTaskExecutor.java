@@ -7,6 +7,7 @@ import java.util.concurrent.PriorityBlockingQueue;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import tom.api.ConversationId;
+import tom.api.TaskPriority;
 
 public class PriorityThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 

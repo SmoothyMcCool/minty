@@ -14,6 +14,7 @@ import java.util.function.BiFunction;
 import org.junit.jupiter.api.Test;
 
 import tom.api.ConversationId;
+import tom.api.TaskPriority;
 
 class PriorityThreadPoolTaskExecutorTest {
 

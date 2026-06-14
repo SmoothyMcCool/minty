@@ -1,13 +1,16 @@
 package tom.tools.project;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 
 import tom.api.ConversationId;
@@ -59,79 +62,65 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 		FILE, DOCUMENT
 	}
 
-	/**
-	 * A single hit from knowledge_search. The type field tells the model which read
-	 * tool to use next.
-	 */
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public record SearchResult(
-			@JsonPropertyDescription("CRITICAL: always check this field before calling any read tool. "
-					+ "FILE → call knowledge_read_file with ref as the path. "
-					+ "DOCUMENT → call knowledge_doc_get with ref as the title. "
-					+ "Never infer type from the ref value or file extension.") ResultType type,
-			@JsonPropertyDescription("For FILE: absolute path to pass to knowledge_read_file. "
-					+ "For DOCUMENT: title to pass to knowledge_doc_get.") String ref,
-			@JsonPropertyDescription("Brief description of the content") String summary) {
+			@JsonPropertyDescription("FILE -> use knowledge_read_file. DOCUMENT -> use knowledge_doc_read.") ResultType type,
+			@JsonPropertyDescription("Path (FILE) or title (DOCUMENT) to use with the next tool.") String ref,
+			@JsonPropertyDescription("Short description.") String summary) {
 	}
 
-	public record SectionMapEntry(
-			@JsonPropertyDescription("Section index — pass to knowledge_doc_read_sections") int index,
-			@JsonPropertyDescription("Section heading") String title,
-			@JsonPropertyDescription("What this section covers — may be null if the document has not been summarised yet") String summary,
-			@JsonPropertyDescription("Key terms found in this section — may be null if the document has not been summarised yet") List<String> keywords,
-			@JsonPropertyDescription("Example questions this section can answer — may be null if the document has not been summarised yet") List<String> queries) {
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public record SectionInfo(
+			@JsonPropertyDescription("Section number. Use this in the 'sections' argument.") int index,
+			@JsonPropertyDescription("Section heading.") String title,
+			@JsonPropertyDescription("What this section is about.") String summary) {
 	}
 
-	public record DocumentMap(String title, List<SectionMapEntry> sections) {
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public record DocumentMap(String title, List<SectionInfo> sections) {
 	}
 
-	public record SectionContent(@JsonPropertyDescription("Section index within the document") int index,
-			@JsonPropertyDescription("Section heading") String title,
-			@JsonPropertyDescription("Heading depth: 0 = top-level, higher = nested") int level,
-			@JsonPropertyDescription("Index of the parent section, or null if top-level") Integer parentIndex,
-			@JsonPropertyDescription("Full section content") String content) {
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public record SectionContent(@JsonPropertyDescription("Section number.") int index,
+			@JsonPropertyDescription("Section heading.") String title,
+			@JsonPropertyDescription("Full text of this section.") String content) {
+	}
+
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public record DocumentContent(String title, List<SectionContent> sections) {
 	}
 
 	// =====================================================================
-	// SEARCH — unified entry point
+	// SEARCH
 	// =====================================================================
 
 	@Tool(name = "knowledge_search", description = """
-			Search for files and documents in the project by name or keyword.
+			Search project files and documents by name or keyword.
 
-			Arguments:
-			- filter: partial name, path fragment, or keyword (case-insensitive)
+			Argument: filter (text to search for)
 
-			Returns a ranked list of matches. Each result includes:
+			Returns a list of results. Each result has:
 			- type: FILE or DOCUMENT
-			- ref: for FILE, the absolute path; for DOCUMENT, the title
-			- summary: a brief description of the content
+			- ref: use this value with the next tool
+			- summary: short description
 
-			IMPORTANT: always use the type field to decide which tool to call next.
-			Do not infer type from the ref value or file extension — a result with
-			a .md or .json ref may be either a FILE or a DOCUMENT.
+			What to do next:
+			- type=FILE -> call knowledge_read_file(path=ref)
+			- type=DOCUMENT -> call knowledge_doc_read(title=ref)
 
-			Next steps based on type:
-			- FILE     → call knowledge_read_file with the ref as the path
-			- DOCUMENT → call knowledge_doc_get with the ref as the title,
-			             then knowledge_doc_read_sections to read relevant sections
-
-			Use this tool first whenever looking for content by name,
-			regardless of whether it might be a file or a document.
+			Example: knowledge_search(filter="deployment")
 			""")
 	@Transactional(readOnly = true)
-	public MintyToolResponse<List<SearchResult>> search(
-			@ToolParam(description = "Partial name, path fragment, or keyword") String filter) {
+	public MintyToolResponse<List<SearchResult>> search(@ToolParam(description = "Text to search for") String filter) {
 		try {
 			ensureProjectSelected();
 
 			List<SearchResult> results = new ArrayList<>();
 
-			// File tree hits
 			pluginServices.getProjectService().searchByFilter(userId, projectId, filter).stream()
-					.filter(node -> node.getFileType() != null) // exclude folder nodes
+					.filter(node -> node.getFileType() != null)
 					.map(node -> new SearchResult(ResultType.FILE, node.getPath(), null)).forEach(results::add);
 
-			// Document knowledge base hits
 			pluginServices.getDocumentService().listDocuments(userId, projectId).stream()
 					.filter(doc -> matchesFilter(doc, filter))
 					.map(doc -> new SearchResult(ResultType.DOCUMENT, doc.title(), doc.summary()))
@@ -152,13 +141,11 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 	// =====================================================================
 
 	@Tool(name = "knowledge_read_file", description = """
-			Read the full contents of a project file.
+			Read a project file's full contents.
 
-			Arguments:
-			- path: absolute file path (from a FILE result in knowledge_search,
-			        or from knowledge_files_tree)
+			Argument: path (absolute file path)
 
-			Returns the file contents, metadata, and version.
+			Example: knowledge_read_file(path="/src/main.py")
 
 			Fails if the path does not exist or is a folder.
 			""")
@@ -178,12 +165,11 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 	}
 
 	@Tool(name = "knowledge_files_tree", description = """
-			Return the complete project file tree.
+			List every file and folder in the project.
 
-			Returns all file and folder paths with their types and versions.
+			No arguments.
 
-			Use this to browse the full project structure when you need an
-			overview rather than searching for a specific file.
+			Example: knowledge_files_tree()
 			""")
 	@Transactional(readOnly = true)
 	public MintyToolResponse<List<NodeInfo>> getFilesTree() {
@@ -197,18 +183,16 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 	}
 
 	@Tool(name = "knowledge_write_file", description = """
-			Create or fully replace a project file.
+			Create a file, or replace its contents completely.
 
 			Arguments:
 			- path: absolute file path
-			- fileType: code | markdown | json | text | diagram
-			- content: complete final file contents
+			- fileType: one of code, markdown, json, text, diagram
+			- content: the full file contents
 
-			Creates missing files. Fully replaces existing files — does not append or patch.
-			The parent folder must already exist.
+			Example: knowledge_write_file(path="/notes/todo.md", fileType="markdown", content="# Todo\\n- task 1")
 
-			Fails if the parent folder does not exist, the path is a folder,
-			or the fileType is invalid.
+			The parent folder must already exist. This replaces the whole file, it does not append.
 			""")
 	@Transactional
 	public MintyToolResponse<NodeInfo> writeFile(@ToolParam(description = "Absolute file path") String path,
@@ -232,13 +216,13 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 	}
 
 	@Tool(name = "knowledge_create_folder", description = """
-			Create a folder in the project file tree.
+			Create a folder.
 
-			Arguments:
-			- path: absolute folder path
+			Argument: path (absolute folder path)
+
+			Example: knowledge_create_folder(path="/notes")
 
 			The parent folder must already exist.
-			Fails if the parent does not exist or the path already exists.
 			""")
 	@Transactional
 	public MintyToolResponse<NodeInfo> createFolder(@ToolParam(description = "Absolute folder path") String path) {
@@ -253,13 +237,11 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 	}
 
 	@Tool(name = "knowledge_delete", description = """
-			Permanently delete a file or folder.
+			Permanently delete a file or folder (and everything inside it).
 
-			Arguments:
-			- path: absolute file or folder path
+			Argument: path (absolute file or folder path)
 
-			Deleting a folder removes the full subtree. This operation is permanent.
-			Fails if the path does not exist or is "/".
+			Example: knowledge_delete(path="/notes/old.md")
 			""")
 	@Transactional
 	public MintyToolResponse<Integer> deletePath(@ToolParam(description = "Absolute file or folder path") String path) {
@@ -283,9 +265,7 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 			- sourcePath: existing absolute path
 			- targetPath: new absolute path
 
-			Moving a folder moves its full subtree. Moved nodes receive new versions.
-			Fails if the source does not exist, the target already exists,
-			or a folder is moved inside itself.
+			Example: knowledge_move(sourcePath="/notes/old.md", targetPath="/notes/new.md")
 			""")
 	@Transactional
 	public MintyToolResponse<NodeInfo> movePath(@ToolParam(description = "Existing absolute path") String sourcePath,
@@ -308,92 +288,72 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 	// DOCUMENTS
 	// =====================================================================
 
-	@Tool(name = "knowledge_doc_get", description = """
-			Retrieve a document's section list by title.
+	@Tool(name = "knowledge_doc_read", description = """
+			Read a document from the knowledge base.
 
 			Arguments:
-			- title: document title (the ref value from a DOCUMENT result in knowledge_search)
+			- title: document title (required)
+			- sections: which sections to read (optional)
 
-			Returns a section list where each entry contains:
-			- index: pass to knowledge_doc_read_sections to retrieve content
-			- title: section heading
-			- summary: what the section covers (may be null — section still has content)
-			- keywords: key terms in the section (may be null)
-			- queries: example questions this section can answer (may be null)
+			If you don't pass "sections", you get a list of section numbers
+			and titles only (no content) -- use this first to see what's in
+			the document.
 
-			Sections are always listed even when summary metadata is unavailable.
-			A null summary does not mean the section is empty — use the section
-			title and index to decide whether to fetch its content.
+			If you pass "sections", you get the full text of just those
+			sections. You can pass section numbers as a comma-separated
+			string or as a list, e.g. "0,2,3" or [0,2,3].
 
-			Use the section list to identify which sections are relevant,
-			then call knowledge_doc_read_sections with only those indices.
+			Examples:
+			  knowledge_doc_read(title="Setup Guide")
+			  knowledge_doc_read(title="Setup Guide", sections="0,2")
 
 			Fails if no document with that title exists.
 			""")
 	@Transactional(readOnly = true)
-	public MintyToolResponse<DocumentMap> getDocument(@ToolParam(description = "Document title") String title) {
+	public MintyToolResponse<?> readDocument(@ToolParam(description = "Document title", required = true) String title,
+			@ToolParam(description = "Section numbers to read, e.g. \"0,2,3\" or [0,2,3]. Leave empty to list sections only.", required = false) String sections) {
 		try {
 			ensureProjectSelected();
 
 			Document document = pluginServices.getDocumentService().findByTitle(userId, projectId, title).orElse(null);
-
 			if (document == null) {
 				return MintyToolResponse.FailureResponse("No document found with title: \"" + title + "\"");
 			}
 
-			List<SectionMapEntry> sections;
-			if (document.summary() != null && !document.summary().isBlank()) {
-				// Rich map from summary JSON — preferred path
-				sections = parseSectionMap(document.summary());
-			} else {
-				// No summary yet: fall back to bare section list from the document.
-				// Sections are already loaded without content by listDocuments/findByTitle.
-				sections = document.sections().stream()
-						.map(s -> new SectionMapEntry(s.sequenceOrder(), s.title(), null, null, null)).toList();
+			List<Integer> indices = parseSectionIndices(sections);
+
+			if (indices == null || indices.isEmpty()) {
+				// No sections requested -> return section list only
+				List<SectionInfo> sectionInfos;
+				if (document.summary() != null && !document.summary().isBlank()) {
+					sectionInfos = parseSectionMap(document.summary());
+				} else {
+					sectionInfos = document.sections().stream()
+							.map(s -> new SectionInfo(s.sequenceOrder(), s.title(), null)).toList();
+				}
+				return MintyToolResponse.SuccessResponse(new DocumentMap(document.title(), sectionInfos));
 			}
 
-			return MintyToolResponse.SuccessResponse(new DocumentMap(document.title(), sections));
-		} catch (Exception e) {
-			return MintyToolResponse.FailureResponse(e.getMessage());
-		}
-	}
+			// Sections requested -> return full content for those sections
+			List<DocumentSection> sectionData = pluginServices.getDocumentService().getSectionsBySequenceOrder(userId,
+					projectId, title, indices);
 
-	@Tool(name = "knowledge_doc_read_sections", description = """
-			Read the full content of specific sections from a document.
-
-			Arguments:
-			- title: document title
-			- sectionIndices: section indices to fetch (from the section map in knowledge_doc_get)
-
-			Returns each section's heading, depth, parent index, and full content.
-
-			Only request sections likely to contain the needed information.
-			Call again with different indices if the initial results are insufficient.
-
-			Fails if no document with that title exists or any index is out of range.
-			""")
-	@Transactional(readOnly = true)
-	public MintyToolResponse<List<SectionContent>> readSections(@ToolParam(description = "Document title") String title,
-			@ToolParam(description = "Section indices to retrieve (from the section map)") List<Integer> sectionIndices) {
-		try {
-			ensureProjectSelected();
-
-			List<DocumentSection> sections = pluginServices.getDocumentService().getSectionsBySequenceOrder(userId,
-					projectId, title, sectionIndices);
-
-			if (sections == null) {
+			if (sectionData == null) {
 				return MintyToolResponse.FailureResponse("No document found with title: \"" + title + "\"");
 			}
 
-			List<Integer> outOfRange = sectionIndices.stream()
-					.filter(i -> sections.stream().noneMatch(s -> s.sequenceOrder() == i)).toList();
+			List<Integer> outOfRange = indices.stream()
+					.filter(i -> sectionData.stream().noneMatch(s -> s.sequenceOrder() == i)).toList();
 			if (!outOfRange.isEmpty()) {
-				return MintyToolResponse.FailureResponse("Section indices not found: " + outOfRange);
+				return MintyToolResponse.FailureResponse(
+						"Section numbers not found: " + outOfRange + ". Call knowledge_doc_read(title=\"" + title
+								+ "\") with no sections to see what's available.");
 			}
 
-			return MintyToolResponse.SuccessResponse(sections.stream()
-					.map(s -> new SectionContent(s.sequenceOrder(), s.title(), s.level(), s.parentIndex(), s.content()))
-					.toList());
+			List<SectionContent> contents = sectionData.stream()
+					.map(s -> new SectionContent(s.sequenceOrder(), s.title(), s.content())).toList();
+
+			return MintyToolResponse.SuccessResponse(new DocumentContent(document.title(), contents));
 		} catch (Exception e) {
 			return MintyToolResponse.FailureResponse(e.getMessage());
 		}
@@ -403,10 +363,6 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 	// HELPERS
 	// =====================================================================
 
-	/**
-	 * Matches a document against a filter string by checking the title and the
-	 * summary text, so the search covers both name and description.
-	 */
 	private boolean matchesFilter(Document doc, String filter) {
 		String f = filter.toLowerCase();
 		if (doc.title() != null && doc.title().toLowerCase().contains(f)) {
@@ -418,7 +374,33 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 		return false;
 	}
 
-	private List<SectionMapEntry> parseSectionMap(String summaryJson) {
+	/**
+	 * Leniently parses a "sections" argument that might be: - null or blank -> no
+	 * sections - "0,2,3" -> [0,2,3] - "[0,2,3]" -> [0,2,3] - "0" -> [0]
+	 */
+	private List<Integer> parseSectionIndices(String sections) {
+		if (sections == null) {
+			return List.of();
+		}
+		String cleaned = sections.trim();
+		if (cleaned.isEmpty()) {
+			return List.of();
+		}
+		// Strip surrounding brackets/quotes if the model sent JSON-array-like syntax
+		cleaned = cleaned.replaceAll("^[\\[\"']+|[\\]\"']+$", "");
+		if (cleaned.isEmpty()) {
+			return List.of();
+		}
+		return Arrays.stream(cleaned.split("[,\\s]+")).filter(s -> !s.isBlank()).map(s -> {
+			try {
+				return Integer.parseInt(s.trim());
+			} catch (NumberFormatException e) {
+				return null;
+			}
+		}).filter(i -> i != null).collect(Collectors.toList());
+	}
+
+	private List<SectionInfo> parseSectionMap(String summaryJson) {
 		if (summaryJson == null || summaryJson.isBlank()) {
 			return List.of();
 		}
@@ -426,10 +408,7 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 			List<RawSectionMapEntry> raw = MAPPER.readValue(summaryJson, new TypeReference<List<RawSectionMapEntry>>() {
 			});
 			return raw.stream().filter(e -> e.summary() != null && !Boolean.TRUE.equals(e.summary().insufficient()))
-					.map(e -> new SectionMapEntry(e.index(), e.title(), e.summary().summary(),
-							e.summary().keywords() != null ? e.summary().keywords() : List.of(),
-							e.summary().queries() != null ? e.summary().queries() : List.of()))
-					.toList();
+					.map(e -> new SectionInfo(e.index(), e.title(), e.summary().summary())).toList();
 		} catch (Exception e) {
 			return List.of();
 		}
@@ -456,9 +435,9 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 		return """
 				Tools for finding and reading project knowledge.
 
-				Always start with knowledge_search to locate content by name
-				or keyword — it searches both the file tree and the document
-				knowledge base and tells you which read tool to use next.
+				Start with knowledge_search to find files and documents by
+				keyword. It tells you whether to use knowledge_read_file
+				(for files) or knowledge_doc_read (for documents).
 				""";
 	}
 

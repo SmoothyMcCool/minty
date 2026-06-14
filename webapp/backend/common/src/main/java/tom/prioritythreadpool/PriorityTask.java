@@ -5,6 +5,7 @@ import java.util.Objects;
 import java.util.concurrent.FutureTask;
 
 import tom.api.ConversationId;
+import tom.api.TaskPriority;
 
 /**
  * A Runnable that knows its priority. Lower numbers = higher priority. The

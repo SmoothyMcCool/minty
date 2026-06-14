@@ -1,44 +1,49 @@
+<!-- skill-explorer.component.html -->
 <div class="container-fluid py-3">
 
-	<button class="btn btn-primary mb-3" (click)="skillFileDialogVisible = true">Add Skill</button>
+	<!-- Add-Skill button -->
+	<div class="mb-3">
+		<button type="button" class="btn btn-primary" (click)="skillFileDialogVisible = true">
+			Add Skill
+		</button>
+	</div>
 
-	<div class="row">
+	<!-- Main two-column layout -->
+	<div class="row g-4">
 
-		<!-- Left pane - skill list -->
+		<!-- =========================  Left pane - skill list  ========================= -->
 		<div class="col-3 border-end">
 			<h5 class="mb-3">Skills</h5>
 			<ul class="list-group">
 				@for (skill of skills; track skill) {
-					<li class="list-group-item list-group-item-action d-flex position-relative text-bg-light bg-opacity-75"
-						[class.active]="skill.name === selectedSkill?.metadata?.name"
-						style="height: 2.5rem">
-
-						<span class="text-truncate"
-							(click)="onSelectSkill(skill)" style="cursor: pointer">
-							{{skill.name}}
-						</span>
+					<li class="list-group-item d-flex align-items-center position-relative text-bg-light bg-opacity-75"
+						[class.active]="skill.name === selectedSkill?.metadata?.name" style="height: 2.5rem;">
+						<!-- Skill name as a link -->
+						<a href="#" class="flex-grow-1 text-truncate text-decoration-none" role="button"
+							(click)="$event.preventDefault(); onSelectSkill(skill);" tabindex="0">
+							{{ skill.name }}
+						</a>
 
 						@if (skill.owned) {
-
+							<!-- Owner-only dropdown -->
 							<div class="position-absolute top-0 end-0 p-1">
 								<div class="dropdown">
 									<button class="btn btn-sm p-0" type="button" data-bs-toggle="dropdown"
 										aria-expanded="false">
-										<i class="bi bi-three-dots-vertical" style="font-size: 18px;"></i>
+										<i class="bi bi-three-dots-vertical fs-5"></i>
 									</button>
+
 									<ul class="dropdown-menu dropdown-menu-end">
 										<li>
-											<button class="dropdown-item" type="button"
-												(click)="shareSkill(skill.name)">
+											<button class="dropdown-item" (click)="shareSkill(skill.name)">
 												<i class="bi bi-share me-2"></i> Share
 											</button>
 										</li>
 										<li>
-											<hr class="dropdown-divider">
+											<hr class="dropdown-divider" />
 										</li>
 										<li>
-											<button class="dropdown-item text-danger" type="button"
-												(click)="deleteSkill(skill.name)">
+											<button class="dropdown-item text-danger" (click)="deleteSkill(skill.name)">
 												<i class="bi bi-trash me-2"></i> Delete
 											</button>
 										</li>
@@ -47,72 +52,103 @@
 							</div>
 						}
 					</li>
+				} @empty {
+					<li class="list-group-item text-muted text-center">No skills yet.</li>
 				}
 			</ul>
 		</div>
 
-		<!-- Right panes -->
-		@if (selectedSkill) {
-			<div class="col-9">
-				<!-- Skill header -->
-				<div class="mb-3 pb-2 border-bottom">
-					<h5 class="mb-1">{{selectedSkill.metadata.name}}</h5>
-					<p class="text-muted mb-0">{{selectedSkill.metadata.description}}</p>
+		<!-- =========================  Right pane - selected skill details  ========================= -->
+		<div class="col-9">
+			@if (selectedSkill) {
+
+				<!-- Skill header card -->
+				<div class="card shadow-sm border-0 mb-3">
+					<div class="card-body pb-2">
+						<h5 class="mb-1">{{ selectedSkill.metadata.name }}</h5>
+						<p class="text-muted mb-0">{{ selectedSkill.metadata.description }}</p>
+					</div>
 				</div>
-				<div class="row">
-					<!-- File list -->
-					<div class="col-4 border-end">
+
+				<!-- File list + preview (side-by-side) -->
+				<div class="row g-3">
+					<!-- Files list column -->
+					<div class="col-4 border-end h-100 d-flex flex-column">
 						<h6 class="mb-3">Files</h6>
-						<ul class="list-group">
-							@for (file of selectedSkill.files; track file) {
+						<ul class="list-group flex-grow-1 overflow-auto">
+							@for (file of selectedSkill?.files ?? []; track file) {
 								<li class="list-group-item list-group-item-action text-bg-light bg-opacity-75"
-									[class.active]="file === selectedFile" (click)="onSelectFile(file)"
-									style="cursor: pointer">
-									<i class="bi bi-file-earmark me-2"></i>{{file.relativePath}}
+									[class.active]="file === selectedFile">
+									<!-- File name as a link -->
+									<a href="#" class="text-decoration-none d-flex align-items-center" role="button"
+										(click)="$event.preventDefault(); onSelectFile(file);" tabindex="0">
+										<i class="bi bi-file-earmark me-2"></i>{{ file.relativePath }}
+									</a>
 								</li>
+							} @empty {
+								<li class="list-group-item text-muted">No files in this skill.</li>
 							}
 						</ul>
 					</div>
-					<!-- File contents -->
+
+					<!-- File preview column -->
 					@if (selectedFile) {
 						<div class="col-8">
 							<h6 class="text-muted mb-3">{{ selectedFile.relativePath }}</h6>
 							<markdown mermaid [data]="renderContent(selectedFile.content)"></markdown>
 						</div>
 					} @else {
-						<h5 class="col-8 text-muted">Select a file to view its contents</h5>
+						<!-- Placeholder when no file is chosen -->
+						<div class="d-flex align-items-center justify-content-center h-100 text-muted">
+							Select a file to view its contents
+						</div>
 					}
-				</div>
-			</div>
-		} @else {
-			<h5 class="col-9 text-muted">Select a skill to view its files</h5>
-		}
+				</div> <!-- End inner row (files + preview) -->
 
-	</div>
-</div>
-
-<div class="modal fade" tabindex="-1" [ngClass]="{'show d-block': skillFileDialogVisible}"
-	[style.display]="skillFileDialogVisible ? 'block' : 'none'">
-	<div class="modal-dialog">
-		<div class="modal-content">
-			<div class="modal-header">
-				<h5 class="modal-title">Add Skill</h5>
-				<button type="button" class="btn-close" (click)="skillFileDialogVisible = false"></button>
-			</div>
-			<div class="modal-body">
-				<div class="mb-3">
-					<label for="zipFilename" class="form-label">Filename</label>
-					<input class="form-control" type="file" id="zipFilename" (change)="fileSelected($event)">
-				</div>
-			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-secondary" (click)="skillFileDialogVisible = false">Cancel</button>
-				<button type="button" class="btn btn-primary" (click)="addSkill()">OK</button>
-			</div>
+			} @else {
+				<!-- Empty state - nothing selected -->
+				<h5 class="text-muted">Select a skill to view its files</h5>
+			}
 		</div>
-	</div>
-</div>
 
+	</div> <!-- End main two-column row -->
+</div> <!-- End container-fluid -->
+
+<!-- =========================  Add-Skill modal ========================= -->
+<ng-container *ngIf="skillFileDialogVisible">
+	<div class="modal-backdrop fade show"></div>
+	<div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" style="display:block;">
+		<div class="modal-dialog modal-lg modal-dialog-scrollable">
+			<div class="modal-content">
+
+				<!-- Header -->
+				<div class="modal-header">
+					<h5 class="modal-title">Add Skill</h5>
+					<button type="button" class="btn-close" aria-label="Close"
+						(click)="skillFileDialogVisible = false"></button>
+				</div>
+
+				<!-- Body - file input -->
+				<div class="modal-body">
+					<div class="mb-3">
+						<label for="zipFilename" class="form-label">Select a ZIP file</label>
+						<input type="file" id="zipFilename" class="form-control" (change)="fileSelected($event)">
+					</div>
+				</div>
+
+				<!-- Footer - actions -->
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary"
+						(click)="skillFileDialogVisible = false">Cancel</button>
+					<button type="button" class="btn btn-primary" (click)="addSkill()">OK</button>
+				</div>
+
+			</div> <!-- /.modal-content -->
+		</div> <!-- /.modal-dialog -->
+	</div> <!-- /.modal -->
+</ng-container>
+
+<!-- Confirmation dialogs -->
 <minty-confirmation-dialog [title]="'Delete Skill'" [message]="'Are you sure you want to delete this Skill?'"
 	[visible]="deleteSkillDialogVisible" (confirm)="confirmDeleteSkill()" (cancel)="deleteSkillDialogVisible = false">
 </minty-confirmation-dialog>

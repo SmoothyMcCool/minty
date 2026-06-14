@@ -1,6 +1,7 @@
 package tom.llm.service;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
@@ -12,23 +13,27 @@ import org.springframework.ai.vectorstore.VectorStore;
 import tom.api.model.assistant.Assistant;
 import tom.api.model.assistant.AssistantQuery;
 import tom.config.model.ChatModelConfig;
+import tom.user.model.User;
 
-public interface LlmService {
+public interface LlmClientRegistry {
 
-	VectorStore getVectorStore();
+	ChatClient buildChatClient(User user, Assistant assistant, AssistantQuery query, int contextSize,
+			List<Advisor> advisors);
+
+	ChatModel buildSimpleModel(String modelName);
+
+	VectorStore getVectorStore(String modelName);
 
 	ChatMemoryRepository getChatMemoryRepository();
 
 	ChatMemory getChatMemory();
 
+	boolean has(String modelName);
+
+	Set<String> modelNames();
+
+	LlmEndpointService serviceForModel(String modelName);
+
 	List<ChatModelConfig> listModels();
-
-	boolean isModelValid(String model);
-
-	ChatModel buildSimpleModel(String model);
-
-	int estimateInputTokens(AssistantQuery query);
-
-	ChatClient buildChatClient(Assistant assistant, AssistantQuery query, int contextSize, List<Advisor> advisors);
 
 }

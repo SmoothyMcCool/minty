@@ -12,7 +12,6 @@ import javax.sql.DataSource;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.ai.ollama.api.OllamaApi;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
@@ -38,19 +37,14 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import com.openai.client.OpenAIClient;
-import com.openai.client.OpenAIClientAsync;
-
 import de.neuland.pug4j.PugConfiguration;
 import de.neuland.pug4j.filter.MarkdownFilter;
 import de.neuland.pug4j.template.FileTemplateLoader;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import reactor.core.scheduler.Schedulers;
 import tom.api.MintyObjectMapper;
 import tom.cache.service.SingleFlightCacheManager;
-import tom.config.model.LlmEngine;
-import tom.llm.service.LlmService;
-import tom.ollama.service.OllamaServiceImpl;
-import tom.openai.service.OpenAiServiceImpl;
 import tom.prioritythreadpool.PriorityThreadPoolTaskExecutor;
 import tools.jackson.core.exc.StreamReadException;
 import tools.jackson.databind.AnnotationIntrospector;
@@ -93,19 +87,14 @@ public class ApplicationConfig implements WebMvcConfigurer {
 		}
 	}
 
-	@Bean
-	static MintyConfiguration properties() throws StreamReadException, DatabindException, IOException {
-		return new MintyConfigurationImpl();
+	@PreDestroy
+	public void shutdownReactor() {
+		Schedulers.shutdownNow();
 	}
 
 	@Bean
-	LlmService llmService(OllamaApi ollamaApi, OpenAIClient openAiClient, OpenAIClientAsync openAiClientAsync,
-			JdbcTemplate vectorJdbcTemplate, DataSource dataSource) {
-		LlmEngine engine = properties.getConfig().llm().engine();
-		if (engine == LlmEngine.Ollama) {
-			return new OllamaServiceImpl(ollamaApi, vectorJdbcTemplate, dataSource, properties);
-		}
-		return new OpenAiServiceImpl(openAiClient, openAiClientAsync, vectorJdbcTemplate, dataSource, properties);
+	static MintyConfiguration properties() throws StreamReadException, DatabindException, IOException {
+		return new MintyConfigurationImpl();
 	}
 
 	@Bean

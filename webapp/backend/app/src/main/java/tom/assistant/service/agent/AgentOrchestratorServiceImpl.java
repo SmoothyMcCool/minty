@@ -29,7 +29,7 @@ import tom.assistant.service.agent.model.AgentStepState;
 import tom.assistant.service.agent.model.AgentStepType;
 import tom.assistant.service.agent.model.PlanState;
 import tom.assistant.service.agent.model.StepResult;
-import tom.llm.service.LlmService;
+import tom.llm.service.LlmClientRegistry;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
@@ -46,10 +46,11 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 	private final AgentPlanner planner;
 	private final ChatMemory chatMemory;
 
-	public AgentOrchestratorServiceImpl(AgentPlanner planner, LlmService llmService, AgentRegistryImpl agentRegistry) {
+	public AgentOrchestratorServiceImpl(AgentPlanner planner, AgentRegistryImpl agentRegistry,
+			LlmClientRegistry llmClientRegistry) {
 		this.planner = planner;
 		this.agentRegistry = agentRegistry;
-		this.chatMemory = llmService.getChatMemory();
+		this.chatMemory = llmClientRegistry.getChatMemory();
 	}
 
 	public void setAssistantQueryService(AssistantQueryService assistantQueryService) {

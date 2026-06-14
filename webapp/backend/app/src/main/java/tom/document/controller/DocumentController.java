@@ -95,44 +95,34 @@ public class DocumentController {
 			Files.createDirectories(file.toPath());
 			mpf.transferTo(file);
 
-			try {
-				String filename = file.getName();
-				int lastDot = filename.lastIndexOf('.');
-				String baseName = (lastDot == -1) ? filename : filename.substring(0, lastDot);
-				String newName = baseName + ".md";
-				logger.info("Started processing " + newName);
+			String filename = file.getName();
+			int lastDot = filename.lastIndexOf('.');
+			String baseName = (lastDot == -1) ? filename : filename.substring(0, lastDot);
+			String newName = baseName + ".md";
+			logger.info("Started processing " + newName);
 
-				String markdown = documentService.fileToMarkdown(file, SpreadsheetFormat.MARKDOWN);
+			String markdown = documentService.fileToMarkdown(file, SpreadsheetFormat.MARKDOWN);
 
-				DocumentSection section = DocumentSection.builder().content(markdown).created(LocalDateTime.now())
-						.documentId(null).id(null).level(0).parentIndex(null).sequenceOrder(0).title("document")
-						.build();
-				Document doc = Document.builder().ownerId(user.getId()).projectId(projectId).title(newName)
-						.vectorized(false).addSection(section).created(Instant.now()).updated(Instant.now()).build();
+			DocumentSection section = DocumentSection.builder().content(markdown).created(LocalDateTime.now())
+					.documentId(null).id(null).level(0).parentIndex(null).sequenceOrder(0).title("document").build();
+			Document doc = Document.builder().ownerId(user.getId()).projectId(projectId).title(newName)
+					.vectorized(false).addSection(section).created(Instant.now()).updated(Instant.now()).build();
 
-				documentService.addDocument(user.getId(), doc);
+			documentService.addDocument(user.getId(), doc);
 
-				logger.info("Markdown processing complete for " + file.getName());
+			logger.info("Markdown processing complete for " + file.getName());
 
-				ResponseWrapper<String> response = ResponseWrapper.SuccessResponse("File processed successfully.");
-				return new ResponseEntity<>(response, HttpStatus.OK);
+			ResponseWrapper<String> response = ResponseWrapper.SuccessResponse("File processed successfully.");
+			return new ResponseEntity<>(response, HttpStatus.OK);
 
-			} catch (Exception e) {
-				logger.error("Markdown processing failed: ", e);
-			} finally {
-				file.delete();
-			}
-
-		} catch (IllegalStateException | IOException e) {
+		} catch (Exception e) {
 			logger.error("Failed to store file: ", e);
 			ResponseWrapper<String> response = ResponseWrapper
 					.ApiFailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), List.of(ApiError.REQUEST_FAILED));
 			return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+		} finally {
+			file.delete();
 		}
-
-		ResponseWrapper<String> response = ResponseWrapper
-				.SuccessResponse("You'll find your file in the active project.");
-		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	@PostMapping(value = { "/convert/markdown/decompose" }, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -147,7 +137,9 @@ public class DocumentController {
 			mpf.transferTo(file);
 
 			logger.info("Markdown processing started for " + file.getName());
-			documentService.fileToMarkdownAndDecompose(user.getId(), projectId, file, false);
+			String filename = file.getName();
+			String markdown = documentService.fileToMarkdown(file, SpreadsheetFormat.MARKDOWN);
+			documentService.decompose(user.getId(), projectId, filename, markdown, false);
 
 		} catch (Exception e) {
 			logger.error("Markdown processing failed: ", e);
@@ -175,14 +167,17 @@ public class DocumentController {
 			mpf.transferTo(file);
 
 			logger.info("Markdown processing started for " + file.getName());
-			documentService.fileToMarkdownAndDecompose(user.getId(), projectId, file, true);
-			// Don't delete the file. Processing task will do that when it completes.
+			String filename = file.getName();
+			String markdown = documentService.fileToMarkdown(file, SpreadsheetFormat.MARKDOWN);
+			documentService.decompose(user.getId(), projectId, filename, markdown, true);
 
 		} catch (Exception e) {
 			logger.error("Markdown processing failed: ", e);
 			ResponseWrapper<String> response = ResponseWrapper
 					.ApiFailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), List.of(ApiError.REQUEST_FAILED));
 			return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+		} finally {
+			file.delete();
 		}
 
 		ResponseWrapper<String> response = ResponseWrapper.SuccessResponse(

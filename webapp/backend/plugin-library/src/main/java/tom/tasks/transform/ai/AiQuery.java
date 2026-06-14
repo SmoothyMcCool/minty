@@ -13,6 +13,7 @@ import org.apache.logging.log4j.core.tools.picocli.CommandLine.TypeConversionExc
 
 import tom.api.ConversationId;
 import tom.api.MintyObjectMapper;
+import tom.api.TaskPriority;
 import tom.api.UserId;
 import tom.api.model.assistant.AssistantQuery;
 import tom.api.model.services.ServiceConsumer;
@@ -142,7 +143,8 @@ public class AiQuery extends MintyTask implements ServiceConsumer {
 			String response = null;
 			while (true) {
 				try {
-					CompletableFuture<String> future = pluginServices.getAssistantQueryService().ask(userId, query);
+					CompletableFuture<String> future = pluginServices.getAssistantQueryService().ask(userId, query,
+							TaskPriority.Low);
 					response = future.get();
 					break;
 

@@ -26,7 +26,6 @@ import tom.assistant.repository.AssistantRepository;
 import tom.assistant.repository.UserAssistantLinkRepository;
 import tom.config.MintyConfiguration;
 import tom.conversation.service.ConversationServiceInternal;
-import tom.llm.service.LlmService;
 import tom.user.service.UserServiceInternal;
 
 @Service
@@ -38,17 +37,15 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 	private final UserAssistantLinkRepository linkRepository;
 	private final AssistantRegistry assistantRegistry;
 	private final UserServiceInternal userService;
-	private final LlmService llmService;
 	private ConversationServiceInternal conversationService;
 
 	public AssistantManagementServiceImpl(AssistantRepository assistantRepository,
 			UserAssistantLinkRepository linkRepository, AssistantRegistry assistantRegistry,
-			UserServiceInternal userService, LlmService llmService, MintyConfiguration properties) {
+			UserServiceInternal userService, MintyConfiguration properties) {
 		this.assistantRepository = assistantRepository;
 		this.linkRepository = linkRepository;
 		this.assistantRegistry = assistantRegistry;
 		this.userService = userService;
-		this.llmService = llmService;
 	}
 
 	@Override
@@ -267,7 +264,6 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 		}
 
 		try {
-			llmService.isModelValid(assistant.model()); // Just to make sure the value is valid.
 			return assistant.model();
 		} catch (Exception e) {
 			logger.warn("Invalid model: " + assistant.model());

@@ -11,6 +11,7 @@ import tom.api.task.TaskSpec;
 import tom.api.task.annotation.RunnableTask;
 import tom.tasks.TaskGroup;
 import tom.tasks.transform.pipeline.model.PipelineDefinition;
+import tom.tasks.transform.pipeline.model.PipelineOperation;
 import tom.tasks.transform.pipeline.operations.PipelineOperationRegistry;
 import tom.tasks.transform.pipeline.operations.TransformOperation;
 
@@ -59,7 +60,7 @@ public class Transform extends MintyTask {
 
 			String prePipeline = input.toJson();
 
-			for (var operation : pipeline.getOperations()) {
+			for (PipelineOperation operation : pipeline.getOperations()) {
 
 				String opName = operation.getName();
 				TransformOperation op = PipelineOperationRegistry.get(opName);

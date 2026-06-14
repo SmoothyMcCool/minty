@@ -109,7 +109,6 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 	anyTaskCompleted: boolean = false;
 
 	constructor(private ngZone: NgZone,
-		private cdr: ChangeDetectorRef,
 		private projectService: ProjectService,
 		private documentService: DocumentService,
 		private conversationService: ConversationService,
@@ -123,14 +122,15 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 					switchMap(() => this.documentService.listTasks())
 				)
 				.subscribe(tasks => {
-					const removed = this.tasks.filter(t => !this.tasks.some(t2 => t2 === t));
+					const removed = this.tasks.filter(t => !tasks.some(t2 => t2 === t));
 					const added = tasks.filter(t => !this.tasks.some(t2 => t2 === t));
 					if (removed.length > 0 || added.length > 0) {
-						if (removed.length > 0) {
-							this.anyTaskCompleted = true;
-						}
 						this.tasks = tasks;
-						this.ngZone.run(() => { }); // re-enter zone only when tasks actually changed
+						this.ngZone.run(() => {
+							if (removed.length > 0) {
+								this.anyTaskCompleted = true;
+							}
+						}); // re-enter zone only when tasks actually changed
 					}
 					// If nothing changed, we never re-enter the zone at all
 				});

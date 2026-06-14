@@ -4,12 +4,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +26,7 @@ import tom.config.MintyConfiguration;
 import tom.config.model.ChatModelConfig;
 import tom.config.model.LlmConfig;
 import tom.config.model.MintyConfig;
-import tom.llm.service.LlmService;
+import tom.llm.service.LlmClientRegistry;
 import tom.meta.service.AiRequestMetricsService;
 import tom.prioritythreadpool.PriorityTask;
 import tom.prioritythreadpool.PriorityThreadPoolTaskExecutor;
@@ -44,7 +46,7 @@ class AssistantQueryServiceImplTest {
 	/* Mocks that are injected into the service */
 	/* --------------------------------------------------------------------- */
 	private final AssistantManagementService assistantManagementService = mock(AssistantManagementService.class);
-	private final LlmService llmService = mock(LlmService.class);
+	private final LlmClientRegistry llmClientRegistry = mock(LlmClientRegistry.class);
 	private final UserServiceInternal userService = mock(UserServiceInternal.class);
 	private final ToolRegistryService toolRegistryService = mock(ToolRegistryService.class);
 	private final AgentOrchestratorService agentOrchestratorService = mock(AgentOrchestratorService.class);
@@ -70,7 +72,7 @@ class AssistantQueryServiceImplTest {
 		when(modelMock.maximumContext()).thenReturn(8192);
 
 		when(llmMock.modelDefinitions()).thenReturn(List.of(modelMock));
-		service = new AssistantQueryServiceImpl(assistantManagementService, llmService, userService,
+		service = new AssistantQueryServiceImpl(assistantManagementService, llmClientRegistry, userService,
 				toolRegistryService, agentOrchestratorService, aiRequestMetricsService, transactionManager,
 				mintyConfiguration, llmExecutor);
 	}
@@ -79,13 +81,13 @@ class AssistantQueryServiceImplTest {
 	/* Helpers to inject private fields */
 	/* --------------------------------------------------------------------- */
 	private void setResultsMap(Map<ConversationId, LlmResult> map) throws Exception {
-		var field = AssistantQueryServiceImpl.class.getDeclaredField("results");
+		Field field = AssistantQueryServiceImpl.class.getDeclaredField("results");
 		field.setAccessible(true);
 		field.set(service, map);
 	}
 
 	private void setExecutorQueue(BlockingQueue<Runnable> queue) throws Exception {
-		var threadPoolExecutor = mock(java.util.concurrent.ThreadPoolExecutor.class);
+		ThreadPoolExecutor threadPoolExecutor = mock(java.util.concurrent.ThreadPoolExecutor.class);
 		when(llmExecutor.getThreadPoolExecutor()).thenReturn(threadPoolExecutor);
 		when(threadPoolExecutor.getQueue()).thenReturn(queue);
 	}

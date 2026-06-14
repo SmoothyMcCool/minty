@@ -37,7 +37,7 @@ contextSize: 131072
 temperature: 0.4
 topK: 5
 hasMemory: false
-tools: ['Project Tools']
+tools: ['Knowledge Tools']
 prompt: |
   You are a release note writer.
 

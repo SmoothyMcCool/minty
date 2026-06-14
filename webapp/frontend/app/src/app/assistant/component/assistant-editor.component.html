@@ -1,107 +1,111 @@
-@if (assistant) {
-	<div class="form-group mb-2">
-		<label for="assistantName">Name</label>
-		<input type="text" class="form-control bg-opacity-75" id="assistantName" name="assistantName"
-			[ngModel]="assistant.name" (ngModelChange)="nameChanged($event)">
-	</div>
-	<div class="d-flex flex-row">
-		<div class="form-group mb-2">
-			<input type="checkbox" class="form-check-input" id="hasMemory" name="hasMemory"
-				[ngModel]="assistant.hasMemory" (ngModelChange)="hasMemoryChanged($event)" [disabled]="!allowHistory">
-			<label class=" ms-1" for="hasMemory">Keep conversation history</label>
+<!-- assistant-settings.component.html -->
+<div class="container-fluid py-4">
+
+	<!-- Main card - shown only when an assistant exists -->
+	@if (assistant) {
+
+
+		<!-- Header: Assistant name -->
+		<h5 class="mb-3 text-dark">{{ assistant.name }}</h5>
+
+		<!-- 1 Name field -->
+		<div class="mb-3">
+			<label for="assistantName" class="form-label">Name</label>
+			<input id="assistantName" name="assistantName" type="text" class="form-control bg-opacity-75"
+				[(ngModel)]="assistant.name" (ngModelChange)="nameChanged($event)">
 		</div>
-	</div>
-	<div class="form-group mb-2">
-		<label for="model">Model</label>
-		<select class="form-select bg-opacity-75" name="model" [ngModel]="assistant.model"
-			(ngModelChange)="modelChanged($event)">
-			@for (model of models; track model) {
-				<option value="{{model.name}}">{{model.name}}</option>
-			}
-		</select>
-	</div>
-	@if (assistant.model) {
-		<div class="form-group mb-2">
-			<minty-slider [min]="minContext" [max]="maxContext" [label]="'Default Context Size'"
-				[ngModel]="assistant.contextSize" (ngModelChange)="contextSizeChanged($event)"></minty-slider>
+
+		<!-- 2 Keep conversation history -->
+		<div class="mb-3 form-check">
+			<input id="hasMemory" name="hasMemory" type="checkbox" class="form-check-input"
+				[(ngModel)]="assistant.hasMemory" (ngModelChange)="hasMemoryChanged($event)" [disabled]="!allowHistory">
+			<label for="hasMemory" class="form-check-label ms-1">
+				Keep conversation history
+			</label>
 		</div>
-	}
-	<div class="form-group mb-2">
-		<label for="assistantTemperature">Temperature</label>
-		<input type="number" step="0.1" min="0" max="1" class="form-control bg-opacity-75" id="assistantTemperature"
-			name="assistantTemperature" [ngModel]="assistant.temperature" (ngModelChange)="temperatureChanged($event)">
-	</div>
-	<div class="form-group mb-2">
-		<label for="assistantTopK">Top K (Number of Document chunks to use for RAG)</label>
-		<input type="number" step="1" min="0" max="99" class="form-control bg-opacity-75" id="assistantTopK"
-			name="assistantTopK" [ngModel]="assistant.topK" (ngModelChange)="topKChanged($event)">
-	</div>
-	<div class="form-group mb-2">
-		<label for="assistantPrompt">Prompt</label>
-		<textarea autoResize class="form-control bg-opacity-75" id="assistantPrompt" name="assistantPrompt"
-			[ngModel]="assistant.prompt" (ngModelChange)="promptChanged($event)"></textarea>
-	</div>
-	@if (assistant && (tools && tools.length > 0) || (assistantTools && assistantTools.length > 0)) {
-		<div class="form-group mb-2 well p-2">
-			<label class="form-label">Tools</label>
-			<div class="row">
-				<div class="col">
-					<strong>Available Tools</strong>
-					<div class="list-group">
-						@for (tool of unusedTools; track tool) {
-							<button class="list-group-item list-group-item-action" [mintyTooltip]="tool.description"
-								tooltipPlacement="right" (click)="addTool(tool, $event)">
-								{{tool.name}}
-							</button>
-						}
-					</div>
-				</div>
-				<div class="col">
-					<strong>Added Tools</strong>
-					<div class="list-group">
-						@for (tool of usedTools; track tool) {
-							<button type="button" class="list-group-item list-group-item-action"
-								[mintyTooltip]="tool.description" tooltipPlacement="left"
-								(click)="removeTool(tool, $event)">
-								{{tool.name}}
-							</button>
-						}
-					</div>
-				</div>
+
+		<!-- 3 Model selector -->
+		<div class="mb-3">
+			<label for="model" class="form-label">Model</label>
+			<select id="model" name="model" class="form-select bg-opacity-75" [(ngModel)]="assistant.model"
+				(ngModelChange)="modelChanged($event)">
+				@for (m of models; track m) {
+					<option [value]="m.name">{{ m.name }}</option>
+				}
+			</select>
+		</div>
+
+		<!-- 4 Default context size - only when a model is chosen -->
+		@if (assistant.model) {
+			<div class="mb-3">
+				<minty-slider [min]="minContext" [max]="maxContext" label="Default Context Size"
+					[(ngModel)]="assistant.contextSize" (ngModelChange)="contextSizeChanged($event)">
+				</minty-slider>
 			</div>
+		}
+
+		<!-- 5 Temperature -->
+		<div class="mb-3">
+			<label for="assistantTemperature" class="form-label">Temperature</label>
+			<input id="assistantTemperature" name="assistantTemperature" type="number" step="0.1" min="0" max="1"
+				class="form-control bg-opacity-75" [(ngModel)]="assistant.temperature"
+				(ngModelChange)="temperatureChanged($event)">
 		</div>
-	}
-	<!--@if (assistant && ((documents?.length > 0) || (assistantDocuments?.length > 0))) {
-		<div class="form-group mb-2 well p-2">
-			<label for="ragFile" class="form-label">Documents</label>
-			<div class="row">
-				<div class="col">
-					<strong>Available Documents</strong>
-					<div class="list-group">
-						@for (doc of unusedDocs; track doc) {
-							<button class="list-group-item list-group-item-action" (click)="addDoc(doc)">
-								{{doc.title}}
-							</button>
-						}
-					</div>
-				</div>
-				<div class="col">
-					<strong>Added Documents</strong>
-					<div class="list-group">
-						@for (doc of usedDocs; track doc) {
-							<button type="button" class="list-group-item list-group-item-action"
-								(click)="removeDoc(doc)">
-								{{doc.title}}
-							</button>
-						}
-					</div>
-				</div>
-			</div>
+
+		<!-- 6 Top K -->
+		<div class="mb-3">
+			<label for="assistantTopK" class="form-label">
+				Top K (Number of Document chunks to use for RAG)
+			</label>
+			<input id="assistantTopK" name="assistantTopK" type="number" step="1" min="0" max="99"
+				class="form-control bg-opacity-75" [(ngModel)]="assistant.topK" (ngModelChange)="topKChanged($event)">
 		</div>
+
+		<!-- 7 Prompt -->
+		<div class="mb-3">
+			<label for="assistantPrompt" class="form-label">Prompt</label>
+			<textarea id="assistantPrompt" name="assistantPrompt" autoResize class="form-control bg-opacity-75"
+				[(ngModel)]="assistant.prompt" (ngModelChange)="promptChanged($event)">
+	</textarea>
+		</div>
+
+		<!-- 8 Tool assignment panel - shown only when tools exist -->
+		@if ((tools?.length > 0) || (assistantTools?.length > 0)) {
+			<div class="card shadow-sm border-0 p-3 mt-4">
+				<h6 class="fw-semibold mb-3">Tools</h6>
+				<div class="row g-4">
+
+					<!-- Available tools -->
+					<div class="col">
+						<h6 class="fw-semibold mb-2">Available Tools</h6>
+						<ul class="list-group list-group-flush">
+							@for (tool of unusedTools; track tool) {
+								<li class="list-group-item list-group-item-action" [mintyTooltip]="tool.description"
+									tooltipPlacement="right" (click)="addTool(tool, $event)">
+									{{ tool.name }}
+								</li>
+							}
+						</ul>
+					</div>
+
+					<!-- Added tools -->
+					<div class="col">
+						<h6 class="fw-semibold mb-2">Added Tools</h6>
+						<ul class="list-group list-group-flush">
+							@for (tool of usedTools; track tool) {
+								<li class="list-group-item list-group-item-action" [mintyTooltip]="tool.description"
+									tooltipPlacement="left" (click)="removeTool(tool, $event)">
+									{{ tool.name }}
+								</li>
+							}
+						</ul>
+					</div>
+
+				</div> <!-- /.row -->
+			</div> <!-- /.card -->
+		} <!-- /@if tools -->
 	} @else {
-		<div class="well p-2 mb-2">
-			No Documents available for Assistants to use. This is very sad and you should add some so they can grow up
-			to be big and smart, just like you.
-		</div>
-	}-->
-}
+		<p class="text-muted">No assistant selected.</p>
+	}
+
+</div> <!-- /.container-fluid -->

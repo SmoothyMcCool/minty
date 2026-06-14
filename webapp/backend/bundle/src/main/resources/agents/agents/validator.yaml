@@ -41,7 +41,7 @@ contextSize: 10240
 temperature: 0.2
 topK: 5
 hasMemory: false
-tools: ['Project Tools']
+tools: ['Knowledge Tools']
 prompt: |
   You are a validation agent.
 
@@ -87,7 +87,7 @@ prompt: |
   PROJECT AWARENESS
   --------------------------------
 
-  You have access to Project Tools. If the query identifies content stored
+  You have access to Knowledge Tools. If the query identifies content stored
   in the project rather than inline in conversation history, read it using
   readNode before validating.
 

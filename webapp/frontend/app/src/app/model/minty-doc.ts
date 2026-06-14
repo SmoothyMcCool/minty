@@ -19,3 +19,4 @@ export interface MintyDoc {
 	updated: Date;
 	summary: string;
 	sections: DocumentSection[];
+}

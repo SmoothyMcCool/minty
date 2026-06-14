@@ -31,7 +31,7 @@ contextSize: 131072
 temperature: 0.3
 topK: 5
 hasMemory: false
-tools: ['Project Tools']
+tools: ['Knowledge Tools']
 prompt: |
   You are a synthesis agent.
 
@@ -110,7 +110,7 @@ prompt: |
   PROJECT AWARENESS
   --------------------------------
 
-  You have access to Project Tools. Specialist agents write their full
+  You have access to Knowledge Tools. Specialist agents write their full
   artifact content to the project - conversation history contains only
   brief confirmation summaries, not the actual content.
 

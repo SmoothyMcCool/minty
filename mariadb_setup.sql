@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS Document (
     ownerId    UUID,
     projectId  UUID,
     vectorized BOOLEAN   DEFAULT FALSE,
-    summary    TEXT,
+    summary    LONGTEXT,
     created    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id)
@@ -364,8 +364,6 @@ CREATE TABLE IF NOT EXISTS UserWorkflowLinks (
 -- TRIGGERS
 -- =============================================================
 
-DELIMITER $$
-
 CREATE TRIGGER trg_computeMetrics
 AFTER UPDATE ON LlmRequests
 FOR EACH ROW
@@ -388,9 +386,7 @@ BEGIN
             ttftUs      = VALUES(ttftUs),
             totalTimeUs = VALUES(totalTimeUs);
     END IF;
-END$$
-
-DELIMITER ;
+END;
 
 -- =============================================================
 -- VIEWS

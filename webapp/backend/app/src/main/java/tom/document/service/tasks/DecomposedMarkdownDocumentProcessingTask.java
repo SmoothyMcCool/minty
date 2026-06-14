@@ -14,6 +14,7 @@ import org.apache.logging.log4j.Logger;
 
 import tom.api.MintyObjectMapper;
 import tom.api.ProjectId;
+import tom.api.TaskPriority;
 import tom.api.UserId;
 import tom.api.model.assistant.Assistant;
 import tom.api.model.assistant.AssistantBuilder;
@@ -34,6 +35,7 @@ import tom.document.markdown.MarkdownSectionSplitter;
 import tom.document.markdown.SectionResult;
 import tom.document.markdown.SectionSummary;
 import tom.document.service.DocumentServiceInternal;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
@@ -51,6 +53,9 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 	private Document.Builder documentBuilder;
 	private boolean summarize;
 	private boolean complete;
+	private boolean failed;
+	private int numSegments;
+	private int currentSegment;
 
 	public DecomposedMarkdownDocumentProcessingTask(UserId userId, ProjectId projectId, String docName, String markdown,
 			ConversationServiceInternal conversationService, AssistantManagementService assistantManagementService,
@@ -65,6 +70,9 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 		this.documentService = documentService;
 		this.config = config;
 		complete = false;
+		failed = false;
+		numSegments = 0;
+		currentSegment = 0;
 		this.summarize = summarize;
 
 		documentBuilder = Document.builder().title(docName).ownerId(userId).projectId(projectId);
@@ -80,6 +88,8 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 			List<DocumentSection> sections = decompose();
 			documentBuilder.sections(sections);
 
+			numSegments = sections.size();
+
 			if (summarize) {
 				String summary = writeSummary(sections);
 				documentBuilder.summary(summary);
@@ -94,6 +104,7 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 			logger.info("Decomposed markdown processing complete for " + documentName);
 
 		} catch (Exception e) {
+			failed = true;
 			logger.error("Markdown processing failed: ", e);
 		} finally {
 			complete = true;
@@ -103,6 +114,18 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 
 	public UserId getUserId() {
 		return userId;
+	}
+
+	public int getNumSegments() {
+		return numSegments;
+	}
+
+	public int getCurrentSegment() {
+		return currentSegment;
+	}
+
+	public boolean isFailed() {
+		return failed;
 	}
 
 	public boolean isComplete() {
@@ -124,27 +147,35 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 		ObjectMapper mapper = MintyObjectMapper.StandardJsonMapper;
 		List<SectionResult> results = new ArrayList<>();
 
+		currentSegment = 1;
+
 		for (DocumentSection s : sections) {
-			String filename = sectionFilename(s);
 			String breadcrumb = documentExtractorService.buildBreadcrumb(sections, s);
 			String summaryStr = generateSummary(s, breadcrumb);
 
 			SectionSummary summary;
-			if (summaryStr.strip().equals("{\"insufficient\": true}")) {
-				summary = new SectionSummary(true, null, null, null, null, null);
-			} else {
+			try {
+				summary = mapper.readValue(summaryStr, SectionSummary.class);
+			} catch (Exception e) {
 				try {
-					summary = mapper.readValue(summaryStr, SectionSummary.class);
-				} catch (Exception e) {
-					// fallback: wrap raw string in a minimal summary
-					summary = new SectionSummary(false, null, summaryStr, null, null, null);
+					JsonNode node = mapper.readTree(summaryStr);
+					JsonNode inner = node.get("summary");
+					if (inner != null && inner.isString()) {
+						summary = mapper.readValue(inner.asString(), SectionSummary.class);
+					} else {
+						summary = new SectionSummary(null, summaryStr, null, null, null);
+					}
+				} catch (Exception e2) {
+					summary = new SectionSummary(null, summaryStr, null, null, null);
 				}
 			}
 
-			results.add(new SectionResult(s.sequenceOrder(), s.title(), filename, breadcrumb, summary));
+			results.add(new SectionResult(s.sequenceOrder(), s.title(), summary));
+			currentSegment++;
 		}
 
 		return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(results);
+
 	}
 
 	private String generateSummary(DocumentSection s, String breadcrumb) {
@@ -175,7 +206,7 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 
 			while (true) {
 				try {
-					summary = assistantQueryService.ask(UserService.DefaultId, query).get();
+					summary = assistantQueryService.ask(UserService.DefaultId, query, TaskPriority.Low).get();
 					break;
 				} catch (QueueFullException | ConversationInUseException e) {
 					// Thrown directly from ask() before reaching the executor
@@ -221,15 +252,6 @@ public class DecomposedMarkdownDocumentProcessingTask implements Runnable {
 			logger.warn("Thread was interrupted while waiting to retry.");
 			return false;
 		}
-	}
-
-	/**
-	 * Generates a filename that encodes both the section index and its level
-	 * indentation, so files sort naturally in the project explorer. e.g.
-	 * section-003-2-interface-design.md for a level-2 section at index 3
-	 */
-	private String sectionFilename(DocumentSection s) {
-		return "section-%03d-L%d-%s.md".formatted(s.sequenceOrder(), s.level(), slug(s.title()));
 	}
 
 	private static String slug(String text) {

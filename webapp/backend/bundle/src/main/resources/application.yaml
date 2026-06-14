@@ -28,28 +28,39 @@ db:
 
 # LLM Parameters
 llm:
-  engine: Ollama
-  uri: http://localhost:11434
-  #engine: openai
-  #uri: http://192.168.2.106:8081
-  openaiApiKey: dummy-key
+  endpoints:
+    - name: ollama
+      provider: Ollama
+      url: http://localhost:11434
+      apiConnectionTimeout: PT60S
+      apiTimeout: PT5M
+    - name: llama-cpp
+      provider: OpenAI
+      url: http://192.168.2.106:8081
+      apiKey: dummy-key
+      apiConnectionTimeout: PT60S
+      apiTimeout: PT5M
   modelDefinitions:
     - name: gpt-oss:20b
+      endpoint: ollama
       defaultContext: 32768
       maximumContext: 131072
       maxConcurrent: 6
       imageSupport: false
     - name: gemma4:e4b-it-q4_K_M
+      endpoint: ollama
       defaultContext: 16384
       maximumContext: 262144
       maxConcurrent: 2
       imageSupport: true
     - name: gemma4:26b
+      endpoint: ollama
       defaultContext: 16384
       maximumContext: 262144
       maxConcurrent: 2
       imageSupport: true
     - name: gemma4:26b-a4b-it-qat
+      endpoint: ollama
       defaultContext: 16384
       maximumContext: 262144
       maxConcurrent: 2

@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -318,7 +319,7 @@ public class PluginLoader {
 		List<String> files = new ArrayList<>();
 
 		try (JarFile jarFile = new JarFile(path.toFile())) {
-			var entries = jarFile.entries();
+			Enumeration<JarEntry> entries = jarFile.entries();
 			while (entries.hasMoreElements()) {
 				JarEntry entry = entries.nextElement();
 				String name = entry.getName();

@@ -54,6 +54,7 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 
 	private List<DecomposedMarkdownDocumentProcessingTask> inProgressTasks;
 	private List<DecomposedMarkdownDocumentProcessingTask> completedTasks;
+	private List<DecomposedMarkdownDocumentProcessingTask> failedTasks;
 
 	public DocumentServiceImpl(DocumentRepository documentRepository,
 			DocumentSegmentRepository documentSegmentRepository,
@@ -74,6 +75,7 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 
 		inProgressTasks = Collections.synchronizedList(new ArrayList<>());
 		completedTasks = Collections.synchronizedList(new ArrayList<>());
+		failedTasks = Collections.synchronizedList(new ArrayList<>());
 	}
 
 	@PreDestroy
@@ -91,16 +93,14 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 	}
 
 	@Override
-	public void fileToMarkdownAndDecompose(UserId userId, ProjectId projectId, File file, boolean summarize)
+	public void decompose(UserId userId, ProjectId projectId, String documentName, String markdown, boolean summarize)
 			throws Exception {
 
-		String markdown = documentExtractorService.extract(file);
-		String filename = file.getName();
-		int dotIndex = filename.lastIndexOf('.');
-		filename = (dotIndex != -1) ? filename.substring(0, dotIndex) : filename + ".md";
+		int dotIndex = documentName.lastIndexOf('.');
+		documentName = (dotIndex != -1) ? documentName.substring(0, dotIndex) : documentName + ".md";
 
 		DecomposedMarkdownDocumentProcessingTask task = new DecomposedMarkdownDocumentProcessingTask(userId, projectId,
-				filename, markdown, conversationService, assistantManagementService, assistantQueryService,
+				documentName, markdown, conversationService, assistantManagementService, assistantQueryService,
 				documentExtractorService, this, config, summarize);
 
 		synchronized (inProgressTasks) {
@@ -113,21 +113,30 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 	@Override
 	public List<String> getInProgressTaskNames(UserId userId) {
 		synchronized (inProgressTasks) {
-			List<String> tasks = inProgressTasks.stream().filter(task -> task.getUserId().equals(userId))
-					.map(task -> task.getFilename() + "(In Progress)").collect(Collectors.toCollection(ArrayList::new));
+			List<String> tasks = inProgressTasks
+					.stream().filter(task -> task.getUserId().equals(userId)).map(task -> task.getFilename()
+							+ "(In Progress " + task.getCurrentSegment() + "/" + task.getNumSegments() + ")")
+					.collect(Collectors.toCollection(ArrayList::new));
 			tasks.addAll(completedTasks.stream().filter(task -> task.getUserId().equals(userId))
 					.map(task -> task.getFilename() + "(Complete)").toList());
+			tasks.addAll(failedTasks.stream().filter(task -> task.getUserId().equals(userId))
+					.map(task -> task.getFilename() + "(Failed)").toList());
 			completedTasks.removeIf(task -> task.getUserId().equals(userId));
+			failedTasks.removeIf(task -> task.getUserId().equals(userId));
 
 			return tasks;
 		}
 	}
 
 	@Override
-	public void taskComplete(DecomposedMarkdownDocumentProcessingTask decomposedMarkdownDocumentProcessingTask) {
+	public void taskComplete(DecomposedMarkdownDocumentProcessingTask task) {
 		synchronized (inProgressTasks) {
-			inProgressTasks.removeIf(task -> task == decomposedMarkdownDocumentProcessingTask);
-			completedTasks.add(decomposedMarkdownDocumentProcessingTask);
+			inProgressTasks.removeIf(t -> t == task);
+			if (!task.isFailed()) {
+				completedTasks.add(task);
+			} else {
+				failedTasks.add(task);
+			}
 		}
 	}
 
