@@ -28,7 +28,7 @@ import tom.api.model.conversation.Conversation;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.assistant.service.management.AssistantManagementServiceInternal;
 import tom.conversation.repository.ConversationRepository;
-import tom.llm.service.LlmService;
+import tom.llm.service.LlmClientRegistry;
 
 @Service
 public class ConversationServiceImpl implements ConversationServiceInternal {
@@ -36,14 +36,14 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 	private static final Logger logger = LogManager.getLogger(ConversationServiceImpl.class);
 
 	private final AssistantManagementServiceInternal assistantManagementService;
-	private final LlmService llmService;
+	private final LlmClientRegistry llmClientRegistry;
 	private final ConversationRepository conversationRepository;
 	private final HashMap<ConversationId, Conversation> fakeConversationMap;
 
 	public ConversationServiceImpl(ConversationRepository conversationRepository,
-			AssistantManagementServiceInternal assistantManagementService, LlmService llmService) {
+			AssistantManagementServiceInternal assistantManagementService, LlmClientRegistry llmClientRegistry) {
 		this.assistantManagementService = assistantManagementService;
-		this.llmService = llmService;
+		this.llmClientRegistry = llmClientRegistry;
 		this.conversationRepository = conversationRepository;
 		fakeConversationMap = new HashMap<>();
 	}
@@ -70,7 +70,8 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 	public void deleteConversationsForAssistant(UserId userId, AssistantId assistantId) {
 		List<tom.conversation.model.Conversation> conversations = conversationRepository
 				.findAllByOwnerIdAndAssociatedAssistantId(userId, assistantId);
-		ChatMemoryRepository chatMemoryRepository = llmService.getChatMemoryRepository();
+
+		ChatMemoryRepository chatMemoryRepository = llmClientRegistry.getChatMemoryRepository();
 
 		conversations.forEach(conversation -> {
 			chatMemoryRepository.deleteByConversationId(conversation.getId().toString());
@@ -107,8 +108,14 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 			return List.of();
 		}
 
+		Optional<tom.conversation.model.Conversation> conversation = conversationRepository
+				.findById(conversationId.value());
+		if (conversation.isEmpty()) {
+			return List.of();
+		}
+
 		List<ChatMessage> result = new ArrayList<>();
-		ChatMemory chatMemory = llmService.getChatMemory();
+		ChatMemory chatMemory = llmClientRegistry.getChatMemory();
 
 		List<Message> messages = chatMemory.get(conversationId.value().toString());
 		result = messages.stream().filter(message -> message.getMessageType() != MessageType.SYSTEM)
@@ -140,7 +147,7 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 			return false;
 		}
 
-		ChatMemory chatMemory = llmService.getChatMemory();
+		ChatMemory chatMemory = llmClientRegistry.getChatMemory();
 
 		chatMemory.clear(conversationId.value().toString());
 		conversationRepository.deleteById(conversationId.value());
@@ -158,7 +165,7 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 			return false;
 		}
 
-		ChatMemory chatMemory = llmService.getChatMemory();
+		ChatMemory chatMemory = llmClientRegistry.getChatMemory();
 
 		chatMemory.clear(conversationId.value().toString());
 

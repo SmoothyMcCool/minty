@@ -24,7 +24,7 @@ import tom.api.services.DocumentExtractorService;
 import tom.config.MintyConfiguration;
 import tom.document.service.DocumentEmbeddingService;
 import tom.document.service.DocumentProcessingException;
-import tom.llm.service.LlmService;
+import tom.llm.service.LlmClientRegistry;
 
 @Service
 public class DocumentEmbeddingServiceImpl implements DocumentEmbeddingService {
@@ -32,20 +32,21 @@ public class DocumentEmbeddingServiceImpl implements DocumentEmbeddingService {
 	private static final Logger logger = LogManager.getLogger(DocumentEmbeddingServiceImpl.class);
 
 	private final DocumentExtractorService documentExtractorService;
-	private final LlmService llmService;
+	private final LlmClientRegistry llmClientRegistry;
 
 	private final int keywordsPerDocument;
 	private final int documentTargetChunkSize;
 	private final int macroTargetChunkSize;
 	private final int embeddingBatchSize;
+	private final String summarizingModel;
 	// private final int maxEmbeddingTokens;
 
 	private final ChatModel chatModel;
 
-	public DocumentEmbeddingServiceImpl(DocumentExtractorService documentExtractorService, LlmService llmService,
-			MintyConfiguration properties) {
+	public DocumentEmbeddingServiceImpl(DocumentExtractorService documentExtractorService,
+			LlmClientRegistry llmClientRegistry, MintyConfiguration properties) {
 		this.documentExtractorService = documentExtractorService;
-		this.llmService = llmService;
+		this.llmClientRegistry = llmClientRegistry;
 		keywordsPerDocument = properties.getConfig().llm().embedding().keywordsPerDocument();
 		documentTargetChunkSize = properties.getConfig().llm().embedding().documentTargetChunkSize();
 		macroTargetChunkSize = properties.getConfig().llm().embedding().macroTargetChunkSize();
@@ -54,8 +55,8 @@ public class DocumentEmbeddingServiceImpl implements DocumentEmbeddingService {
 		// maxEmbeddingTokens =
 		// properties.getConfig().llm().embedding().maxEmbeddingTokens();
 
-		String summarizingModel = properties.getConfig().llm().embedding().summarizingModel();
-		chatModel = llmService.buildSimpleModel(summarizingModel);
+		summarizingModel = properties.getConfig().llm().embedding().summarizingModel();
+		chatModel = llmClientRegistry.buildSimpleModel(summarizingModel);
 
 	}
 
@@ -141,7 +142,7 @@ public class DocumentEmbeddingServiceImpl implements DocumentEmbeddingService {
 			return false;
 		}
 
-		VectorStore vectorStore = llmService.getVectorStore();
+		VectorStore vectorStore = llmClientRegistry.getVectorStore(summarizingModel);
 		try {
 			vectorStore.add(documents);
 			return true;

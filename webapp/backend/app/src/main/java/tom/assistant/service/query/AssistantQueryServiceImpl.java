@@ -44,6 +44,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 import reactor.core.scheduler.Schedulers;
 import tom.api.ConversationId;
+import tom.api.TaskPriority;
 import tom.api.UserId;
 import tom.api.model.assistant.Assistant;
 import tom.api.model.assistant.AssistantQuery;
@@ -61,13 +62,12 @@ import tom.api.tool.MintyTool;
 import tom.assistant.service.agent.AgentOrchestratorService;
 import tom.config.MintyConfiguration;
 import tom.config.model.ChatModelConfig;
-import tom.llm.service.LlmService;
+import tom.llm.service.LlmClientRegistry;
 import tom.meta.model.LlmRequestId;
 import tom.meta.model.RequestSummary;
 import tom.meta.service.AiRequestMetricsService;
 import tom.prioritythreadpool.PriorityTask;
 import tom.prioritythreadpool.PriorityThreadPoolTaskExecutor;
-import tom.prioritythreadpool.TaskPriority;
 import tom.tool.auditing.ToolExecutionContext;
 import tom.tool.registry.ToolRegistryService;
 import tom.user.model.User;
@@ -79,7 +79,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 
 	private static final Logger logger = LogManager.getLogger(AssistantQueryServiceImpl.class);
 
-	private final LlmService llmService;
+	private final LlmClientRegistry llmClientRegistry;
 	private final UserServiceInternal userService;
 	private final AssistantManagementService assistantManagementService;
 	private final AgentOrchestratorService agentOrchestratorService;
@@ -92,12 +92,12 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	private final Duration streamingTimeout;
 	private final ConcurrentHashMap<ConversationId, Sinks.One<Void>> activeLlmCalls;
 
-	public AssistantQueryServiceImpl(AssistantManagementService assistantManagementService, LlmService llmService,
-			UserServiceInternal userService, ToolRegistryService toolRegistryService,
-			AgentOrchestratorService agentOrchestratorService, AiRequestMetricsService aiRequestMetricsService,
-			PlatformTransactionManager transactionManager, MintyConfiguration properties,
-			@Qualifier("llmExecutor") PriorityThreadPoolTaskExecutor llmExecutor) {
-		this.llmService = llmService;
+	public AssistantQueryServiceImpl(AssistantManagementService assistantManagementService,
+			LlmClientRegistry llmClientRegistry, UserServiceInternal userService,
+			ToolRegistryService toolRegistryService, AgentOrchestratorService agentOrchestratorService,
+			AiRequestMetricsService aiRequestMetricsService, PlatformTransactionManager transactionManager,
+			MintyConfiguration properties, @Qualifier("llmExecutor") PriorityThreadPoolTaskExecutor llmExecutor) {
+		this.llmClientRegistry = llmClientRegistry;
 		this.userService = userService;
 		this.assistantManagementService = assistantManagementService;
 		this.toolRegistryService = toolRegistryService;
@@ -122,7 +122,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 	}
 
 	@Override
-	public CompletableFuture<String> ask(UserId userId, AssistantQuery query)
+	public CompletableFuture<String> ask(UserId userId, AssistantQuery query, TaskPriority priority)
 			throws QueueFullException, ConversationInUseException {
 
 		LlmRequest request = new LlmRequest(userId, query, Instant.now());
@@ -149,7 +149,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			} catch (Exception e) {
 				future.completeExceptionally(e);
 			}
-		}, query.getConversationId(), TaskPriority.Low);
+		}, query.getConversationId(), priority);
 
 		return future;
 	}
@@ -519,7 +519,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 						: Stream.empty())
 				.toList();
 
-		ChatClient chatClient = buildChatClient(assistant, computeContextSize(assistant, query, tools), query);
+		ChatClient chatClient = buildChatClient(user, assistant, computeContextSize(assistant, query, tools), query);
 
 		StringBuilder systemPrompt = new StringBuilder();
 
@@ -550,17 +550,17 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		return spec;
 	}
 
-	private ChatClient buildChatClient(Assistant assistant, int contextSize, AssistantQuery query) {
+	private ChatClient buildChatClient(User user, Assistant assistant, int contextSize, AssistantQuery query) {
 		List<Advisor> advisors = buildAdvisorList(assistant, query.getConversationId(), query.getQuery());
 
-		return llmService.buildChatClient(assistant, query, contextSize, advisors);
+		return llmClientRegistry.buildChatClient(user, assistant, query, contextSize, advisors);
 	}
 
 	private List<Advisor> buildAdvisorList(Assistant assistant, ConversationId conversationId, String query) {
 		List<Advisor> advisors = new ArrayList<>();
 
 		if (assistant.hasMemory()) {
-			ChatMemory chatMemory = llmService.getChatMemory();
+			ChatMemory chatMemory = llmClientRegistry.getChatMemory();
 			advisors.add(MessageChatMemoryAdvisor.builder(chatMemory).build());
 		}
 

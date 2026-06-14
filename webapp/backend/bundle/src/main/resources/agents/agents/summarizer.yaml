@@ -35,7 +35,7 @@ contextSize: 65536
 temperature: 0.5
 topK: 5
 hasMemory: false
-tools: ['Project Tools']
+tools: ['Knowledge Tools']
 prompt: |
   You are a summarization and formatting agent.
 
@@ -79,7 +79,7 @@ prompt: |
   PROJECT AWARENESS
   --------------------------------
 
-  You have access to Project Tools. If the query references an artifact
+  You have access to Knowledge Tools. If the query references an artifact
   stored in the project, read it using readNode before summarizing.
   Do not rely solely on conversation history - specialist agents write
   their full output to the project, not to the conversation.

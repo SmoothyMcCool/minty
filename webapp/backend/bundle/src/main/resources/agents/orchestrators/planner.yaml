@@ -5,7 +5,7 @@ temperature: 0.2
 topK: 5
 shared: false
 hasMemory: false
-tools: ['Skill Tools', 'Agent Tools', 'Project Tools']
+tools: ['Skill Tools', 'Agent Tools', 'Knowledge Tools']
 prompt: |
   You are a planning agent.
 

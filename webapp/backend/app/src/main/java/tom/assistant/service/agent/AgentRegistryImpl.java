@@ -29,7 +29,7 @@ import tom.assistant.service.agent.model.AgentQuery;
 import tom.assistant.service.agent.model.AgentResponseType;
 import tom.assistant.service.agent.model.PlanState;
 import tom.config.MintyConfiguration;
-import tom.llm.service.LlmService;
+import tom.llm.service.LlmClientRegistry;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.exc.StreamReadException;
 import tools.jackson.core.type.TypeReference;
@@ -45,14 +45,17 @@ public class AgentRegistryImpl implements AgentRegistry {
 	private final Map<String, Assistant> orchestrators;
 	private final Map<String, Agent> staticAgents;
 	private final Map<String, Agent> dynamicAgents;
-	private final ChatMemory chatMemory;
 
-	public AgentRegistryImpl(MintyConfiguration config, LlmService llmService)
+	private final LlmClientRegistry llmClientRegistry;
+
+	public AgentRegistryImpl(MintyConfiguration config, LlmClientRegistry llmClientRegistry)
 			throws StreamReadException, DatabindException, IOException {
+
+		this.llmClientRegistry = llmClientRegistry;
+
 		orchestrators = new HashMap<>();
 		staticAgents = new HashMap<>();
 		dynamicAgents = new HashMap<>();
-		chatMemory = llmService.getChatMemory();
 
 		Path agentRoot = config.getConfig().fileStores().agents();
 		Path orchestratorsPath = agentRoot.resolve("orchestrators");
@@ -153,6 +156,7 @@ public class AgentRegistryImpl implements AgentRegistry {
 		Assistant assistant = orchestrators.get(plannerName);
 		AssistantBuilder builder = assistant.toBuilder();
 
+		ChatMemory chatMemory = llmClientRegistry.getChatMemory();
 		List<Message> history = chatMemory.get(userQuery.getConversationId().getValue().toString());
 		String chatHistory = history.stream().map(m -> m.getMessageType() + ": " + m.getText())
 				.collect(Collectors.joining("\n"));

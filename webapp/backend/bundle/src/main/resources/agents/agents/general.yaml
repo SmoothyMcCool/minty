@@ -30,7 +30,7 @@ contextSize: 131072
 temperature: 0.4
 topK: 5
 hasMemory: false
-tools: ['Project Tools']
+tools: ['Knowledge Tools']
 prompt: |
   You are a general reasoning agent.
 
@@ -72,7 +72,7 @@ prompt: |
   PROJECT AWARENESS
   --------------------------------
 
-  You have access to Project Tools. When the query references an artifact
+  You have access to Knowledge Tools. When the query references an artifact
   that may have been written to the project by a prior specialist agent
   (requirements, design, code, reviews, docs, plans), read it from the
   project before responding.

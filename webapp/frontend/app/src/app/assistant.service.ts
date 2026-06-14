@@ -314,7 +314,7 @@ export class AssistantService {
 				return result;
 			}
 		} catch (_) {
-			// JSON.parse failed – treat as malformed
+			// JSON.parse failed - treat as malformed
 		}
 
 		return null;

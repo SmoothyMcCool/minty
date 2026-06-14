@@ -11,6 +11,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
+import tom.api.TaskPriority;
 import tom.api.model.assistant.AssistantQuery;
 import tom.api.model.assistant.AssistantSpec;
 import tom.api.services.UserService;
@@ -18,11 +19,11 @@ import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
 import tom.api.services.assistant.ConversationInUseException;
 import tom.api.services.assistant.QueueFullException;
-import tom.assistant.service.management.AssistantRegistry;
+import tom.assistant.service.management.AssistantManagementServiceInternal;
 import tom.config.MintyConfiguration;
 import tom.conversation.model.Conversation;
 import tom.conversation.repository.ConversationRepository;
-import tom.llm.service.LlmService;
+import tom.llm.service.LlmClientRegistry;
 
 @Service
 public class ConversationNamingService {
@@ -31,16 +32,19 @@ public class ConversationNamingService {
 
 	private final ConversationRepository conversationRepository;
 	private final AssistantQueryService assistantQueryService;
-	private final LlmService llmService;
+	private final LlmClientRegistry llmClientRegistry;
 	private final ConversationServiceInternal conversationService;
+	private final AssistantSpec assistantSpec;
 
 	public ConversationNamingService(ConversationRepository conversationRepository,
-			AssistantQueryService assistantQueryService, AssistantRegistry assistantRegistry,
-			ConversationServiceInternal conversationService, LlmService llmService, MintyConfiguration properties) {
+			AssistantManagementServiceInternal assistantManagementService, AssistantQueryService assistantQueryService,
+			ConversationServiceInternal conversationService, LlmClientRegistry llmClientRegistry,
+			MintyConfiguration properties) {
 		this.conversationRepository = conversationRepository;
 		this.assistantQueryService = assistantQueryService;
-		this.llmService = llmService;
+		this.llmClientRegistry = llmClientRegistry;
 		this.conversationService = conversationService;
+		this.assistantSpec = new AssistantSpec(AssistantManagementService.ConversationNamingAssistantId);
 	}
 
 	@Scheduled(fixedDelay = 5000)
@@ -52,7 +56,7 @@ public class ConversationNamingService {
 				.getAssociatedAssistantId() != AssistantManagementService.DefaultAssistantId).toList();
 
 		conversations.forEach(conversation -> {
-			List<Message> messages = llmService.getChatMemory().get(conversation.getId().value().toString());
+			List<Message> messages = llmClientRegistry.getChatMemory().get(conversation.getId().value().toString());
 
 			if (messages.size() > 1 || (messages.size() == 1 && messages.get(0).getText().length() > 80)) {
 				logger.info("Starting on conversation ID " + conversation.getId().value().toString());
@@ -64,8 +68,6 @@ public class ConversationNamingService {
 				});
 
 				AssistantQuery assistantQuery = new AssistantQuery();
-				AssistantSpec assistantSpec = new AssistantSpec(
-						AssistantManagementService.ConversationNamingAssistantId);
 				assistantQuery.setAssistantSpec(assistantSpec);
 				tom.api.model.conversation.Conversation namingConversation = conversationService.newConversation(
 						UserService.DefaultId, AssistantManagementService.ConversationNamingAssistantId);
@@ -76,7 +78,8 @@ public class ConversationNamingService {
 				while (summary == null) {
 					try {
 						// blocks this scheduled thread, which is acceptable here
-						summary = assistantQueryService.ask(UserService.DefaultId, assistantQuery).get();
+						summary = assistantQueryService.ask(UserService.DefaultId, assistantQuery, TaskPriority.Medium)
+								.get();
 					} catch (CancellationException e) {
 						logger.warn("Conversation naming request was cancelled.");
 						return;

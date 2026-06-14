@@ -12,24 +12,26 @@
 								</option>
 							}
 						</select>
-						<button class="btn btn-primary" (click)="newProjectVisible = true"><i class="bi bi-folder-plus"></i></button>
+						<button class="btn btn-primary" (click)="newProjectVisible = true"><i
+								class="bi bi-folder-plus"></i></button>
 					</div>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" [class.active]="isRouteActive('/projects')" (click)="navigateTo('/projects')" data-bs-toggle="collapse"
-						data-bs-target=".navbar-collapse.show">Projects</a>
+					<a class="nav-link" [class.active]="isRouteActive('/projects')" (click)="navigateTo('/projects')"
+						data-bs-toggle="collapse" data-bs-target=".navbar-collapse.show">Projects</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" [class.active]="isRouteActive('/assistants')" (click)="navigateTo('/assistants')" data-bs-toggle="collapse"
+					<a class="nav-link" [class.active]="isRouteActive('/assistants')"
+						(click)="navigateTo('/assistants')" data-bs-toggle="collapse"
 						data-bs-target=".navbar-collapse.show">Assistants</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" [class.active]="isRouteActive('/workflow')" (click)="navigateTo('/workflow')" data-bs-toggle="collapse"
-						data-bs-target=".navbar-collapse.show">Workflows</a>
+					<a class="nav-link" [class.active]="isRouteActive('/workflow')" (click)="navigateTo('/workflow')"
+						data-bs-toggle="collapse" data-bs-target=".navbar-collapse.show">Workflows</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" [class.active]="isRouteActive('/skill')" (click)="navigateTo('/skills')" data-bs-toggle="collapse"
-						data-bs-target=".navbar-collapse.show">Skills</a>
+					<a class="nav-link" [class.active]="isRouteActive('/skill')" (click)="navigateTo('/skills')"
+						data-bs-toggle="collapse" data-bs-target=".navbar-collapse.show">Skills</a>
 				</li>
 			</ul>
 		</div>
@@ -65,49 +67,46 @@
 </nav>
 <div class="container-fluid">
 	<div class="container-top">
-
-		<!-- SUCCESS -->
-		@if (alerts.success.length > 0) {
-			<div class="alert alert-primary" @alertAnim>
-				@for (alert of alerts.success; track alert) {
-					<strong [innerHTML]="alert"></strong>
-				}
-			</div>
-		}
-
-		<!-- INFO -->
-		@if (alerts.info.length > 0) {
-			<div class="alert alert-info" @alertAnim>
-				@for (alert of alerts.info; track alert) {
-					<strong [innerHTML]="alert"></strong>
-				}
-			</div>
-		}
-
-		<!-- FAILURE -->
-		@if (alerts.failure.length > 0) {
-			<div class="alert alert-danger" @alertAnim>
-				<div class="row mb-3 mb-0">
-					<div class="col me-auto align-middle">
-						@for (alert of alerts.failure; track alert) {
-							<div class="row">
-								<label class="col-form-label">
-									<strong>Oh no!&nbsp;</strong>
-									<span>
-										<pre [innerHTML]="alert"></pre>
-									</span>
-								</label>
-							</div>
-						}
+		<div class="toast-container position-absolute end-0 p-3" style="z-index:1050;">
+			<!-- SUCCESS TOASTS -->
+			@for (alert of alerts.success; track alert) {
+				<div class="toast show" role="alert">
+					<div class="toast-header bg-success text-white">
+						<strong class="me-auto">Success</strong>
+						<button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
 					</div>
-					<div class="col-auto">
-						<button class="btn btn-danger" (click)="hideError()">
-							Dismiss
-						</button>
+					<div class="toast-body" style="white-space: pre-wrap;">
+						{{alert}}
 					</div>
 				</div>
-			</div>
-		}
+			}
+
+			<!-- INFO TOASTS -->
+			@for (alert of alerts.info; track alert) {
+				<div class="toast show" role="alert">
+					<div class="toast-header bg-info text-white">
+						<strong class="me-auto">Info</strong>
+						<button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+					</div>
+					<div class="toast-body" style="white-space: pre-wrap;">
+						{{alert}}
+					</div>
+				</div>
+			}
+
+			<!-- FAILURE TOASTS -->
+			@for (alert of alerts.failure; track alert) {
+				<div class="toast show" role="alert">
+					<div class="toast-header bg-danger text-white">
+						<strong class="me-auto">Error</strong>
+						<button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+					</div>
+					<div class="toast-body" style="white-space: pre-wrap;">
+						{{alert}}
+					</div>
+				</div>
+			}
+		</div>
 	</div>
 </div>
 
@@ -117,8 +116,7 @@
 			<div class="modal-content">
 				<div class="modal-header">
 					<h5 class="modal-title">New Project</h5>
-					<button type="button" class="btn-close" (click)="cancelNewProject()"
-						aria-label="Close"></button>
+					<button type="button" class="btn-close" (click)="cancelNewProject()" aria-label="Close"></button>
 				</div>
 				<div class="modal-body">
 					<form role="form row">

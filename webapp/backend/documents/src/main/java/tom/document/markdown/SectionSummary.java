@@ -1,10 +1,13 @@
 package tom.document.markdown;
 
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import tools.jackson.databind.JsonNode;
+
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public record SectionSummary(boolean insufficient, String type, String summary, List<String> keywords,
-		SectionEntities entities, List<String> queries) {
+public record SectionSummary(String type, String summary, List<String> keywords, Map<String, JsonNode> entities,
+		List<String> queries) {
 }

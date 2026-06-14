@@ -125,7 +125,7 @@ public class MintyConfigurationImpl implements MintyConfiguration {
 	private static Object resolveTree(Object node, String path, Properties resolved) {
 		if (node instanceof Map<?, ?> map) {
 			Map<String, Object> out = new LinkedHashMap<>();
-			for (var e : map.entrySet()) {
+			for (Entry<?, ?> e : map.entrySet()) {
 				String key = e.getKey().toString();
 				String newPath = path.isEmpty() ? key : path + "." + key;
 				out.put(key, resolveTree(e.getValue(), newPath, resolved));

@@ -46,7 +46,7 @@ import tom.assistant.service.management.AssistantManagementServiceInternal;
 import tom.config.model.ChatModelConfig;
 import tom.controller.ResponseWrapper;
 import tom.conversation.service.ConversationServiceInternal;
-import tom.llm.service.LlmService;
+import tom.llm.service.LlmClientRegistry;
 import tom.meta.service.MetadataService;
 import tom.model.security.UserDetailsUser;
 import tools.jackson.databind.ObjectMapper;
@@ -59,17 +59,17 @@ public class AssistantController {
 
 	private final MetadataService metadataService;
 	private final AssistantManagementServiceInternal assistantManagementService;
-	private final LlmService llmService;
+	private final LlmClientRegistry llmClientRegistry;
 	private final ConversationServiceInternal conversationService;
 	private final AssistantQueryService assistantQueryService;
 	private final ObjectMapper mapper;
 
 	public AssistantController(AssistantManagementServiceInternal assistantManagementService,
-			AssistantQueryService assistantQueryService, MetadataService metadataService, LlmService llmService,
-			ConversationServiceInternal conversationService) {
+			AssistantQueryService assistantQueryService, MetadataService metadataService,
+			LlmClientRegistry llmClientRegistry, ConversationServiceInternal conversationService) {
 		this.assistantManagementService = assistantManagementService;
 		this.metadataService = metadataService;
-		this.llmService = llmService;
+		this.llmClientRegistry = llmClientRegistry;
 		this.conversationService = conversationService;
 		this.assistantQueryService = assistantQueryService;
 		this.mapper = MintyObjectMapper.StandardJsonMapper;
@@ -114,7 +114,7 @@ public class AssistantController {
 	@GetMapping({ "/models" })
 	public ResponseEntity<ResponseWrapper<List<ChatModelConfig>>> listModels(
 			@AuthenticationPrincipal UserDetailsUser user) {
-		List<ChatModelConfig> models = llmService.listModels();
+		List<ChatModelConfig> models = llmClientRegistry.listModels();
 		ResponseWrapper<List<ChatModelConfig>> response = ResponseWrapper.SuccessResponse(models);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}

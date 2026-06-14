@@ -30,7 +30,7 @@ export class ImageInputComponent {
 	onPaste(event: ClipboardEvent) {
 		const file = this.getImageFromClipboard(event.clipboardData);
 		if (!file) {
-			// Nothing to do – let the browser paste text normally
+			// Nothing to do - let the browser paste text normally
 			return;
 		}
 

@@ -16,9 +16,10 @@ import tom.api.services.exception.NotOwnedException;
 
 public interface DocumentService {
 
-	String fileToMarkdown(File file, SpreadsheetFormat tsv);
+	String fileToMarkdown(File file, SpreadsheetFormat format);
 
-	void fileToMarkdownAndDecompose(UserId userId, ProjectId projectId, File file, boolean summarize) throws Exception;
+	void decompose(UserId userId, ProjectId projectId, String documentName, String markdown, boolean summarize)
+			throws Exception;
 
 	boolean documentExists(Document document);
 
