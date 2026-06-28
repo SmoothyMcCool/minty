@@ -23,6 +23,8 @@ public interface PluginServices {
 
 	DocumentService getDocumentService();
 
+	DocumentExtractorService getDocumentExtractorService();
+
 	ProjectService getProjectService();
 
 	CacheService getCacheService();
@@ -32,4 +34,5 @@ public interface PluginServices {
 	WorkflowService getWorkflowService();
 
 	AgentRegistry getAgentRegistry();
+
 }

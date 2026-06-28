@@ -7,6 +7,8 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -370,23 +372,68 @@ public class ProjectServiceImpl implements ProjectService {
 		return sb.toString();
 	}
 
+	private static final Map<String, FileType> EXTENSION_MAP = Map.ofEntries(
+			// MARKDOWN
+			Map.entry("md", FileType.markdown), Map.entry("markdown", FileType.markdown),
+
+			// CODE (source‑code / scripts)
+			Map.entry("ts", FileType.code), Map.entry("tsx", FileType.code), Map.entry("js", FileType.code),
+			Map.entry("jsx", FileType.code), Map.entry("cjs", FileType.code), Map.entry("mjs", FileType.code),
+			Map.entry("css", FileType.code), Map.entry("scss", FileType.code), Map.entry("sass", FileType.code),
+
+			Map.entry("py", FileType.code), Map.entry("rb", FileType.code), Map.entry("php", FileType.code),
+			Map.entry("go", FileType.code), Map.entry("rs", FileType.code), Map.entry("java", FileType.code),
+			Map.entry("kt", FileType.code), Map.entry("kts", FileType.code), Map.entry("cs", FileType.code),
+			Map.entry("cpp", FileType.code), Map.entry("cxx", FileType.code), Map.entry("cc", FileType.code),
+			Map.entry("c", FileType.code), Map.entry("h", FileType.code), Map.entry("hpp", FileType.code),
+
+			Map.entry("sh", FileType.code), Map.entry("bash", FileType.code), Map.entry("ps1", FileType.code),
+			Map.entry("sql", FileType.code), Map.entry("bat", FileType.code), Map.entry("cmd", FileType.code),
+
+			Map.entry("swift", FileType.code), Map.entry("scala", FileType.code), Map.entry("groovy", FileType.code),
+			Map.entry("dart", FileType.code), Map.entry("lua", FileType.code), Map.entry("pl", FileType.code),
+			Map.entry("pm", FileType.code), Map.entry("vb", FileType.code), Map.entry("f90", FileType.code),
+			Map.entry("for", FileType.code), Map.entry("f95", FileType.code), Map.entry("hs", FileType.code),
+			Map.entry("erl", FileType.code), Map.entry("ex", FileType.code), Map.entry("exs", FileType.code),
+			Map.entry("r", FileType.code), Map.entry("R", FileType.code),
+
+			// HTML
+			Map.entry("html", FileType.html), Map.entry("htm", FileType.html),
+
+			// JSON / YAML
+			Map.entry("json", FileType.json), Map.entry("yaml", FileType.yaml), Map.entry("yml", FileType.yaml),
+
+			// TEXT (config, data)
+			Map.entry("xml", FileType.text), Map.entry("csv", FileType.text), Map.entry("tsv", FileType.text),
+			Map.entry("toml", FileType.text), Map.entry("ini", FileType.text),
+
+			// DIAGRAM / graph description
+			Map.entry("mmd", FileType.diagram), Map.entry("mermaid", FileType.diagram),
+			Map.entry("dot", FileType.diagram), Map.entry("plantuml", FileType.diagram),
+			Map.entry("puml", FileType.diagram));
+
 	private FileType detectFileType(String path) {
-		String lower = path.toLowerCase();
+		String lower = path.toLowerCase(Locale.ROOT);
 
-		if (lower.endsWith(".md")) {
-			return FileType.markdown;
-		}
-		if (lower.endsWith(".json")) {
-			return FileType.json;
-		}
-		if (lower.endsWith(".yaml") || lower.endsWith(".yml")) {
-			return FileType.yaml;
-		}
-		if (lower.endsWith(".html")) {
-			return FileType.html;
+		// Special file names without an extension (Dockerfile)
+		int slashIdx = lower.lastIndexOf('/');
+		String nameOnly = (slashIdx >= 0 ? lower.substring(slashIdx + 1) : lower);
+		if ("dockerfile".equals(nameOnly)) {
+			return FileType.code;
 		}
 
-		return FileType.text;
+		// Extension lookup
+		// Grab the last component after the final dot – if any
+		int dotIdx = lower.lastIndexOf('.');
+		if (dotIdx >= 0 && dotIdx < lower.length() - 1) {
+			String ext = lower.substring(dotIdx + 1);
+			FileType mapped = EXTENSION_MAP.get(ext);
+			if (mapped != null) {
+				return mapped;
+			}
+		}
+
+		return FileType.text; // everything else is plain text
 	}
 
 	private void insertFileVersion(UserId userId, UUID nodeId, int version, String content) {

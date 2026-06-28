@@ -4,17 +4,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.model.transformer.KeywordMetadataEnricher;
 import org.springframework.ai.model.transformer.SummaryMetadataEnricher;
 import org.springframework.ai.model.transformer.SummaryMetadataEnricher.SummaryType;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.ai.vectorstore.mariadb.MariaDBVectorStore;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import tom.api.DocumentId;
@@ -22,9 +26,12 @@ import tom.api.model.document.Document;
 import tom.api.model.document.DocumentSection;
 import tom.api.services.DocumentExtractorService;
 import tom.config.MintyConfiguration;
+import tom.config.model.EmbeddingConfig;
 import tom.document.service.DocumentEmbeddingService;
 import tom.document.service.DocumentProcessingException;
 import tom.llm.service.LlmClientRegistry;
+import tom.user.model.User;
+import tom.user.service.UserServiceInternal;
 
 @Service
 public class DocumentEmbeddingServiceImpl implements DocumentEmbeddingService {
@@ -32,31 +39,31 @@ public class DocumentEmbeddingServiceImpl implements DocumentEmbeddingService {
 	private static final Logger logger = LogManager.getLogger(DocumentEmbeddingServiceImpl.class);
 
 	private final DocumentExtractorService documentExtractorService;
+	private final UserServiceInternal userService;
 	private final LlmClientRegistry llmClientRegistry;
+	private final JdbcTemplate vectorJdbcTemplate;
+	private final EmbeddingConfig embeddingConfig;
 
 	private final int keywordsPerDocument;
 	private final int documentTargetChunkSize;
 	private final int macroTargetChunkSize;
 	private final int embeddingBatchSize;
 	private final String summarizingModel;
-	// private final int maxEmbeddingTokens;
-
-	private final ChatModel chatModel;
 
 	public DocumentEmbeddingServiceImpl(DocumentExtractorService documentExtractorService,
-			LlmClientRegistry llmClientRegistry, MintyConfiguration properties) {
+			UserServiceInternal userService, LlmClientRegistry llmClientRegistry, JdbcTemplate vectorJdbcTemplate,
+			MintyConfiguration properties) {
 		this.documentExtractorService = documentExtractorService;
+		this.userService = userService;
 		this.llmClientRegistry = llmClientRegistry;
-		keywordsPerDocument = properties.getConfig().llm().embedding().keywordsPerDocument();
-		documentTargetChunkSize = properties.getConfig().llm().embedding().documentTargetChunkSize();
-		macroTargetChunkSize = properties.getConfig().llm().embedding().macroTargetChunkSize();
-		embeddingBatchSize = properties.getConfig().llm().embedding().batchSize();
+		this.vectorJdbcTemplate = vectorJdbcTemplate;
+		this.embeddingConfig = properties.getConfig().llm().embedding();
 
-		// maxEmbeddingTokens =
-		// properties.getConfig().llm().embedding().maxEmbeddingTokens();
-
-		summarizingModel = properties.getConfig().llm().embedding().summarizingModel();
-		chatModel = llmClientRegistry.buildSimpleModel(summarizingModel);
+		keywordsPerDocument = embeddingConfig.keywordsPerDocument();
+		documentTargetChunkSize = embeddingConfig.documentTargetChunkSize();
+		macroTargetChunkSize = embeddingConfig.macroTargetChunkSize();
+		embeddingBatchSize = embeddingConfig.batchSize();
+		summarizingModel = embeddingConfig.summarizingModel();
 
 	}
 
@@ -71,6 +78,14 @@ public class DocumentEmbeddingServiceImpl implements DocumentEmbeddingService {
 					metadata.put("section_breadcrumb", documentExtractorService.buildBreadcrumb(sections, s));
 					return new org.springframework.ai.document.Document(s.content(), metadata);
 				}).toList();
+
+		Optional<User> maybeUser = userService.getUserFromId(doc.ownerId());
+		if (maybeUser.isEmpty()) {
+			return;
+		}
+		User user = maybeUser.get();
+
+		ChatModel chatModel = llmClientRegistry.buildSimpleModel(user, summarizingModel);
 
 		// Summarize larger sections first
 		List<org.springframework.ai.document.Document> macroChunks = split(rawDocuments, macroTargetChunkSize);
@@ -88,7 +103,7 @@ public class DocumentEmbeddingServiceImpl implements DocumentEmbeddingService {
 		for (int i = 0; i < microChunks.size(); i += embeddingBatchSize) {
 			List<org.springframework.ai.document.Document> batch = microChunks.subList(i,
 					Math.min(i + embeddingBatchSize, microChunks.size()));
-			if (!addDocuments(batch, documentTargetChunkSize, 0)) {
+			if (!addDocuments(user, batch, documentTargetChunkSize, 0)) {
 				String batchStr = batch.stream().map(d -> d.getText()).collect(Collectors.joining("\n-----\n"));
 				throw new DocumentProcessingException(
 						"Failed to store document despite repeated re-chunking. Failing. The failing chunk was: "
@@ -135,22 +150,26 @@ public class DocumentEmbeddingServiceImpl implements DocumentEmbeddingService {
 		return summarizer.apply(documents);
 	}
 
-	private boolean addDocuments(List<org.springframework.ai.document.Document> documents, int targetChunkSize,
-			int iteration) {
+	private boolean addDocuments(User user, List<org.springframework.ai.document.Document> documents,
+			int targetChunkSize, int iteration) {
 
 		if (iteration >= 5) {
 			return false;
 		}
 
-		VectorStore vectorStore = llmClientRegistry.getVectorStore(summarizingModel);
 		try {
+			EmbeddingModel embeddingModel = llmClientRegistry.getEmbeddingModel(user, embeddingConfig);
+			VectorStore vectorStore = MariaDBVectorStore.builder(vectorJdbcTemplate, embeddingModel).schemaName("Minty")
+					.vectorTableName("vector_store").idFieldName("doc_id").contentFieldName("text")
+					.metadataFieldName("meta").embeddingFieldName("embedding").initializeSchema(true).build();
+
 			vectorStore.add(documents);
 			return true;
 		} catch (Exception e) {
 			logger.warn("Chunk too large. Splitting.");
 			// split again and retry
 			int newTarget = targetChunkSize / 2;
-			return addDocuments(split(documents, newTarget), newTarget, iteration + 1);
+			return addDocuments(user, split(documents, newTarget), newTarget, iteration + 1);
 		}
 	}
 }

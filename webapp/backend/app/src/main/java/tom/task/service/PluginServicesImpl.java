@@ -102,6 +102,11 @@ public class PluginServicesImpl implements PluginServices {
 	}
 
 	@Override
+	public DocumentExtractorService getDocumentExtractorService() {
+		return documentExtractorService;
+	}
+
+	@Override
 	public ProjectService getProjectService() {
 		return projectService;
 	}

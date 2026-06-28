@@ -32,12 +32,22 @@ llm:
     - name: ollama
       provider: Ollama
       url: http://localhost:11434
+      apiKeyName: dummy-key
+      requiresKey: false
       apiConnectionTimeout: PT60S
       apiTimeout: PT5M
     - name: llama-cpp
       provider: OpenAI
       url: http://192.168.2.106:8081
-      apiKey: dummy-key
+      apiKeyName: dummy-key
+      requiresKey: false
+      apiConnectionTimeout: PT60S
+      apiTimeout: PT5M
+    - name: anthropic
+      provider: Anthropic
+      url: http://192.168.2.106:8081
+      apiKeyName: Anthropic API Key
+      requiresKey: true
       apiConnectionTimeout: PT60S
       apiTimeout: PT5M
   modelDefinitions:
@@ -79,6 +89,7 @@ llm:
   asyncResponseTimeout: PT20M
   # Embedding Parameters
   embedding:
+    endpoint: ollama
     model: nomic-embed-text
     summarizingModel: gemma4:e4b-it-q4_K_M
     keywordsPerDocument: 5
@@ -148,6 +159,7 @@ pluginConfiguration:
 
 # List of default properties that each use should have that isn't tied to a task spec.
 userDefaults:
+  - "Anthropic API Key"
 
 # System default values for various Tasks
 systemDefaults:

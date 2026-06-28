@@ -8,11 +8,12 @@ import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.model.ChatModel;
-import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.ai.embedding.EmbeddingModel;
 
 import tom.api.model.assistant.Assistant;
 import tom.api.model.assistant.AssistantQuery;
 import tom.config.model.ChatModelConfig;
+import tom.config.model.EmbeddingConfig;
 import tom.user.model.User;
 
 public interface LlmClientRegistry {
@@ -20,9 +21,7 @@ public interface LlmClientRegistry {
 	ChatClient buildChatClient(User user, Assistant assistant, AssistantQuery query, int contextSize,
 			List<Advisor> advisors);
 
-	ChatModel buildSimpleModel(String modelName);
-
-	VectorStore getVectorStore(String modelName);
+	ChatModel buildSimpleModel(User user, String modelName);
 
 	ChatMemoryRepository getChatMemoryRepository();
 
@@ -35,5 +34,7 @@ public interface LlmClientRegistry {
 	LlmEndpointService serviceForModel(String modelName);
 
 	List<ChatModelConfig> listModels();
+
+	EmbeddingModel getEmbeddingModel(User user, EmbeddingConfig embeddingConfig);
 
 }

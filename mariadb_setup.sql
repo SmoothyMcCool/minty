@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS Assistant (
 
 CREATE TABLE IF NOT EXISTS Conversation (
     title                  TEXT,
-    conversationId         UUID NOT NULL,
+    id                     UUID NOT NULL,
     ownerId                UUID,
     associatedAssistantId  UUID,
     projectId              UUID,
@@ -73,11 +73,15 @@ CREATE TABLE IF NOT EXISTS Conversation (
 );
 
 CREATE TABLE IF NOT EXISTS SPRING_AI_CHAT_MEMORY (
+    sequence_id     BIGINT NOT NULL,
     conversation_id TEXT,
     content         TEXT,
     type            TEXT,
     timestamp       TIMESTAMP
 );
+
+CREATE INDEX IF NOT EXISTS SPRING_AI_CHAT_MEMORY_CONVERSATION_ID_SEQUENCE_ID_IDX
+    ON SPRING_AI_CHAT_MEMORY (conversation_id(36), sequence_id);
 
 -- =============================================================
 -- DOCUMENTS & TAGS

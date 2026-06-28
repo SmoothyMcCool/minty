@@ -1,10 +1,10 @@
 package tom.openai.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import javax.sql.DataSource;
-
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.ToolCallingAdvisor;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.document.MetadataMode;
@@ -15,80 +15,71 @@ import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.OpenAiEmbeddingModel;
 import org.springframework.ai.openai.OpenAiEmbeddingOptions;
-import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.ai.vectorstore.mariadb.MariaDBVectorStore;
-import org.springframework.jdbc.core.JdbcTemplate;
-
-import com.openai.client.OpenAIClient;
-import com.openai.client.OpenAIClientAsync;
-import com.openai.client.okhttp.OpenAIOkHttpClient;
-import com.openai.client.okhttp.OpenAIOkHttpClientAsync;
-import com.openai.credential.BearerTokenCredential;
 
 import tom.api.model.assistant.Assistant;
 import tom.api.model.assistant.AssistantQuery;
 import tom.config.model.EndpointConfig;
+import tom.llm.KeyRequiredException;
 import tom.llm.service.LlmEndpointService;
 import tom.tool.auditing.AuditingToolCallingManager;
 import tom.user.model.User;
 
 public class OpenAiEndpointService implements LlmEndpointService {
 
-	private final OpenAIClient openAiClient;
-	private final OpenAIClientAsync openAiClientAsync;
-	private final VectorStore vectorStore;
-	private final EmbeddingModel embeddingModel;
 	private final ToolCallingManager defaultToolCallingManager;
+	private final EndpointConfig endpointConfig;
 
-	public OpenAiEndpointService(EndpointConfig endpointConfig, JdbcTemplate vectorJdbcTemplate, DataSource dataSource,
-			String embeddingModelName, int chatMemoryDepth) {
-
-		this.openAiClient = OpenAIOkHttpClient.builder().baseUrl(endpointConfig.url().toString())
-				.apiKey("doesn't matter for llama-cpp").timeout(endpointConfig.apiTimeout()).build();
-
-		this.openAiClientAsync = OpenAIOkHttpClientAsync.builder().baseUrl(endpointConfig.url().toString())
-				.apiKey("doesn't matter for llama.cpp").timeout(endpointConfig.apiTimeout()).build();
-
-		OpenAiEmbeddingOptions embeddingOptions = OpenAiEmbeddingOptions.builder().model(embeddingModelName).build();
-		embeddingModel = new OpenAiEmbeddingModel(openAiClient, MetadataMode.EMBED, embeddingOptions);
-
-		vectorStore = MariaDBVectorStore.builder(vectorJdbcTemplate, embeddingModel).schemaName("Minty")
-				.vectorTableName("vector_store").idFieldName("doc_id").contentFieldName("text")
-				.metadataFieldName("meta").embeddingFieldName("embedding").initializeSchema(true).build();
+	public OpenAiEndpointService(EndpointConfig endpointConfig) {
 
 		defaultToolCallingManager = DefaultToolCallingManager.builder().build();
+
+		this.endpointConfig = endpointConfig;
+	}
+
+	@Override
+	public EmbeddingModel buildEmbeddingModel(User user, String embeddingModelName) {
+		OpenAiEmbeddingOptions embeddingOptions = OpenAiEmbeddingOptions.builder().model(embeddingModelName)
+				.apiKey(getApiKey(user)).baseUrl(endpointConfig.url().toString()).build();
+		return OpenAiEmbeddingModel.builder().metadataMode(MetadataMode.EMBED).options(embeddingOptions).build();
 	}
 
 	@Override
 	public ChatClient buildChatClient(User user, Assistant assistant, AssistantQuery query, int contextSize,
 			List<Advisor> advisors) {
-		// String apiKey = user.getSettings().get("OpenAI Key");
-		// if (apiKey == null) {
-		// throw new RuntimeException("No OpenAI key set up.");
-		// }
-		OpenAiChatOptions chatOptions = OpenAiChatOptions.builder().model(assistant.model())
-				.credential(BearerTokenCredential.create("doesn't matter for llama-cpp"))
-				.temperature(assistant.temperature())
+
+		OpenAiChatOptions chatOptions = OpenAiChatOptions.builder().model(assistant.model()).apiKey(getApiKey(user))
+				.baseUrl(endpointConfig.url().toString()).temperature(assistant.temperature())
 				// OpenAI-compat endpoints don't always honour topK, but pass it through
 				.build();
 
-		ChatModel chatModel = OpenAiChatModel.builder().openAiClient(openAiClient).openAiClientAsync(openAiClientAsync)
-				.toolCallingManager(new AuditingToolCallingManager(query.getConversationId().getValue().toString(),
-						defaultToolCallingManager))
-				.options(chatOptions).build();
+		ToolCallingManager auditingManager = new AuditingToolCallingManager(
+				query.getConversationId().getValue().toString(), defaultToolCallingManager);
 
-		return ChatClient.builder(chatModel).defaultAdvisors(advisors).build();
+		List<Advisor> allAdvisors = new ArrayList<>();
+		allAdvisors.add(ToolCallingAdvisor.builder().toolCallingManager(auditingManager).build());
+		allAdvisors.addAll(advisors);
+
+		ChatModel chatModel = OpenAiChatModel.builder().options(chatOptions).build();
+
+		return ChatClient.builder(chatModel).defaultAdvisors(allAdvisors).build();
 	}
 
 	@Override
-	public ChatModel buildSimpleModel(String modelName) {
-		return OpenAiChatModel.builder().openAiClient(openAiClient).openAiClientAsync(openAiClientAsync)
-				.options(OpenAiChatOptions.builder().model(modelName).build()).build();
+	public ChatModel buildSimpleModel(User user, String modelName) {
+		return OpenAiChatModel.builder().options(OpenAiChatOptions.builder().model(modelName).apiKey(getApiKey(user))
+				.baseUrl(endpointConfig.url().toString()).build()).build();
 	}
 
-	@Override
-	public VectorStore getVectorStore() {
-		return vectorStore;
+	private String getApiKey(User user) {
+		String apiKeyName = endpointConfig.apiKeyName();
+		String apiKey = user.getDefaults().get(apiKeyName);
+		if (apiKey == null) {
+			if (endpointConfig.requiresKey()) {
+				throw new KeyRequiredException(apiKeyName);
+			} else {
+				apiKey = "doesn't matter";
+			}
+		}
+		return apiKey;
 	}
-
 }
