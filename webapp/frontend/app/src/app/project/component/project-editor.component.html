@@ -215,6 +215,7 @@
 							</div>
 						</div>
 						<h1>{{selectedItem.item.path}}</h1>
+						<hr>
 						<minty-project-node-viewer [ngModel]="selectedItem.item"
 							(ngModelChange)="onFileContentsChanged($event)"
 							[edit]="editFile"></minty-project-node-viewer>

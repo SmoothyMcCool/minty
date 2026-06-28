@@ -39,7 +39,7 @@ export class NodeViewerComponent implements ControlValueAccessor {
 		if (this.node?.path) {
 			lang = this.getMarkdownLang(this.node?.path);
 		}
-		if (this.node?.fileType === 'code' || this.node?.fileType === 'json' || this.node?.fileType === 'markdown') {
+		if (this.node?.fileType === 'code' || this.node?.fileType === 'json') {
 			this.displayText = lang + '\n' + this.node.content + '\n```';
 		} else {
 			this.displayText = this.node?.content;

@@ -22,6 +22,7 @@
 	<modules>
 		<module>../parent</module>
 		<module>../api</module>
+		<module>../api-anthropic</module>
 		<module>../api-ollama</module>
 		<module>../api-openai</module>
 		<module>../app</module>

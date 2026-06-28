@@ -16,7 +16,7 @@ import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryRepository;
 import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryRepositoryDialect;
 import org.springframework.ai.chat.model.ChatModel;
-import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +24,7 @@ import tom.api.model.assistant.Assistant;
 import tom.api.model.assistant.AssistantQuery;
 import tom.config.MintyConfigurationImpl;
 import tom.config.model.ChatModelConfig;
+import tom.config.model.EmbeddingConfig;
 import tom.user.model.User;
 
 @Service
@@ -61,13 +62,8 @@ public class LlmClientRegistryImpl implements LlmClientRegistry {
 	}
 
 	@Override
-	public ChatModel buildSimpleModel(String modelName) {
-		return serviceForModel(modelName).buildSimpleModel(modelName);
-	}
-
-	@Override
-	public VectorStore getVectorStore(String modelName) {
-		return serviceForModel(modelName).getVectorStore();
+	public ChatModel buildSimpleModel(User user, String modelName) {
+		return serviceForModel(modelName).buildSimpleModel(user, modelName);
 	}
 
 	@Override
@@ -101,6 +97,12 @@ public class LlmClientRegistryImpl implements LlmClientRegistry {
 		String endpointName = Optional.ofNullable(modelToEndpoint.get(modelName))
 				.orElseThrow(() -> new IllegalArgumentException("No endpoint registered for model: " + modelName));
 		return endpointServices.get(endpointName);
+	}
+
+	@Override
+	public EmbeddingModel getEmbeddingModel(User user, EmbeddingConfig embeddingConfig) {
+		LlmEndpointService endpointService = endpointServices.get(embeddingConfig.endpoint());
+		return endpointService.buildEmbeddingModel(user, embeddingConfig.model());
 	}
 
 }
