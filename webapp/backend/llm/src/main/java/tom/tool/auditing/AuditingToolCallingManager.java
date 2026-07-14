@@ -61,7 +61,7 @@ public class AuditingToolCallingManager implements ToolCallingManager {
 						sb.append("user id       ").append(context.getOrDefault(ToolExecutionContext.USER_ID, "null"))
 								.append('\n').append("tool id       ").append(toolResponse.id()).append('\n')
 								.append("tool name     ").append(toolResponse.name()).append('\n')
-								.append("tool response ").append(toolResponse.responseData()).append('\n');
+								.append("tool response ").append("<Redacted>").append('\n');
 					});
 
 					if (sb.length() > 0) {

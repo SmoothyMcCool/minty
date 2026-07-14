@@ -57,29 +57,41 @@ llm:
       maximumContext: 131072
       maxConcurrent: 6
       imageSupport: false
+      usesTemperature: true
     - name: gemma4:e4b-it-q4_K_M
       endpoint: ollama
       defaultContext: 16384
       maximumContext: 262144
       maxConcurrent: 2
       imageSupport: true
+      usesTemperature: true
     - name: gemma4:26b
       endpoint: ollama
       defaultContext: 16384
       maximumContext: 262144
       maxConcurrent: 2
       imageSupport: true
+      usesTemperature: true
     - name: gemma4:26b-a4b-it-qat
       endpoint: ollama
       defaultContext: 16384
       maximumContext: 262144
       maxConcurrent: 2
       imageSupport: true
+      usesTemperature: true
+    - name: gemma4:26b-a4b-it-qat-no-temp
+      endpoint: ollama
+      defaultContext: 16384
+      maximumContext: 262144
+      maxConcurrent: 2
+      imageSupport: true
+      usesTemperature: false
   activeModels:
     - gpt-oss:20b
     - gemma4:e4b-it-q4_K_M
     - gemma4:26b
     - gemma4:26b-a4b-it-qat
+    - gemma4:26b-a4b-it-qat-no-temp
   chatMemoryDepth: 100
   # The number of documents to retrieve when doing RAG.
   defaultTopK: 5

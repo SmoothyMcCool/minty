@@ -47,10 +47,14 @@ public class OpenAiEndpointService implements LlmEndpointService {
 	public ChatClient buildChatClient(User user, Assistant assistant, AssistantQuery query, int contextSize,
 			List<Advisor> advisors) {
 
-		OpenAiChatOptions chatOptions = OpenAiChatOptions.builder().model(assistant.model()).apiKey(getApiKey(user))
-				.baseUrl(endpointConfig.url().toString()).temperature(assistant.temperature())
-				// OpenAI-compat endpoints don't always honour topK, but pass it through
-				.build();
+		OpenAiChatOptions.Builder chatOptionsBuilder = OpenAiChatOptions.builder().model(assistant.model())
+				.apiKey(getApiKey(user)).baseUrl(endpointConfig.url().toString())
+		// OpenAI-compat endpoints don't always honour topK, but pass it through
+		;
+
+		if (assistant.temperature() != null) {
+			chatOptionsBuilder.temperature(assistant.temperature());
+		}
 
 		ToolCallingManager auditingManager = new AuditingToolCallingManager(
 				query.getConversationId().getValue().toString(), defaultToolCallingManager);
@@ -59,7 +63,7 @@ public class OpenAiEndpointService implements LlmEndpointService {
 		allAdvisors.add(ToolCallingAdvisor.builder().toolCallingManager(auditingManager).build());
 		allAdvisors.addAll(advisors);
 
-		ChatModel chatModel = OpenAiChatModel.builder().options(chatOptions).build();
+		ChatModel chatModel = OpenAiChatModel.builder().options(chatOptionsBuilder.build()).build();
 
 		return ChatClient.builder(chatModel).defaultAdvisors(allAdvisors).build();
 	}

@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.ToolCallingAdvisor;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.embedding.EmbeddingModel;
@@ -54,13 +55,20 @@ public class OllamaEndpointService implements LlmEndpointService {
 
 		// Ollama never requires an API key.
 
-		OllamaChatOptions chatOptions = OllamaChatOptions.builder().model(assistant.model())
-				.temperature(assistant.temperature()).numCtx(contextSize).topK(assistant.topK()).build();
+		OllamaChatOptions.Builder chatOptionsBuilder = OllamaChatOptions.builder().model(assistant.model())
+				.disableThinking().numCtx(contextSize).topK(assistant.topK());
 
-		ChatModel chatModel = OllamaChatModel.builder().ollamaApi(ollamaApi)
+		if (assistant.temperature() != null) {
+			chatOptionsBuilder.temperature(assistant.temperature());
+		}
+
+		ChatModel chatModel = OllamaChatModel.builder().ollamaApi(ollamaApi).options(chatOptionsBuilder.build())
+				.build();
+
+		advisors.add(ToolCallingAdvisor.builder()
 				.toolCallingManager(new AuditingToolCallingManager(query.getConversationId().getValue().toString(),
 						defaultToolCallingManager))
-				.options(chatOptions).build();
+				.build());
 
 		return ChatClient.builder(chatModel).defaultAdvisors(advisors).build();
 	}

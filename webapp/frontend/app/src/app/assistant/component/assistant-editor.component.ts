@@ -46,6 +46,7 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 	assistant: Assistant | undefined = undefined;
 	minContext: number = 0;
 	maxContext: number = 0;
+	usesTemperature = true;
 
 	usedTools: MintyTool[] = [];
 	unusedTools: MintyTool[] = [];
@@ -82,11 +83,16 @@ export class AssistantEditorComponent implements ControlValueAccessor {
 			if (model) {
 				this.minContext = 0;
 				this.maxContext = model.maximumContext;
+				this.usesTemperature = model.usesTemperature;
 
 				if (this.assistant.contextSize < this.minContext) {
 					this.assistant.contextSize = this.minContext;
 				} else if (this.assistant.contextSize > this.maxContext) {
 					this.assistant.contextSize = this.maxContext;
+				}
+
+				if (!this.usesTemperature) {
+					this.assistant.temperature = null;
 				}
 			}
 		}

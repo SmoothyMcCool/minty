@@ -11,8 +11,10 @@ export const ProjectFileTypes = [
 	'code',
 	'markdown',
 	'json',
+	'yaml',
 	'text',
-	'diagram'
+	'diagram',
+	'html'
 ] as const;
 
 export type ProjectFileType =

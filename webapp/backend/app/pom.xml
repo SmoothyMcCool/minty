@@ -53,6 +53,11 @@
 		</dependency>
 		<dependency>
 			<groupId>tom.minty</groupId>
+			<artifactId>api-anthropic</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>tom.minty</groupId>
 			<artifactId>plugins</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>

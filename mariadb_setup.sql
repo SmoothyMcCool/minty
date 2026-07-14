@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS Conversation (
     associatedAssistantId  UUID,
     projectId              UUID,
     lastUsed               TIMESTAMP,
-    PRIMARY KEY (conversationId)
+    PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS SPRING_AI_CHAT_MEMORY (

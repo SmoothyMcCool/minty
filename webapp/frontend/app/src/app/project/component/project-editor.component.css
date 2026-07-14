@@ -12,3 +12,10 @@
 .dropdown.show .menu-btn {
 	background-color: rgba(0, 0, 0, 0.08);
 }
+
+.tree-heading {
+	background: #f8f9fa;
+	font-weight: 600;
+	border-top: none;
+	border-bottom: 1px solid #dee2e6;
+}
