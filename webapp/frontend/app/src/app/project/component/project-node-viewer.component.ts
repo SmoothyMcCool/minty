@@ -39,7 +39,7 @@ export class NodeViewerComponent implements ControlValueAccessor {
 		if (this.node?.path) {
 			lang = this.getMarkdownLang(this.node?.path);
 		}
-		if (this.node?.fileType === 'code' || this.node?.fileType === 'json') {
+		if (this.node?.fileType === 'code' || this.node?.fileType === 'json'|| this.node?.fileType === 'yaml'|| this.node?.fileType === 'html') {
 			this.displayText = lang + '\n' + this.node.content + '\n```';
 		} else {
 			this.displayText = this.node?.content;
@@ -106,6 +106,7 @@ export class NodeViewerComponent implements ControlValueAccessor {
 		// Shell & Documentation
 		'sh': '```bash\n',
 		'bash': '```bash\n',
+		'bat': '```bat\n',
 		'ps1': '```powershell\n',
 		'sql': '```sql\n',
 		'md': '```markdown\n',

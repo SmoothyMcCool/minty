@@ -9,7 +9,7 @@ export interface Assistant {
 	prompt: string;
 	model: string;
 	contextSize: number;
-	temperature: number;
+	temperature: number | null;
 	topK: number;
 	tools: string[];
 	owned: boolean;

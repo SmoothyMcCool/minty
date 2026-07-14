@@ -1,17 +1,11 @@
-@if (anyTaskCompleted) {
-	<div>
-		<div class="alert alert-warning">
-			<strong>A task completed. You should reload the project.</strong>
-		</div>
-	</div>
-}
+<div style="height:100vh; overflow:hidden;">
+	<!-- The outer container is forced to the viewport height -->
+	<div class="container-fluid py-3 h-100">
+		<div class="row h-100">
 
-<div class="container-fluid py-3 h-100">
-	<div class="row h-100">
-		<!-- Left pane - tree view -->
-		<div class="col-3 border-end d-flex flex-column" [class.d-none]="!sidebarVisible" style="height: 100%;">
-			<ul class="list-group flex-grow-1">
-				<li class="list-group-item text-bg-light bg-opacity-75">
+			<div class="col-3 border-end d-flex flex-column" [class.d-none]="!sidebarVisible" style="height: 100%;">
+
+				<div class="list-group-item text-bg-light bg-opacity-75">
 					<div class="row">
 						<div class="col">
 							<div class="d-flex align-items-center h-100">
@@ -24,7 +18,7 @@
 							<button type="button" class="btn" (click)="downloadProject(project)">
 								<i class="bi bi-download"></i>
 							</button>
-							<button type="button" class="btn" style="color: red" [disabled]="deleteInProgress"
+							<button type="button" class="btn" style="color:red" [disabled]="deleteInProgress"
 								(click)="deleteProject(project)">
 								<i class="bi bi-trash"></i>
 							</button>
@@ -36,207 +30,228 @@
 							</button>
 						</div>
 					</div>
-				</li>
+				</div>
 
-				<li class="list-group-item text-bg-light bg-opacity-75">
-					<div class="d-flex align-items-center">
-						<span class="flex-grow-1" style="cursor: pointer">
-							<i class="bi bi-journal-text text-primary"></i> Conversations
-						</span>
-						<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-2"
-							(click)="newConversationDialogVisible = true">
-							<i class="bi bi-chat"></i>
-						</button>
-					</div>
-					<!-- Nodes -->
-					@if (conversations.length > 0) {
-						<minty-conversation-list name="conversationList" [projectMode]="true"
-							[ngModel]="conversations" (ngModelChange)="conversationsChanged($event)"
-							(showConversation)="onConversationSelected($event)">
-						</minty-conversation-list>
-					} @else {
-						<div class="text-muted ps-1">Click <span><i class="bi bi-chat"></i></span> to create a new
-							conversation.</div>
-					}
-				</li>
+				<div class="flex-fill overflow-y-auto" style="overflow-y:auto;">
 
-				<li class="list-group-item text-bg-light bg-opacity-75">
-					<i class="bi bi-gear-wide-connected text-primary"></i> Workflows
-				</li>
-
-				<li class="list-group-item text-bg-light bg-opacity-75">
-					<div class="d-flex align-items-center">
-						<span class="flex-grow-1" style="cursor: pointer">
-							<i class="bi bi-collection text-primary"></i> Documents
-						</span>
-
-						<!-- Action Dropdown -->
-						<div class="dropdown">
-							<button class="btn btn-sm p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false"
-								data-bs-boundary="viewport">
-								<i class="bi bi-list" style="font-size: 18px;"></i>
+					<!-- Conversations -->
+					<div class="list-group mb-2">
+						<li class="tree-heading text-bg-light bg-opacity-75 d-flex align-items-center justify-content-between">
+							<span class="flex-grow-1" style="cursor:pointer;">
+								<i class="bi bi-journal-text text-primary"></i> Conversations
+							</span>
+							<button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-2"
+								(click)="newConversationDialogVisible = true">
+								<i class="bi bi-chat"></i>
 							</button>
-							<ul class="dropdown-menu dropdown-menu-end shadow-sm">
-								<li class="dropdown-header">Documents</li>
-								<li>
-									<button class="dropdown-item d-flex align-items-center gap-2"
-										(click)="mdFileDialogVisible = true">
-										<i class="bi bi-filetype-md"></i> Add Document
-									</button>
-								</li>
-								<!--li>
-									<button class="dropdown-item d-flex align-items-center gap-2"
-										(click)="mermaidFileDialogVisible = true">
-										<i class="bi bi-filetype-md"></i> XMI to Mermaid
-									</button>
-								</li-->
-							</ul>
-						</div>
+						</li>
+
+						@if (conversations.length > 0) {
+							<div class="ps-3 mt-1">
+								<minty-conversation-list name="conversationList" [projectMode]="true"
+									[ngModel]="conversations" (ngModelChange)="conversationsChanged($event)"
+									(showConversation)="onConversationSelected($event)">
+								</minty-conversation-list>
+							</div>
+						} @else {
+							<div class="text-muted ps-1">
+								Click <span><i class="bi bi-chat"></i></span> to create a new conversation.
+							</div>
+						}
 					</div>
 
-					<ul class="list-group flex-grow-1 mt-1">
-						@for (doc of documents; track doc.id) {
-							<li class="list-group-item border-0 text-bg-light bg-opacity-75 py-0 px-1 d-flex">
+					<!-- Workflows -->
+					<div class="list-group mb-2">
+						<li class="tree-heading text-bg-light bg-opacity-75 d-flex align-items-center justify-content-between">
+							<span class="flex-grow-1" style="cursor:pointer;">
+								<i class="bi bi-gear-wide-connected text-primary"></i> Workflows
+							</span>
+						</li>
+					</div>
 
-								<span class="flex-shrink-0 me-2" style="width: 20px; text-align: center;">
-									<i class="bi bi-file-text" style="font-size: 18px;"></i>
-								</span>
-								<span class="clickable-text small text-truncate flex-grow-1" (click)="onDocumentSelected(doc)" style="min-width: 0;">
-									{{doc.title}}
-								</span>
-								<div class="d-flex align-items-center">
-									<!-- Action Dropdown -->
-									<div class="dropdown">
-										<button class="btn p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false"
-											data-bs-boundary="viewport">
-											<i class="bi bi-three-dots-vertical" style="font-size: 18px;"></i>
+					<!-- Documents -->
+					<div class="list-group mb-2">
+						<li class="tree-heading text-bg-light bg-opacity-75 d-flex align-items-center justify-content-between">
+							<span class="flex-grow-1" style="cursor:pointer;">
+								<i class="bi bi-collection text-primary"></i> Documents
+							</span>
+
+							<!-- Action Dropdown -->
+							<div class="dropdown">
+								<button class="btn btn-sm p-0" type="button" data-bs-toggle="dropdown"
+									aria-expanded="false" data-bs-boundary="viewport">
+									<i class="bi bi-list" style="font-size:18px;"></i>
+								</button>
+								<ul class="dropdown-menu dropdown-menu-end shadow-sm">
+									<li class="dropdown-header">Documents</li>
+									<li>
+										<button class="dropdown-item d-flex align-items-center gap-2"
+											(click)="mdFileDialogVisible = true">
+											<i class="bi bi-filetype-md"></i> Add Document
 										</button>
-										<ul class="dropdown-menu dropdown-menu-end">
-											<li>
-												<button class="dropdown-item d-flex align-items-center gap-2" style="color: red"
-													(click)="documentToDelete = doc ; confirmDeleteDocumentVisible = true">
-													<i class="bi bi-trash"></i> Delete
-												</button>
-											</li>
-										</ul>
+									</li>
+								</ul>
+							</div>
+						</li>
+
+						<ul class="list-group mt-1 ps-3">
+							@for (doc of documents; track doc.id) {
+								<li class="list-group-item border-0 text-bg-light bg-opacity-75 py-0 px-1 d-flex">
+
+									<span class="flex-shrink-0 me-2" style="width:20px;text-align:center;">
+										<i class="bi bi-file-text" style="font-size:18px;"></i>
+									</span>
+
+									<span class="clickable-text small text-truncate flex-grow-1"
+										(click)="onDocumentSelected(doc)" style="min-width:0;">
+										{{doc.title}}
+									</span>
+
+									<!-- Action Dropdown -->
+									<div class="d-flex align-items-center">
+										<div class="dropdown">
+											<button class="btn p-0" type="button" data-bs-toggle="dropdown"
+												aria-expanded="false" data-bs-boundary="viewport">
+												<i class="bi bi-three-dots-vertical" style="font-size:18px;"></i>
+											</button>
+											<ul class="dropdown-menu dropdown-menu-end">
+												<li>
+													<button class="dropdown-item d-flex align-items-center gap-2"
+														style="color:red"
+														(click)="documentToDelete = doc; confirmDeleteDocumentVisible=true">
+														<i class="bi bi-trash"></i> Delete
+													</button>
+												</li>
+											</ul>
+										</div>
 									</div>
-								</div>
-							</li>
-						}
-					</ul>
-
-				</li>
-
-				<li class="list-group-item text-bg-light bg-opacity-75 position-relative">
-					<div class="d-flex align-items-center">
-						<span class="flex-grow-1" style="cursor: pointer">
-							<i class="bi bi-folder text-primary"></i> Files
-						</span>
-
-						<!-- Action Dropdown -->
-						<div class="dropdown">
-							<button class="btn btn-sm p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false"
-								data-bs-boundary="viewport">
-								<i class="bi bi-list" style="font-size: 18px;"></i>
-							</button>
-							<ul class="dropdown-menu dropdown-menu-end shadow-sm">
-								<li class="dropdown-header">File Actions</li>
-								<li>
-									<button class="dropdown-item d-flex align-items-center gap-2" (click)="addFolder()">
-										<i class="bi bi-folder-plus"></i> New Folder
-									</button>
 								</li>
-								<li>
-									<button class="dropdown-item d-flex align-items-center gap-2" (click)="addFile()">
-										<i class="bi bi-file-earmark-plus"></i> New File
-									</button>
-								</li>
-								<li>
-									<button class="dropdown-item d-flex align-items-center gap-2"
-										(click)="zipFileDialogVisible = true">
-										<i class="bi bi-file-earmark-zip"></i> Import ZIP
-									</button>
-								</li>
-							</ul>
-						</div>
+							}
+						</ul>
 					</div>
 
-					<!-- Nodes -->
-					<ul class="list-group flex-grow-1 mt-1">
-						@for (node of rootNodes; track node.path) {
-							<li class="list-group-item p-0 border-0 text-bg-light bg-opacity-75">
-								<minty-project-node [node]="node" [selected]="selectedNode" [nodes]="nodes"
-									(nodeSelected)="onNodeSelected($event)" (update)="onUpdateNode($event)"
-									(delete)="onDeleteNode($event)">
-								</minty-project-node>
-							</li>
-						}
-					</ul>
-				</li>
-			</ul>
-		</div>
+					<!-- Files -->
+					<div class="list-group mb-2 position-relative">
+						<li class="tree-heading text-bg-light bg-opacity-75 d-flex align-items-center justify-content-between">
+							<span class="flex-grow-1" style="cursor:pointer;">
+								<i class="bi bi-folder text-primary"></i> Files
+							</span>
 
+							<!-- Action Dropdown -->
+							<div class="dropdown">
+								<button class="btn btn-sm p-0" type="button" data-bs-toggle="dropdown"
+									aria-expanded="false" data-bs-boundary="viewport">
+									<i class="bi bi-list" style="font-size:18px;"></i>
+								</button>
+								<ul class="dropdown-menu dropdown-menu-end shadow-sm">
+									<li class="dropdown-header">File Actions</li>
+									<li>
+										<button class="dropdown-item d-flex align-items-center gap-2"
+											(click)="addFolder()">
+											<i class="bi bi-folder-plus"></i> New Folder
+										</button>
+									</li>
+									<li>
+										<button class="dropdown-item d-flex align-items-center gap-2"
+											(click)="addFile()">
+											<i class="bi bi-file-earmark-plus"></i> New File
+										</button>
+									</li>
+									<li>
+										<button class="dropdown-item d-flex align-items-center gap-2"
+											(click)="zipFileDialogVisible = true">
+											<i class="bi bi-file-earmark-zip"></i> Import ZIP
+										</button>
+									</li>
+								</ul>
+							</div>
+						</li>
 
-		<!-- Right pane - file viewer -->
-		<div [class.col-9]="sidebarVisible" [class.col-12]="!sidebarVisible">
-			<div class="toast-container position-absolute end-0 p-3" style="z-index: 1050;">
-				@for (task of tasks; track task) {
-					<div class="toast show" role="alert">
-						<div class="toast-header">
-							<strong class="me-auto">Processing {{task}}</strong>
-						</div>
+						<ul class="list-group mt-1 ps-3">
+							@for (node of rootNodes; track node.path) {
+								<li class="list-group-item p-0 border-0 text-bg-light bg-opacity-75">
+									<minty-project-node [node]="node" [selected]="selectedNode" [nodes]="nodes"
+										(nodeSelected)="onNodeSelected($event)" (update)="onUpdateNode($event)"
+										(delete)="onDeleteNode($event)">
+									</minty-project-node>
+								</li>
+							}
+						</ul>
 					</div>
-				}
-			</div>
-			<div class="row">
-				@if (!sidebarVisible) {
-					<div class="col-auto">
-						<button class="btn btn-outline-primary" (click)="toggleSidebar()">
-							<i class="bi bi-chevron-bar-right"></i>
-						</button>
-					</div>
-				}
-				<div class="col">
-					@if (selectedItem && selectedItem.type === 'ProjectNode') {
-						<div class="row">
-							<div class="col-auto">
-								@if (!editFile) {
-									<button class="btn" (click)="editCurrentFile()" title="edit">
-										<i class="bi bi-pencil-square"></i>
-									</button>
-								} @else {
-									<button class="btn" (click)="saveChangesToCurrentFile()" title="save">
-										<i class="bi bi-floppy"></i>
-									</button>
-									<button class="btn" (click)="cancelEditingCurrentFile()" title="cancel">
-										<i class="bi bi-x-circle"></i>
-									</button>
-								}
+
+				</div> <!-- /.flex-fill -->
+			</div> <!-- /# left pane -->
+
+			<!-- ===== RIGHT PANE – FILE VIEWER (scrollable if needed) ===== -->
+			<div [class.col-9]="sidebarVisible" [class.col-12]="!sidebarVisible" style="height:100%; overflow-y:auto;">
+
+				<div class="toast-container position-absolute end-0 p-3" style="z-index:1050;">
+					@for (task of tasks; track task) {
+						<div class="toast show" role="alert">
+							<div class="toast-header">
+								<strong class="me-auto">Processing {{task}}</strong>
 							</div>
 						</div>
-						<h1>{{selectedItem.item.path}}</h1>
-						<hr>
-						<minty-project-node-viewer [ngModel]="selectedItem.item"
-							(ngModelChange)="onFileContentsChanged($event)"
-							[edit]="editFile"></minty-project-node-viewer>
-					}
-					@else if (selectedItem && selectedItem.type === 'Conversation') {
-						<minty-conversation-viewer name="conversationViewer" [ngModel]="selectedItem.item"
-							(ngModelChange)="onConversationChanged($event)"></minty-conversation-viewer>
-					}
-					@else if (selectedItem && selectedItem.type === 'Document') {
-						<minty-document-editor name="documentViewer" [ngModel]="selectedItem.item"
-							(ngModelChange)="onConversationChanged($event)"></minty-document-editor>
-					}
-					@else {
-						<h5 class="text-muted">Select an item to view it</h5>
 					}
 				</div>
-			</div>
-		</div>
-	</div>
-</div>
 
+				<div class="row">
+					@if (!sidebarVisible) {
+						<div class="col-auto">
+							<button class="btn btn-outline-primary" (click)="toggleSidebar()">
+								<i class="bi bi-chevron-bar-right"></i>
+							</button>
+						</div>
+					}
+					<div class="col">
+
+						@if (selectedItem && selectedItem.type === 'ProjectNode') {
+							<div class="row">
+								<div class="col-auto">
+									@if (!editFile) {
+										<button class="btn" (click)="editCurrentFile()" title="edit">
+											<i class="bi bi-pencil-square"></i>
+										</button>
+									} @else {
+										<button class="btn" (click)="saveChangesToCurrentFile()" title="save">
+											<i class="bi bi-floppy"></i>
+										</button>
+										<button class="btn" (click)="cancelEditingCurrentFile()" title="cancel">
+											<i class="bi bi-x-circle"></i>
+										</button>
+									}
+								</div>
+							</div>
+							<h1>{{selectedItem.item.path}}</h1>
+							<minty-project-node-viewer [ngModel]="selectedItem.item"
+								(ngModelChange)="onFileContentsChanged($event)" [edit]="editFile">
+							</minty-project-node-viewer>
+
+						} @else if (selectedItem && selectedItem.type === 'Conversation') {
+							<minty-conversation-viewer name="conversationViewer" [ngModel]="selectedItem.item"
+								(ngModelChange)="onConversationChanged($event)">
+							</minty-conversation-viewer>
+
+						} @else if (selectedItem && selectedItem.type === 'Document') {
+							<minty-document-editor name="documentViewer" [ngModel]="selectedItem.item"
+								(ngModelChange)="onConversationChanged($event)">
+							</minty-document-editor>
+
+						} @else {
+							<h5 class="text-muted">Select an item to view it</h5>
+						}
+
+					</div>
+				</div>
+			</div> <!-- /# right pane -->
+
+		</div> <!-- /.row -->
+	</div> <!-- /.container-fluid -->
+</div> <!-- wrapper that forces 100vh -->
+
+<!-- ----------------------------------------------------------- -->
+<!-- Modals & Confirmation Dialogs (unchanged) -->
+<!-- ----------------------------------------------------------- -->
 <div class="modal fade" tabindex="-1" [ngClass]="{'show d-block': mdFileDialogVisible}"
 	[style.display]="mdFileDialogVisible ? 'block' : 'none'">
 	<div class="modal-dialog">
@@ -245,33 +260,36 @@
 				<h5 class="modal-title">Save as Markdown</h5>
 				<button type="button" class="btn-close" (click)="mdFileDialogVisible = false"></button>
 			</div>
+
 			<div class="modal-body">
 				<div class="mb-3">
 					<label for="mdFilename" class="form-label">Filename</label>
 					<input class="form-control" type="file" id="mdFile" (change)="fileSelected($event)">
 				</div>
+
 				<div class="form-check">
-					<input class="form-check-input" type="checkbox" [(ngModel)]="decomposeDocument" id="decomposeDocument" [disabled]="summarizeDocument">
-					<label class="form-check-label" for="decomposeDocument">
-						Decompose
-					</label>
+					<input class="form-check-input" type="checkbox" [(ngModel)]="decomposeDocument"
+						id="decomposeDocument" [disabled]="summarizeDocument">
+					<label class="form-check-label" for="decomposeDocument">Decompose</label>
 				</div>
+
 				<div class="form-check">
-					<input class="form-check-input" type="checkbox" [(ngModel)]="summarizeDocument" id="summarizeDocument" [disabled]="!decomposeDocument">
-					<label class="form-check-label" for="summarizeDocument">
-						Summarize
-					</label>
+					<input class="form-check-input" type="checkbox" [(ngModel)]="summarizeDocument"
+						id="summarizeDocument" [disabled]="!decomposeDocument">
+					<label class="form-check-label" for="summarizeDocument">Summarize</label>
 				</div>
 			</div>
+
 			<div class="modal-footer">
 				<button type="button" class="btn btn-secondary" (click)="mdFileDialogVisible = false">Cancel</button>
+
 				@if (!decomposeDocument && !summarizeDocument) {
 					<button type="button" class="btn btn-primary" (click)="addMarkdownFile()">Add</button>
 				} @else if (!summarizeDocument) {
 					<button type="button" class="btn btn-primary" (click)="decomposeMarkdown()">Add & Decompose</button>
 				} @else {
-					<button type="button" class="btn btn-primary" (click)="decomposeAndSummarizeMarkdown()">Add, Decompose &
-						Summarize</button>
+					<button type="button" class="btn btn-primary" (click)="decomposeAndSummarizeMarkdown()">Add,
+						Decompose & Summarize</button>
 				}
 			</div>
 		</div>
@@ -286,12 +304,14 @@
 				<h5 class="modal-title">Convert Diagrams to Mermaid</h5>
 				<button type="button" class="btn-close" (click)="mermaidFileDialogVisible = false"></button>
 			</div>
+
 			<div class="modal-body">
 				<div class="mb-3">
 					<label for="mdFilename" class="form-label">Filename</label>
 					<input class="form-control" type="file" id="mdFile" (change)="fileSelected($event)">
 				</div>
 			</div>
+
 			<div class="modal-footer">
 				<button type="button" class="btn btn-secondary"
 					(click)="mermaidFileDialogVisible = false">Cancel</button>
@@ -309,12 +329,14 @@
 				<h5 class="modal-title">Add Zip to Project</h5>
 				<button type="button" class="btn-close" (click)="zipFileDialogVisible = false"></button>
 			</div>
+
 			<div class="modal-body">
 				<div class="mb-3">
 					<label for="zipFilename" class="form-label">Filename</label>
 					<input class="form-control" type="file" id="zipFilename" (change)="fileSelected($event)">
 				</div>
 			</div>
+
 			<div class="modal-footer">
 				<button type="button" class="btn btn-secondary" (click)="zipFileDialogVisible = false">Cancel</button>
 				<button type="button" class="btn btn-primary" (click)="addZip()">OK</button>
@@ -331,10 +353,12 @@
 				<h5 class="modal-title">New Conversation</h5>
 				<button type="button" class="btn-close" (click)="newConversationDialogVisible = false"></button>
 			</div>
+
 			<div class="modal-body">
-				<minty-assistant-list [projectId]="project?.id"
-					(conversationRequest)="startConversation($event)"></minty-assistant-list>
+				<minty-assistant-list [projectId]="project?.id" (conversationRequest)="startConversation($event)">
+				</minty-assistant-list>
 			</div>
+
 			<div class="modal-footer">
 				<button type="button" class="btn btn-secondary"
 					(click)="newConversationDialogVisible = false">Cancel</button>
@@ -348,7 +372,8 @@
 </minty-confirmation-dialog>
 
 <minty-confirmation-dialog [title]="'Delete Document'" [message]="'Are you sure you want to delete this document?'"
-	[visible]="confirmDeleteDocumentVisible" (confirm)="confirmDeleteDocument()" (cancel)="confirmDeleteDocumentVisible = false">
+	[visible]="confirmDeleteDocumentVisible" (confirm)="confirmDeleteDocument()"
+	(cancel)="confirmDeleteDocumentVisible = false">
 </minty-confirmation-dialog>
 
 <minty-confirmation-dialog [title]="'Delete Project'"
