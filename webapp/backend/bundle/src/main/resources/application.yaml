@@ -38,11 +38,11 @@ llm:
       apiTimeout: PT5M
     - name: llama-cpp
       provider: OpenAI
-      url: http://192.168.2.106:8081
+      url: http://172.24.128.199:8081
       apiKeyName: dummy-key
       requiresKey: false
       apiConnectionTimeout: PT60S
-      apiTimeout: PT5M
+      apiTimeout: PT20M
     - name: anthropic
       provider: Anthropic
       url: http://192.168.2.106:8081
@@ -52,12 +52,13 @@ llm:
       apiTimeout: PT5M
   modelDefinitions:
     - name: gpt-oss:20b
-      endpoint: ollama
+      endpoint: llama-cpp
       defaultContext: 32768
       maximumContext: 131072
       maxConcurrent: 6
       imageSupport: false
       usesTemperature: true
+      usesTopK: true
     - name: gemma4:e4b-it-q4_K_M
       endpoint: ollama
       defaultContext: 16384
@@ -65,6 +66,7 @@ llm:
       maxConcurrent: 2
       imageSupport: true
       usesTemperature: true
+      usesTopK: true
     - name: gemma4:26b
       endpoint: ollama
       defaultContext: 16384
@@ -72,6 +74,7 @@ llm:
       maxConcurrent: 2
       imageSupport: true
       usesTemperature: true
+      usesTopK: true
     - name: gemma4:26b-a4b-it-qat
       endpoint: ollama
       defaultContext: 16384
@@ -79,6 +82,7 @@ llm:
       maxConcurrent: 2
       imageSupport: true
       usesTemperature: true
+      usesTopK: true
     - name: gemma4:26b-a4b-it-qat-no-temp
       endpoint: ollama
       defaultContext: 16384
@@ -86,6 +90,7 @@ llm:
       maxConcurrent: 2
       imageSupport: true
       usesTemperature: false
+      usesTopK: true
   activeModels:
     - gpt-oss:20b
     - gemma4:e4b-it-q4_K_M
@@ -169,7 +174,7 @@ pluginConfiguration:
     configuration:
       maxPageChars: 50000
 
-# List of default properties that each use should have that isn't tied to a task spec.
+# List of default properties that each use should have that aren't' tied to a task spec.
 userDefaults:
   - "Anthropic API Key"
 

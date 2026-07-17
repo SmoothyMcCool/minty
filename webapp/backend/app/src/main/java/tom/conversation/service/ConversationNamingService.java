@@ -20,7 +20,6 @@ import tom.api.services.assistant.AssistantQueryService;
 import tom.api.services.assistant.ConversationInUseException;
 import tom.api.services.assistant.QueueFullException;
 import tom.assistant.service.management.AssistantManagementServiceInternal;
-import tom.config.MintyConfiguration;
 import tom.conversation.model.Conversation;
 import tom.conversation.repository.ConversationRepository;
 import tom.llm.service.LlmClientRegistry;
@@ -38,8 +37,7 @@ public class ConversationNamingService {
 
 	public ConversationNamingService(ConversationRepository conversationRepository,
 			AssistantManagementServiceInternal assistantManagementService, AssistantQueryService assistantQueryService,
-			ConversationServiceInternal conversationService, LlmClientRegistry llmClientRegistry,
-			MintyConfiguration properties) {
+			ConversationServiceInternal conversationService, LlmClientRegistry llmClientRegistry) {
 		this.conversationRepository = conversationRepository;
 		this.assistantQueryService = assistantQueryService;
 		this.llmClientRegistry = llmClientRegistry;

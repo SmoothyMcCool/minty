@@ -39,10 +39,13 @@ public class AnthropicEndpointService implements LlmEndpointService {
 		}
 
 		AnthropicChatOptions.Builder chatOptionsBuilder = AnthropicChatOptions.builder()
-				.baseUrl(endpointConfig.url().toString()).apiKey(apiKey).model(assistant.model()).topK(assistant.topK())
+				.baseUrl(endpointConfig.url().toString()).apiKey(apiKey).model(assistant.model())
 				.maxTokens(contextSize);
 		if (assistant.temperature() != null) {
 			chatOptionsBuilder.temperature(assistant.temperature());
+		}
+		if (assistant.topK() != null) {
+			chatOptionsBuilder.topK(assistant.topK());
 		}
 
 		AnthropicChatModel chatModel = AnthropicChatModel.builder().options(chatOptionsBuilder.build()).build();
