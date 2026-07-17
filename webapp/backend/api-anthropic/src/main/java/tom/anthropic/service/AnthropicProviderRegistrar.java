@@ -47,7 +47,7 @@ public class AnthropicProviderRegistrar implements LlmProviderRegistrar {
 				continue;
 
 			modelToEndpoint.put(model.name(), model.endpoint());
-			logger.info("Registered Anthropic model '{}' → endpoint '{}'", model.name(), model.endpoint());
+			logger.info("Registered Anthropic model '{}' -> endpoint '{}'", model.name(), model.endpoint());
 		}
 	}
 }

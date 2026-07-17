@@ -10,7 +10,7 @@ export interface Assistant {
 	model: string;
 	contextSize: number;
 	temperature: number | null;
-	topK: number;
+	topK: number | null;
 	tools: string[];
 	owned: boolean;
 	hasMemory: boolean;

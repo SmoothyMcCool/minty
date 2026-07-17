@@ -55,13 +55,15 @@
 		}
 
 		<!-- 6 Top K -->
-		<div class="mb-3">
-			<label for="assistantTopK" class="form-label">
-				Top K (Number of Document chunks to use for RAG)
-			</label>
-			<input id="assistantTopK" name="assistantTopK" type="number" step="1" min="0" max="99"
-				class="form-control bg-opacity-75" [(ngModel)]="assistant.topK" (ngModelChange)="topKChanged($event)">
-		</div>
+		 @if (usersTopK) {
+			<div class="mb-3">
+				<label for="assistantTopK" class="form-label">
+					Top K (Number of Document chunks to use for RAG)
+				</label>
+				<input id="assistantTopK" name="assistantTopK" type="number" step="1" min="0" max="99"
+					class="form-control bg-opacity-75" [(ngModel)]="assistant.topK" (ngModelChange)="topKChanged($event)">
+			</div>
+		 }
 
 		<!-- 7 Prompt -->
 		<div class="mb-3">

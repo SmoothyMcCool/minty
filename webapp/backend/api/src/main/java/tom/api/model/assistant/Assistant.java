@@ -12,7 +12,6 @@ public record Assistant(AssistantId id, String name, String model, Integer conte
 		Objects.requireNonNull(name, "name cannot be null");
 		Objects.requireNonNull(model, "model cannot be null");
 		Objects.requireNonNull(contextSize, "contextSize cannot be null");
-		Objects.requireNonNull(topK, "topK cannot be null");
 		Objects.requireNonNull(prompt, "prompt cannot be null");
 		Objects.requireNonNull(tools, "tools cannot be null");
 		Objects.requireNonNull(owned, "owned cannot be null");

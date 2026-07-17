@@ -30,58 +30,58 @@ public class OpenAiEndpointService implements LlmEndpointService {
 	private final EndpointConfig endpointConfig;
 
 	public OpenAiEndpointService(EndpointConfig endpointConfig) {
-
 		defaultToolCallingManager = DefaultToolCallingManager.builder().build();
-
 		this.endpointConfig = endpointConfig;
 	}
 
 	@Override
 	public EmbeddingModel buildEmbeddingModel(User user, String embeddingModelName) {
 		OpenAiEmbeddingOptions embeddingOptions = OpenAiEmbeddingOptions.builder().model(embeddingModelName)
-				.apiKey(getApiKey(user)).baseUrl(endpointConfig.url().toString()).build();
+				.apiKey(getApiKey(user)).baseUrl(endpointConfig.url().toString()).timeout(endpointConfig.apiTimeout())
+				.build();
 		return OpenAiEmbeddingModel.builder().metadataMode(MetadataMode.EMBED).options(embeddingOptions).build();
 	}
 
 	@Override
 	public ChatClient buildChatClient(User user, Assistant assistant, AssistantQuery query, int contextSize,
 			List<Advisor> advisors) {
-
 		OpenAiChatOptions.Builder chatOptionsBuilder = OpenAiChatOptions.builder().model(assistant.model())
-				.apiKey(getApiKey(user)).baseUrl(endpointConfig.url().toString())
-		// OpenAI-compat endpoints don't always honour topK, but pass it through
-		;
-
+				.apiKey(getApiKey(user)).baseUrl(endpointConfig.url().toString()).timeout(endpointConfig.apiTimeout());
 		if (assistant.temperature() != null) {
 			chatOptionsBuilder.temperature(assistant.temperature());
+		}
+		if (assistant.topK() != null) {
+			chatOptionsBuilder.topK(assistant.topK());
 		}
 
 		ToolCallingManager auditingManager = new AuditingToolCallingManager(
 				query.getConversationId().getValue().toString(), defaultToolCallingManager);
-
 		List<Advisor> allAdvisors = new ArrayList<>();
 		allAdvisors.add(ToolCallingAdvisor.builder().toolCallingManager(auditingManager).build());
 		allAdvisors.addAll(advisors);
 
 		ChatModel chatModel = OpenAiChatModel.builder().options(chatOptionsBuilder.build()).build();
-
 		return ChatClient.builder(chatModel).defaultAdvisors(allAdvisors).build();
 	}
 
 	@Override
 	public ChatModel buildSimpleModel(User user, String modelName) {
-		return OpenAiChatModel.builder().options(OpenAiChatOptions.builder().model(modelName).apiKey(getApiKey(user))
-				.baseUrl(endpointConfig.url().toString()).build()).build();
+		OpenAiChatOptions options = OpenAiChatOptions.builder().model(modelName).apiKey(getApiKey(user))
+				.baseUrl(endpointConfig.url().toString()).timeout(endpointConfig.apiTimeout()).build();
+		return OpenAiChatModel.builder().options(options).build();
 	}
 
 	private String getApiKey(User user) {
 		String apiKeyName = endpointConfig.apiKeyName();
-		String apiKey = user.getDefaults().get(apiKeyName);
-		if (apiKey == null) {
-			if (endpointConfig.requiresKey()) {
-				throw new KeyRequiredException(apiKeyName);
-			} else {
-				apiKey = "doesn't matter";
+		String apiKey = "not defined";
+		if (user != null && user.getDefaults() != null) {
+			apiKey = user.getDefaults().get(apiKeyName);
+			if (apiKey == null) {
+				if (endpointConfig.requiresKey()) {
+					throw new KeyRequiredException(apiKeyName);
+				} else {
+					apiKey = "doesn't matter";
+				}
 			}
 		}
 		return apiKey;
