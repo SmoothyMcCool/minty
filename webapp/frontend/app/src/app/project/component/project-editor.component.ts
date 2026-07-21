@@ -215,7 +215,11 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 
 	onConversationChanged(conversation: Conversation) {
 		this.conversations = this.conversations.map(c => c.id === conversation.id ? { ...c, ...conversation } : c);
-		this.selectedItem = { type: 'Conversation', item: this.conversations.find(c => c.id === conversation.id) };
+		const selectedConversation = this.conversations.find(c => c.id === conversation.id);
+		const isSameConversation = this.selectedItem && this.selectedItem.type === 'Conversation' && (this.selectedItem.item as Conversation).id === selectedConversation?.id;
+		if (!isSameConversation) {
+			this.selectedItem = { type: 'Conversation', item: this.conversations.find(c => c.id === conversation.id) };
+		}
 	}
 
 	conversationsChanged(conversations: Conversation[]) {

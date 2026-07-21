@@ -17,7 +17,7 @@ fileStores:
 
 # Database configuration
 db:
-  #url=jdbc:mariadb://localhost:3306/Minty
+  #url: jdbc:mariadb://localhost:3306/Minty
   url: jdbc:mariadb://192.168.2.54:3306/Minty
   port: 3306
   name: Minty

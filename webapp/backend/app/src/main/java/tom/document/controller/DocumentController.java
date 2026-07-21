@@ -72,7 +72,7 @@ public class DocumentController {
 					HttpStatus.OK);
 		}
 
-		logger.info("User " + user.getId() + "deleted document " + documentId);
+		logger.info("User " + user.getId().getValue() + " deleted document " + documentId.getValue());
 		return new ResponseEntity<>(ResponseWrapper.SuccessResponse(true), HttpStatus.OK);
 	}
 
@@ -117,8 +117,8 @@ public class DocumentController {
 
 		} catch (Exception e) {
 			logger.error("Failed to store file: ", e);
-			ResponseWrapper<String> response = ResponseWrapper
-					.ApiFailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), List.of(ApiError.REQUEST_FAILED));
+			ResponseWrapper<String> response = ResponseWrapper.FailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+					List.of("Markdown processing failed: " + e));
 			return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
 		} finally {
 			file.delete();
@@ -143,8 +143,8 @@ public class DocumentController {
 
 		} catch (Exception e) {
 			logger.error("Markdown processing failed: ", e);
-			ResponseWrapper<String> response = ResponseWrapper
-					.ApiFailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), List.of(ApiError.REQUEST_FAILED));
+			ResponseWrapper<String> response = ResponseWrapper.FailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+					List.of("Markdown processing failed: " + e));
 			return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
 		} finally {
 			file.delete();
@@ -173,8 +173,8 @@ public class DocumentController {
 
 		} catch (Exception e) {
 			logger.error("Markdown processing failed: ", e);
-			ResponseWrapper<String> response = ResponseWrapper
-					.ApiFailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), List.of(ApiError.REQUEST_FAILED));
+			ResponseWrapper<String> response = ResponseWrapper.FailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+					List.of("Markdown processing failed: " + e));
 			return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
 		} finally {
 			file.delete();

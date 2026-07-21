@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { AlertService } from '../alert.service';
 import { catchError, EMPTY, map, Observable, ReplaySubject, take } from 'rxjs';
 import { ApiResult } from '../model/api-result';
@@ -38,10 +38,7 @@ export class WorkflowService {
 	constructor(private http: HttpClient, private alertService: AlertService, private userService: UserService) {
 		this.http.get<ApiResult>(WorkflowService.ListTaskSpecifications)
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					const returnValue = result.data as TaskSpecification[];
 					returnValue.forEach(value => {
@@ -58,10 +55,7 @@ export class WorkflowService {
 
 		this.http.get<ApiResult>(WorkflowService.ListOutputTaskSpecifications)
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					const returnValue = result.data as OutputTaskSpecification[];
 					returnValue.forEach(value => {
@@ -78,10 +72,7 @@ export class WorkflowService {
 
 		this.http.get<ApiResult>(WorkflowService.ListEnumLists)
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as EnumList[];
 				})
@@ -119,10 +110,7 @@ export class WorkflowService {
 
 		return this.http.get<ApiResult>(WorkflowService.GetWorkflow, { params: params })
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return this.objectify(result.data);
 				})
@@ -135,10 +123,7 @@ export class WorkflowService {
 
 		return this.http.delete<ApiResult>(WorkflowService.DeleteWorkflow, { params: params })
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return this.sortWorkflows(Array.from(result.data as any[]).map(element => this.objectify(element))) as Workflow[];
 				})
@@ -151,10 +136,7 @@ export class WorkflowService {
 
 		return this.http.delete<ApiResult>(WorkflowService.CancelWorkflow, { params: params })
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return;
 				})
@@ -166,10 +148,7 @@ export class WorkflowService {
 
 		return this.http.post<ApiResult>(WorkflowService.NewWorkflow, body)
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as Workflow;
 				})
@@ -181,10 +160,7 @@ export class WorkflowService {
 
 		return this.http.post<ApiResult>(WorkflowService.UpdateWorkflow, body)
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as Workflow;
 				})
@@ -194,10 +170,7 @@ export class WorkflowService {
 	listWorkflows(): Observable<WorkflowDescription[]> {
 		return this.http.get<ApiResult>(WorkflowService.ListWorkflows)
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return this.sortWorkflows(Array.from(result.data as WorkflowDescription[]));
 				})
@@ -211,10 +184,7 @@ export class WorkflowService {
 		}
 		return this.http.post<ApiResult>(WorkflowService.ShareWorkflow, body)
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as string;
 				})
@@ -227,10 +197,7 @@ export class WorkflowService {
 
 		return this.http.get<ApiResult>(WorkflowService.ListSharedUsers, { params: params })
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as UserSelection;
 				})
@@ -247,10 +214,7 @@ export class WorkflowService {
 
 		return this.http.post<ApiResult>(WorkflowService.ExecuteWorkflow, body)
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as string;
 				})
@@ -264,10 +228,7 @@ export class WorkflowService {
 	getTaskHelpFiles(): Observable<Map<string, string>> {
 		return this.http.get<ApiResult>(WorkflowService.GetTaskHelpFiles)
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return new Map(Object.entries(result.data as any));
 				})
@@ -277,10 +238,7 @@ export class WorkflowService {
 	getOutputHelpFiles(): Observable<Map<string, string>> {
 		return this.http.get<ApiResult>(WorkflowService.GetOutputHelpFiles)
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return new Map(Object.entries(result.data as any));
 				})
@@ -399,6 +357,13 @@ export class WorkflowService {
 				return -1;
 			}
 			return left.name.localeCompare(right.name);
+		});
+	}
+
+	private handleError<T>() {
+		return catchError<T, Observable<never>>((error: HttpErrorResponse) => {
+			this.alertService.postFailure(JSON.stringify(error.error));
+			return EMPTY;
 		});
 	}
 }

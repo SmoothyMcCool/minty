@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from "@angular/common/http";
+import { HttpClient, HttpErrorResponse, HttpParams } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { AlertService } from "../alert.service";
 import { catchError, EMPTY, map, Observable, of, switchMap, timer } from "rxjs";
@@ -21,10 +21,7 @@ export class DiagramService {
 
 		return this.http.get<ApiResult>(DiagramService.RequestDiagram, { params: params })
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as string;
 				})
@@ -37,10 +34,7 @@ export class DiagramService {
 
 		return this.http.get<ApiResult>(DiagramService.RetrieveDiagram, { params: params })
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				switchMap((result: ApiResult) => {
 					if (result.data === '~~Not~Running~~') {
 						return EMPTY;
@@ -53,5 +47,12 @@ export class DiagramService {
 					return of(result.data as string);
 				})
 			);
+	}
+
+	private handleError<T>() {
+		return catchError<T, Observable<never>>((error: HttpErrorResponse) => {
+			this.alertService.postFailure(JSON.stringify(error.error));
+			return EMPTY;
+		});
 	}
 }

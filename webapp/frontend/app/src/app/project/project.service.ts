@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 import { BehaviorSubject, catchError, combineLatest, EMPTY, map, Observable } from "rxjs";
-import { HttpClient, HttpParams } from "@angular/common/http";
+import { HttpClient, HttpErrorResponse, HttpParams } from "@angular/common/http";
 import { AlertService } from "../alert.service";
 import { ApiResult } from "../model/api-result";
 import { Project } from "../model/project/project";
@@ -221,10 +221,7 @@ export class ProjectService {
 
 		return this.http.post<ApiResult>(ProjectService.ImportZip, formData)
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as string;
 				})
@@ -320,10 +317,7 @@ export class ProjectService {
 		}
 
 		return this.http.post<ApiResult>(ProjectService.UpdateNodeMeta, {}, { params }).pipe(
-			catchError(error => {
-				this.alertService.postFailure(JSON.stringify(error));
-				return EMPTY;
-			}),
+			this.handleError(),
 			map((result: ApiResult) => {
 				return result.data as boolean;
 			})
@@ -335,8 +329,8 @@ export class ProjectService {
 	// -------------------------
 
 	private handleError<T>() {
-		return catchError<T, Observable<never>>(error => {
-			this.alertService.postFailure(JSON.stringify(error));
+		return catchError<T, Observable<never>>((error: HttpErrorResponse) => {
+			this.alertService.postFailure(JSON.stringify(error.error));
 			return EMPTY;
 		});
 	}

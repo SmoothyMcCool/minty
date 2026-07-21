@@ -35,6 +35,10 @@ public class MarkdownSectionSplitter {
 				current.level(lvl).title(title);
 
 				curContent.setLength(0);
+				// Keep the heading line (and whatever section number it carries, e.g.
+				// "## 2.3.1 Scope") as part of the section's own content, so it survives
+				// into whatever gets handed to the LLM regardless of collapsing below.
+				curContent.append(trimmedLine).append('\n').append('\n');
 			} else if (current != null) {
 				curContent.append(line).append('\n');
 			} else {
@@ -73,9 +77,12 @@ public class MarkdownSectionSplitter {
 
 	/**
 	 * Collapses sections that are shorter than minChars into their predecessor. The
-	 * title of the short section is folded in as a Markdown heading so the content
-	 * remains navigable, and the predecessor's title is kept. Preamble sections
-	 * (level 0) are never used as a collapse target.
+	 * incoming short section's content already carries its own heading line (with
+	 * its section number), so it's appended as-is -- no heading is reconstructed
+	 * for it. The target's own heading is prepended once, the first time it absorbs
+	 * a section, as a defensive fallback for content that didn't arrive via
+	 * {@link #split}. Preamble sections (level 0) are never used as a collapse
+	 * target.
 	 */
 	private static List<DocumentSection> collapse(List<DocumentSection> sections, int minChars) {
 		if (minChars <= 0) {
@@ -93,18 +100,19 @@ public class MarkdownSectionSplitter {
 
 				String mergedContent = target.content();
 
-				// Prepend the target's own heading the first time it absorbs a section
+				// Prepend the target's own heading the first time it absorbs a section.
+				// This is a defensive fallback only: content produced by split() above
+				// already starts with its own heading line, so this is a no-op for the
+				// normal case.
 				if (!mergedContent.startsWith("#")) {
 					String targetHeading = "#".repeat(target.level()) + " " + target.title();
 					mergedContent = mergedContent.isBlank() ? targetHeading : targetHeading + "\n\n" + mergedContent;
 				}
 
-				String incomingHeading = "#".repeat(section.level()) + " " + section.title();
-
 				if (mergedContent.isBlank()) {
-					mergedContent = incomingHeading + "\n\n" + section.content();
+					mergedContent = section.content();
 				} else {
-					mergedContent = mergedContent + "\n\n" + incomingHeading + "\n\n" + section.content();
+					mergedContent = mergedContent + "\n\n" + section.content();
 				}
 
 				DocumentSection merged = target.toBuilder().content(mergedContent).build();
