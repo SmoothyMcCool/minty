@@ -74,8 +74,8 @@ export class UserService {
 			.pipe(
 				map((result: HttpResponse<ApiResult>) => {
 					this.timeoutTimer$.next('start');
-					sessionStorage.setItem('x-auth-token', result.headers.get('x-auth-token'));
-					this.user = result.body.data as User;
+					sessionStorage.setItem('x-auth-token', result.headers.get('x-auth-token') ?? '');
+					this.user = result.body?.data as User;
 					this.user.defaults = { ...this.user.defaults };
 					return this.user;
 				})
@@ -116,11 +116,11 @@ export class UserService {
 			);
 	}
 
-	getSystemDefaults(): AttributeMap {
+	getSystemDefaults(): AttributeMap | undefined {
 		return this.systemDefaults;
 	}
 
-	getUserDefaults(): AttributeMap {
+	getUserDefaults(): AttributeMap | undefined {
 		return this.userDefaults;
 	}
 
@@ -129,7 +129,7 @@ export class UserService {
 			.pipe(
 				finalize(() => {
 					this.timeoutTimer$.next('stop');
-					this.user = null;
+					this.user = undefined;
 					sessionStorage.clear();
 					this.router.navigate(['/login']);
 				})

@@ -116,7 +116,7 @@ export class AppComponent implements OnInit {
 		});
 	}
 
-	handleAlert(alert: Alert): void {
+	handleAlert(alert: Alert | undefined): void {
 		if (!alert || !alert.type || !alert.message) {
 			return;
 		}

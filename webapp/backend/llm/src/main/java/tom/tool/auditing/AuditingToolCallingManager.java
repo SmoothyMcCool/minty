@@ -58,10 +58,11 @@ public class AuditingToolCallingManager implements ToolCallingManager {
 
 					lastToolMessage.getResponses().forEach(toolResponse -> {
 						Map<String, String> context = ToolExecutionContext.getAndClear(key);
-						sb.append("user id       ").append(context.getOrDefault(ToolExecutionContext.USER_ID, "null"))
-								.append('\n').append("tool id       ").append(toolResponse.id()).append('\n')
-								.append("tool name     ").append(toolResponse.name()).append('\n')
-								.append("tool response ").append("<Redacted>").append('\n');
+						sb.append("user id      : ").append(context.getOrDefault(ToolExecutionContext.USER_ID, "null"))
+								.append('\n').append("tool id      : ").append(toolResponse.id()).append('\n')
+								.append("tool name    : ").append(toolResponse.name()).append('\n')
+								.append("tool response: ").append(toolResponse.responseData().length() + " characters")
+								.append('\n');
 					});
 
 					if (sb.length() > 0) {

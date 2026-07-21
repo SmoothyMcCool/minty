@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResult } from './model/api-result';
 import { catchError, map } from 'rxjs/operators';
@@ -34,10 +34,7 @@ export class ConversationService {
 
 		return this.http.get<ApiResult>(ConversationService.NewConversation, { params: params })
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as Conversation;
 				})
@@ -51,10 +48,7 @@ export class ConversationService {
 
 		return this.http.get<ApiResult>(ConversationService.NewProjectConversation, { params: params })
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as Conversation;
 				})
@@ -64,10 +58,7 @@ export class ConversationService {
 	list(): Observable<Conversation[]> {
 		return this.http.get<ApiResult>(ConversationService.ListConversations)
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as Conversation[];
 				})
@@ -80,10 +71,7 @@ export class ConversationService {
 
 		return this.http.get<ApiResult>(ConversationService.ListConversationsForProject, { params: params })
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as Conversation[];
 				})
@@ -96,10 +84,7 @@ export class ConversationService {
 
 		return this.http.get<ApiResult>(ConversationService.GetConversation, { params: params })
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as Conversation;
 				})
@@ -112,10 +97,7 @@ export class ConversationService {
 
 		return this.http.delete<ApiResult>(ConversationService.DeleteConversation, { params: params })
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as string;
 				})
@@ -128,10 +110,7 @@ export class ConversationService {
 
 		return this.http.delete<ApiResult>(ConversationService.ResetConversation, { params: params })
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as string;
 				})
@@ -144,10 +123,7 @@ export class ConversationService {
 
 		return this.http.get<ApiResult>(ConversationService.GetConversationHistory, { params: params })
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as ChatMessage[];
 				})
@@ -161,10 +137,7 @@ export class ConversationService {
 
 		return this.http.get<ApiResult>(ConversationService.RenameConversation, { params: params })
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as Conversation;
 				})
@@ -186,5 +159,12 @@ export class ConversationService {
 					return result.data as Conversation;
 				})
 			);
+	}
+
+	private handleError<T>() {
+		return catchError<T, Observable<never>>((error: HttpErrorResponse) => {
+			this.alertService.postFailure(JSON.stringify(error.error));
+			return EMPTY;
+		});
 	}
 }

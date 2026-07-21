@@ -20,7 +20,7 @@ export class Alert {
 })
 export class AlertService {
 
-	public alert: BehaviorSubject<Alert> = new BehaviorSubject<Alert>(undefined);
+	public alert: BehaviorSubject<Alert | undefined> = new BehaviorSubject<Alert | undefined>(undefined);
 
 	private outstandingRequests = 0;
 	private completedRequests = 0;

@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResult } from './model/api-result';
 import { catchError, map } from 'rxjs/operators';
@@ -36,10 +36,7 @@ export class DocumentService {
 
 		return this.http.get<ApiResult>(DocumentService.ListDocuments, { params: params })
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as MintyDoc[];
 				})
@@ -52,10 +49,7 @@ export class DocumentService {
 
 		return this.http.delete<ApiResult>(DocumentService.DeleteDocument, { params: params })
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as boolean;
 				})
@@ -73,10 +67,7 @@ export class DocumentService {
 
 		return this.http.post<ApiResult>(DocumentService.ConvertToMarkdownAndAddFile, formData)
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as string;
 				})
@@ -94,10 +85,7 @@ export class DocumentService {
 
 		return this.http.post<ApiResult>(DocumentService.ConvertToMarkdownDecomposeFile, formData)
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as string;
 				})
@@ -115,10 +103,7 @@ export class DocumentService {
 
 		return this.http.post<ApiResult>(DocumentService.ConvertToMarkdownDecomposeAndSummarizeFile, formData)
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as string;
 				})
@@ -135,10 +120,7 @@ export class DocumentService {
 
 		return this.http.post<ApiResult>(DocumentService.ConvertToMermaid, formData)
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as string;
 				})
@@ -158,10 +140,7 @@ export class DocumentService {
 
 		return this.http.get<ApiResult>(DocumentService.GetDocumentSectionContent, { params: params })
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return (result.data as DocumentSection).content;
 				})
@@ -173,7 +152,7 @@ export class DocumentService {
 	// -------------------------
 
 	private handleError<T>() {
-		return catchError<T, Observable<never>>(error => {
+		return catchError<T, Observable<never>>((error: HttpErrorResponse) => {
 			this.alertService.postFailure(JSON.stringify(error));
 			return EMPTY;
 		});

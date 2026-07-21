@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, map, shareReplay, switchMap } from 'rxjs/operators';
 import { EMPTY, Observable, of, throwError, timer } from 'rxjs';
@@ -13,7 +13,7 @@ import { WorkflowResult } from '../model/workflow/workflow-result';
 })
 export class ResultService {
 
-	private static mimeToExtension = {
+	private static mimeToExtension: Record<string, string> = {
 		'text/plain': 'txt',
 		'text/html': 'html',
 		'application/json': 'json',
@@ -51,10 +51,7 @@ export class ResultService {
 	getWorkflowResultList(): Observable<WorkflowState[]> {
 		return this.http.get<ApiResult>(ResultService.GetWorkflowResultList)
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return throwError(() => new Error(error));
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return this.sortResults(result.data as WorkflowState[]);
 				})
@@ -67,10 +64,7 @@ export class ResultService {
 
 		return this.http.get<ApiResult>(ResultService.GetWorkflowResult, { params: params })
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as WorkflowResult;
 				})
@@ -83,10 +77,7 @@ export class ResultService {
 
 		return this.http.get<ApiResult>(ResultService.GetWorkflowLog, { params: params })
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as string;
 				})
@@ -138,10 +129,7 @@ export class ResultService {
 
 		return this.http.delete<ApiResult>(ResultService.DeleteWorkflowResult, { params: params })
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return null;
 				})
@@ -162,4 +150,12 @@ export class ResultService {
 			return left.name.localeCompare(right.name);
 		});
 	}
+
+	private handleError<T>() {
+		return catchError<T, Observable<never>>((error: HttpErrorResponse) => {
+			this.alertService.postFailure(JSON.stringify(error));
+			return EMPTY;
+		});
+	}
+
 }

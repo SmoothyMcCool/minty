@@ -19,12 +19,14 @@ import org.apache.tika.sax.ToHTMLContentHandler;
 import org.springframework.stereotype.Service;
 import org.xml.sax.SAXException;
 
+import tom.api.model.document.DocumentParsingException;
 import tom.api.model.document.DocumentSection;
 import tom.api.model.document.SpreadsheetFormat;
 import tom.api.services.DocumentExtractorService;
 import tom.config.MintyConfiguration;
 import tom.config.model.PandocConfig;
 import tom.document.extract.pandoc.PandocConverter;
+import tom.document.extract.pandoc.WordHeadingNumberer;
 import tom.document.extract.pdf.PdfExtractor;
 import tom.document.extract.spreadsheet.SpreadsheetExtractor;
 import tom.document.markdown.MarkdownSectionSplitter;
@@ -62,7 +64,7 @@ public class DocumentExtractorServiceImpl implements DocumentExtractorService {
 	}
 
 	@Override
-	public List<DocumentSection> extractAndSplit(File file) {
+	public List<DocumentSection> extractAndSplit(File file) throws DocumentParsingException {
 		String markdown = extract(file);
 		return MarkdownSectionSplitter.split(markdown, config.headingLevel(), config.minimumSectionSize()).stream()
 				.map(section -> {
@@ -77,12 +79,12 @@ public class DocumentExtractorServiceImpl implements DocumentExtractorService {
 	}
 
 	@Override
-	public String extract(File file) {
+	public String extract(File file) throws DocumentParsingException {
 		return extract(file, SpreadsheetFormat.MARKDOWN);
 	}
 
 	@Override
-	public String extract(File file, SpreadsheetFormat format) {
+	public String extract(File file, SpreadsheetFormat format) throws DocumentParsingException {
 		String mime;
 		try {
 			mime = tika.detect(file);
@@ -97,6 +99,9 @@ public class DocumentExtractorServiceImpl implements DocumentExtractorService {
 
 			if (panDocSupports(mime, name)) {
 				markdown = pandoc.convert(file);
+				if (name.endsWith(".docx")) {
+					markdown = WordHeadingNumberer.injectNumbers(file, markdown);
+				}
 			} else if (isSpreadsheet) {
 				markdown = SpreadsheetExtractor.extract(file,
 						format == SpreadsheetFormat.MARKDOWN ? SpreadsheetFormat.MARKDOWN : SpreadsheetFormat.TSV);
@@ -111,7 +116,7 @@ public class DocumentExtractorServiceImpl implements DocumentExtractorService {
 
 		} catch (IOException | SAXException | TikaException | InterruptedException e) {
 			logger.error("Failed to extract file " + file.getName() + ". ", e);
-			return "";
+			throw new DocumentParsingException("Failed to extract file " + file.getName() + ". " + e);
 		}
 	}
 

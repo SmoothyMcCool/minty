@@ -1,4 +1,4 @@
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResult } from './model/api-result';
 import { catchError, map } from 'rxjs/operators';
@@ -44,10 +44,7 @@ export class AssistantService {
 
 		return this.http.post<ApiResult>(AssistantService.CreateAssistant, assistant, { headers: headers })
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as Assistant;
 				})
@@ -61,10 +58,7 @@ export class AssistantService {
 
 		return this.http.post<ApiResult>(AssistantService.EditAssistant, assistant, { headers: headers })
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as Assistant;
 				})
@@ -77,10 +71,7 @@ export class AssistantService {
 
 		return this.http.delete<ApiResult>(AssistantService.DeleteAssistant, { params: params })
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((_result: ApiResult) => {
 					return null;
 				})
@@ -90,10 +81,7 @@ export class AssistantService {
 	list(): Observable<Assistant[]> {
 		return this.http.get<ApiResult>(AssistantService.ListAssistants)
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					this.assistantCache = result.data as Assistant[];
 					return result.data as Assistant[];
@@ -112,10 +100,7 @@ export class AssistantService {
 		}
 		return this.http.post<ApiResult>(AssistantService.ShareAssistant, body)
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as string;
 				})
@@ -128,10 +113,7 @@ export class AssistantService {
 
 		return this.http.get<ApiResult>(AssistantService.ListSharedUsers, { params: params })
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as UserSelection;
 				})
@@ -141,10 +123,7 @@ export class AssistantService {
 	models(): Observable<Model[]> {
 		return this.http.get<ApiResult>(AssistantService.ListModels)
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as Model[];
 				})
@@ -160,10 +139,7 @@ export class AssistantService {
 
 		return this.http.post<ApiResult>(AssistantService.GetConversationQueryId, body)
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as string;
 				})
@@ -189,10 +165,7 @@ export class AssistantService {
 
 		return this.http.post<ApiResult>(AssistantService.AskAssistant, form)
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as string;
 				})
@@ -205,10 +178,7 @@ export class AssistantService {
 
 		return this.http.get<ApiResult>(AssistantService.CancelResponseStream, { params: params })
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as boolean;
 				})
@@ -326,10 +296,7 @@ export class AssistantService {
 
 		return this.http.get<ApiResult>(AssistantService.GetAssistant, { params: params })
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as Assistant;
 				})
@@ -342,10 +309,7 @@ export class AssistantService {
 
 		return this.http.get<ApiResult>(AssistantService.GetAssistantForConversation, { params: params })
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as Assistant;
 				})
@@ -355,10 +319,7 @@ export class AssistantService {
 	getDiagrammingAssistant() {
 		return this.http.get<ApiResult>(AssistantService.GetDiagrammingAssistant)
 			.pipe(
-				catchError(error => {
-					this.alertService.postFailure(JSON.stringify(error));
-					return EMPTY;
-				}),
+				this.handleError(),
 				map((result: ApiResult) => {
 					return result.data as Assistant;
 				})
@@ -394,5 +355,12 @@ export class AssistantService {
 		}
 
 		return results;
+	}
+
+	private handleError<T>() {
+		return catchError<T, Observable<never>>((error: HttpErrorResponse) => {
+			this.alertService.postFailure(JSON.stringify(error.error));
+			return EMPTY;
+		});
 	}
 }
