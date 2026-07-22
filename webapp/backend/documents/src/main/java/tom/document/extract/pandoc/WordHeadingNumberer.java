@@ -8,9 +8,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -63,7 +65,7 @@ public final class WordHeadingNumberer {
 
 	private static final Logger logger = LogManager.getLogger(WordHeadingNumberer.class);
 
-	private static final Pattern HEADING_STYLE_ID = Pattern.compile("^Heading(\\d)$", Pattern.CASE_INSENSITIVE);
+	private static final Pattern HEADING_STYLE_ID = Pattern.compile("^Heading\\s*(\\d)$", Pattern.CASE_INSENSITIVE);
 	private static final Pattern ATX_HEADER = Pattern.compile("^(#{1,6})(\\s+)(.*)$");
 	private static final Pattern ALREADY_NUMBERED = Pattern.compile("^\\(?\\d+([.\\-]\\d+)*[.)]?\\s");
 
@@ -109,29 +111,40 @@ public final class WordHeadingNumberer {
 		Map<String, String> numIdToAbstractId;
 
 		if (numberingXml == null) {
-			return List.of(); // no numbering defined anywhere in the doc
+			logger.info("WordHeadingNumberer: {} has no word/numbering.xml -- document defines no list "
+					+ "numbering at all (or isn't a real docx zip).", docx.getName());
+			return List.of();
 		}
 		NumberingDefs defs = parseNumberingXml(numberingXml);
 
-		Map<String, int[]> styleNumPr = stylesXml == null ? Map.of() : parseStyleNumPr(stylesXml);
+		Map<String, Element> stylesById = stylesXml == null ? Map.of() : indexStylesById(stylesXml);
 
 		List<String> results = new ArrayList<>();
 		Map<String, int[]> counters = new HashMap<>(); // numId -> counters per level (1-indexed values)
 
+		int totalParagraphs = 0;
+		int headingParagraphs = 0;
+		int headingsWithNumPr = 0;
+		int headingsWithResolvableAbstract = 0;
+
 		NodeList paragraphs = documentXml.getElementsByTagName("w:p");
+		totalParagraphs = paragraphs.getLength();
+
 		for (int i = 0; i < paragraphs.getLength(); i++) {
 			Element p = (Element) paragraphs.item(i);
-			if (!isHeadingParagraph(p)) {
+			if (!isHeadingParagraph(p, stylesById)) {
 				continue;
 			}
+			headingParagraphs++;
 
 			int[] numPr = directNumPr(p); // [numId, ilvl] or null
 			if (numPr == null) {
-				numPr = styleNumPr.get(headingStyleId(p));
+				numPr = resolveNumPrViaStyleChain(headingStyleId(p), stylesById);
 			}
 			if (numPr == null) {
-				continue; // heading with no numbering attached -- nothing to compute
+				continue; // heading with no numbering attached anywhere -- nothing to compute
 			}
+			headingsWithNumPr++;
 
 			String numId = String.valueOf(numPr[0]);
 			int ilvl = numPr[1];
@@ -146,6 +159,7 @@ public final class WordHeadingNumberer {
 			if (fmtCodes == null || ilvl >= fmtCodes.length) {
 				continue;
 			}
+			headingsWithResolvableAbstract++;
 
 			int[] counter = counters.computeIfAbsent(numId, k -> {
 				int[] c = new int[9];
@@ -161,17 +175,44 @@ public final class WordHeadingNumberer {
 			results.add(formatLevelText(lvlTexts[ilvl], counter, fmtCodes));
 		}
 
+		logger.info(
+				"WordHeadingNumberer: {} -- paragraphs={}, detectedAsHeading={}, "
+						+ "hadNumPr(direct or via style)={}, resolvedAgainstNumbering.xml={}, numbersComputed={}",
+				docx.getName(), totalParagraphs, headingParagraphs, headingsWithNumPr, headingsWithResolvableAbstract,
+				results.size());
+
 		return results;
 	}
 
-	private static boolean isHeadingParagraph(Element p) {
+	/**
+	 * Builds a styleId -> &lt;w:style&gt; element map for basedOn-chain resolution.
+	 */
+	private static Map<String, Element> indexStylesById(Document stylesXml) {
+		Map<String, Element> map = new HashMap<>();
+		NodeList styles = stylesXml.getElementsByTagName("w:style");
+		for (int i = 0; i < styles.getLength(); i++) {
+			Element style = (Element) styles.item(i);
+			String id = style.getAttribute("w:styleId");
+			if (id != null && !id.isEmpty()) {
+				map.put(id, style);
+			}
+		}
+		return map;
+	}
+
+	private static boolean isHeadingParagraph(Element p, Map<String, Element> stylesById) {
 		String styleId = headingStyleId(p);
 		if (styleId != null && HEADING_STYLE_ID.matcher(styleId).matches()) {
 			return true;
 		}
-		// Fallback: outlineLvl is how Word marks "this paragraph is a heading"
-		// independent of style name (used by custom heading style names).
-		return firstDescendant(p, "w:outlineLvl") != null;
+		// Direct override on the paragraph itself.
+		if (firstDescendant(p, "w:outlineLvl") != null) {
+			return true;
+		}
+		// Word almost always defines outlineLvl on the STYLE, not the paragraph --
+		// walk the basedOn chain to find it, so custom/localized heading style
+		// names (e.g. "Titre1", "SectionHeading") are still recognized.
+		return resolveViaStyleChain(styleId, stylesById, pPr -> firstDescendant(pPr, "w:outlineLvl")) != null;
 	}
 
 	private static String headingStyleId(Element p) {
@@ -182,9 +223,19 @@ public final class WordHeadingNumberer {
 	/** Reads numPr (numId, ilvl) directly on the paragraph, if present. */
 	private static int[] directNumPr(Element p) {
 		Element numPr = firstDescendant(p, "w:numPr");
-		if (numPr == null) {
-			return null;
-		}
+		return numPr == null ? null : readNumPr(numPr);
+	}
+
+	/**
+	 * Resolves numPr by walking the style's full w:basedOn chain (not just one
+	 * hop).
+	 */
+	private static int[] resolveNumPrViaStyleChain(String styleId, Map<String, Element> stylesById) {
+		Element numPr = resolveViaStyleChain(styleId, stylesById, pPr -> firstDescendant(pPr, "w:numPr"));
+		return numPr == null ? null : readNumPr(numPr);
+	}
+
+	private static int[] readNumPr(Element numPr) {
 		Element numId = firstDescendant(numPr, "w:numId");
 		Element ilvl = firstDescendant(numPr, "w:ilvl");
 		if (numId == null) {
@@ -193,6 +244,32 @@ public final class WordHeadingNumberer {
 		int numIdVal = parseIntSafe(numId.getAttribute("w:val"), -1);
 		int ilvlVal = ilvl == null ? 0 : parseIntSafe(ilvl.getAttribute("w:val"), 0);
 		return numIdVal < 0 ? null : new int[] { numIdVal, ilvlVal };
+	}
+
+	/**
+	 * Walks a style's full w:basedOn chain (with cycle protection), applying
+	 * {@code lookup} to each style's w:pPr until something is found or the chain
+	 * ends.
+	 */
+	private static Element resolveViaStyleChain(String styleId, Map<String, Element> stylesById,
+			java.util.function.Function<Element, Element> lookup) {
+		Set<String> visited = new HashSet<>();
+		while (styleId != null && visited.add(styleId)) {
+			Element style = stylesById.get(styleId);
+			if (style == null) {
+				return null;
+			}
+			Element pPr = firstDescendant(style, "w:pPr");
+			if (pPr != null) {
+				Element found = lookup.apply(pPr);
+				if (found != null) {
+					return found;
+				}
+			}
+			Element basedOn = firstDescendant(style, "w:basedOn");
+			styleId = basedOn == null ? null : basedOn.getAttribute("w:val");
+		}
+		return null;
 	}
 
 	// ------------------------------------------------------------------
@@ -264,38 +341,6 @@ public final class WordHeadingNumberer {
 		}
 
 		return defs;
-	}
-
-	/**
-	 * numId/ilvl attached at the *style* level (w:styles > w:style > w:pPr >
-	 * w:numPr), keyed by style id.
-	 */
-	private static Map<String, int[]> parseStyleNumPr(Document stylesXml) {
-		Map<String, int[]> result = new HashMap<>();
-		NodeList styles = stylesXml.getElementsByTagName("w:style");
-		for (int i = 0; i < styles.getLength(); i++) {
-			Element style = (Element) styles.item(i);
-			String styleId = style.getAttribute("w:styleId");
-			Element pPr = firstDescendant(style, "w:pPr");
-			if (pPr == null) {
-				continue;
-			}
-			Element numPr = firstDescendant(pPr, "w:numPr");
-			if (numPr == null) {
-				continue;
-			}
-			Element numId = firstDescendant(numPr, "w:numId");
-			Element ilvl = firstDescendant(numPr, "w:ilvl");
-			if (numId == null) {
-				continue;
-			}
-			int numIdVal = parseIntSafe(numId.getAttribute("w:val"), -1);
-			int ilvlVal = ilvl == null ? 0 : parseIntSafe(ilvl.getAttribute("w:val"), 0);
-			if (numIdVal >= 0) {
-				result.put(styleId, new int[] { numIdVal, ilvlVal });
-			}
-		}
-		return result;
 	}
 
 	private static int numFmtCode(String val) {
