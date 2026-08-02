@@ -295,12 +295,18 @@ public class ProjectServiceImpl implements ProjectService {
 
 	@Override
 	public List<NodeInfo> searchByFilter(UserId userId, ProjectId projectId, String filter) {
-		// Wrap the filter in % wildcards to allow for substring matching (SQL LIKE
-		// %filter%)
-		String pattern = "%" + filter + "%";
+		if (filter == null || filter.isEmpty()) {
+			// Handle empty filter case: return all nodes or an empty list
+			return nodeRepository.findByProjectIdAndOwnerId(projectId.getValue(), userId).stream()
+					.map(n -> new NodeInfo(n.getType(), n.getFileType(), n.getPath(), n.getVersion()))
+					.collect(Collectors.toList());
+		}
 
-		// Call the repository method using the pattern
-		List<ProjectNodeEntity> matchingNodes = nodeRepository.searchByFilter(projectId.getValue(), userId, pattern);
+		// '*' becomes '%' (matches any sequence)
+		// '?' becomes '_' (matches any single character)
+		String sqlPattern = "%" + filter.replace("*", "%").replace("?", "_") + "%";
+
+		List<ProjectNodeEntity> matchingNodes = nodeRepository.searchByFilter(projectId.getValue(), userId, sqlPattern);
 
 		return matchingNodes.stream().map(n -> new NodeInfo(n.getType(), n.getFileType(), n.getPath(), n.getVersion()))
 				.collect(Collectors.toList());

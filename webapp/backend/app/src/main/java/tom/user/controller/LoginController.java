@@ -80,6 +80,15 @@ public class LoginController {
 			}
 		}
 
+		// This is a hack and is only needed short-term to fix a sync problem in some
+		// accounts
+		String conversationOrder = result.getSettings().get("Message Order");
+		if (conversationOrder == null
+				|| (!conversationOrder.equals("NewestFirst") && !conversationOrder.equals("OldestFirst"))) {
+			result.getSettings().put("Message Order", "NewestFirst");
+			anythingAdded = true;
+		}
+
 		try {
 			if (anythingRemoved || anythingAdded) {
 				userRepository.save(userService.encrypt(result));
@@ -91,6 +100,9 @@ public class LoginController {
 		metadataService.userLoggedIn(user.getId());
 
 		result.setPassword("");
+		result.getDefaults().forEach((k, v) -> {
+			result.getDefaults().put(k, "Value hidden");
+		});
 
 		return ResponseWrapper.SuccessResponse(result);
 	}

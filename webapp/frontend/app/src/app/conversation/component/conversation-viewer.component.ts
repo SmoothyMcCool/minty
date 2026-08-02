@@ -66,7 +66,9 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 	newestMessagesFirst = true;
 	reverseButtons = false;
 	metrics: LlmMetric | undefined = undefined;
+	sourcesOpen: boolean = true;
 	sources: Set<string> | undefined = undefined;
+	thoughts: string | undefined = undefined;
 	statusMessages: AgentStepResult[] = [];
 	expandedSteps: Record<number, boolean> = {};
 	model: Model | undefined = undefined;
@@ -166,7 +168,10 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 
 	stream(streamId: string) {
 		let response = '';
-		this.chatHistory.unshift(this.newMessage(false, ''));;
+		this.chatHistory.unshift(this.newMessage(false, ''));
+		this.sources = undefined;
+		this.metrics = undefined;
+		this.thoughts = '';
 
 		this.assistantService.getStream(streamId).pipe(
 			retry({
@@ -183,16 +188,14 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 						this.metrics = responseChunk.metric;
 					}
 					if (responseChunk.sources) {
-						if (!this.sources) {
-							this.sources = new Set<string>();
-						}
-						responseChunk.sources.forEach(source => this.sources!.add(source));
+						const currentSources = this.sources ? Array.from(this.sources) : [];
+						this.sources = new Set([...currentSources, ...responseChunk.sources]);
 					}
+
 					if (responseChunk.content) {
 						if (responseChunk.content.startsWith('[STATUS]')) {
 							const message = responseChunk.content.substring('[STATUS]'.length).replace(/\\n/g, '\n').trim() + '\n';
 							this.statusMessages.push({ statusMessage: message, stepOutput: '' });
-							console.log('raw message:', message);
 
 						} else if (responseChunk.content.startsWith('[INTERNAL]')) {
 							let message = responseChunk.content.substring('[INTERNAL]'.length).replace(/\\n/g, '\n').trim() + '\n';
@@ -208,8 +211,13 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 								statusStep.stepOutput += message;
 							}
 							this.statusMessages = [...this.statusMessages];
-							console.log('raw message:', message);
-
+						}
+						else if (responseChunk.content.startsWith('[THOUGHT]')) {
+							const thoughtPart = responseChunk.content.replace('[THOUGHT]', '');
+							this.thoughts = (this.thoughts || '') + thoughtPart;
+						} else if (responseChunk.content.startsWith('[TOOL]')) {
+							const thoughtPart = responseChunk.content.replace('[TOOL]', '');
+							this.thoughts = (this.thoughts || '') + '\n>> Calling: ' + thoughtPart + '\n\n';
 						} else {
 							response += responseChunk.content;
 						}
@@ -291,6 +299,10 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 
 	private newMessage(user: boolean, message: string): ChatMessage {
 		return { id: this.nextId++, user, message };
+	}
+
+	toggleSources(): void {
+		this.sourcesOpen = !this.sourcesOpen;
 	}
 
 	writeValue(obj: any): void {

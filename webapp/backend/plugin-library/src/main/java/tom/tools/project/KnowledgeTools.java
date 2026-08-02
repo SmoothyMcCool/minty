@@ -3,6 +3,7 @@ package tom.tools.project;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.springframework.ai.tool.annotation.Tool;
@@ -97,7 +98,7 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 	@Tool(name = "knowledge_search", description = """
 			Search project files and documents by name or keyword.
 
-			Argument: filter (text to search for)
+			Argument: filter (text to search for - wildcards * and % are supported)
 
 			Returns a list of results. Each result has:
 			- type: FILE or DOCUMENT
@@ -364,13 +365,26 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 	// =====================================================================
 
 	private boolean matchesFilter(Document doc, String filter) {
-		String f = filter.toLowerCase();
-		if (doc.title() != null && doc.title().toLowerCase().contains(f)) {
+		if (filter == null || filter.isEmpty()) {
+			return true; // Or false, depending on your preference for empty searches
+		}
+		String regexPattern = Pattern.quote(filter);
+
+		regexPattern = regexPattern.replace("*", "\\E.*\\Q") // Replace '*' (escaped as \* in quote) with '.*'
+				.replace("?", "\\E.\\Q"); // Replace '?' (escaped as \?) with '.'
+
+		Pattern pattern = Pattern.compile(regexPattern, Pattern.CASE_INSENSITIVE);
+
+		// Check Title
+		if (doc.title() != null && pattern.matcher(doc.title()).find()) {
 			return true;
 		}
-		if (doc.summary() != null && doc.summary().toLowerCase().contains(f)) {
+
+		// Check Summary
+		if (doc.summary() != null && pattern.matcher(doc.summary()).find()) {
 			return true;
 		}
+
 		return false;
 	}
 

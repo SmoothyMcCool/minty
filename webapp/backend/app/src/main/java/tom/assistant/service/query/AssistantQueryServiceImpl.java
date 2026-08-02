@@ -3,6 +3,7 @@ package tom.assistant.service.query;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
@@ -51,6 +53,7 @@ import tom.api.model.assistant.AssistantQuery;
 import tom.api.model.assistant.AssistantSpec;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.api.services.assistant.AssistantQueryService;
+import tom.api.services.assistant.ChunkType;
 import tom.api.services.assistant.ConversationInUseException;
 import tom.api.services.assistant.LlmMetric;
 import tom.api.services.assistant.LlmResult;
@@ -229,6 +232,8 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		Sinks.One<Void> cancelSink = Sinks.one();
 		this.activeLlmCalls.put(query.getConversationId(), cancelSink);
 
+		AtomicReference<String> toolCalls = new AtomicReference<>("");
+
 		try {
 
 			Map<String, String> params = Map.of(ToolExecutionContext.ASSISTANT_ID,
@@ -246,7 +251,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 
 			if (spec == null) {
 				logger.warn("runSingleLlmCallStreaming: failed to generate chat request");
-				sr.addChunk("Failed to generate response.");
+				sr.addChunk("Failed to generate response.", ChunkType.RESPONSE);
 				return "";
 			}
 
@@ -277,12 +282,45 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 					firstToken.set(false);
 				}
 
+				String currentToolCalls = ToolExecutionContext.get(contextKey)
+						.getOrDefault(ToolExecutionContext.ACCUMULATED_TOOL_CALLS, "");
+				Set<String> oldSet = Arrays.stream(toolCalls.get().split("\\|\\|")).filter(s -> !s.isEmpty())
+						.collect(Collectors.toSet());
+				Set<String> newSet = Arrays.stream(currentToolCalls.split("\\|\\|")).filter(s -> !s.isEmpty())
+						.collect(Collectors.toSet());
+
+				List<String> newEntries = newSet.stream().filter(call -> !oldSet.contains(call))
+						.collect(Collectors.toList());
+
+				toolCalls.set(currentToolCalls);
+
+				if (newEntries.size() > 0) {
+					for (String entry : newEntries) {
+						sr.addChunk(entry, ChunkType.TOOL);
+					}
+				}
+
 				AssistantMessage chunk = chatResponse.getResult().getOutput();
 
-				if (chunk != null && chunk.getText() != null) {
-					String text = chunk.getText();
-					sr.addChunk(text);
-					finalText.append(text);
+				if (chunk != null) {
+
+					for (String thoughtsKey : List.of("thoughts", "thinking", "reasoning_content")) {
+						if (chunk.getMetadata().containsKey(thoughtsKey)) {
+							String thoughtsText = (String) chunk.getMetadata().get(thoughtsKey);
+							if (thoughtsText != null && !thoughtsText.isEmpty()) {
+								sr.addChunk(thoughtsText, ChunkType.THINKING);
+							}
+							break;
+						}
+					}
+
+					if (chunk.getText() != null) {
+						String text = chunk.getText();
+						if (text != null && !text.isEmpty()) {
+							sr.addChunk(text, ChunkType.RESPONSE);
+							finalText.append(text);
+						}
+					}
 				}
 
 				usage.set(chatResponse.getMetadata().getUsage());
@@ -293,7 +331,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 				return Flux.empty();
 			}).doFinally(signalType -> {
 				if (failed.get()) {
-					sr.addChunk("Failed to generate response.");
+					sr.addChunk("Failed to generate response.", ChunkType.RESPONSE);
 				}
 
 				if (usage.get() != null) {
@@ -305,6 +343,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 				}
 
 				ToolExecutionContext.getAndClear(contextKey);
+
 				if (!failed.get()) {
 					// If failed is true, we marked it as failed in onErrorResume, above.
 					aiRequestMetricsService.markCompleted(llmRequestId);
@@ -313,7 +352,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 
 		} catch (Exception e) {
 			logger.warn("runSingleLlmCallStreaming failed", e);
-			sr.addChunk("Failed to generate response.");
+			sr.addChunk("Failed to generate response.", ChunkType.RESPONSE);
 		} finally {
 			activeLlmCalls.remove(query.getConversationId());
 		}
@@ -403,7 +442,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 					}
 				} catch (Exception e) {
 					logger.warn("Streaming Agent orchestration failed", e);
-					sr.addChunk("Failed to generate response.");
+					sr.addChunk("Failed to generate response.", ChunkType.RESPONSE);
 				} finally {
 					sr.markComplete();
 					results.remove(request.getQuery().getConversationId());

@@ -108,6 +108,9 @@ public class UserController {
 		try {
 			User savedUser = userService.decrypt(userRepository.save(userService.encrypt(user)));
 			savedUser.setPassword("");
+			savedUser.getDefaults().forEach((k, v) -> {
+				savedUser.getDefaults().put(k, "Value hidden");
+			});
 			userService.invalidateUserList();
 
 			metadataService.addUser(savedUser.getId());

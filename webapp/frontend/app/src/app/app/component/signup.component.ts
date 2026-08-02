@@ -27,7 +27,7 @@ export class SignupComponent {
 			name: '',
 			password: '',
 			defaults: {},
-			settings: { 'Message Order': 'Newest at Top', 'Button Alignment': 'Left', 'Theme': 'Light Mode' }
+			settings: { 'Message Order': 'Newest First', 'Button Alignment': 'Left', 'Theme': 'Light Mode' }
 		};
 	}
 
