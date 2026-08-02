@@ -14,12 +14,15 @@ export class ConversationComponent {
 	useMermaid = true;
 	useMarkdown = true;
 
+	@Input() thoughts!: string;
 	@Input() messages!: ChatMessage[];
 	@Input() responsePending!: boolean;
 	@Input() responseComplete!: boolean;
 	@Input() queueDepth!: number;
 	@Input() oldestMessagesFirst!: boolean;
 	@Input() showChatOptions!: boolean;
+
+	isThinkingExpanded = false;
 
 	trackByMessage(index: number, message: ChatMessage) {
 		return index;

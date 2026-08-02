@@ -15,6 +15,8 @@ public interface ProjectNodeRepository extends JpaRepository<ProjectNodeEntity, 
 
 	Optional<ProjectNodeEntity> findByProjectIdAndPathAndOwnerId(UUID projectId, String path, UserId ownerId);
 
+	List<ProjectNodeEntity> findByProjectIdAndOwnerId(UUID projectId, UserId ownerId);
+
 	List<ProjectNodeEntity> findByProjectIdAndParentIdAndOwnerId(UUID projectId, UUID parentId, UserId ownerId);
 
 	List<ProjectNodeEntity> findByProjectIdAndOwnerIdOrderByPathAsc(UUID projectId, UserId ownerId);

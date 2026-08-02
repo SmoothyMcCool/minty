@@ -17,7 +17,7 @@ export class ViewUserComponent implements OnInit {
 	updatePassword = false;
 	messages: string[] = [];
 	defaultValues: { key: string, value: string }[] = [];
-	messageOrder = 'Newest at Top';
+	messageOrder = 'NewestFirst';
 	buttonAlignment = 'Left';
 	theme = 'Light Mode';
 
@@ -27,7 +27,7 @@ export class ViewUserComponent implements OnInit {
 	ngOnInit() {
 		this.userService.getUser().subscribe(user => {
 			this.user = user;
-			this.messageOrder = this.user.settings['Message Order'] ?? 'Newest at Top';
+			this.messageOrder = this.user.settings['Message Order'] ?? 'NewestFirst';
 			this.buttonAlignment = this.user.settings['Button Alignment'] ?? 'Left';
 			this.theme = this.user.settings['Theme'] ?? 'Light Mode';
 			this.defaultValues = Object.entries(this.user.defaults).map(([key, value]) => ({ key,value }));

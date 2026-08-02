@@ -7,9 +7,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+
 public final class StreamResult implements LlmResult {
 
-	private final BlockingQueue<String> chunks = new LinkedBlockingQueue<>();
+	private final BlockingQueue<ImmutablePair<String, ChunkType>> chunks = new LinkedBlockingQueue<>();
 	private AtomicReference<LlmMetric> metric = new AtomicReference<>();
 	private AtomicReference<List<String>> sources = new AtomicReference<>();
 	private final AtomicBoolean complete = new AtomicBoolean(false);
@@ -26,13 +28,13 @@ public final class StreamResult implements LlmResult {
 		return query;
 	}
 
-	public void addChunk(String chunk) {
-		chunks.offer(chunk);
+	public void addChunk(String chunk, ChunkType type) {
+		chunks.offer(ImmutablePair.of(chunk, type));
 	}
 
-	public String takeChunk() throws InterruptedException {
+	public ImmutablePair<String, ChunkType> takeChunk() throws InterruptedException {
 		while (true) {
-			String chunk = chunks.poll(100, TimeUnit.MILLISECONDS);
+			ImmutablePair<String, ChunkType> chunk = chunks.poll(100, TimeUnit.MILLISECONDS);
 
 			if (chunk != null) {
 				return chunk;
@@ -76,4 +78,5 @@ public final class StreamResult implements LlmResult {
 	public LlmResultState getState() {
 		return resultState.get();
 	}
+
 }

@@ -13,7 +13,8 @@
 				<div class="col-lg-4 col-md-4">
 					<div class="card shadow-sm border-0 mb-4">
 						<div class="list-group list-group-flush">
-							<div class="list-group-item list-group-light py-3 text-uppercase fw-bold small text-secondary border-bottom">
+							<div
+								class="list-group-item list-group-light py-3 text-uppercase fw-bold small text-secondary border-bottom">
 								<i class="bi bi-folder2-open me-2"></i>Files
 							</div>
 							@for (file of files; track file) {
@@ -68,7 +69,6 @@
 		</div>
 	</div>
 
-	<!-- NEW LOGIC: If newestMessagesFirst is true, Input Area appears at the TOP -->
 	@if (user && newestMessagesFirst) {
 		<ng-container *ngTemplateOutlet="inputArea"></ng-container>
 	}
@@ -78,7 +78,7 @@
 		@if (user && !newestMessagesFirst) {
 			<!-- Flow A: Standard Order -->
 			<div class="overflow-auto">
-				<minty-conversation [messages]="chatHistory" [responsePending]="waitingForResponse"
+				<minty-conversation [thoughts]="thoughts" [messages]="chatHistory" [responsePending]="waitingForResponse"
 					[queueDepth]="queueDepth" [oldestMessagesFirst]="user && !newestMessagesFirst"
 					[showChatOptions]="showChatOptions"></minty-conversation>
 
@@ -101,7 +101,8 @@
 									[class.show]="expandedSteps[i]">
 									<div class="card-body p-2 bg-white">
 										<pre class="mb-0 small text-dark"
-											style="white-space: pre-wrap; font-size: 0.85em;">{{message.stepOutput}}</pre>
+											style="white-space: pre-wrap; font-size: 0.85em;">{{message.stepOutput}}
+										</pre>
 									</div>
 								</div>
 							}
@@ -130,17 +131,19 @@
 							</div>
 							@if (message.stepOutput) {
 								<div class="collapse border-top" [id]="'stepOutput-' + i"
-									[class.show]="expandedSteps[i]"> <!-- Fixed typo: expanded-steps to expandedSteps -->
+									[class.show]="expandedSteps[i]">
+									<!-- Fixed typo: expanded-steps to expandedSteps -->
 									<div class="card-body p-2 bg-white">
 										<pre class="mb-0 small text-dark"
-											style="white-space: pre-wrap; font-size: 0.85em;">{{message.stepOutput}}</pre>
+											style="white-space: pre-wrap; font-size: 0.85em;">{{message.stepOutput}}
+										</pre>
 									</div>
 								</div>
 							}
 						</div>
 					</div>
 				}
-				<minty-conversation [messages]="chatHistory" [responsePending]="waitingForResponse"
+				<minty-conversation [thoughts]="thoughts" [messages]="chatHistory" [responsePending]="waitingForResponse"
 					[responseComplete]="responseComplete" [queueDepth]="queueDepth"
 					[oldestMessagesFirst]="!newestMessagesFirst"
 					[showChatOptions]="showChatOptions"></minty-conversation>
@@ -224,17 +227,26 @@
 
 			<!-- Metadata Section -->
 			<div class="row g-3 mb-4">
-				@if (sources && sources.length > 0) {
+				@if (sources && sources.size > 0) {
 					<div class="col-12">
-						<div class="card shadow-sm border-<0xC2>0">
-							<div class="card-header bg-white py-2 small fw-bold text-secondary text-uppercase">Sources Used</div>
-							<ul class="list-group list-group-flush">
-								@for (source of sources; track source) {
-									<li class="list-group-item border-0 small py-2">
-										<i class="bi bi-link-45deg me-2 text-primary"></i>{{source}}
-									</li>
-								}
-							</ul>
+						<div class="card shadow-sm border mt-3">
+							<!-- Header – click to toggle -->
+							<div class="card-header bg-white py-2 small fw-bold text-secondary text-uppercase d-flex justify-content-between align-items-center"
+								(click)="toggleSources()" style="cursor: pointer;">
+								Sources Used
+								<i class="bi bi-chevron-down" [class.rotate]="sourcesOpen"></i>
+							</div>
+
+							<!-- Collapsible body -->
+							<div id="sourcesCollapse" class="collapse" [ngClass]="{ 'show': sourcesOpen }">
+								<ul class="list-group list-group-flush">
+									@for (source of sources; track source) {
+										<li class="list-group-item border-0 small py-2">
+											<i class="bi bi-link-45deg me-2 text-primary"></i>{{source}}
+										</li>
+									}
+								</ul>
+							</div>
 						</div>
 					</div>
 				}

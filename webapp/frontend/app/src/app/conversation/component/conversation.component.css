@@ -108,3 +108,20 @@
 		max-width: 95%;
 	}
 }
+
+.thinking-container {
+	display: block;
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.thinking-container pre,
+.thinking-container code {
+	white-space: pre-wrap !important;
+	word-break: break-all;
+	font-family: monospace;
+}
+
+.thinking-container {
+	border-left: 3px solid #ced4da !important;
+}

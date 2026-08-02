@@ -18,6 +18,7 @@ import tom.api.MintyObjectMapper;
 import tom.api.UserId;
 import tom.api.model.assistant.AssistantQuery;
 import tom.api.services.assistant.AssistantQueryService;
+import tom.api.services.assistant.ChunkType;
 import tom.api.services.assistant.StreamResult;
 import tom.assistant.service.agent.llm.LlmParseResult;
 import tom.assistant.service.agent.llm.LlmResponse;
@@ -90,7 +91,7 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 
 			} catch (Exception e) {
 				statusMessage(sr, "Step failed: " + currentStep.getName());
-				sr.addChunk("\nError: " + e.getMessage() + "\n\n");
+				sr.addChunk("\nError: " + e.getMessage() + "\n\n", ChunkType.RESPONSE);
 				break;
 			}
 
@@ -240,12 +241,13 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 
 		String raw = null;
 
-		sr.addChunk("[INTERNAL][" + state.currentStep().left().getName() + "]Query: " + agentQuery.query().getQuery());
+		sr.addChunk("[INTERNAL][" + state.currentStep().left().getName() + "]Query: " + agentQuery.query().getQuery(),
+				ChunkType.RESPONSE);
 
 		while (raw == null) {
 			if (step.getVisibility() == AgentResponseVisibility.USER) {
 				raw = assistantQueryService.askStreamingDirect(userId, agentQuery.query(), sr);
-				sr.addChunk("<br><br>");
+				sr.addChunk("<br><br>", ChunkType.RESPONSE);
 			} else {
 				raw = assistantQueryService.askDirect(userId, agentQuery.query());
 			}
@@ -317,7 +319,7 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 			stepState.setStatus(LlmStatus.SUCCESS);
 			if (state.currentStep().left().getVisibility() == AgentResponseVisibility.INTERNAL) {
 				sr.addChunk("[INTERNAL][" + state.currentStep().left().getName() + "]" + result.getResponse().toString()
-						+ "<br><br>");
+						+ "<br><br>", ChunkType.RESPONSE);
 			} else {
 				// User-facing message. Add it to chat history.
 				assistantMessageBuilder.append("\n\n").append(result.getResponse().getMessage());
@@ -330,7 +332,7 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 			stepState.setStatus(LlmStatus.NEED_INFO);
 
 			assistantMessageBuilder.append("\n\n").append(result.getResponse().getMessage());
-			sr.addChunk("<br>" + result.getResponse().getMessage());
+			sr.addChunk("<br>" + result.getResponse().getMessage(), ChunkType.RESPONSE);
 			sr.markComplete();
 
 			return false;
@@ -341,8 +343,8 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 			stepState.setStatus(LlmStatus.REPLAN);
 			// Insert a replan step into the plan.
 			state.addReplanStep();
-			sr.addChunk("<br>Replan was requested.");
-			sr.addChunk("<br>" + result.getResponse().getMessage());
+			sr.addChunk("<br>Replan was requested.", ChunkType.RESPONSE);
+			sr.addChunk("<br>" + result.getResponse().getMessage(), ChunkType.RESPONSE);
 			return true;
 		}
 		case ERROR -> {
@@ -350,7 +352,7 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 			stepState.setStatus(LlmStatus.ERROR);
 			state.setErrored(true);
 
-			sr.addChunk("<br>Error: " + result.getResponse().getMessage());
+			sr.addChunk("<br>Error: " + result.getResponse().getMessage(), ChunkType.RESPONSE);
 			sr.markComplete();
 
 			return false;
@@ -360,7 +362,8 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 			stepState.setUnstructuredResponse(result.getFallbackText());
 			stepState.setStatus(LlmStatus.SUCCESS);
 			if (state.currentStep().left().getVisibility() == AgentResponseVisibility.INTERNAL) {
-				sr.addChunk("[INTERNAL][" + state.currentStep().left().getName() + "]" + result.getFallbackText());
+				sr.addChunk("[INTERNAL][" + state.currentStep().left().getName() + "]" + result.getFallbackText(),
+						ChunkType.RESPONSE);
 			} else {
 				// User-facing message. Add it to chat history.
 				assistantMessageBuilder.append("\n\n").append(result.getFallbackText());
@@ -373,6 +376,6 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 	}
 
 	private void statusMessage(StreamResult sr, String msg) {
-		sr.addChunk("[STATUS] " + msg);
+		sr.addChunk("[STATUS] " + msg, ChunkType.RESPONSE);
 	}
 }

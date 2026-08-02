@@ -412,6 +412,7 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 	}
 
 	confirmDeleteDocument() {
+		this.confirmDeleteDocumentVisible = false;
 		if (this.documentToDelete) {
 			this.documentService.delete(this.documentToDelete).subscribe(_ => {
 				this.refresh();

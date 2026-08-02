@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.core.io.ByteArrayResource;
@@ -37,6 +38,7 @@ import tom.api.model.conversation.Conversation;
 import tom.api.model.user.ResourceSharingSelection;
 import tom.api.model.user.UserSelection;
 import tom.api.services.assistant.AssistantQueryService;
+import tom.api.services.assistant.ChunkType;
 import tom.api.services.assistant.LlmResult;
 import tom.api.services.assistant.LlmResultState;
 import tom.api.services.assistant.QueueFullException;
@@ -319,7 +321,7 @@ public class AssistantController {
 				// Stream actual result
 				try {
 					while (true) {
-						String chunk;
+						ImmutablePair<String, ChunkType> chunk;
 						try {
 							chunk = streamResult.get().takeChunk();
 						} catch (InterruptedException e) {
@@ -338,8 +340,15 @@ public class AssistantController {
 							break;
 						}
 
+						String output = chunk.getLeft();
+						if (chunk.getRight().compareTo(ChunkType.THINKING) == 0) {
+							output = "[THOUGHT]" + output;
+						} else if (chunk.getRight().compareTo(ChunkType.TOOL) == 0) {
+							output = "[TOOL]" + output;
+						}
+
 						writeResponse(outputStream, new StreamingResponse(
-								new LlmStatus(RequestProcessingState.RUNNING, 0), null, null, chunk));
+								new LlmStatus(RequestProcessingState.RUNNING, 0), null, null, output));
 						outputStream.flush();
 						httpResponse.flushBuffer();
 					}

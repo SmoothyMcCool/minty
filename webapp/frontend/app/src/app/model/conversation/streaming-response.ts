@@ -5,5 +5,6 @@ export interface StreamingResponse {
 	status: LlmStatus,
 	metric: LlmMetric,
 	sources: string[],
+	thought: string,
 	content: String
 }

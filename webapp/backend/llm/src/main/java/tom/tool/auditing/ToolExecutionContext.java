@@ -10,6 +10,7 @@ public final class ToolExecutionContext {
 	public static final String REQUEST_ID = "requestId";
 	public static final String USER_ID = "userId";
 	public static final String ASSISTANT_ID = "assistantId";
+	public static final String ACCUMULATED_TOOL_CALLS = "toolCalls";
 
 	// Thread-safe, lock-free map
 	private static final Map<String, Map<String, String>> ContextMap = new ConcurrentHashMap<>();
@@ -57,5 +58,13 @@ public final class ToolExecutionContext {
 	 */
 	public static void clearAll() {
 		ContextMap.clear();
+	}
+
+	public static Map<String, String> get(String key) {
+		if (key == null) {
+			throw new IllegalArgumentException("key cannot be null");
+		}
+		Map<String, String> map = ContextMap.get(key);
+		return map == null ? Collections.emptyMap() : Collections.unmodifiableMap(map);
 	}
 }
