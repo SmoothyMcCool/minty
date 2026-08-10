@@ -1,58 +1,83 @@
 <!-- Settings Toolbar: Styled as a subtle, modern utility bar -->
 @if (showChatOptions) {
-	<div
-		class="chat-settings-bar mb-3 p-2 bg-light border rounded-3 d-flex flex-wrap gap-3 align-items-center shadow-sm">
-		<div class="d-flex align-items-center gap-2 px-2 border-end">
-			<i class="bi bi-sliders text-muted small"></i>
-			<span class="text-uppercase fw-bold small text-secondary"
-				style="font-size: 0.7rem; letter-spacing: 0.5px;">Chat Options</span>
-		</div>
-
-		<div class="form-check form-switch mb-0">
-			<input class="form-check-input" type="checkbox" id="renderDiagramsSwitch" [(ngModel)]="useMermaid">
-			<label class="form-check-label small text-dark" for="renderDiagramsSwitch">Diagrams</label>
-		</div>
-
-		<div class="form-check form-switch mb-0">
-			<input class="form-check-input" type="checkbox" id="useMarkdownSwitch" [(ngModel)]="useMarkdown">
-			<label class="form-check-label small text-dark" for="useMarkdownSwitch">Markdown</label>
-		</div>
+<div class="chat-settings-bar mb-3 p-2 bg-light border rounded-3 d-flex flex-wrap gap-3 align-items-center shadow-sm">
+	<div class="d-flex align-items-center gap-2 px-2 border-end">
+		<i class="bi bi-sliders text-muted small"></i>
+		<span class="text-uppercase fw-bold small text-secondary" style="font-size: 0.7rem; letter-spacing: 0.5px;">Chat
+			Options</span>
 	</div>
+
+	<div class="form-check form-switch mb-0">
+		<input class="form-check-input" type="checkbox" id="renderDiagramsSwitch" [(ngModel)]="useMermaid">
+		<label class="form-check-label small text-dark" for="renderDiagramsSwitch">Diagrams</label>
+	</div>
+
+	<div class="form-check form-switch mb-0">
+		<input class="form-check-input" type="checkbox" id="useMarkdownSwitch" [(ngModel)]="useMarkdown">
+		<label class="form-check-label small text-dark" for="useMarkdownSwitch">Markdown</label>
+	</div>
+</div>
 }
 
-<!-- Model thinking output -->
-@if (thoughts) {
-	<div class="d-flex align-items-center mb-1" style="cursor: pointer; user-select: none;"
-		(click)="isThinkingExpanded = !isThinkingExpanded">
-		<span class="small text-muted fw-semibold">
-			@if (isThinkingExpanded) {
-				<i class="bi bi-chevron-up me-1"></i>
-			} @else {
-				<i class="bi bi-chevron-down me-1"></i>
-			}
-			{{ isThinkingExpanded ? 'Hide' : 'Show' }} Reasoning
-		</span>
-	</div>
+<!-- Model thinking / tool call output -->
+@if (thoughts && thoughts.length > 0) {
+<div class="d-flex align-items-center mb-1" style="cursor: pointer; user-select: none;"
+	(click)="isThinkingExpanded = !isThinkingExpanded">
+	<span class="small text-muted fw-semibold">
+		@if (isThinkingExpanded) {
+		<i class="bi bi-chevron-up me-1"></i>
+		} @else {
+		<i class="bi bi-chevron-down me-1"></i>
+		}
+		{{isThinkingExpanded ? 'Hide' : 'Show'}} Reasoning
+	</span>
+</div>
 
-	<div class="collapse" [class.show]="isThinkingExpanded">
-		<!-- Updated font-family to your requested system stack -->
-		<div class="p-3 mb-2 rounded bg-light border text-secondary small shadow-sm thinking-container" style="white-space: pre-wrap; 
-                    font-family: system-ui, -apple-system, sans-serif;
-                    line-height: 1.5;
-                    overflow-wrap: break-word;
-                    word-break: break-word;
-                    max-width: 100%;">
-			{{ thoughts }}
-		</div>
-	</div>
+<div class="collapse" [class.show]="isThinkingExpanded">
+	<ul class="list-group mb-2 shadow-sm thinking-container">
+		@for (entry of thoughts; track $index) {
+			<li class="list-group-item small" [class.bg-light]="entry.type === 'thinking'"
+				[class.bg-white]="entry.type === 'tool'" style="font-family: system-ui, -apple-system, sans-serif;
+							line-height: 1.5;
+							max-width: 100%;">
+				<div class="d-flex align-items-center justify-content-between" style="cursor: pointer; user-select: none;"
+					(click)="toggleEntry($index)">
+					@if (entry.type === 'TOOL') {
+						<span class="fw-semibold text-primary">
+							<i class="bi bi-tools me-1"></i>Tool Call
+						</span>
+					} @else {
+						<span class="fw-semibold text-secondary">
+							<i class="bi bi-lightbulb me-1"></i>Thinking
+						</span>
+					}
+					@if (isEntryExpanded($index)) {
+						<i class="bi bi-chevron-up text-muted"></i>
+					} @else {
+						<i class="bi bi-chevron-down text-muted"></i>
+					}
+				</div>
+
+				@if (isEntryExpanded($index)) {
+					<div class="mt-1" style="white-space: pre-wrap;
+									overflow-wrap: break-word;
+									word-break: break-word;
+									max-width: 100%;" [class.text-dark]="entry.type === 'tool'"
+						[class.text-secondary]="entry.type === 'thinking'">
+						{{entry.content}}
+					</div>
+				}
+			</li>
+		}
+	</ul>
+</div>
 }
-
 <!-- The Message Stream -->
 <div [class.chat-container]="oldestMessagesFirst" class="chat-stream-container">
 	@for (message of messages; track message.id; let messageIndex = $index) {
-		<minty-chat-message [message]="message" [useMarkdown]="useMarkdown" [useMermaid]="useMermaid"
-			[isFirst]="messageIndex === 0" [responsePending]="responsePending" [responseComplete]="responseComplete"
-			[queueDepth]="queueDepth">
-		</minty-chat-message>
+	<minty-chat-message [message]="message" [useMarkdown]="useMarkdown" [useMermaid]="useMermaid"
+		[isFirst]="messageIndex === 0" [responsePending]="responsePending" [responseComplete]="responseComplete"
+		[queueDepth]="queueDepth">
+	</minty-chat-message>
 	}
 </div>

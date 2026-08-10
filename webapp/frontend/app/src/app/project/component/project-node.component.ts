@@ -1,7 +1,8 @@
 import { CommonModule } from "@angular/common";
-import { Component, EventEmitter, Input, Output } from "@angular/core";
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ProjectFileType, ProjectNode, ProjectNodeType } from "../../model/project/project-node";
+import { nodeMatchesFilter } from "../../model/project/project-node-filter";
 import { AlertService } from "../../alert.service";
 
 @Component({
@@ -9,35 +10,27 @@ import { AlertService } from "../../alert.service";
 	standalone: true,
 	imports: [CommonModule, FormsModule],
 	templateUrl: 'project-node.component.html',
-	styleUrl: 'project-node.component.css'
+	styleUrl: 'project-node.component.css',
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ProjectNodeComponent {
-	@Input() set nodes(value: ProjectNode[]) {
-		this._nodes = value;
-		this._updateCaches();
-	}
-	get nodes(): ProjectNode[] { return this._nodes; }
-	private _nodes: ProjectNode[] = [];
-
-	@Input() set node(value: ProjectNode) {
-		this._node = value;
-		this._fileName = this.getFileName(value.path);
-		this._updateCaches();
-	}
-	get node(): ProjectNode { return this._node; }
-	private _node!: ProjectNode;
-
-	get children(): ProjectNode[] { return this._children; }
-	get fileName(): string { return this._fileName; }
-
+export class ProjectNodeComponent implements OnChanges {
+	@Input() nodes: ProjectNode[] = [];
+	@Input() node!: ProjectNode;
+	@Input() filter: string = '';
 	@Input() selected!: ProjectNode | null;
+
 	@Output() nodeSelected = new EventEmitter<ProjectNode>();
 	@Output() update = new EventEmitter<ProjectNode>();
 	@Output() delete = new EventEmitter<ProjectNode>();
 
-	private _children: ProjectNode[] = [];
-	private _fileName: string = '';
-	private _cachedNodesRef: ProjectNode[] | null = null;
+	// Computed once in ngOnChanges rather than as getters, so they only
+	// recompute when an @Input actually changes (not on every unrelated
+	// change-detection cycle, e.g. someone typing in an input elsewhere).
+	children: ProjectNode[] = [];
+	filteredChildren: ProjectNode[] = [];
+	fileName: string = '';
+	hasActiveFilter: boolean = false;
+	displayExpanded: boolean = true;
 
 	editNodeInfoVisible = false;
 	editName: string | undefined = undefined;
@@ -47,6 +40,18 @@ export class ProjectNodeComponent {
 	isExpanded = true;
 
 	public constructor(private alertService: AlertService) { }
+
+	ngOnChanges(changes: SimpleChanges): void {
+		if (changes['node']) {
+			this.fileName = this.getFileName(this.node.path);
+		}
+		if (changes['node'] || changes['nodes']) {
+			this._updateChildren();
+		}
+		if (changes['filter'] || changes['node'] || changes['nodes']) {
+			this._updateFilteredChildren();
+		}
+	}
 
 	getParentPath(input: string): string {
 		if (!input) return '';
@@ -129,23 +134,34 @@ export class ProjectNodeComponent {
 
 	toggle() {
 		this.isExpanded = !this.isExpanded;
+		this.displayExpanded = this.hasActiveFilter ? true : this.isExpanded;
 	}
 
 	listFolders(): ProjectNode[] {
-		return this._nodes.filter(node => node.type === 'Folder' && node.path !== '/');
+		return this.nodes.filter(node => node.type === 'Folder' && node.path !== '/');
 	}
 
 	stopTreePropagation(event: KeyboardEvent) {
 		event.stopPropagation();
 	}
 
-	private _updateCaches(): void {
-		if (!this._node || !this._nodes) return;
-		this._children = this._nodes.filter(n =>
-			n.path !== this._node.path &&
-			n.path.startsWith(this._node.path + '/') &&
-			n.path.split('/').length === this._node.path.split('/').length + 1
+	private _updateChildren(): void {
+		if (!this.node || !this.nodes) {
+			this.children = [];
+			return;
+		}
+		this.children = this.nodes.filter(n =>
+			n.path !== this.node.path &&
+			n.path.startsWith(this.node.path + '/') &&
+			n.path.split('/').length === this.node.path.split('/').length + 1
 		);
 	}
 
+	private _updateFilteredChildren(): void {
+		this.hasActiveFilter = !!(this.filter ?? '').toString().trim();
+		this.displayExpanded = this.hasActiveFilter ? true : this.isExpanded;
+		this.filteredChildren = this.hasActiveFilter
+			? this.children.filter(child => nodeMatchesFilter(child, this.nodes, this.filter))
+			: this.children;
+	}
 }

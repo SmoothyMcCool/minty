@@ -18,6 +18,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import tom.ApiError;
 import tom.ApiException;
+import tom.analytics.service.AnalyticsService;
 import tom.config.MintyConfiguration;
 import tom.controller.ResponseWrapper;
 import tom.meta.service.MetadataService;
@@ -35,13 +36,15 @@ public class LoginController {
 
 	private final UserRepository userRepository;
 	private final UserServiceInternal userService;
+	private final AnalyticsService analyticsService;
 	private final MetadataService metadataService;
 	private final MintyConfiguration properties;
 
 	public LoginController(UserRepository userRepository, UserServiceInternal userService,
-			MetadataService metadataService, MintyConfiguration properties) {
+			AnalyticsService analyticsService, MetadataService metadataService, MintyConfiguration properties) {
 		this.userRepository = userRepository;
 		this.userService = userService;
+		this.analyticsService = analyticsService;
 		this.metadataService = metadataService;
 		this.properties = properties;
 	}
@@ -97,6 +100,7 @@ public class LoginController {
 			throw new ApiException(ApiError.FAILED_TO_DECRYPT_USER);
 		}
 
+		analyticsService.recordUserLogin(user.getId());
 		metadataService.userLoggedIn(user.getId());
 
 		result.setPassword("");

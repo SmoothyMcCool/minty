@@ -56,7 +56,7 @@ public class OllamaEndpointService implements LlmEndpointService {
 		// Ollama never requires an API key.
 
 		OllamaChatOptions.Builder chatOptionsBuilder = OllamaChatOptions.builder().model(assistant.model())
-				.disableThinking().numCtx(contextSize);
+				.enableThinking().numCtx(contextSize);
 
 		if (assistant.temperature() != null) {
 			chatOptionsBuilder.temperature(assistant.temperature());

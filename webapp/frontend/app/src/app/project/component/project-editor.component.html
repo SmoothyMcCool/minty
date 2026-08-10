@@ -32,6 +32,15 @@
 					</div>
 				</div>
 
+				<!-- Shared filter for Conversations, Documents, and Files -->
+				<div class="p-2 border-bottom">
+					<form>
+						<input type="text" class="form-control form-control-sm" id="itemFilter" name="itemFilter"
+							placeholder="Filter conversations, documents, files..." [ngModel]="itemFilter"
+							(ngModelChange)="onItemFilterChange($event)">
+					</form>
+				</div>
+
 				<div class="flex-fill overflow-y-auto" style="overflow-y:auto;">
 
 					<!-- Conversations -->
@@ -47,12 +56,18 @@
 						</li>
 
 						@if (conversations.length > 0) {
-							<div class="ps-3 mt-1">
-								<minty-conversation-list name="conversationList" [projectMode]="true"
-									[ngModel]="conversations" (ngModelChange)="conversationsChanged($event)"
-									(showConversation)="onConversationSelected($event)">
-								</minty-conversation-list>
-							</div>
+							@if (filteredConversationsList.length > 0) {
+								<div class="ps-3 mt-1">
+									<minty-conversation-list name="conversationList" [projectMode]="true"
+										[ngModel]="filteredConversationsList" (ngModelChange)="conversationsChanged($event)"
+										(showConversation)="onConversationSelected($event)">
+									</minty-conversation-list>
+								</div>
+							} @else {
+								<div class="text-muted ps-1 small">
+									No conversations match your filter.
+								</div>
+							}
 						} @else {
 							<div class="text-muted ps-1">
 								Click <span><i class="bi bi-chat"></i></span> to create a new conversation.
@@ -95,7 +110,7 @@
 						</li>
 
 						<ul class="list-group mt-1 ps-3">
-							@for (doc of documents; track doc.id) {
+							@for (doc of filteredDocumentsList; track doc.id) {
 								<li class="list-group-item border-0 text-bg-light bg-opacity-75 py-0 px-1 d-flex">
 
 									<span class="flex-shrink-0 me-2" style="width:20px;text-align:center;">
@@ -126,6 +141,12 @@
 										</div>
 									</div>
 								</li>
+							} @empty {
+								@if (documents.length > 0) {
+									<div class="text-muted ps-1 small">
+										No documents match your filter.
+									</div>
+								}
 							}
 						</ul>
 					</div>
@@ -168,13 +189,19 @@
 						</li>
 
 						<ul class="list-group mt-1 ps-3">
-							@for (node of rootNodes; track node.path) {
+							@for (node of filteredRootNodesList; track node.path) {
 								<li class="list-group-item p-0 border-0 text-bg-light bg-opacity-75">
 									<minty-project-node [node]="node" [selected]="selectedNode" [nodes]="nodes"
-										(nodeSelected)="onNodeSelected($event)" (update)="onUpdateNode($event)"
-										(delete)="onDeleteNode($event)">
+										[filter]="appliedFilter" (nodeSelected)="onNodeSelected($event)"
+										(update)="onUpdateNode($event)" (delete)="onDeleteNode($event)">
 									</minty-project-node>
 								</li>
+							} @empty {
+								@if (rootNodes.length > 0) {
+									<div class="text-muted ps-1 small">
+										No files match your filter.
+									</div>
+								}
 							}
 						</ul>
 					</div>
@@ -234,7 +261,7 @@
 
 						} @else if (selectedItem && selectedItem.type === 'Document') {
 							<minty-document-editor name="documentViewer" [ngModel]="selectedItem.item"
-								(ngModelChange)="onConversationChanged($event)">
+								(ngModelChange)="onDocumentSelected($event)">
 							</minty-document-editor>
 
 						} @else {

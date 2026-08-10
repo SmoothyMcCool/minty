@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import tom.ApiError;
+import tom.analytics.service.AnalyticsService;
 import tom.api.WorkflowId;
 import tom.api.model.user.ResourceSharingSelection;
 import tom.api.model.user.UserSelection;
@@ -38,12 +39,14 @@ public class WorkflowController {
 
 	private final WorkflowService workflowService;
 	private final TaskRegistryService taskRegistryService;
+	private final AnalyticsService analyticsService;
 	private final MetadataService metadataService;
 
 	public WorkflowController(WorkflowService workflowService, TaskRegistryService taskRegistryService,
-			MetadataService metadataService) {
+			AnalyticsService analyticsService, MetadataService metadataService) {
 		this.workflowService = workflowService;
 		this.taskRegistryService = taskRegistryService;
+		this.analyticsService = analyticsService;
 		this.metadataService = metadataService;
 	}
 
@@ -140,6 +143,7 @@ public class WorkflowController {
 				response = ResponseWrapper.ApiFailureResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
 						List.of(ApiError.FAILED_TO_START_WORKFLOW));
 			} else {
+				analyticsService.recordWorkflowExecuted(user.getId(), request.getId());
 				metadataService.workflowExecuted(user.getId());
 				response = ResponseWrapper.SuccessResponse("Started workflow " + workflowName);
 			}
@@ -160,6 +164,7 @@ public class WorkflowController {
 		Workflow createdWorkflow;
 		try {
 			createdWorkflow = workflowService.createWorkflow(user.getId(), workflow);
+			analyticsService.recordWorkflowCreated(user.getId(), createdWorkflow.getId());
 			metadataService.workflowCreated(user.getId());
 
 			ResponseWrapper<Workflow> response = ResponseWrapper.SuccessResponse(createdWorkflow);

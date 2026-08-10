@@ -48,7 +48,7 @@ public class OpenAiProviderRegistrar implements LlmProviderRegistrar {
 				continue;
 
 			modelToEndpoint.put(model.name(), model.endpoint());
-			logger.info("Registered OpenAI model '{}' → endpoint '{}'", model.name(), model.endpoint());
+			logger.info("Registered OpenAI model '{}' at endpoint '{}'", model.name(), model.endpoint());
 		}
 	}
 }

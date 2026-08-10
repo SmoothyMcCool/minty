@@ -1,0 +1,312 @@
+.analytics-dashboard {
+	padding: 1rem;
+}
+
+.dashboard-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 1.5rem;
+}
+
+.dashboard-header h2 {
+	font-weight: 600;
+}
+
+.dashboard-filter-card {
+	background: var(--bs-tertiary-bg);
+}
+
+.date-range-status {
+	min-height: 38px;
+	display: flex;
+	align-items: center;
+	color: var(--bs-secondary-color);
+}
+
+
+/* -------------------------------------------------------------------------
+   Sections
+   ------------------------------------------------------------------------- */
+
+.dashboard-section {
+	margin-bottom: 2.5rem;
+}
+
+.section-heading {
+	display: flex;
+	align-items: center;
+	margin-bottom: 1rem;
+}
+
+.section-heading h3 {
+	font-size: 1.35rem;
+	font-weight: 600;
+	margin: 0;
+}
+
+
+/* -------------------------------------------------------------------------
+   Metric cards
+   ------------------------------------------------------------------------- */
+
+.metric-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit,
+			minmax(180px, 1fr));
+	gap: 1rem;
+}
+
+.metric-card {
+	padding: 1.25rem;
+	border: 1px solid var(--bs-border-color);
+	border-radius: 0.5rem;
+	background: var(--bs-body-bg);
+	min-height: 110px;
+}
+
+.metric-label {
+	color: var(--bs-secondary-color);
+	font-size: 0.8rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	margin-bottom: 0.5rem;
+}
+
+.metric-value {
+	font-size: 1.8rem;
+	font-weight: 600;
+	line-height: 1.2;
+}
+
+
+/* -------------------------------------------------------------------------
+   Cards
+   ------------------------------------------------------------------------- */
+
+.analytics-card {
+	border-radius: 0.5rem;
+	overflow: hidden;
+}
+
+.analytics-card .card-header {
+	font-weight: 600;
+}
+
+
+/* -------------------------------------------------------------------------
+   Ranking
+   ------------------------------------------------------------------------- */
+
+.ranking-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.85rem;
+}
+
+.ranking-row {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.ranking-number {
+	width: 30px;
+	height: 30px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	background: var(--bs-tertiary-bg);
+	font-weight: 600;
+	flex-shrink: 0;
+}
+
+.ranking-content {
+	flex: 1;
+	min-width: 0;
+}
+
+.ranking-label {
+	font-size: 0.9rem;
+	margin-bottom: 0.35rem;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.ranking-value {
+	min-width: 70px;
+	text-align: right;
+	font-weight: 600;
+}
+
+
+/* -------------------------------------------------------------------------
+   Horizontal bars
+   ------------------------------------------------------------------------- */
+
+.bar-chart {
+	display: flex;
+	flex-direction: column;
+	gap: 0.8rem;
+}
+
+.bar-row {
+	display: grid;
+	grid-template-columns: minmax(100px, 0.8fr) minmax(100px, 2fr) 60px;
+	gap: 0.75rem;
+	align-items: center;
+}
+
+.bar-label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 0.85rem;
+}
+
+.bar-track {
+	height: 14px;
+	background: var(--bs-tertiary-bg);
+	border-radius: 999px;
+	overflow: hidden;
+}
+
+.bar-value {
+	height: 100%;
+	background: var(--bs-primary);
+	border-radius: 999px;
+	min-width: 2px;
+	transition: width 0.25s ease;
+}
+
+.bar-number {
+	text-align: right;
+	font-size: 0.85rem;
+	font-weight: 600;
+}
+
+
+/* -------------------------------------------------------------------------
+   Timeline chart
+   ------------------------------------------------------------------------- */
+
+.timeline-chart {
+	height: 260px;
+	display: flex;
+	align-items: flex-end;
+	gap: 0.3rem;
+	padding: 1rem 0;
+	overflow-x: auto;
+}
+
+.timeline-column {
+	height: 100%;
+	min-width: 30px;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	align-items: center;
+	gap: 0.4rem;
+}
+
+.timeline-bar {
+	width: 100%;
+	min-height: 2px;
+	background: var(--bs-primary);
+	border-radius: 3px 3px 0 0;
+	transition: height 0.25s ease;
+}
+
+.timeline-label {
+	font-size: 0.65rem;
+	color: var(--bs-secondary-color);
+	white-space: nowrap;
+	transform: rotate(-45deg);
+	transform-origin: top center;
+	margin-top: 0.5rem;
+}
+
+
+/* -------------------------------------------------------------------------
+   Tables
+   ------------------------------------------------------------------------- */
+
+.analytics-table {
+	white-space: nowrap;
+}
+
+.analytics-table th {
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+}
+
+.analytics-table td {
+	vertical-align: middle;
+}
+
+
+/* -------------------------------------------------------------------------
+   Empty/loading states
+   ------------------------------------------------------------------------- */
+
+.empty-state {
+	color: var(--bs-secondary-color);
+	padding: 1rem;
+	text-align: center;
+}
+
+.loading-container {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	min-height: 300px;
+}
+
+
+/* -------------------------------------------------------------------------
+   Responsive
+   ------------------------------------------------------------------------- */
+
+@media (max-width: 767.98px) {
+
+	.analytics-dashboard {
+		padding: 0.5rem;
+	}
+
+	.dashboard-header {
+		align-items: flex-start;
+		gap: 1rem;
+	}
+
+	.dashboard-header h2 {
+		font-size: 1.4rem;
+	}
+
+	.metric-grid {
+		grid-template-columns: repeat(2,
+				minmax(0, 1fr));
+	}
+
+	.metric-value {
+		font-size: 1.4rem;
+	}
+
+	.bar-row {
+		grid-template-columns: 90px minmax(80px, 1fr) 50px;
+		gap: 0.5rem;
+	}
+
+}
+
+@media (max-width: 450px) {
+
+	.metric-grid {
+		grid-template-columns: 1fr;
+	}
+
+}
