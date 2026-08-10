@@ -30,10 +30,11 @@ public interface RequestMetricsRepository extends JpaRepository<RequestMetrics, 
 	@Query("""
 			UPDATE RequestMetrics m
 			   SET m.promptTokens     = :promptTokens,
-			       m.completionTokens = :completionTokens
+			       m.completionTokens = :completionTokens,
+			       m.totalTokens      = :totalTokens
 			 WHERE m.id = :id
 			""")
 	int updateTokenCounts(@Param("id") UUID id, @Param("promptTokens") int promptTokens,
-			@Param("completionTokens") int completionTokens);
+			@Param("completionTokens") int completionTokens, @Param("totalTokens") int totalTokens);
 
 }

@@ -35,37 +35,20 @@ public class AuditingToolCallingManager implements ToolCallingManager {
 	@Override
 	public ToolExecutionResult executeToolCalls(Prompt prompt, ChatResponse chatResponse) {
 
-		List<String> currentBatchCalls = new ArrayList<>();
+		// Pre-execution: log tool call parameters and remember name/arguments by id,
+		// so we can pair each result with its call once execution completes.
+		Map<String, String> pendingCallsById = new HashMap<>();
 
-		// Pre-execution: log tool call parameters
 		chatResponse.getResults().forEach(generation -> {
 			AssistantMessage output = generation.getOutput();
 			if (output.hasToolCalls()) {
 				output.getToolCalls().forEach(toolCall -> {
 					logger.info("Tool call dispatched - name: {}, id: {}, arguments: {}", toolCall.name(),
 							toolCall.id(), toolCall.arguments());
-					currentBatchCalls.add(toolCall.name() + "(" + toolCall.arguments() + ")");
+					pendingCallsById.put(toolCall.id(), toolCall.name() + "(" + toolCall.arguments() + ")");
 				});
 			}
 		});
-
-		if (!currentBatchCalls.isEmpty()) {
-			Map<String, String> currentParams = ToolExecutionContext.get(key);
-			if (currentParams != null) {
-				// Create a modifiable map copy if the input map was immutable (e.g., Map.of)
-				Map<String, String> modifiableParams = new HashMap<>(currentParams);
-
-				// Fetch existing stored tools to avoid overwriting multi-turn agent execution
-				// records
-				String existingCalls = modifiableParams.get(ToolExecutionContext.ACCUMULATED_TOOL_CALLS);
-				String updatedCalls = (existingCalls == null || existingCalls.isEmpty())
-						? String.join("||", currentBatchCalls)
-						: existingCalls + "||" + String.join("||", currentBatchCalls);
-
-				modifiableParams.put(ToolExecutionContext.ACCUMULATED_TOOL_CALLS, updatedCalls);
-				ToolExecutionContext.set(key, modifiableParams);
-			}
-		}
 
 		ToolExecutionResult result = null;
 		try {
@@ -78,18 +61,34 @@ public class AuditingToolCallingManager implements ToolCallingManager {
 				if (!toolMessages.isEmpty()) {
 					ToolResponseMessage lastToolMessage = toolMessages.getLast();
 					StringBuilder sb = new StringBuilder();
+					List<String> completedEntries = new ArrayList<>();
 
 					lastToolMessage.getResponses().forEach(toolResponse -> {
-						Map<String, String> context = ToolExecutionContext.get(key);
+						Map<String, Object> context = ToolExecutionContext.get(key);
 						sb.append("user id      : ").append(context.getOrDefault(ToolExecutionContext.USER_ID, "null"))
 								.append('\n').append("tool id      : ").append(toolResponse.id()).append('\n')
 								.append("tool name    : ").append(toolResponse.name()).append('\n')
-								.append("tool response: ").append(toolResponse.responseData().length() + " characters")
+								.append("tool response: ")
+								.append((toolResponse.responseData().length() / 3.5) + " tokens (approximate)")
 								.append('\n');
+
+						String callDescription = pendingCallsById.get(toolResponse.id());
+						if (callDescription == null) {
+							// Fall back if we somehow don't have a matching dispatched call recorded.
+							callDescription = toolResponse.name() + "(?)";
+							logger.warn("No matching dispatched call found for tool response id {}",
+									toolResponse.id());
+						}
+
+						completedEntries.add(callDescription + " \n\n " + toolResponse.responseData());
 					});
 
 					if (sb.length() > 0) {
 						logger.info("\n{}", sb.toString());
+					}
+
+					if (!completedEntries.isEmpty()) {
+						appendAccumulatedToolCalls(completedEntries);
 					}
 				}
 			}
@@ -99,5 +98,25 @@ public class AuditingToolCallingManager implements ToolCallingManager {
 		}
 
 		return result;
+	}
+
+	@SuppressWarnings("unchecked")
+	private void appendAccumulatedToolCalls(List<String> newEntries) {
+		Map<String, Object> currentParams = ToolExecutionContext.get(key);
+		if (currentParams != null) {
+			// Create a modifiable map copy if the input map was immutable (e.g., Map.of)
+			Map<String, Object> modifiableParams = new HashMap<>(currentParams);
+
+			// Fetch existing stored tools to avoid overwriting multi-turn agent execution
+			// records
+			Object existing = modifiableParams.get(ToolExecutionContext.ACCUMULATED_TOOL_CALLS);
+			List<String> accumulated = (existing instanceof List) ? new ArrayList<>((List<String>) existing)
+					: new ArrayList<>();
+
+			accumulated.addAll(newEntries);
+
+			modifiableParams.put(ToolExecutionContext.ACCUMULATED_TOOL_CALLS, accumulated);
+			ToolExecutionContext.set(key, modifiableParams);
+		}
 	}
 }

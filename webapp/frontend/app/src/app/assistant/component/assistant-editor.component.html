@@ -6,7 +6,7 @@
 
 
 		<!-- Header: Assistant name -->
-		<h5 class="mb-3 text-dark">{{ assistant.name }}</h5>
+		<h5 class="mb-3 text-dark">{{assistant.name}}</h5>
 
 		<!-- 1 Name field -->
 		<div class="mb-3">
@@ -30,7 +30,7 @@
 			<select id="model" name="model" class="form-select bg-opacity-75" [(ngModel)]="assistant.model"
 				(ngModelChange)="modelChanged($event)">
 				@for (m of models; track m) {
-					<option [value]="m.name">{{ m.name }}</option>
+					<option [value]="m.name">{{m.name}}</option>
 				}
 			</select>
 		</div>
@@ -86,7 +86,7 @@
 							@for (tool of unusedTools; track tool) {
 								<li class="list-group-item list-group-item-action" [mintyTooltip]="tool.description"
 									tooltipPlacement="right" (click)="addTool(tool, $event)">
-									{{ tool.name }}
+									{{tool.name}}
 								</li>
 							}
 						</ul>
@@ -99,7 +99,7 @@
 							@for (tool of usedTools; track tool) {
 								<li class="list-group-item list-group-item-action" [mintyTooltip]="tool.description"
 									tooltipPlacement="left" (click)="removeTool(tool, $event)">
-									{{ tool.name }}
+									{{tool.name}}
 								</li>
 							}
 						</ul>

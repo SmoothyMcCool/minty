@@ -7,6 +7,7 @@ import { NodeViewerComponent } from './project-node-viewer.component';
 import { AlertService } from '../../alert.service';
 import { ConfirmationDialogComponent } from '../../app/component/confirmation-dialog.component';
 import { ProjectNode } from '../../model/project/project-node';
+import { nodeMatchesFilter } from '../../model/project/project-node-filter';
 import { Project } from '../../model/project/project';
 import { DocProperties, DocumentEditorComponent } from '../../document/document-editor.component';
 import { AssistantListComponent } from '../../assistant/component/assistant-list.component';
@@ -15,7 +16,7 @@ import { ConversationService } from '../../conversation.service';
 import { Conversation } from '../../model/conversation/conversation';
 import { ConversationListComponent } from '../../conversation/component/conversation-list.component';
 import { ConversationViewerComponent } from '../../conversation/component/conversation-viewer.component';
-import { forkJoin, interval, startWith, Subscription, switchMap } from 'rxjs';
+import { debounceTime, forkJoin, interval, startWith, Subject, Subscription, switchMap } from 'rxjs';
 import { MintyDoc } from '../../model/minty-doc';
 import { DocumentService } from '../../document.service';
 
@@ -108,6 +109,21 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 	tasks: string[] = [];
 	anyTaskCompleted: boolean = false;
 
+	// -------------------------
+	// FILTERING
+	// -------------------------
+	// itemFilter is bound directly to the input for instant visual feedback.
+	// appliedFilter only updates after a short pause in typing, and is what
+	// actually drives the filtering logic below.
+	itemFilter: string = '';
+	appliedFilter: string = '';
+	private itemFilterSubject = new Subject<string>();
+	private itemFilterSubscription: Subscription | undefined;
+
+	filteredConversationsList: Conversation[] = [];
+	filteredDocumentsList: MintyDoc[] = [];
+	filteredRootNodesList: ProjectNode[] = [];
+
 	constructor(private ngZone: NgZone,
 		private projectService: ProjectService,
 		private documentService: DocumentService,
@@ -115,6 +131,13 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 		private alertService: AlertService) { }
 
 	ngOnInit(): void {
+		this.itemFilterSubscription = this.itemFilterSubject.pipe(
+			debounceTime(200)
+		).subscribe(text => {
+			this.appliedFilter = text;
+			this.recomputeFilteredLists();
+		});
+
 		this.ngZone.runOutsideAngular(() => {
 			this.processingTaskSubscription = interval(5000)
 				.pipe(
@@ -139,6 +162,7 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 
 	ngOnDestroy(): void {
 		this.processingTaskSubscription?.unsubscribe();
+		this.itemFilterSubscription?.unsubscribe();
 	}
 
 	randomId(length: number) {
@@ -174,6 +198,8 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 			this.documents = documents;
 			this.conversations = conversations;
 
+			this.recomputeFilteredLists();
+
 			const displayItem = this.projectService.initialDisplayItem;
 			if (displayItem) {
 				switch (displayItem.type) {
@@ -197,12 +223,39 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 	}
 
 	// -------------------------
+	// FILTERING
+	// -------------------------
+	onItemFilterChange(value: string) {
+		this.itemFilter = value;
+		this.itemFilterSubject.next(value);
+	}
+
+	private recomputeFilteredLists() {
+		const text = (this.appliedFilter ?? '').toString().trim().toLowerCase();
+
+		this.filteredConversationsList = !text
+			? this.conversations
+			: this.conversations.filter(c => (c.title ?? '').toString().toLowerCase().includes(text));
+
+		this.filteredDocumentsList = !text
+			? this.documents
+			: this.documents.filter(d => (d.title ?? '').toString().toLowerCase().includes(text));
+
+		// Root nodes: a folder is kept only if it has a matching leaf
+		// descendant somewhere inside it; files/conversations match on name.
+		this.filteredRootNodesList = !text
+			? this.rootNodes
+			: this.rootNodes.filter(n => nodeMatchesFilter(n, this.nodes, this.appliedFilter));
+	}
+
+	// -------------------------
 	// CONVERSATIONS
 	// -------------------------
 	startConversation(event: { assistant: Assistant, projectId: string }): void {
 		this.conversationService.createInProject(event.assistant, event.projectId).subscribe(conversation => {
 			this.conversationService.listForProject(event.projectId).subscribe(conversations => {
 				this.conversations = conversations;
+				this.recomputeFilteredLists();
 				this.onConversationSelected(conversation);
 			})
 		});
@@ -215,6 +268,7 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 
 	onConversationChanged(conversation: Conversation) {
 		this.conversations = this.conversations.map(c => c.id === conversation.id ? { ...c, ...conversation } : c);
+		this.recomputeFilteredLists();
 		const selectedConversation = this.conversations.find(c => c.id === conversation.id);
 		const isSameConversation = this.selectedItem && this.selectedItem.type === 'Conversation' && (this.selectedItem.item as Conversation).id === selectedConversation?.id;
 		if (!isSameConversation) {
@@ -415,6 +469,7 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 		this.confirmDeleteDocumentVisible = false;
 		if (this.documentToDelete) {
 			this.documentService.delete(this.documentToDelete).subscribe(_ => {
+				this.confirmDeleteDocumentVisible = false;
 				this.refresh();
 			});
 		}

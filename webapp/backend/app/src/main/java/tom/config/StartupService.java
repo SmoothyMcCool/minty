@@ -11,18 +11,18 @@ import tom.meta.model.AiRequest;
 import tom.meta.model.RequestStatus;
 import tom.meta.repository.AiRequestRepository;
 import tom.meta.repository.RequestStatusRepository;
-import tom.meta.service.AiRequestMetricsService;
+import tom.meta.service.LlmRequestMetricsService;
 
 @Service
 public class StartupService {
 
 	private static final Logger logger = LogManager.getLogger(StartupService.class);
 
-	private final AiRequestMetricsService aiRequestMetricsService;
+	private final LlmRequestMetricsService aiRequestMetricsService;
 	private final AiRequestRepository requestRepository;
 	private final RequestStatusRepository statusRepository;
 
-	public StartupService(AiRequestMetricsService aiRequestMetricsService, AiRequestRepository requestRepository,
+	public StartupService(LlmRequestMetricsService aiRequestMetricsService, AiRequestRepository requestRepository,
 			RequestStatusRepository statusRepository) {
 		this.aiRequestMetricsService = aiRequestMetricsService;
 		this.requestRepository = requestRepository;

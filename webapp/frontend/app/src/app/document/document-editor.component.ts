@@ -26,7 +26,7 @@ export interface DocProperties {
 export class DocumentEditorComponent implements ControlValueAccessor {
 
 	document: MintyDoc | undefined = undefined;
-	selectedSection: DocumentSection | null = null;
+	selectedSection: DocumentSection | undefined = undefined;
 	viewingMode: 'summary' | 'section' | 'none' = 'none';
 
 	onChange = (_: any) => { };
@@ -42,6 +42,15 @@ export class DocumentEditorComponent implements ControlValueAccessor {
 
 	writeValue(obj: any): void {
 		this.document = obj;
+		this.selectedSection = undefined;
+		this.viewingMode = 'none';
+
+		if (this.document?.sections?.length === 1) {
+			const onlySection = this.document.sections[0];
+			this.selectedSection = onlySection;
+			this.viewingMode = 'section';
+			this.getContent(onlySection);
+		}
 	}
 	registerOnChange(fn: any): void {
 		this.onChange = fn;

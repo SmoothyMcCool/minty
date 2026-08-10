@@ -21,7 +21,7 @@
 						<!-- Skill name as a link -->
 						<a href="#" class="flex-grow-1 text-truncate text-decoration-none" role="button"
 							(click)="$event.preventDefault(); onSelectSkill(skill);" tabindex="0">
-							{{ skill.name }}
+							{{skill.name}}
 						</a>
 
 						@if (skill.owned) {
@@ -65,8 +65,8 @@
 				<!-- Skill header card -->
 				<div class="card shadow-sm border-0 mb-3">
 					<div class="card-body pb-2">
-						<h5 class="mb-1">{{ selectedSkill.metadata.name }}</h5>
-						<p class="text-muted mb-0">{{ selectedSkill.metadata.description }}</p>
+						<h5 class="mb-1">{{selectedSkill.metadata.name}}</h5>
+						<p class="text-muted mb-0">{{selectedSkill.metadata.description}}</p>
 					</div>
 				</div>
 
@@ -82,7 +82,7 @@
 									<!-- File name as a link -->
 									<a href="#" class="text-decoration-none d-flex align-items-center" role="button"
 										(click)="$event.preventDefault(); onSelectFile(file);" tabindex="0">
-										<i class="bi bi-file-earmark me-2"></i>{{ file.relativePath }}
+										<i class="bi bi-file-earmark me-2"></i>{{file.relativePath}}
 									</a>
 								</li>
 							} @empty {
@@ -94,7 +94,7 @@
 					<!-- File preview column -->
 					@if (selectedFile) {
 						<div class="col-8">
-							<h6 class="text-muted mb-3">{{ selectedFile.relativePath }}</h6>
+							<h6 class="text-muted mb-3">{{selectedFile.relativePath}}</h6>
 							<markdown mermaid [data]="renderContent(selectedFile.content)"></markdown>
 						</div>
 					} @else {

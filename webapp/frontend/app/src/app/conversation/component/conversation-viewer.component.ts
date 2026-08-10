@@ -9,7 +9,7 @@ import { ChatMessage } from '../../model/conversation/chat-message';
 import { ConfirmationDialogComponent } from '../../app/component/confirmation-dialog.component';
 import { Conversation } from '../../model/conversation/conversation';
 import { LlmMetric } from '../../model/conversation/llm-metric';
-import { StreamingResponse } from '../../model/conversation/streaming-response';
+import { StreamingResponse, ThoughtEntry } from '../../model/conversation/streaming-response';
 import { Model } from '../../model/model';
 import { User } from '../../model/user';
 import { AutoResizeDirective } from '../../pipe/auto-resize-directive';
@@ -68,7 +68,7 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 	metrics: LlmMetric | undefined = undefined;
 	sourcesOpen: boolean = true;
 	sources: Set<string> | undefined = undefined;
-	thoughts: string | undefined = undefined;
+	thoughts: ThoughtEntry[] = [];
 	statusMessages: AgentStepResult[] = [];
 	expandedSteps: Record<number, boolean> = {};
 	model: Model | undefined = undefined;
@@ -166,12 +166,21 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 		});
 	}
 
+	appendThought(type: 'THINKING' | 'TOOL', content: string) {
+		const last = this.thoughts[this.thoughts.length - 1];
+		if (last && last.type === type) {
+			last.content += content;
+		} else {
+			this.thoughts = [...this.thoughts, { type, content }];
+		}
+	}
+
 	stream(streamId: string) {
 		let response = '';
 		this.chatHistory.unshift(this.newMessage(false, ''));
 		this.sources = undefined;
 		this.metrics = undefined;
-		this.thoughts = '';
+		this.thoughts = [];
 
 		this.assistantService.getStream(streamId).pipe(
 			retry({
@@ -192,13 +201,13 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 						this.sources = new Set([...currentSources, ...responseChunk.sources]);
 					}
 
-					if (responseChunk.content) {
-						if (responseChunk.content.startsWith('[STATUS]')) {
-							const message = responseChunk.content.substring('[STATUS]'.length).replace(/\\n/g, '\n').trim() + '\n';
-							this.statusMessages.push({ statusMessage: message, stepOutput: '' });
-
-						} else if (responseChunk.content.startsWith('[INTERNAL]')) {
-							let message = responseChunk.content.substring('[INTERNAL]'.length).replace(/\\n/g, '\n').trim() + '\n';
+					if (responseChunk.content && responseChunk.type) {
+						switch (responseChunk.type) {
+						case 'STATUS':
+							this.statusMessages.push({ statusMessage: responseChunk.content, stepOutput: '' });
+							break;
+						case 'INTERNAL':
+							let message = responseChunk.content + '\n';
 
 							const start = message.indexOf("[") + 1;
 							const end = message.indexOf("]");
@@ -211,16 +220,18 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 								statusStep.stepOutput += message;
 							}
 							this.statusMessages = [...this.statusMessages];
-						}
-						else if (responseChunk.content.startsWith('[THOUGHT]')) {
-							const thoughtPart = responseChunk.content.replace('[THOUGHT]', '');
-							this.thoughts = (this.thoughts || '') + thoughtPart;
-						} else if (responseChunk.content.startsWith('[TOOL]')) {
-							const thoughtPart = responseChunk.content.replace('[TOOL]', '');
-							this.thoughts = (this.thoughts || '') + '\n>> Calling: ' + thoughtPart + '\n\n';
-						} else {
+							break;	
+						case 'THINKING':
+							this.appendThought('THINKING', responseChunk.content);
+							break;
+						case 'TOOL':
+							this.appendThought('TOOL', 'Calling Tool: ' + responseChunk.content);
+							break;
+						case 'RESPONSE':
 							response += responseChunk.content;
+							break;
 						}
+
 					}
 					if (response.length > 0) {
 						this.waitingForResponse = false;

@@ -21,11 +21,13 @@
 
 	<modules>
 		<module>../parent</module>
+		<module>../analytics</module>
 		<module>../api</module>
 		<module>../api-anthropic</module>
 		<module>../api-ollama</module>
 		<module>../api-openai</module>
 		<module>../app</module>
+		<module>../assistant</module>
 		<module>../common</module>
 		<module>../documents</module>
 		<module>../llm</module>

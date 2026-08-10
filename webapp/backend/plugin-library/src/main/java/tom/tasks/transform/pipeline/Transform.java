@@ -134,13 +134,11 @@ public class Transform extends MintyTask {
 
 			@Override
 			public int numOutputs() {
-				// TODO Auto-generated method stub
 				return 1;
 			}
 
 			@Override
 			public int numInputs() {
-				// TODO Auto-generated method stub
 				return 1;
 			}
 
