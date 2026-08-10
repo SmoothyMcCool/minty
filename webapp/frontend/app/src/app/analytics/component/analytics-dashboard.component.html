@@ -1,0 +1,854 @@
+<div class="container-fluid analytics-dashboard">
+
+	<!-- Header -------------------------------------------------------------- -->
+
+	<div class="dashboard-header">
+
+		<div>
+			<h2 class="mb-1">
+				Analytics
+			</h2>
+
+			<div class="text-muted">
+				Application usage and system statistics
+			</div>
+		</div>
+
+		<button type="button" class="btn btn-outline-secondary" (click)="refresh()" [disabled]="loading">
+
+			@if (loading) {
+				<span class="spinner-border spinner-border-sm me-1" aria-hidden="true">
+				</span>
+			}
+
+			Refresh
+		</button>
+
+	</div>
+
+
+	<!-- Date range ---------------------------------------------------------- -->
+
+	<div class="card dashboard-filter-card mb-4">
+
+		<div class="card-body">
+
+			<div class="row align-items-end g-3">
+
+				<div class="col-sm-4 col-lg-3">
+
+					<label class="form-label">
+						From
+					</label>
+
+					<input type="date" class="form-control" [value]="formatDateForInput(fromDate)"
+						(change)="setFromDate($any($event.target).value)">
+
+				</div>
+
+
+				<div class="col-sm-4 col-lg-3">
+
+					<label class="form-label">
+						To
+					</label>
+
+					<input type="date" class="form-control" [value]="formatDateForInput(toDate)"
+						(change)="setToDate($any($event.target).value)">
+
+				</div>
+
+
+				<div class="col-sm-4 col-lg-6">
+
+					<div class="date-range-status">
+
+						@if (loadingDateRange) {
+							<span class="spinner-border spinner-border-sm me-2" aria-hidden="true">
+							</span>
+
+							Updating date-range data...
+						}
+						@else {
+							Showing data from&nbsp;
+							<strong>
+								{{ fromDate | date:'yyyy-MM-dd' }}
+							</strong>
+							&nbsp;to&nbsp;
+							<strong>
+								{{ toDate | date:'yyyy-MM-dd' }}
+							</strong>
+						}
+
+					</div>
+
+				</div>
+
+			</div>
+
+			@if (fromDate > toDate) {
+				<div class="alert alert-warning mt-3 mb-0">
+					The start date must not be after the end date.
+				</div>
+			}
+
+		</div>
+
+	</div>
+
+
+	@if (loading) {
+
+		<div class="loading-container">
+
+			<div class="spinner-border" role="status">
+
+				<span class="visually-hidden">
+					Loading...
+				</span>
+
+			</div>
+
+			<div class="text-muted mt-3">
+				Loading analytics...
+			</div>
+
+		</div>
+
+	}
+	@else {
+
+		<!-- System overview ------------------------------------------------- -->
+
+		<section class="dashboard-section">
+
+			<div class="section-heading">
+				<h3>System</h3>
+			</div>
+
+
+			<div class="metric-grid">
+
+				@for (
+					metric of getOverviewMetrics(systemOverview);
+					track metric.name
+				) {
+
+					<div class="metric-card">
+
+						<div class="metric-label">
+							{{ formatColumnName(metric.name) }}
+						</div>
+
+						<div class="metric-value">
+							{{ formatValue(metric.value) }}
+						</div>
+
+					</div>
+
+				}
+
+			</div>
+
+
+			@if (
+				!systemOverview ||
+				getOverviewMetrics(systemOverview).length === 0
+			) {
+
+				<div class="empty-state">
+					No system overview data available.
+				</div>
+
+			}
+
+			<div class="card analytics-card mt-4">
+				<div class="card-header">
+					Daily System Statistics
+				</div>
+
+				<div class="card-body p-0">
+					<ng-container
+						[ngTemplateOutlet]="tableTemplate"
+						[ngTemplateOutletContext]="{
+							rows: dailySystemStatistics
+						}">
+					</ng-container>
+				</div>
+			</div>
+
+		</section>
+
+
+		<!-- LLM overview ---------------------------------------------------- -->
+
+		<section class="dashboard-section">
+
+			<div class="section-heading">
+				<h3>LLM Overview</h3>
+			</div>
+
+
+			<div class="metric-grid">
+
+				@for (
+					metric of getOverviewMetrics(llmSystemOverview);
+					track metric.name
+				) {
+
+					<div class="metric-card">
+
+						<div class="metric-label">
+							{{ formatColumnName(metric.name) }}
+						</div>
+
+						<div class="metric-value">
+							{{ formatValue(metric.value) }}
+						</div>
+
+					</div>
+
+				}
+
+			</div>
+
+
+			@if (
+				!llmSystemOverview ||
+				getOverviewMetrics(llmSystemOverview).length === 0
+			) {
+
+				<div class="empty-state">
+					No LLM overview data available.
+				</div>
+
+			}
+
+		</section>
+
+
+		<!-- Assistants ------------------------------------------------------ -->
+
+		<section class="dashboard-section">
+
+			<div class="section-heading">
+				<h3>Assistants</h3>
+			</div>
+
+
+			<div class="row g-4">
+
+				<div class="col-xl-6">
+
+					<div class="card analytics-card h-100">
+
+						<div class="card-header">
+							Assistant Leaderboard
+						</div>
+
+						<div class="card-body">
+
+							@if (
+								assistantLeaderboard.length > 0
+							) {
+
+								<div class="ranking-list">
+
+									@for (
+										row of assistantLeaderboard.slice(0, 10);
+										track $index
+									) {
+
+										<div class="ranking-row">
+
+											<div class="ranking-number">
+												{{ $index + 1 }}
+											</div>
+
+											<div class="ranking-content">
+
+												<div class="ranking-label">
+													{{ findLabel(row, $index) }}
+												</div>
+
+												<div class="progress">
+
+													<div class="progress-bar" role="progressbar" [style.width.%]="
+															getChartPoints(
+																assistantLeaderboard
+															)[
+																$index
+															]?.percentage ?? 0
+														">
+													</div>
+
+												</div>
+
+											</div>
+
+											<div class="ranking-value">
+
+												{{ formatValue(
+													row[
+														getDefaultChartColumn(
+															assistantLeaderboard
+														) ?? ''
+													]
+												) }}
+
+											</div>
+
+										</div>
+
+									}
+
+								</div>
+
+							}
+							@else {
+
+								<div class="empty-state">
+									No assistant leaderboard data.
+								</div>
+
+							}
+
+						</div>
+
+					</div>
+
+				</div>
+
+
+				<div class="col-xl-6">
+
+					<div class="card analytics-card h-100">
+
+						<div class="card-header">
+							Assistant Popularity
+						</div>
+
+						<div class="card-body">
+
+							@if (
+								assistantPopularity.length > 0
+							) {
+
+								<div class="bar-chart">
+
+									@for (
+										point of getChartPoints(
+											assistantPopularity
+										).slice(0, 10);
+										track $index
+									) {
+
+										<div class="bar-row">
+
+											<div class="bar-label">
+												{{ point.label }}
+											</div>
+
+											<div class="bar-track">
+
+												<div class="bar-value" [style.width.%]="point.percentage">
+												</div>
+
+											</div>
+
+											<div class="bar-number">
+												{{ formatValue(point.value) }}
+											</div>
+
+										</div>
+
+									}
+
+								</div>
+
+							}
+							@else {
+
+								<div class="empty-state">
+									No assistant popularity data.
+								</div>
+
+							}
+
+						</div>
+
+					</div>
+
+				</div>
+
+			</div>
+
+
+			<div class="card analytics-card mt-4">
+
+				<div class="card-header">
+					Daily Assistant Usage
+				</div>
+
+				<div class="card-body">
+
+					@if (assistantDailyUsage.length > 0) {
+
+						<div class="timeline-chart">
+
+							@for (
+								point of getChartPoints(
+									assistantDailyUsage
+								);
+								track $index
+							) {
+
+								<div class="timeline-column" [title]="
+										point.label +
+										': ' +
+										formatValue(point.value)
+									">
+
+									<div class="timeline-bar" [style.height.%]="point.percentage">
+									</div>
+
+									<div class="timeline-label">
+										{{ point.label }}
+									</div>
+
+								</div>
+
+							}
+
+						</div>
+
+					}
+					@else {
+
+						<div class="empty-state">
+							No assistant usage data for this period.
+						</div>
+
+					}
+
+				</div>
+
+			</div>
+
+
+			<div class="card analytics-card mt-4">
+
+				<div class="card-header">
+					Assistant Popularity Details
+				</div>
+
+				<div class="card-body p-0">
+
+					<ng-container [ngTemplateOutlet]="tableTemplate" [ngTemplateOutletContext]="{
+							rows: assistantPopularity
+						}">
+					</ng-container>
+
+				</div>
+
+			</div>
+
+		</section>
+
+
+		<!-- Workflows ------------------------------------------------------- -->
+
+		<section class="dashboard-section">
+
+			<div class="section-heading">
+				<h3>Workflows</h3>
+			</div>
+
+
+			<div class="row g-4">
+
+				<div class="col-xl-6">
+
+					<div class="card analytics-card">
+
+						<div class="card-header">
+							Most Run Workflows
+						</div>
+
+						<div class="card-body">
+
+							@if (mostRunWorkflows.length > 0) {
+
+								<div class="bar-chart">
+
+									@for (
+										point of getChartPoints(
+											mostRunWorkflows
+										).slice(0, 10);
+										track $index
+									) {
+
+										<div class="bar-row">
+
+											<div class="bar-label">
+												{{ point.label }}
+											</div>
+
+											<div class="bar-track">
+
+												<div class="bar-value" [style.width.%]="point.percentage">
+												</div>
+
+											</div>
+
+											<div class="bar-number">
+												{{ formatValue(point.value) }}
+											</div>
+
+										</div>
+
+									}
+
+								</div>
+
+							}
+							@else {
+
+								<div class="empty-state">
+									No workflow data available.
+								</div>
+
+							}
+
+						</div>
+
+					</div>
+
+				</div>
+
+
+				<div class="col-xl-6">
+
+					<div class="card analytics-card">
+
+						<div class="card-header">
+							Workflow Popularity
+						</div>
+
+						<div class="card-body p-0">
+
+							<ng-container [ngTemplateOutlet]="tableTemplate" [ngTemplateOutletContext]="{
+									rows: workflowPopularity
+								}">
+							</ng-container>
+
+						</div>
+
+					</div>
+
+				</div>
+
+			</div>
+
+		</section>
+
+
+		<!-- Users ----------------------------------------------------------- -->
+
+		<section class="dashboard-section">
+
+			<div class="section-heading">
+				<h3>Users</h3>
+			</div>
+
+
+			<div class="row g-4">
+
+				<div class="col-xl-6">
+
+					<div class="card analytics-card">
+
+						<div class="card-header">
+							User Activity
+						</div>
+
+						<div class="card-body p-0">
+
+							<ng-container [ngTemplateOutlet]="tableTemplate" [ngTemplateOutletContext]="{
+									rows: userActivity
+								}">
+							</ng-container>
+
+						</div>
+
+					</div>
+
+				</div>
+
+
+				<div class="col-xl-6">
+
+					<div class="card analytics-card">
+
+						<div class="card-header">
+							User Login Activity
+						</div>
+
+						<div class="card-body p-0">
+
+							<ng-container [ngTemplateOutlet]="tableTemplate" [ngTemplateOutletContext]="{
+									rows: userLoginSummaries
+								}">
+							</ng-container>
+
+						</div>
+
+					</div>
+
+				</div>
+
+			</div>
+
+
+			<div class="card analytics-card mt-4">
+
+				<div class="card-header">
+					User Actions
+				</div>
+
+				<div class="card-body p-0">
+
+					<ng-container [ngTemplateOutlet]="tableTemplate" [ngTemplateOutletContext]="{
+							rows: userActionSummaries
+						}">
+					</ng-container>
+
+				</div>
+
+			</div>
+
+		</section>
+
+
+		<!-- LLM ------------------------------------------------------------- -->
+
+		<section class="dashboard-section">
+
+			<div class="section-heading">
+				<h3>LLM Usage</h3>
+			</div>
+
+
+			<div class="card analytics-card mb-4">
+
+				<div class="card-header">
+					Requests / Day
+				</div>
+
+				<div class="card-body">
+
+					@if (llmDailyMetrics.length > 0) {
+
+						<div class="timeline-chart">
+
+							@for (
+								point of getChartPoints(
+									llmDailyMetrics
+								);
+								track $index
+							) {
+
+								<div class="timeline-column" [title]="
+										point.label +
+										': ' +
+										formatValue(point.value)
+									">
+
+									<div class="timeline-bar" [style.height.%]="point.percentage">
+									</div>
+
+									<div class="timeline-label">
+										{{ point.label }}
+									</div>
+
+								</div>
+
+							}
+
+						</div>
+
+					}
+					@else {
+
+						<div class="empty-state">
+							No LLM data for this period.
+						</div>
+
+					}
+
+				</div>
+
+			</div>
+
+
+			<div class="row g-4">
+
+				<div class="col-xl-6">
+
+					<div class="card analytics-card">
+
+						<div class="card-header">
+							LLM Usage by User
+						</div>
+
+						<div class="card-body p-0">
+
+							<ng-container [ngTemplateOutlet]="tableTemplate" [ngTemplateOutletContext]="{
+									rows: llmUserMetrics
+								}">
+							</ng-container>
+
+						</div>
+
+					</div>
+
+				</div>
+
+
+				<div class="col-xl-6">
+
+					<div class="card analytics-card">
+
+						<div class="card-header">
+							LLM Usage by Assistant
+						</div>
+
+						<div class="card-body p-0">
+
+							<ng-container [ngTemplateOutlet]="tableTemplate" [ngTemplateOutletContext]="{
+									rows: llmAssistantMetrics
+								}">
+							</ng-container>
+
+						</div>
+
+					</div>
+
+				</div>
+
+			</div>
+
+
+			<div class="card analytics-card mt-4">
+
+				<div class="card-header">
+					LLM Daily Metrics
+				</div>
+
+				<div class="card-body p-0">
+
+					<ng-container [ngTemplateOutlet]="tableTemplate" [ngTemplateOutletContext]="{
+							rows: llmDailyMetrics
+						}">
+					</ng-container>
+
+				</div>
+
+			</div>
+
+
+			<div class="card analytics-card mt-4">
+
+				<div class="card-header">
+					LLM Hourly Metrics
+				</div>
+
+				<div class="card-body p-0">
+
+					<ng-container [ngTemplateOutlet]="tableTemplate" [ngTemplateOutletContext]="{
+							rows: llmHourlyMetrics
+						}">
+					</ng-container>
+
+				</div>
+
+			</div>
+
+		</section>
+
+	}
+
+</div>
+
+
+<!-- Generic dataset table ----------------------------------------------- -->
+
+<ng-template #tableTemplate let-rows="rows">
+
+	@if (!rows || rows.length === 0) {
+
+		<div class="empty-state p-4">
+			No data available.
+		</div>
+
+	}
+	@else {
+
+		<div class="table-responsive">
+
+			<table class="table table-sm table-hover analytics-table mb-0">
+
+				<thead>
+
+					<tr>
+
+						@for (
+							column of getColumns(rows);
+							track column
+						) {
+
+							<th scope="col">
+								{{ formatColumnName(column) }}
+							</th>
+
+						}
+
+					</tr>
+
+				</thead>
+
+				<tbody>
+
+					@for (
+						row of rows;
+						track $index
+					) {
+
+						<tr>
+
+							@for (
+								column of getColumns(rows);
+								track column
+							) {
+
+								<td>
+									{{ formatValue(
+										getValue(row, column)
+									) }}
+								</td>
+
+							}
+
+						</tr>
+
+					}
+
+				</tbody>
+
+			</table>
+
+		</div>
+
+	}
+
+</ng-template>

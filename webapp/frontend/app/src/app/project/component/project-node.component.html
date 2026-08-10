@@ -3,7 +3,7 @@
 	<span class="flex-shrink-0 me-2" style="width: 20px; text-align: center;">
 		@if (node.type === 'Folder') {
 			<span class="folder-toggle cursor-pointer" (click)="toggle()">
-				<i class="bi" [ngClass]="{'bi-folder2-open': isExpanded, 'bi-folder': !isExpanded}"></i>
+				<i class="bi" [ngClass]="{'bi-folder2-open': displayExpanded, 'bi-folder': !displayExpanded}"></i>
 			</span>
 		} @else if (node.type === 'Conversation') {
 			<i class="bi bi-chat-left-text text-primary"></i>
@@ -42,11 +42,11 @@
 	</div>
 </div>
 
-@if (node.type === 'Folder' && isExpanded) {
+@if (node.type === 'Folder' && displayExpanded) {
 	<ul class="list-unstyled ps-2">
-		@for (child of children; track child.path) {
-			<minty-project-node [node]="child" [selected]="selected" [nodes]="nodes" (nodeSelected)="onSelect($event)"
-				(update)="update.emit($event)" (delete)="delete.emit($event)">
+		@for (child of filteredChildren; track child.path) {
+			<minty-project-node [node]="child" [selected]="selected" [nodes]="nodes" [filter]="filter"
+				(nodeSelected)="onSelect($event)" (update)="update.emit($event)" (delete)="delete.emit($event)">
 			</minty-project-node>
 		}
 	</ul>

@@ -119,13 +119,11 @@ public class RenameData extends MintyTask {
 
 			@Override
 			public int numOutputs() {
-				// TODO Auto-generated method stub
 				return 1;
 			}
 
 			@Override
 			public int numInputs() {
-				// TODO Auto-generated method stub
 				return 1;
 			}
 
@@ -154,13 +152,10 @@ public class RenameData extends MintyTask {
 
 	@Override
 	public void inputTerminated(int i) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public boolean failed() {
-		// TODO Auto-generated method stub
 		return failed;
 	}
 

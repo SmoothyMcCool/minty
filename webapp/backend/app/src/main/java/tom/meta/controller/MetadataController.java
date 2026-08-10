@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -20,6 +22,8 @@ import tom.user.service.UserServiceInternal;
 @Controller
 @RequestMapping("/api/metadata")
 public class MetadataController {
+
+	private static final Logger logger = LogManager.getLogger(MetadataController.class);
 
 	private final MetadataRepository metadataRepository;
 	private final UserServiceInternal userService;
@@ -40,6 +44,9 @@ public class MetadataController {
 				ret.add(new Metadata(user.get().getName(), md.getTotalAssistantsCreated(), md.getTotalConversations(),
 						md.getTotalWorkflowsCreated(), md.getTotalWorkflowRuns(), md.getTotalLogins(),
 						md.getLastLogin()));
+			} else {
+				logger.info("Could not generate stats for user " + md.getUserId().value()
+						+ ". User likely no longer exists.");
 			}
 		});
 

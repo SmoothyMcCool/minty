@@ -66,6 +66,8 @@ public class RequestMetrics {
 
 	private Integer completionTokens;
 
+	private Integer totalTokens;
+
 	protected RequestMetrics() {
 	}
 
@@ -128,6 +130,14 @@ public class RequestMetrics {
 
 	public void setCompletionTokens(Integer completionTokens) {
 		this.completionTokens = completionTokens;
+	}
+
+	public Integer getTotalTokens() {
+		return totalTokens;
+	}
+
+	public void setTotalTokens(Integer totalTokens) {
+		this.totalTokens = totalTokens;
 	}
 
 	@Transient

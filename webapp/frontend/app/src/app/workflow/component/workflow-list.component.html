@@ -12,7 +12,7 @@
 
 						<!-- Workflow name (clickable) -->
 						<h5 class="mb-0 flex-grow-1 clickable-text" (click)="editWorkflow(workflow)">
-							{{ workflow.name }}
+							{{workflow.name}}
 						</h5>
 
 						<!-- Action dropdown -->
@@ -101,7 +101,7 @@
 							<!-- Result name -->
 							<span class="text-truncate clickable-text me-2"
 								(click)="result.id && displayResultsFor(result)">
-								{{ result.name }}
+								{{result.name}}
 							</span>
 
 							<!-- Failure icon -->
@@ -198,20 +198,20 @@
 						<tbody>
 							@for (stepState of workflowStatus.stepStates | keyvalue; track $index) {
 								<tr>
-									<td class="fw-semibold">{{ stepState.key }}</td>
+									<td class="fw-semibold">{{stepState.key}}</td>
 									@if (stepState.totalTasks !== 0) {
-										<td class="text-center">{{ stepState.value.numTasks }}</td>
+										<td class="text-center">{{stepState.value.numTasks}}</td>
 
 										<td class="text-center">
 											<span class="badge minty-badge-success">
-												{{ stepState.value.completedTasks }}
+												{{stepState.value.completedTasks}}
 											</span>
 										</td>
 
 										<td class="text-center">
 											<span class="badge"
 												[ngClass]="stepState.value.failedTasks > 0 ? 'bg-danger' : 'bg-secondary'">
-												{{ stepState.value.failedTasks }}
+												{{stepState.value.failedTasks}}
 											</span>
 										</td>
 									} @else {

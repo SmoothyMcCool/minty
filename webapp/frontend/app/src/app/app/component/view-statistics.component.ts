@@ -4,10 +4,11 @@ import { UserMeta } from '../../model/user-meta';
 import { MetadataService } from '../../metadata.service';
 import { User } from '../../model/user';
 import { UserService } from '../../user.service';
+import { AnalyticsDashboardComponent } from '../../analytics/component/analytics-dashboard.component';
 
 @Component({
 	selector: 'minty-view-statistics',
-	imports: [CommonModule, DatePipe],
+	imports: [CommonModule, DatePipe, AnalyticsDashboardComponent],
 	templateUrl: 'view-statistics.component.html'
 })
 export class ViewStatisticsComponent implements OnInit {
