@@ -2,44 +2,58 @@
 	<div class="container">
 		<div class="pt-5">
 			<h1 class="well blue rounded text-center">{{applicationName}}</h1>
-			<div class="big-margin well rounded p-3 vertical-centre">
 
-				@if (loginFailed) {
-					<div class="alert alert-danger container">
-						<div class="row">
-							<div class="col me-auto align-middle">
-								<label class="col-form-label">Couldn't log in :( Try again.</label>
-							</div>
-							<div class="col-auto">
-								<button (click)="loginFailed = false" class="btn btn-danger">&times;</button>
-							</div>
-						</div>
+			<div class="vertical-centre">
+
+				@if (motd && motd.length > 0) {
+					<div class="text-center">
+						<span class="bg-warning text-black p-2 rounded">{{motd}}</span>
 					</div>
 				}
 
-				<div class="header">
-					<button type="submit" id="accountButton" (click)="signup()" class="btn btn-primary btn-float">Sign
-						Up!</button>
-					<h1 class="blue">Log in!</h1>
-				</div>
-				<form role="form" #userForm="ngForm" class="container-fluid" (submit)="login()">
-					<div class="mb-3 row">
-						<div class="col" required>
-							<input id="account" name="account" type="text" size="10" maxlength="50"
-								placeholder="User name" class="form-control" [(ngModel)]="credentials.account" required>
-						</div>
-					</div>
-					<div class="mb-3 row">
-						<div class="col" required>
-							<input id="password" name="password" type="password" size="10" maxlength="50"
-								placeholder="Password" class="form-control" [(ngModel)]="credentials.password" required>
-						</div>
-					</div>
+				<div class="big-margin well rounded p-3">
 
-					<div class="centred space-after">
-						<button type="submit" id="loginButton" class="btn btn-primary">Login</button>
+					@if (loginFailed) {
+						<div class="alert alert-danger container">
+							<div class="row">
+								<div class="col me-auto align-middle">
+									<label class="col-form-label">Couldn't log in :( Try again.</label>
+								</div>
+								<div class="col-auto">
+									<button (click)="loginFailed = false" class="btn btn-danger">&times;</button>
+								</div>
+							</div>
+						</div>
+					}
+
+					<div class="header">
+						<button type="submit" id="accountButton" (click)="signup()" class="btn btn-primary btn-float">Sign
+							Up!</button>
+
+						<h1 class="blue">Log in!</h1>
 					</div>
-				</form>
+					<form role="form" #userForm="ngForm" class="container-fluid" (submit)="login()">
+						<div class="mb-3 row">
+							<div class="col" required>
+								<input id="account" name="account" type="text" size="10" maxlength="50"
+									placeholder="User name" class="form-control" [(ngModel)]="credentials.account" required>
+							</div>
+						</div>
+						<div class="mb-3 row">
+							<div class="col" required>
+								<input id="password" name="password" type="password" size="10" maxlength="50"
+									placeholder="Password" class="form-control" [(ngModel)]="credentials.password" required>
+							</div>
+						</div>
+
+						<div class="centred space-after">
+							<button type="submit" id="loginButton" class="btn btn-primary">Login</button>
+						</div>
+					</form>
+				</div>
+
+				<minty-did-you-know [message]="message"></minty-did-you-know>
+
 			</div>
 		</div>
 		<div class="row fixed-bottom" style="pointer-events: none;">

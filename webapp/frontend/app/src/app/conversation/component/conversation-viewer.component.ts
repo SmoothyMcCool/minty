@@ -168,7 +168,8 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 
 	appendThought(type: 'THINKING' | 'TOOL', content: string) {
 		const last = this.thoughts[this.thoughts.length - 1];
-		if (last && last.type === type) {
+
+		if (last && last.type === 'THINKING') {
 			last.content += content;
 		} else {
 			this.thoughts = [...this.thoughts, { type, content }];
@@ -225,7 +226,7 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 							this.appendThought('THINKING', responseChunk.content);
 							break;
 						case 'TOOL':
-							this.appendThought('TOOL', 'Calling Tool: ' + responseChunk.content);
+							this.appendThought('TOOL', responseChunk.content);
 							break;
 						case 'RESPONSE':
 							response += responseChunk.content;
