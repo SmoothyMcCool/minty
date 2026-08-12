@@ -1,0 +1,9 @@
+Word documents can be read far more easily than PDFs. If you're having trouble with uploading a document, it works even better if you re-save it in LibreOffce.
+You can adjust the context size for assistants mid-chat. Press the <i class="bi bi-sliders"></i> button and adjust the slider.
+Minty can help you generate <i class="bi bi-diagram-3"></i> diagrams, and can render Mermaid diagrams in conversation. Try out the Diagramming Bot!
+Is an assistant not doing quite what you want? In a conversation with the assistant, press the <i class="bi bi-sliders"></i> button and you can see the System Prompt. Feel free to copy and tweak to suit your needs.
+Most assistants don't have multiple tools attached. Small models struggle to pick the correct tool, so less is more.
+Chats that occur in the context of a project automatically have access to tools to read, write, and update files in the selected project.
+Have a lot of files in your project? You can filter on Conversations, Workflows, Documents, and Files using the filter text input area in the top-left of the projects screen.
+With small models, sometimes you have to hit them over the head a little bit. If you aren't getting the output you expect, try augmenting your system prompt with very specific instructions, such as "before reporting that code does not exist, explicitly check for it in the Git repo first."
+Skills are a great way to augment Minty's abilities. Skill files need to have a specific format, see https://agentskills.io/specification. There is also Minty-specific guidance in Confluence (try the Confluence bot to search for it!)

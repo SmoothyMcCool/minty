@@ -46,7 +46,8 @@ public class OpenAiEndpointService implements LlmEndpointService {
 	public ChatClient buildChatClient(User user, Assistant assistant, AssistantQuery query, int contextSize,
 			List<Advisor> advisors) {
 		OpenAiChatOptions.Builder chatOptionsBuilder = OpenAiChatOptions.builder().model(assistant.model())
-				.apiKey(getApiKey(user)).baseUrl(endpointConfig.url().toString()).timeout(endpointConfig.apiTimeout());
+				.apiKey(getApiKey(user)).baseUrl(endpointConfig.url().toString()).timeout(endpointConfig.apiTimeout())
+				.streamOptions(OpenAiChatOptions.StreamOptions.builder().includeUsage(true).build());
 		if (assistant.temperature() != null) {
 			chatOptionsBuilder.temperature(assistant.temperature());
 		}

@@ -271,7 +271,16 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 				}
 
 				ChatResponse chatResponse = chatClientResponse.chatResponse();
-				if (chatResponse == null || chatResponse.getResult() == null) {
+				if (chatResponse == null) {
+					return;
+				}
+
+				Usage chunkUsage = chatResponse.getMetadata().getUsage();
+				if (chunkUsage != null) {
+					usage.set(chunkUsage);
+				}
+
+				if (chatResponse.getResult() == null) {
 					return;
 				}
 
@@ -301,7 +310,8 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 
 				if (chunk != null) {
 
-					for (String thoughtsKey : List.of("thoughts", "thinking", "reasoning_content")) {
+					for (String thoughtsKey : List.of("thoughts", "thinking", "reasoning_content",
+							"reasoningContent")) {
 						if (chunk.getMetadata().containsKey(thoughtsKey)) {
 							String thoughtsText = (String) chunk.getMetadata().get(thoughtsKey);
 							if (thoughtsText != null && !thoughtsText.isEmpty()) {
@@ -320,7 +330,6 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 					}
 				}
 
-				usage.set(chatResponse.getMetadata().getUsage());
 			}).onErrorResume(e -> {
 				logger.warn("runSingleLlmCallStreaming error", e);
 				failed.set(true);
