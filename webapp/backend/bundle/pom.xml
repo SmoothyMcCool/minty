@@ -110,6 +110,8 @@
 									<directory>${basedir}/src/main/resources</directory>
 									<includes>
 										<include>application.yaml</include>
+										<include>did-you-know.txt</include>
+										<include>motd.txt</include>
 									</includes>
 								</resource>
 							</resources>

@@ -68,16 +68,15 @@ public class AuditingToolCallingManager implements ToolCallingManager {
 						sb.append("user id      : ").append(context.getOrDefault(ToolExecutionContext.USER_ID, "null"))
 								.append('\n').append("tool id      : ").append(toolResponse.id()).append('\n')
 								.append("tool name    : ").append(toolResponse.name()).append('\n')
-								.append("tool response: ")
-								.append((toolResponse.responseData().length() / 3.5) + " tokens (approximate)")
+								.append("tool response: ").append(Math.round(toolResponse.responseData().length() / 3.5)
+										+ " tokens (approximate)")
 								.append('\n');
 
 						String callDescription = pendingCallsById.get(toolResponse.id());
 						if (callDescription == null) {
 							// Fall back if we somehow don't have a matching dispatched call recorded.
 							callDescription = toolResponse.name() + "(?)";
-							logger.warn("No matching dispatched call found for tool response id {}",
-									toolResponse.id());
+							logger.warn("No matching dispatched call found for tool response id {}", toolResponse.id());
 						}
 
 						completedEntries.add(callDescription + " \n\n " + toolResponse.responseData());

@@ -61,7 +61,8 @@ public class SecurityConfig {
 							return false;
 						}).permitAll()
 
-						.requestMatchers("/api/user/new", "/api/login").permitAll()
+						.requestMatchers("/api/user/new", "/api/login", "/api/messages/random", "/api/messages/motd")
+						.permitAll()
 
 						.requestMatchers("/api/**").authenticated()
 

@@ -49,4 +49,12 @@ export class ConversationComponent {
 		return !this.collapsedEntries.has(index);
 	}
 
+	getToolCallHeader(content: string): string {
+		return content.split(/\r?\n\s*\r?\n/, 1)[0].trim();
+	}
+
+	getToolCallResult(content: string): string {
+		const parts = content.split(/\r?\n\s*\r?\n/, 2);
+		return parts.length > 1 ? parts[1].trim() : '';
+	}
 };
