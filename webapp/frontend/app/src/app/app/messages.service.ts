@@ -8,13 +8,14 @@ import { ApiResult } from '../model/api-result';
 })
 export class MessagesService {
 
-	private readonly url = '/api/messages';
+	private static readonly DailyMesssage = 'api/messages/motd';
+	private static readonly RandomMesssage = 'api/messages/random';
 
 	constructor(private http: HttpClient) {
 	}
 
 	getRandomMessage(): Observable<string> {
-		return this.http.get<ApiResult>(`${this.url}/random`).pipe(
+		return this.http.get<ApiResult>(MessagesService.RandomMesssage).pipe(
 			map((result: ApiResult) => {
 				return result.data as string;
 			})
@@ -22,7 +23,7 @@ export class MessagesService {
 	}
 
 	getMessageOfTheDay(): Observable<string> {
-		return this.http.get<ApiResult>(`${this.url}/motd`).pipe(
+		return this.http.get<ApiResult>(MessagesService.DailyMesssage).pipe(
 			map((result: ApiResult) => {
 				return result.data as string;
 			})

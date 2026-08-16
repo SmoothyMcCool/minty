@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -20,6 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import tom.api.ProjectId;
 import tom.api.UserId;
+import tom.api.model.project.ContextLine;
+import tom.api.model.project.FileSearchMatch;
+import tom.api.model.project.FileSearchResult;
 import tom.api.model.project.FileType;
 import tom.api.model.project.NodeContent;
 import tom.api.model.project.NodeInfo;
@@ -112,16 +116,42 @@ public class ProjectServiceImpl implements ProjectService {
 
 	@Override
 	public NodeContent readNode(UserId userId, ProjectId projectId, String path) {
+		return readNode(userId, projectId, path, null, null);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public NodeContent readNode(UserId userId, ProjectId projectId, String path, Integer startLine, Integer endLine) {
 		ProjectNodeEntity node = getRequiredNode(userId, projectId, path);
 
 		if (node.getType() == NodeType.Folder) {
-			return new NodeContent(node.getPath(), node.getVersion(), null, null);
+			return new NodeContent(node.getPath(), node.getVersion(), null, null, null, 0, null);
 		}
 
-		ProjectFileContent content = fileContentRepository.findTopByNodeIdOrderByVersionDesc(node.getId())
+		ProjectFileContent fileContent = fileContentRepository.findTopByNodeIdOrderByVersionDesc(node.getId())
 				.orElseThrow(() -> new IllegalStateException("File content missing."));
 
-		return new NodeContent(node.getPath(), node.getVersion(), node.getFileType(), content.getContent());
+		String content = fileContent.getContent();
+
+		if (startLine == null && endLine == null) {
+			return new NodeContent(node.getPath(), node.getVersion(), node.getFileType(), content);
+		}
+
+		validateLineRange(startLine, endLine);
+
+		int totalLines = countLines(content);
+
+		if (startLine > totalLines) {
+			throw new IllegalArgumentException(
+					"startLine " + startLine + " exceeds file length of " + totalLines + " lines.");
+		}
+
+		int actualEndLine = Math.min(endLine, totalLines);
+
+		String rangedContent = extractLines(content, startLine, actualEndLine);
+
+		return new NodeContent(node.getPath(), node.getVersion(), node.getFileType(), startLine, actualEndLine,
+				totalLines, rangedContent);
 	}
 
 	@Override
@@ -313,6 +343,207 @@ public class ProjectServiceImpl implements ProjectService {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
+	public List<NodeInfo> find(UserId userId, ProjectId projectId, String path, String name, NodeType type,
+			int maxResults) {
+
+		ensureValidFindLimit(maxResults);
+
+		if (path == null || path.isBlank()) {
+			path = "/";
+		}
+
+		if (!path.startsWith("/")) {
+			path = "/" + path;
+		}
+
+		if (path.length() > 1 && path.endsWith("/")) {
+			path = path.substring(0, path.length() - 1);
+		}
+
+		String pathPattern;
+
+		if ("/".equals(path)) {
+			pathPattern = "%";
+		} else {
+			pathPattern = path + "/%";
+		}
+
+		String namePattern = null;
+
+		if (name != null && !name.isBlank()) {
+			namePattern = globToSqlLike(name);
+		}
+
+		List<ProjectNodeEntity> nodes = nodeRepository.findNodes(projectId.getValue(), userId, path, pathPattern,
+				namePattern, type);
+
+		return nodes.stream().limit(maxResults)
+				.map(n -> new NodeInfo(n.getType(), n.getFileType(), n.getPath(), n.getVersion())).toList();
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<FileSearchResult> grep(UserId userId, ProjectId projectId, String path, String pattern,
+			boolean caseSensitive, int maxResults, int contextBefore, int contextAfter) {
+
+		if (pattern == null || pattern.isBlank()) {
+			throw new IllegalArgumentException("pattern must not be empty.");
+		}
+
+		if (maxResults < 1 || maxResults > 500) {
+			throw new IllegalArgumentException("maxResults must be between 1 and 500.");
+		}
+
+		if (contextBefore < 0 || contextBefore > 20) {
+			throw new IllegalArgumentException("contextBefore must be between 0 and 20.");
+		}
+
+		if (contextAfter < 0 || contextAfter > 20) {
+			throw new IllegalArgumentException("contextAfter must be between 0 and 20.");
+		}
+
+		if (path == null || path.isBlank()) {
+			path = "/";
+		}
+
+		if (!path.startsWith("/")) {
+			path = "/" + path;
+		}
+
+		if (path.length() > 1 && path.endsWith("/")) {
+			path = path.substring(0, path.length() - 1);
+		}
+
+		String pathPattern = "/".equals(path) ? "%" : path + "/%";
+
+		List<FileSearchRow> contents = fileContentRepository.searchCurrentFileContents(projectId.getValue(),
+				userId.value(), "%" + pattern + "%", pathPattern);
+
+		List<FileSearchResult> results = new ArrayList<>();
+
+		int totalMatches = 0;
+
+		for (FileSearchRow content : contents) {
+
+			String text = content.getContent();
+			String filePath = content.getPath();
+
+			String[] lines = text.split("\\R", -1);
+
+			List<FileSearchMatch> fileMatches = new ArrayList<>();
+
+			for (int i = 0; i < lines.length; i++) {
+
+				String line = lines[i];
+
+				boolean matches;
+
+				if (caseSensitive) {
+					matches = line.contains(pattern);
+				} else {
+					matches = line.toLowerCase(java.util.Locale.ROOT)
+							.contains(pattern.toLowerCase(java.util.Locale.ROOT));
+				}
+
+				if (!matches) {
+					continue;
+				}
+
+				int lineNumber = i + 1;
+
+				List<ContextLine> context = null;
+
+				if (contextBefore > 0 || contextAfter > 0) {
+
+					int first = Math.max(0, i - contextBefore);
+					int last = Math.min(lines.length - 1, i + contextAfter);
+
+					List<ContextLine> contextLines = new ArrayList<>();
+
+					for (int j = first; j <= last; j++) {
+						contextLines.add(new ContextLine(j + 1, lines[j]));
+					}
+
+					context = contextLines;
+				}
+
+				fileMatches.add(new FileSearchMatch(lineNumber, line, context));
+
+				totalMatches++;
+
+				if (totalMatches >= maxResults) {
+					break;
+				}
+			}
+
+			if (!fileMatches.isEmpty()) {
+				results.add(new FileSearchResult(filePath, fileMatches));
+			}
+
+			if (totalMatches >= maxResults) {
+				break;
+			}
+		}
+
+		return results;
+	}
+
+	@Override
+	@Transactional
+	public NodeInfo editFile(UserId userId, ProjectId projectId, String path, int expectedVersion, int startLine,
+			int endLine, String replacement) {
+
+		ProjectNodeEntity node = getRequiredNode(userId, projectId, path);
+
+		if (node.getType() != NodeType.File) {
+			throw new IllegalStateException("Path is not a file.");
+		}
+
+		if (node.getVersion() != expectedVersion) {
+			throw new IllegalStateException(
+					"File has changed since it was read. " + "Expected version " + expectedVersion
+							+ " but current version is " + node.getVersion() + ". Read the file again before editing.");
+		}
+
+		validateLineRange(startLine, endLine);
+
+		if (replacement == null) {
+			replacement = "";
+		}
+
+		ProjectFileContent currentContent = fileContentRepository.findTopByNodeIdOrderByVersionDesc(node.getId())
+				.orElseThrow(() -> new IllegalStateException("File content missing."));
+
+		String original = currentContent.getContent();
+
+		int totalLines = countLines(original);
+
+		if (startLine > totalLines) {
+			throw new IllegalArgumentException(
+					"startLine " + startLine + " exceeds file length of " + totalLines + " lines.");
+		}
+
+		if (endLine > totalLines) {
+			throw new IllegalArgumentException(
+					"endLine " + endLine + " exceeds file length of " + totalLines + " lines.");
+		}
+
+		String updated = replaceLines(original, startLine, endLine, replacement);
+
+		int newVersion = node.getVersion() + 1;
+
+		node.setVersion(newVersion);
+		node.setUpdated(Instant.now());
+
+		nodeRepository.save(node);
+
+		insertFileVersion(userId, node.getId(), newVersion, updated);
+
+		return new NodeInfo(NodeType.File, node.getFileType(), node.getPath(), newVersion);
+	}
+
+	@Override
 	@Transactional
 	public void importZip(UserId userId, ProjectId projectId, InputStream zipStream)
 			throws IOException, NotFoundException, NotOwnedException {
@@ -480,4 +711,125 @@ public class ProjectServiceImpl implements ProjectService {
 		return path.substring(path.lastIndexOf("/") + 1);
 	}
 
+	private void validateLineRange(Integer startLine, Integer endLine) {
+		if (startLine == null || endLine == null) {
+			throw new IllegalArgumentException("startLine and endLine must both be specified.");
+		}
+
+		if (startLine < 1) {
+			throw new IllegalArgumentException("startLine must be >= 1.");
+		}
+
+		if (endLine < startLine) {
+			throw new IllegalArgumentException("endLine must be >= startLine.");
+		}
+	}
+
+	private int countLines(String content) {
+		if (content == null || content.isEmpty()) {
+			return 0;
+		}
+
+		int count = 1;
+
+		for (int i = 0; i < content.length(); i++) {
+			if (content.charAt(i) == '\n') {
+				count++;
+			}
+		}
+
+		if (content.endsWith("\n")) {
+			count--;
+		}
+
+		return count;
+	}
+
+	private String extractLines(String content, int startLine, int endLine) {
+		String[] lines = content.split("\\R", -1);
+
+		StringBuilder result = new StringBuilder();
+
+		for (int i = startLine - 1; i < endLine && i < lines.length; i++) {
+			if (result.length() > 0) {
+				result.append('\n');
+			}
+
+			result.append(lines[i]);
+		}
+
+		return result.toString();
+	}
+
+	private void ensureValidFindLimit(int maxResults) {
+		if (maxResults < 1 || maxResults > 500) {
+			throw new IllegalArgumentException("maxResults must be between 1 and 500.");
+		}
+	}
+
+	private String globToSqlLike(String glob) {
+		StringBuilder result = new StringBuilder();
+
+		for (int i = 0; i < glob.length(); i++) {
+			char c = glob.charAt(i);
+
+			switch (c) {
+			case '*':
+				result.append('%');
+				break;
+
+			case '?':
+				result.append('_');
+				break;
+
+			case '%':
+			case '_':
+				// Escape SQL wildcard characters supplied literally.
+				result.append('\\').append(c);
+				break;
+
+			case '\\':
+				result.append("\\\\");
+				break;
+
+			default:
+				result.append(c);
+				break;
+			}
+		}
+
+		return result.toString();
+	}
+
+	private String replaceLines(String content, int startLine, int endLine, String replacement) {
+
+		String[] lines = content.split("\\R", -1);
+
+		StringBuilder result = new StringBuilder();
+
+		// Lines before replacement.
+		for (int i = 0; i < startLine - 1; i++) {
+			result.append(lines[i]).append('\n');
+		}
+
+		// Replacement.
+		if (replacement != null && !replacement.isEmpty()) {
+			result.append(replacement);
+
+			if (!replacement.endsWith("\n")) {
+				result.append('\n');
+			}
+		}
+
+		// Lines after replacement.
+		for (int i = endLine; i < lines.length; i++) {
+			result.append(lines[i]);
+
+			if (i < lines.length - 1) {
+				result.append('\n');
+			}
+		}
+
+		return result.toString();
+	}
 }

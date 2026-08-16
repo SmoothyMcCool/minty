@@ -216,9 +216,7 @@ export class AnalyticsDashboardComponent implements OnInit {
 		return `${year}-${month}-${day}`;
 	}
 
-	getOverviewMetrics(
-		overview: AnalyticsRow | null
-	): AnalyticsMetric[] {
+	getOverviewMetrics(overview: AnalyticsRow | null): AnalyticsMetric[] {
 		if (!overview) {
 			return [];
 		}
@@ -276,23 +274,14 @@ export class AnalyticsDashboardComponent implements OnInit {
 			);
 	}
 
-	getChartPoints(
-		rows: AnalyticsRow[],
-		valueColumn?: string
-	): ChartPoint[] {
+	getChartPoints(rows: AnalyticsRow[], valueColumn?: string): ChartPoint[] {
 
 		if (!rows || rows.length === 0) {
 			return [];
 		}
 
-		const numericColumns =
-			this.getNumericColumns(rows);
-
-		const selectedColumn =
-			valueColumn ??
-			this.findPreferredNumericColumn(
-				numericColumns
-			);
+		const numericColumns = this.getNumericColumns(rows);
+		const selectedColumn = valueColumn ?? this.findPreferredNumericColumn(numericColumns);
 
 		if (!selectedColumn) {
 			return [];
@@ -300,10 +289,7 @@ export class AnalyticsDashboardComponent implements OnInit {
 
 		const values = rows.map(row => {
 			const value = Number(row[selectedColumn]);
-
-			return Number.isFinite(value)
-				? value
-				: 0;
+			return Number.isFinite(value) ? value : 0;
 		});
 
 		const maximum =

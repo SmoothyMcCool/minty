@@ -97,7 +97,8 @@ CREATE TABLE IF NOT EXISTS Document (
     summary    LONGTEXT,
     created    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    INDEX idx_document_project_owner (projectId, ownerId)
 );
 
 CREATE TABLE DocumentSegment (
@@ -109,9 +110,9 @@ CREATE TABLE DocumentSegment (
     level         INT,
     title         TEXT,
     created       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	PRIMARY KEY (id),
-	FOREIGN KEY (docId) REFERENCES Document(id) ON DELETE CASCADE,
-    INDEX       idx_doc_segments_order (docId, sequenceOrder)
+    PRIMARY KEY (id),
+    FOREIGN KEY (documentId) REFERENCES Document(id) ON DELETE CASCADE,
+    INDEX       idx_doc_segments_order (documentId, sequenceOrder)
 );
 
 CREATE TABLE IF NOT EXISTS Tag (
@@ -388,7 +389,7 @@ CREATE TABLE IF NOT EXISTS ConversationStatistics
 (
     conversationId UUID NOT NULL,
     userId UUID NOT NULL,
-    assistantId UUID NOT NULL,
+    assistantId UUID NULL,
     started DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     completed DATETIME NULL,
     lastActivity DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -402,10 +403,6 @@ CREATE TABLE IF NOT EXISTS ConversationStatistics
         FOREIGN KEY (userId)
         REFERENCES User(id)
         ON DELETE CASCADE,
-    CONSTRAINT fk_conversation_statistics_assistant
-        FOREIGN KEY (assistantId)
-        REFERENCES Assistant(id)
-        ON DELETE CASCADE
 );
 
 CREATE INDEX idx_conversation_statistics_user
