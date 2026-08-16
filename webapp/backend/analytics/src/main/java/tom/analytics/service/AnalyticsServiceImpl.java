@@ -588,9 +588,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 
 		Objects.requireNonNull(conversationId, "conversationId");
 
-		UUID conversationUuid = conversationId.value();
-
-		ConversationStatistics statistics = conversationStatisticsRepository.findById(conversationUuid)
+		ConversationStatistics statistics = conversationStatisticsRepository.findById(conversationId.value())
 				.orElseThrow(() -> new AnalyticsNotFoundException(
 						"No conversation statistics exist for conversation: " + conversationId));
 

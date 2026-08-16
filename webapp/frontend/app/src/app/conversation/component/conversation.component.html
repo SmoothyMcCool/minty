@@ -36,6 +36,12 @@
 	</div>
 
 	<div class="collapse" [class.show]="isThinkingExpanded">
+		<div class="d-flex justify-content-end mb-1">
+			<button type="button" class="btn btn-sm btn-outline-secondary" (click)="copyReasoning()">
+				<i class="bi" [class.bi-clipboard-check]="copiedReasoning" [class.bi-clipboard]="!copiedReasoning"></i>
+				{{ copiedReasoning ? 'Copied!' : 'Copy all' }}
+			</button>
+		</div>
 		<ul class="list-group mb-2 shadow-sm thinking-container">
 			@for (entry of thoughts; track $index) {
 				<li class="list-group-item small" [class.bg-light]="entry.type === 'thinking'"
@@ -48,7 +54,7 @@
 						@if (entry.type === 'TOOL') {
 							<span class="fw-semibold text-primary">
 								<i class="bi bi-tools me-1"></i>
-								Tool Call: {{ getToolCallHeader(entry.content) }}
+								Tool Call: {{getToolCallHeader(entry.content)}}
 							</span>
 						} @else {
 							<span class="fw-semibold text-secondary">
@@ -72,9 +78,9 @@
 							[class.text-secondary]="entry.type === 'THINKING'">
 
 							@if (entry.type === 'TOOL') {
-								{{ getToolCallResult(entry.content) }}
+								{{getToolCallResult(entry.content)}}
 							} @else {
-								{{ entry.content }}
+								{{entry.content}}
 							}
 						</div>
 					}
