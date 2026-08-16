@@ -27,6 +27,8 @@ public interface PluginServices {
 
 	ProjectService getProjectService();
 
+	KnowledgeService getKnowledgeService();
+
 	CacheService getCacheService();
 
 	SkillService getSkillsService();

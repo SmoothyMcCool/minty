@@ -9,6 +9,7 @@ import tom.api.DocumentSectionId;
 import tom.api.ProjectId;
 import tom.api.UserId;
 import tom.api.model.document.Document;
+import tom.api.model.document.DocumentSearchResult;
 import tom.api.model.document.DocumentSection;
 import tom.api.model.document.SpreadsheetFormat;
 import tom.api.services.exception.NotFoundException;
@@ -41,5 +42,8 @@ public interface DocumentService {
 			List<Integer> sectionIndices);
 
 	Optional<Document> findByTitle(UserId userId, ProjectId projectId, String title);
+
+	List<DocumentSearchResult> grep(UserId userId, ProjectId projectId, String pattern, boolean caseSensitive,
+			int maxResults, int contextBefore, int contextAfter);
 
 }

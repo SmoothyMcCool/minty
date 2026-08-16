@@ -7,6 +7,7 @@ import tom.api.services.AgentRegistry;
 import tom.api.services.ConversationService;
 import tom.api.services.DocumentExtractorService;
 import tom.api.services.HttpService;
+import tom.api.services.KnowledgeService;
 import tom.api.services.PluginServices;
 import tom.api.services.ProjectService;
 import tom.api.services.RenderService;
@@ -32,6 +33,7 @@ public class PluginServicesImpl implements PluginServices {
 	private final UserService userService;
 	private final DocumentServiceInternal documentService;
 	private final ProjectService projectService;
+	private final KnowledgeService knowledgeService;
 	private final CacheService cacheService;
 	private final DocumentExtractorService documentExtractorService;
 	private final SkillService skillsService;
@@ -42,9 +44,10 @@ public class PluginServicesImpl implements PluginServices {
 			@Lazy AssistantQueryService assistantQueryService, @Lazy ConversationServiceInternal conversationService,
 			@Lazy HttpService httpService, @Lazy PythonService pythonService, @Lazy RenderService renderService,
 			@Lazy UserService userService, @Lazy DocumentServiceInternal documentService,
-			@Lazy ProjectService projectService, @Lazy CacheService cacheService,
-			@Lazy DocumentExtractorService documentExtractorService, @Lazy SkillService skillsService,
-			@Lazy WorkflowService workflowService, @Lazy AgentRegistry agentRegistry) {
+			@Lazy ProjectService projectService, @Lazy KnowledgeService knowledgeService,
+			@Lazy CacheService cacheService, @Lazy DocumentExtractorService documentExtractorService,
+			@Lazy SkillService skillsService, @Lazy WorkflowService workflowService,
+			@Lazy AgentRegistry agentRegistry) {
 		this.assistantManagementService = assistantManagementService;
 		this.assistantQueryService = assistantQueryService;
 		this.conversationService = conversationService;
@@ -54,6 +57,7 @@ public class PluginServicesImpl implements PluginServices {
 		this.userService = userService;
 		this.documentService = documentService;
 		this.projectService = projectService;
+		this.knowledgeService = knowledgeService;
 		this.cacheService = cacheService;
 		this.documentExtractorService = documentExtractorService;
 		this.skillsService = skillsService;
@@ -109,6 +113,11 @@ public class PluginServicesImpl implements PluginServices {
 	@Override
 	public ProjectService getProjectService() {
 		return projectService;
+	}
+
+	@Override
+	public KnowledgeService getKnowledgeService() {
+		return knowledgeService;
 	}
 
 	@Override

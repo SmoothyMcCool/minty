@@ -33,10 +33,14 @@ import org.w3c.dom.NodeList;
  * calculates complex hierarchical numbers. 2. If no numbering metadata exists
  * (Google Docs), it performs sequential numbering (1., 2., 3...) on all
  * detected headings to ensure the Markdown is numbered.
+ *
+ * All diagnostic logging below is tagged "[HEADNUM]" so it can be grepped out
+ * of application logs independently of everything else.
  */
 public final class WordHeadingNumberer {
 
 	private static final Logger logger = LogManager.getLogger(WordHeadingNumberer.class);
+	private static final String TAG = "[HEADNUM]";
 
 	private static final Pattern HEADING_STYLE_ID = Pattern.compile("^Heading\\s*(\\d)$", Pattern.CASE_INSENSITIVE);
 	private static final Pattern ATX_HEADER = Pattern.compile("^(#{1,6})(\\s+)(.*)$");
@@ -46,15 +50,23 @@ public final class WordHeadingNumberer {
 	}
 
 	public static String injectNumbers(File docx, String markdown) {
+		logger.info("{} injectNumbers() called for file={} exists={} size={} markdownLen={}", TAG, docx.getName(),
+				docx.exists(), docx.exists() ? docx.length() : -1, markdown == null ? -1 : markdown.length());
 		try {
 			List<String> numbers = resolveHeadingNumbers(docx);
+			logger.info("{} resolveHeadingNumbers() returned {} number(s): {}", TAG, numbers.size(), numbers);
 			if (numbers.isEmpty()) {
+				logger.warn("{} numbers list is EMPTY -- returning markdown UNCHANGED. This is why you see no "
+						+ "numbers with no exception: nothing failed, there was just nothing to inject.", TAG);
 				return markdown;
 			}
-			return injectIntoMarkdown(markdown, numbers);
+			String result = injectIntoMarkdown(markdown, numbers);
+			boolean changed = !result.equals(markdown);
+			logger.info("{} injectIntoMarkdown() completed. markdown actually changed={}", TAG, changed);
+			return result;
 		} catch (Exception e) {
-			logger.warn("Could not resolve Word heading numbers for {} ({}); continuing without them.", docx.getName(),
-					e.toString());
+			logger.warn("{} EXCEPTION resolving/injecting heading numbers for {}: {}", TAG, docx.getName(),
+					e.toString(), e);
 			return markdown;
 		}
 	}
@@ -66,80 +78,100 @@ public final class WordHeadingNumberer {
 	private static List<String> resolveHeadingNumbers(File docx) throws Exception {
 		Document documentXml = readZipEntryXml(docx, "word/document.xml");
 		if (documentXml == null) {
+			logger.warn("{} word/document.xml not found or unparsable -- not a valid docx zip?", TAG);
 			return List.of();
 		}
 
 		Document numberingXml = readZipEntryXml(docx, "word/numbering.xml");
 		Document stylesXml = readZipEntryXml(docx, "word/styles.xml");
+		logger.info("{} zip parts found: document.xml=yes numbering.xml={} styles.xml={}", TAG,
+				numberingXml != null ? "yes" : "NO", stylesXml != null ? "yes" : "NO");
 
 		Map<String, Element> stylesById = stylesXml == null ? Map.of() : indexStylesById(stylesXml);
+		logger.info("{} indexed {} style(s) from styles.xml (by styleId)", TAG, stylesById.size());
 
 		// --- STEP 1: Check if we are in a "Rich" numbering document (Word/LibreOffice)
 		// ---
 		boolean hasComplexNumbering = false;
+		int abstractNumCount = 0;
 		if (numberingXml != null) {
 			NodeList abstractNums = numberingXml.getElementsByTagNameNS("*", "abstractNum");
-			if (abstractNums.getLength() > 0) {
+			abstractNumCount = abstractNums.getLength();
+			if (abstractNumCount > 0) {
 				hasComplexNumbering = true;
 			}
 		}
+		logger.info("{} hasComplexNumbering={} (abstractNum count in numbering.xml={})", TAG, hasComplexNumbering,
+				abstractNumCount);
+
+		NodeList allParagraphs = documentXml.getElementsByTagNameNS("*", "p");
+		logger.info("{} total <w:p> paragraphs in document.xml={}", TAG, allParagraphs.getLength());
 
 		// --- CASE A: COMPLEX MODE (Word/LibreOffice) ---
 		if (hasComplexNumbering && numberingXml != null) {
+			logger.info("{} MODE = COMPLEX (numbering.xml driven)", TAG);
 			return computeComplexNumbers(documentXml, numberingXml, stylesById);
 		}
 
 		// --- CASE B: SEQUENTIAL FALLBACK MODE (Google Docs / Flat XML) ---
 		else {
-			logger.info("WordHeadingNumberer [{}]: Using hierarchical sequential numbering.", docx.getName());
+			logger.info("{} MODE = SEQUENTIAL FALLBACK for {} (no abstractNum entries found)", TAG, docx.getName());
 			List<String> sequentialNumbers = new ArrayList<>();
 			NodeList paragraphs = documentXml.getElementsByTagNameNS("*", "p");
 
-			// We'll use a list of counters for the fallback (e.g., [1, 0, 0] means 1.0.0)
-			int[] currentCounters = new int[6]; // Support up to Level 6
-			int lastLevel = 0;
+			int[] currentCounters = new int[6];
 
 			for (int i = 0; i < paragraphs.getLength(); i++) {
 				Element p = (Element) paragraphs.item(i);
-				if (!isHeadingParagraph(p, stylesById))
+				boolean isHeading = isHeadingParagraph(p, stylesById);
+				if (!isHeading) {
 					continue;
-
-				// Determine the level of this heading by looking at its style or properties
-				int currentLevel = getHeadingLevelFromElement(p, stylesById);
-				if (currentLevel == 0)
-					continue;
-
-				String title = getFirstTextContent(p);
-				if (!alreadyNumbered(title)) {
-					// Update our counters based on the level transition
-					// If we go from Level 1 to Level 3, reset levels 2 and 3.
-					for (int l = currentLevel; l < 6; l++)
-						currentCounters[l] = 0;
-					currentCounters[currentLevel - 1]++;
-
-					// Build the string: e.g., "1.2"
-					StringBuilder sb = new StringBuilder();
-					for (int l = 0; l <= currentLevel - 1; l++) {
-						if (l > 0)
-							sb.append(".");
-						sb.append(currentCounters[l]);
-					}
-					sequentialNumbers.add(sb.toString());
 				}
+
+				int currentLevel = getHeadingLevelFromElement(p, stylesById);
+				String title = getFirstTextContent(p);
+
+				if (currentLevel == 0) {
+					logger.info(
+							"{} [seq] paragraph {} styleId={} title=\"{}\" -> detected as heading but level=0, SKIPPING",
+							TAG, i, headingStyleId(p), title);
+					continue;
+				}
+
+				if (alreadyNumbered(title)) {
+					logger.info(
+							"{} [seq] paragraph {} styleId={} title=\"{}\" -> already starts with a number, SKIPPING",
+							TAG, i, headingStyleId(p), title);
+					continue;
+				}
+
+				for (int l = currentLevel; l < 6; l++)
+					currentCounters[l] = 0;
+				currentCounters[currentLevel - 1]++;
+
+				StringBuilder sb = new StringBuilder();
+				for (int l = 0; l <= currentLevel - 1; l++) {
+					if (l > 0)
+						sb.append(".");
+					sb.append(currentCounters[l]);
+				}
+				String computed = sb.toString();
+				sequentialNumbers.add(computed);
+				logger.info("{} [seq] paragraph {} styleId={} title=\"{}\" level={} -> computed number={}", TAG, i,
+						headingStyleId(p), title, currentLevel, computed);
 			}
+			logger.info("{} [seq] TOTAL numbers computed={}", TAG, sequentialNumbers.size());
 			return sequentialNumbers;
 		}
 	}
 
 	private static int getHeadingLevelFromElement(Element p, Map<String, Element> stylesById) {
-		// 1. Try to find via w:outlineLvl (The most reliable way in OOXML)
 		Element outline = firstDescendant(p, "outlineLvl");
 		if (outline != null) {
 			int lvl = parseIntSafe(outline.getAttribute("w:val"), 0);
-			return lvl + 1; // XML is 0-indexed, Markdown is 1-indexed
+			return lvl + 1;
 		}
 
-		// 2. Try via the style name (e.g., "Heading 2")
 		String styleId = headingStyleId(p);
 		if (styleId != null) {
 			Matcher m = Pattern.compile("(?i)Heading\\s*(\\d)").matcher(styleId);
@@ -148,8 +180,6 @@ public final class WordHeadingNumberer {
 			}
 		}
 
-		// 3. Default to Level 1 if we can't determine it, but only if it looks like a
-		// heading
 		return 1;
 	}
 
@@ -159,34 +189,67 @@ public final class WordHeadingNumberer {
 	private static List<String> computeComplexNumbers(Document documentXml, Document numberingXml,
 			Map<String, Element> stylesById) throws Exception {
 		NumberingDefs defs = parseNumberingXml(numberingXml);
+		logger.info("{} [complex] parsed numbering.xml: {} abstractNum def(s), {} numId mapping(s)", TAG,
+				defs.abstractLevelFormat.size(), defs.numIdToAbstractId.size());
+
 		List<String> results = new ArrayList<>();
 		Map<String, int[]> counters = new HashMap<>();
 
 		NodeList paragraphs = documentXml.getElementsByTagNameNS("*", "p");
+
+		int headingCount = 0;
+		int noNumPrCount = 0;
+		int unresolvedAbstractCount = 0;
+		int badLevelCount = 0;
 
 		for (int i = 0; i < paragraphs.getLength(); i++) {
 			Element p = (Element) paragraphs.item(i);
 			if (!isHeadingParagraph(p, stylesById))
 				continue;
 
+			headingCount++;
+			String styleId = headingStyleId(p);
+			String title = getFirstTextContent(p);
+
 			int[] numPrArr = directNumPr(p);
+			String numPrSource = "direct-on-paragraph";
 			if (numPrArr == null) {
-				numPrArr = resolveNumPrViaStyleChain(headingStyleId(p), stylesById);
+				numPrArr = resolveNumPrViaStyleChain(styleId, stylesById);
+				numPrSource = "style-chain";
 			}
-			if (numPrArr == null)
+			if (numPrArr == null) {
+				noNumPrCount++;
+				logger.info(
+						"{} [complex] heading #{} (paragraph idx={}) styleId={} title=\"{}\" -> NO numPr found "
+								+ "(checked direct paragraph AND full style basedOn chain). SKIPPING.",
+						TAG, headingCount, i, styleId, title);
 				continue;
+			}
 
 			String numIdStr = String.valueOf(numPrArr[0]);
 			int ilvl = numPrArr[1];
 			String abstractId = defs.numIdToAbstractId.get(numIdStr);
-			if (abstractId == null)
+			if (abstractId == null) {
+				unresolvedAbstractCount++;
+				logger.info(
+						"{} [complex] heading #{} (paragraph idx={}) styleId={} title=\"{}\" -> numId={} ilvl={} "
+								+ "(source={}) but numId NOT FOUND in numbering.xml's <w:num> list "
+								+ "(known numIds: {}). Possible w:numStyleLink/styleLink case. SKIPPING.",
+						TAG, headingCount, i, styleId, title, numIdStr, ilvl, numPrSource,
+						defs.numIdToAbstractId.keySet());
 				continue;
+			}
 
 			int[] fmtCodes = defs.abstractLevelFormat.get(abstractId);
 			String[] lvlTexts = defs.abstractLevelText.get(abstractId);
 			int[] starts = defs.abstractLevelStart.get(abstractId);
-			if (fmtCodes == null || ilvl >= fmtCodes.length)
+			if (fmtCodes == null || ilvl >= fmtCodes.length) {
+				badLevelCount++;
+				logger.info("{} [complex] heading #{} (paragraph idx={}) styleId={} title=\"{}\" -> numId={} resolved "
+						+ "to abstractId={} but ilvl={} is out of range or abstractId has no level data. SKIPPING.",
+						TAG, headingCount, i, styleId, title, numIdStr, abstractId, ilvl);
 				continue;
+			}
 
 			int[] counter = counters.computeIfAbsent(numIdStr, k -> {
 				int[] c = new int[9];
@@ -199,8 +262,21 @@ public final class WordHeadingNumberer {
 				counter[lvl] = -1;
 			}
 
-			results.add(formatLevelText(lvlTexts[ilvl], counter, fmtCodes));
+			String computed = formatLevelText(lvlTexts[ilvl], counter, fmtCodes);
+			results.add(computed);
+			logger.info(
+					"{} [complex] heading #{} (paragraph idx={}) styleId={} title=\"{}\" -> numId={} ilvl={} "
+							+ "(source={}) abstractId={} lvlTextPattern=\"{}\" -> COMPUTED NUMBER = {}",
+					TAG, headingCount, i, styleId, title, numIdStr, ilvl, numPrSource, abstractId, lvlTexts[ilvl],
+					computed);
 		}
+
+		logger.info(
+				"{} [complex] SUMMARY: paragraphsScanned={}, detectedAsHeading={}, noNumPr={}, "
+						+ "unresolvedAbstractId={}, badLevelData={}, numbersComputed={}",
+				TAG, paragraphs.getLength(), headingCount, noNumPrCount, unresolvedAbstractCount, badLevelCount,
+				results.size());
+
 		return results;
 	}
 
@@ -219,9 +295,30 @@ public final class WordHeadingNumberer {
 		NumberingDefs defs = new NumberingDefs();
 		NodeList abstractNums = numberingXml.getElementsByTagNameNS("*", "abstractNum");
 
+		// Pass 1: index every abstractNum's own raw level data (if any), and note
+		// which ones are pure "link" definitions (w:numStyleLink pointing at a
+		// w:styleLink elsewhere) rather than containing real <w:lvl> data. This
+		// pattern is common in enterprise templates built around named list styles
+		// (e.g. Word's "List Paragraph" gallery) rather than direct multilevel lists.
+		Map<String, String> styleLinkNameToAbstractId = new HashMap<>(); // styleLink val -> abstractId that defines it
+		Map<String, String> abstractIdToNumStyleLink = new HashMap<>(); // abstractId -> styleLink name it points to
+
 		for (int i = 0; i < abstractNums.getLength(); i++) {
 			Element abstractNum = (Element) abstractNums.item(i);
 			String abstractId = abstractNum.getAttribute("w:abstractNumId");
+
+			Element styleLink = firstDescendant(abstractNum, "styleLink");
+			if (styleLink != null) {
+				styleLinkNameToAbstractId.put(styleLink.getAttribute("w:val"), abstractId);
+				logger.info("{} [numbering.xml] abstractNumId={} DEFINES list style \"{}\"", TAG, abstractId,
+						styleLink.getAttribute("w:val"));
+			}
+			Element numStyleLink = firstDescendant(abstractNum, "numStyleLink");
+			if (numStyleLink != null) {
+				abstractIdToNumStyleLink.put(abstractId, numStyleLink.getAttribute("w:val"));
+				logger.info("{} [numbering.xml] abstractNumId={} is a LINK to list style \"{}\" (no levels of its own)",
+						TAG, abstractId, numStyleLink.getAttribute("w:val"));
+			}
 
 			int[] fmt = new int[9];
 			String[] text = new String[9];
@@ -248,6 +345,28 @@ public final class WordHeadingNumberer {
 			defs.abstractLevelFormat.put(abstractId, fmt);
 			defs.abstractLevelText.put(abstractId, text);
 			defs.abstractLevelStart.put(abstractId, start);
+			logger.info("{} [numbering.xml] abstractNumId={} level0..8 lvlText={}", TAG, abstractId,
+					Arrays.toString(text));
+		}
+
+		// Pass 2: redirect every "link" abstractNum to the level data of whichever
+		// abstractNum actually defines the list style it points to.
+		for (Map.Entry<String, String> entry : abstractIdToNumStyleLink.entrySet()) {
+			String linkAbstractId = entry.getKey();
+			String targetStyleName = entry.getValue();
+			String targetAbstractId = styleLinkNameToAbstractId.get(targetStyleName);
+			if (targetAbstractId == null) {
+				logger.info(
+						"{} [numbering.xml] abstractNumId={} links to list style \"{}\" but no abstractNum "
+								+ "defines that style (styleLink) -- cannot resolve.",
+						TAG, linkAbstractId, targetStyleName);
+				continue;
+			}
+			defs.abstractLevelFormat.put(linkAbstractId, defs.abstractLevelFormat.get(targetAbstractId));
+			defs.abstractLevelText.put(linkAbstractId, defs.abstractLevelText.get(targetAbstractId));
+			defs.abstractLevelStart.put(linkAbstractId, defs.abstractLevelStart.get(targetAbstractId));
+			logger.info("{} [numbering.xml] abstractNumId={} (link) RESOLVED to abstractNumId={}'s level data via "
+					+ "list style \"{}\"", TAG, linkAbstractId, targetAbstractId, targetStyleName);
 		}
 
 		NodeList nums = numberingXml.getElementsByTagNameNS("*", "num");
@@ -256,9 +375,37 @@ public final class WordHeadingNumberer {
 			String numId = num.getAttribute("w:numId");
 			Element abstractNumIdElem = firstDescendant(num, "abstractNumId");
 			if (abstractNumIdElem != null) {
-				defs.numIdToAbstractId.put(numId, abstractNumIdElem.getAttribute("w:val"));
+				String abstractId = abstractNumIdElem.getAttribute("w:val");
+				defs.numIdToAbstractId.put(numId, abstractId);
+
+				// Manual "restart numbering at N" overrides for this specific list
+				// instance (common after section breaks / appendices).
+				NodeList overrides = num.getElementsByTagNameNS("*", "lvlOverride");
+				for (int j = 0; j < overrides.getLength(); j++) {
+					Element override = (Element) overrides.item(j);
+					int ilvl = parseIntSafe(override.getAttribute("w:ilvl"), -1);
+					Element startOverride = firstDescendant(override, "startOverride");
+					if (ilvl >= 0 && startOverride != null) {
+						int[] starts = defs.abstractLevelStart.get(abstractId);
+						if (starts != null && ilvl < starts.length) {
+							int newStart = parseIntSafe(startOverride.getAttribute("w:val"), starts[ilvl]);
+							logger.info(
+									"{} [numbering.xml] numId={} has startOverride at ilvl={}: start changes {} -> {}",
+									TAG, numId, ilvl, starts[ilvl], newStart);
+							// Per-numId, not per-abstractId -- copy the start array so we don't
+							// mutate a definition shared by other numIds pointing at the same abstract.
+							int[] perNumStarts = defs.abstractLevelStart.get(abstractId).clone();
+							perNumStarts[ilvl] = newStart;
+							defs.abstractLevelStart.put(abstractId, perNumStarts);
+						}
+					}
+				}
+			} else {
+				logger.info("{} [numbering.xml] <w:num w:numId=\"{}\"> has NO <w:abstractNumId> child", TAG, numId);
 			}
 		}
+		logger.info("{} [numbering.xml] final numId -> abstractId map: {}", TAG, defs.numIdToAbstractId);
+
 		return defs;
 	}
 
@@ -294,8 +441,60 @@ public final class WordHeadingNumberer {
 	}
 
 	private static int[] resolveNumPrViaStyleChain(String styleId, Map<String, Element> stylesById) {
-		Element numPr = resolveViaStyleChain(styleId, stylesById, pPr -> firstDescendant(pPr, "numPr"));
-		return numPr == null ? null : readNumPr(numPr);
+		// ilvl and numId are frequently defined at DIFFERENT points in the basedOn
+		// chain: e.g. Heading4 sets only <w:ilvl w:val="3"/> locally, while numId is
+		// defined once higher up (often on Heading1) and inherited by every
+		// descendant heading level. Resolving "the first <w:numPr> found" as a whole
+		// unit (as a naive walk would) breaks this: Heading4's own numPr has ilvl
+		// but no numId, so a naive lookup stops there and reports "no numPr" even
+		// though a usable numId exists further up the chain.
+		Integer ilvl = null;
+		Integer numId = null;
+		String ilvlFoundAt = null;
+		String numIdFoundAt = null;
+
+		Set<String> visited = new HashSet<>();
+		String current = styleId;
+		while (current != null && visited.add(current)) {
+			Element style = stylesById.get(current);
+			if (style == null) {
+				break;
+			}
+			Element pPr = firstDescendant(style, "pPr");
+			Element numPr = pPr == null ? null : firstDescendant(pPr, "numPr");
+			if (numPr != null) {
+				if (ilvl == null) {
+					Element ilvlEl = firstDescendant(numPr, "ilvl");
+					if (ilvlEl != null) {
+						ilvl = parseIntSafe(ilvlEl.getAttribute("w:val"), 0);
+						ilvlFoundAt = current;
+					}
+				}
+				if (numId == null) {
+					Element numIdEl = firstDescendant(numPr, "numId");
+					if (numIdEl != null) {
+						int v = parseIntSafe(numIdEl.getAttribute("w:val"), -1);
+						if (v >= 0) {
+							numId = v;
+							numIdFoundAt = current;
+						}
+					}
+				}
+			}
+			if (ilvl != null && numId != null) {
+				break;
+			}
+			Element basedOn = firstDescendant(style, "basedOn");
+			current = basedOn == null ? null : basedOn.getAttribute("w:val");
+		}
+
+		if (numId == null) {
+			return null;
+		}
+		logger.info(
+				"{} [style-chain] resolved for style={}: ilvl={} (found on style \"{}\"), numId={} (found on style \"{}\")",
+				TAG, styleId, ilvl, ilvlFoundAt, numId, numIdFoundAt);
+		return new int[] { numId, ilvl == null ? 0 : ilvl };
 	}
 
 	private static int[] readNumPr(Element numPr) {
@@ -412,6 +611,11 @@ public final class WordHeadingNumberer {
 		StringBuilder out = new StringBuilder();
 		boolean inFence = false;
 
+		int atxLinesSeen = 0;
+		int injected = 0;
+		int skippedAlreadyNumbered = 0;
+		int skippedQueueEmpty = 0;
+
 		for (String line : lines) {
 			if (line.startsWith("```")) {
 				inFence = !inFence;
@@ -419,18 +623,31 @@ public final class WordHeadingNumberer {
 				continue;
 			}
 			Matcher m = !inFence ? ATX_HEADER.matcher(line.trim()) : null;
-			if (m != null && m.matches() && !queue.isEmpty()) {
+			if (m != null && m.matches()) {
+				atxLinesSeen++;
 				String title = m.group(3);
-				if (alreadyNumbered(title)) {
+				if (queue.isEmpty()) {
+					skippedQueueEmpty++;
+					out.append(line).append('\n');
+				} else if (alreadyNumbered(title)) {
+					skippedAlreadyNumbered++;
+					logger.info("{} [inject] heading line \"{}\" already starts with a number-like pattern, SKIPPING "
+							+ "(a number stays unused in the queue for this heading)", TAG, title);
 					out.append(line).append('\n');
 				} else {
 					String number = queue.poll();
+					injected++;
 					out.append(m.group(1)).append(m.group(2)).append(number).append(" ").append(title).append('\n');
 				}
 			} else {
 				out.append(line).append('\n');
 			}
 		}
+
+		logger.info(
+				"{} [inject] SUMMARY: markdown ATX heading lines seen={}, numbers injected={}, "
+						+ "skipped(already numbered)={}, skipped(queue empty)={}, numbers left unused in queue={}",
+				TAG, atxLinesSeen, injected, skippedAlreadyNumbered, skippedQueueEmpty, queue.size());
 
 		if (out.length() > 0)
 			out.setLength(out.length() - 1);
@@ -457,6 +674,7 @@ public final class WordHeadingNumberer {
 				return factory.newDocumentBuilder().parse(in);
 			}
 		} catch (IOException e) {
+			logger.warn("{} readZipEntryXml({}) failed: {}", TAG, entryName, e.toString());
 			return null;
 		}
 	}

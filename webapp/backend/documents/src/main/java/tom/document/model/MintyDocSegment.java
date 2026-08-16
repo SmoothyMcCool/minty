@@ -92,7 +92,7 @@ public class MintyDocSegment {
 		this.sequenceOrder = sequenceOrder;
 	}
 
-	public int getParentIndex() {
+	public Integer getParentIndex() {
 		return parentIndex;
 	}
 

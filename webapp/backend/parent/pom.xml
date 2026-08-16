@@ -37,6 +37,7 @@
 		<!-- Library versions -->
 		<commonmark.version>0.28.0</commonmark.version>
 		<commons.lang.version>3.20.0</commons.lang.version>
+		<commons.text.version>1.15.0</commons.text.version>
 		<hibernate.version>7.3.2.Final</hibernate.version>
 		<hikari.cp.version>7.0.2</hikari.cp.version>
 		<httpcore.version>5.4.2</httpcore.version>
@@ -249,6 +250,11 @@
 				<groupId>org.apache.commons</groupId>
 				<artifactId>commons-lang3</artifactId>
 				<version>${commons.lang.version}</version>
+			</dependency>
+			<dependency>
+			    <groupId>org.apache.commons</groupId>
+			    <artifactId>commons-text</artifactId>
+			    <version>${commons.text.version}</version>
 			</dependency>
 
 			<dependency>

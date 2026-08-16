@@ -371,10 +371,8 @@ export class ProjectEditorComponent implements OnInit, OnDestroy {
 		};
 
 		this.projectService.writeFile(this.project.id, node).subscribe(() => {
-			this.projectService.deleteNode(this.project.id, this.nodeToDelete!.path).subscribe(() => {
-				this.refresh();
-				this.alertService.postSuccess('Added file ' + node.path);
-			});
+			this.refresh();
+			this.alertService.postSuccess('Added file ' + node.path);
 		});
 	}
 

@@ -4,8 +4,13 @@ import java.io.File;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
@@ -14,14 +19,17 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.annotation.PreDestroy;
-import jakarta.transaction.Transactional;
 import tom.api.DocumentId;
 import tom.api.DocumentSectionId;
 import tom.api.ProjectId;
 import tom.api.UserId;
 import tom.api.model.document.Document;
+import tom.api.model.document.DocumentSearchContext;
+import tom.api.model.document.DocumentSearchMatch;
+import tom.api.model.document.DocumentSearchResult;
 import tom.api.model.document.DocumentSection;
 import tom.api.model.document.SpreadsheetFormat;
 import tom.api.services.DocumentExtractorService;
@@ -175,6 +183,139 @@ public class DocumentServiceImpl implements DocumentServiceInternal {
 		}
 
 		return Optional.of(document.fromEntity());
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<DocumentSearchResult> grep(UserId userId, ProjectId projectId, String pattern, boolean caseSensitive,
+			int maxResults, int contextBefore, int contextAfter) {
+
+		if (pattern == null || pattern.isBlank()) {
+			throw new IllegalArgumentException("pattern must not be empty.");
+		}
+
+		if (maxResults < 1 || maxResults > 500) {
+			throw new IllegalArgumentException("maxResults must be between 1 and 500.");
+		}
+
+		if (contextBefore < 0 || contextBefore > 20) {
+			throw new IllegalArgumentException("contextBefore must be between 0 and 20.");
+		}
+
+		if (contextAfter < 0 || contextAfter > 20) {
+			throw new IllegalArgumentException("contextAfter must be between 0 and 20.");
+		}
+
+		/*
+		 * Load all segments belonging to documents in this project.
+		 *
+		 * We intentionally perform the content matching in Java rather than JPQL.
+		 * DocumentSegment.content is mapped as a CLOB, and Hibernate does not allow
+		 * LOWER() to be applied to a CLOB during JPQL query validation.
+		 */
+		List<MintyDocSegment> allSegments = documentSegmentRepository
+				.findByDocument_OwnerIdAndDocument_ProjectIdOrderByDocument_TitleAscSequenceOrderAsc(userId, projectId);
+
+		if (allSegments.isEmpty()) {
+			return List.of();
+		}
+
+		/*
+		 * Group segments by document. Because the repository query already orders by
+		 * document title and sequence order, the lists are also in the correct order
+		 * for context lookup.
+		 */
+		Map<UUID, List<MintyDocSegment>> segmentsByDocument = allSegments.stream().collect(Collectors
+				.groupingBy(segment -> segment.getDocument().getId(), LinkedHashMap::new, Collectors.toList()));
+
+		Map<UUID, Integer> segmentIndexes = new HashMap<>();
+
+		for (List<MintyDocSegment> segments : segmentsByDocument.values()) {
+			for (int i = 0; i < segments.size(); i++) {
+				segmentIndexes.put(segments.get(i).getId(), i);
+			}
+		}
+
+		String comparisonPattern = caseSensitive ? pattern : pattern.toLowerCase(Locale.ROOT);
+
+		List<DocumentSearchResult> results = new ArrayList<>();
+
+		String currentDocumentTitle = null;
+		List<DocumentSearchMatch> currentMatches = null;
+
+		int totalMatches = 0;
+
+		for (MintyDocSegment segment : allSegments) {
+
+			String text = segment.getContent();
+
+			if (text == null) {
+				text = "";
+			}
+
+			boolean matches;
+
+			if (caseSensitive) {
+				matches = text.contains(pattern);
+			} else {
+				matches = text.toLowerCase(Locale.ROOT).contains(comparisonPattern);
+			}
+
+			if (!matches) {
+				continue;
+			}
+
+			String documentTitle = segment.getDocument().getTitle();
+
+			if (!documentTitle.equals(currentDocumentTitle)) {
+
+				if (currentMatches != null && !currentMatches.isEmpty()) {
+					results.add(new DocumentSearchResult(currentDocumentTitle, currentMatches));
+				}
+
+				currentDocumentTitle = documentTitle;
+				currentMatches = new ArrayList<>();
+			}
+
+			List<DocumentSearchContext> context = null;
+
+			if (contextBefore > 0 || contextAfter > 0) {
+
+				List<MintyDocSegment> documentSegments = segmentsByDocument.get(segment.getDocument().getId());
+				Integer matchIndex = segmentIndexes.get(segment.getId());
+
+				if (matchIndex != null) {
+
+					int first = Math.max(0, matchIndex - contextBefore);
+					int last = Math.min(documentSegments.size() - 1, matchIndex + contextAfter);
+
+					List<DocumentSearchContext> contextSections = new ArrayList<>();
+
+					for (int i = first; i <= last; i++) {
+						MintyDocSegment contextSegment = documentSegments.get(i);
+						contextSections.add(new DocumentSearchContext(contextSegment.getSequenceOrder(),
+								contextSegment.getTitle(), contextSegment.getContent()));
+					}
+
+					context = contextSections;
+				}
+			}
+
+			currentMatches.add(new DocumentSearchMatch(segment.getSequenceOrder(), segment.getTitle(),
+					segment.getContent(), context));
+
+			totalMatches++;
+
+			if (totalMatches >= maxResults) {
+				break;
+			}
+		}
+
+		if (currentMatches != null && !currentMatches.isEmpty()) {
+			results.add(new DocumentSearchResult(currentDocumentTitle, currentMatches));
+		}
+
+		return results;
 	}
 
 	@Override

@@ -18,7 +18,11 @@ import tom.meta.model.DailyMetrics.DailyMetricsId;
 @Repository
 public interface DailyMetricsRepository extends JpaRepository<DailyMetrics, DailyMetricsId> {
 
-	@Query("SELECT d FROM DailyMetrics d WHERE d.id.day = :day ORDER BY d.totalRequests DESC")
+	@Query("""
+			SELECT d FROM DailyMetrics d
+			 WHERE d.id.day = :day
+			 ORDER BY d.totalRequests DESC
+			""")
 	List<DailyMetrics> findByDay(@Param("day") LocalDate day);
 
 	@Query("""

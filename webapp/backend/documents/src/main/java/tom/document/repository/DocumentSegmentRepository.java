@@ -5,6 +5,8 @@ import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import tom.api.ProjectId;
+import tom.api.UserId;
 import tom.document.model.MintyDocSegment;
 
 public interface DocumentSegmentRepository extends JpaRepository<MintyDocSegment, UUID> {
@@ -35,4 +37,10 @@ public interface DocumentSegmentRepository extends JpaRepository<MintyDocSegment
 	void deleteByDocument_Id(UUID documentId);
 
 	List<MintyDocSegment> findByDocument_IdAndSequenceOrderIn(UUID documentId, List<Integer> sequenceOrders);
+
+	List<MintyDocSegment> findByDocument_IdInOrderByDocument_TitleAscSequenceOrderAsc(List<UUID> documentIds);
+
+	List<MintyDocSegment> findByDocument_OwnerIdAndDocument_ProjectIdOrderByDocument_TitleAscSequenceOrderAsc(
+			UserId userId, ProjectId projectId);
+
 }
