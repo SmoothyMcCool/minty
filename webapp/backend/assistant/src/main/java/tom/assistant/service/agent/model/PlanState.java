@@ -143,4 +143,22 @@ public class PlanState {
 		this.errored = errored;
 	}
 
+	@JsonIgnore
+	public boolean isValid() {
+		if (steps != null) {
+			for (Pair<AgentStep, AgentStepState> step : steps) {
+				AgentStep agentStep = step.left();
+				if (agentStep == null || !agentStep.isValid()) {
+					return false;
+				}
+				AgentStepState agentStepState = step.right();
+				if (agentStepState == null || !agentStepState.isValid()) {
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+
 }

@@ -60,6 +60,10 @@ public class SkillTools implements MintyTool, ServiceConsumer {
 			- skill does not exist
 			""")
 	public MintyToolResponse<String> getSkill(@ToolParam(description = "Exact skill name") String skillName) {
+		if (skillName == null || skillName.isBlank()) {
+			return MintyToolResponse.FailureResponse("skillName is required.");
+		}
+
 		try {
 			return MintyToolResponse
 					.SuccessResponse(pluginServices.getSkillsService().getFile(userId, skillName, "SKILL.md"));
@@ -92,6 +96,10 @@ public class SkillTools implements MintyTool, ServiceConsumer {
 			""")
 	public MintyToolResponse<String> getSkillFile(@ToolParam(description = "Exact skill name") String skillName,
 			@ToolParam(description = "Relative file path inside the skill") String filename) {
+		if (skillName == null || skillName.isBlank()) {
+			return MintyToolResponse.FailureResponse("skillName is required.");
+		}
+
 		try {
 			return MintyToolResponse
 					.SuccessResponse(pluginServices.getSkillsService().getFile(userId, skillName, filename));

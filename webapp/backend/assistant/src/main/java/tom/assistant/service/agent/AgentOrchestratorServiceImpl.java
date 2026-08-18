@@ -119,57 +119,62 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 	}
 
 	private PlanState recoverPlan(StreamResult sr, String conversationId, AssistantQuery query) {
-		PlanState planState = null;
-		List<Message> messages = chatMemory.get(conversationId);
+		try {
+			PlanState planState = null;
+			List<Message> messages = chatMemory.get(conversationId);
 
-		if (messages != null && !messages.isEmpty()) {
+			if (messages != null && !messages.isEmpty()) {
 
-			// Is the last message a system message?
-			Message lastMessage = messages.getLast();
-			if (lastMessage.getMessageType() == MessageType.SYSTEM && messages.size() > 1) {
-				// Try to decode a state object.
-				try {
-					String planAsString = lastMessage.getText().substring(PlanStateMarker.length());
-					planState = Mapper.readValue(planAsString, PlanState.class);
+				// Is the last message a system message?
+				Message lastMessage = messages.getLast();
+				if (lastMessage.getMessageType() == MessageType.SYSTEM && messages.size() > 1) {
+					// Try to decode a state object.
+					try {
+						String planAsString = lastMessage.getText().substring(PlanStateMarker.length());
+						planState = Mapper.readValue(planAsString, PlanState.class);
 
-					List<AgentStep> steps = planState.getSteps().stream().map(step -> step.left()).toList();
+						List<AgentStep> steps = planState.getSteps().stream().map(step -> step.left()).toList();
 
-					// If the current step is a question, advance the step and add the users
-					// response to the next step.
-					if (planState.getSteps().get(planState.getCurrentStepIndex()).left()
-							.getType() == AgentStepType.ASK) {
-						planState.advanceStep();
+						// If the current step is a question, advance the step and add the users
+						// response to the next step.
+						if (planState.getSteps().get(planState.getCurrentStepIndex()).left()
+								.getType() == AgentStepType.ASK) {
+							planState.advanceStep();
+						}
+						if (planState.isDone()) {
+							return null; // nothing left to resume, treat as a fresh conversation
+						}
+						int currentStep = planState.getCurrentStepIndex();
+
+						statusMessage(sr, "Resuming plan at step " + (currentStep + 1) + " of " + steps.size() + "\n");
+						for (int i = planState.getCurrentStepIndex(); i < steps.size(); i++) {
+							statusMessage(sr, "" + (i + 1) + ". " + steps.get(i).getName() + "("
+									+ steps.get(i).getWorker() + ") - " + steps.get(i).getVisibility().toString());
+						}
+
+						// Add the user's response message into the plan step, since agents don't get
+						// the chat history.
+						Map<String, Object> stepInput = planState.currentStep().left().getInput();
+						stepInput.put("User Response", query.getQuery());
+
+					} catch (JacksonException e) {
+						// Not a valid plan object.
+						planState = null;
 					}
-					if (planState.isDone()) {
-						return null; // nothing left to resume, treat as a fresh conversation
-					}
-					int currentStep = planState.getCurrentStepIndex();
-
-					statusMessage(sr, "Resuming plan at step " + (currentStep + 1) + " of " + steps.size() + "\n");
-					for (int i = planState.getCurrentStepIndex(); i < steps.size(); i++) {
-						statusMessage(sr, "" + (i + 1) + ". " + steps.get(i).getName() + "(" + steps.get(i).getWorker()
-								+ ") - " + steps.get(i).getVisibility().toString());
-					}
-
-					// Add the user's response message into the plan step, since agents don't get
-					// the chat history.
-					Map<String, Object> stepInput = planState.currentStep().left().getInput();
-					stepInput.put("User Response", query.getQuery());
-
-				} catch (JacksonException e) {
-					// Not a valid plan object.
-					planState = null;
+					// If the last message was a system message and there was more than one message,
+					// then plan or not it was an attempt at storing a plan, so lets remove it.
+					messages = new ArrayList<>(messages); // Clone it to guard against an API giving us a read-only list
+					messages.removeLast();
+					chatMemory.clear(conversationId);
+					chatMemory.add(conversationId, messages);
 				}
-				// If the last message was a system message and there was more than one message,
-				// then plan or not it was an attempt at storing a plan, so lets remove it.
-				messages = new ArrayList<>(messages); // Clone it to guard against an API giving us a read-only list
-				messages.removeLast();
-				chatMemory.clear(conversationId);
-				chatMemory.add(conversationId, messages);
 			}
-		}
 
-		return planState;
+			return planState;
+		} catch (Exception e) {
+			statusMessage(sr, "Uh oh. The current plan in progress is invalid. Starting over.");
+			return null;
+		}
 	}
 
 	private PlanState createPlan(StreamResult sr, UserId userId, AssistantQuery query) {
@@ -280,7 +285,7 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 	private StepResult runReplan(UserId userId, AssistantQuery query, AgentStep step, PlanState state, StreamResult sr)
 			throws InterruptedException {
 		// Re-run planner with current context
-		List<AgentStep> newSteps = planner.plan(userId, query, state);
+		List<AgentStep> newSteps = planner.plan(userId, query, isPlanStateValid(state, sr) ? state : null);
 
 		if (newSteps == null || newSteps.isEmpty()) {
 			return StepResult.error("Replanning produced empty plan");
@@ -307,6 +312,14 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 		return StepResult.success(response);
 	}
 
+	private boolean isPlanStateValid(PlanState state, StreamResult sr) {
+		if (state == null) {
+			statusMessage(sr, "Uh oh. The current plan in progress is invalid. Starting over.");
+			return false;
+		}
+		return state.isValid();
+	}
+
 	private boolean handleResult(UserId userId, AssistantQuery query, PlanState state, StepResult result,
 			StreamResult sr, StringBuilder assistantMessageBuilder) {
 
@@ -318,8 +331,9 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 			stepState.setResponse(result.getResponse());
 			stepState.setStatus(LlmStatus.SUCCESS);
 			if (state.currentStep().left().getVisibility() == AgentResponseVisibility.INTERNAL) {
-				sr.addChunk("[" + state.currentStep().left().getName() + "]" + result.getResponse().toString()
-						+ "<br><br>", ChunkType.INTERNAL);
+				sr.addChunk(
+						"[" + state.currentStep().left().getName() + "]" + result.getResponse().toString() + "<br><br>",
+						ChunkType.INTERNAL);
 			} else {
 				// User-facing message. Add it to chat history.
 				assistantMessageBuilder.append("\n\n").append(result.getResponse().getMessage());

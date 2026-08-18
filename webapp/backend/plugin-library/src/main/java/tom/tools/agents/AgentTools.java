@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import tom.api.model.services.ServiceConsumer;
 import tom.api.services.PluginServices;
 import tom.api.tool.MintyTool;
+import tom.api.tool.MintyToolResponse;
 
 @Component
 public class AgentTools implements MintyTool, ServiceConsumer {
@@ -18,8 +19,14 @@ public class AgentTools implements MintyTool, ServiceConsumer {
 			whenNotToUse, input specifications, and output description.
 			Call this before using any dynamic agent in a step.
 				""")
-	public String getAgentDefinition(@ToolParam(description = "The name of the agent.") String agentName) {
-		return pluginServices.getAgentRegistry().getAgentDescription(agentName);
+	public MintyToolResponse<String> getAgentDefinition(
+			@ToolParam(description = "The name of the agent.") String agentName) {
+
+		if (agentName == null) {
+			return MintyToolResponse.FailureResponse("agentName is required.");
+		}
+
+		return MintyToolResponse.SuccessResponse(pluginServices.getAgentRegistry().getAgentDescription(agentName));
 	}
 
 	@Override

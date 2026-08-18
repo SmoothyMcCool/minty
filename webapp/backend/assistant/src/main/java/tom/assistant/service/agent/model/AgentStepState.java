@@ -1,5 +1,7 @@
 package tom.assistant.service.agent.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import tom.assistant.service.agent.llm.LlmResponse;
 import tom.assistant.service.agent.llm.LlmStatus;
 
@@ -44,6 +46,11 @@ public class AgentStepState {
 	public String toString() {
 		return "AgentStepState [status=" + status + ", response=" + response + ", unstructuredResponse="
 				+ unstructuredResponse + "]";
+	}
+
+	@JsonIgnore
+	public boolean isValid() {
+		return status != null;
 	}
 
 }

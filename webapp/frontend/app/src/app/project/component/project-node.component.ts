@@ -106,6 +106,7 @@ export class ProjectNodeComponent implements OnChanges {
 	onSelect(node: ProjectNode) {
 		if (this.node.path === node.path && this.node.type === 'Folder') {
 			this.toggle();
+			return;
 		}
 		this.nodeSelected.emit(node);
 	}
@@ -139,10 +140,6 @@ export class ProjectNodeComponent implements OnChanges {
 
 	listFolders(): ProjectNode[] {
 		return this.nodes.filter(node => node.type === 'Folder' && node.path !== '/');
-	}
-
-	stopTreePropagation(event: KeyboardEvent) {
-		event.stopPropagation();
 	}
 
 	private _updateChildren(): void {

@@ -21,6 +21,7 @@ import tom.api.model.document.DocumentSearchResult;
 import tom.api.model.document.DocumentSection;
 import tom.api.model.project.ContextLine;
 import tom.api.model.project.FileType;
+import tom.api.model.project.KnowledgeGrepResult;
 import tom.api.model.project.KnowledgeItemInfo;
 import tom.api.model.project.KnowledgeItemType;
 import tom.api.model.project.KnowledgeSearchResult;
@@ -113,24 +114,14 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 	// =====================================================================
 
 	@Tool(name = "knowledge_search", description = """
-			Search for relevant project files and knowledge-base documents.
+			Broad discovery across both project files and knowledge documents.
 
-			Use this when you are not sure whether the information you need is
-			in a project file or in a knowledge-base document.
+			Use this when you do not know whether the information is in a file
+			or document, or when you only have a general description of what you
+			are looking for.
 
-			This is a BROAD DISCOVERY tool.
-
-			If you know the information is inside project files, prefer
-			knowledge_grep.
-
-			If you know approximately which file or folder you need, use
-			knowledge_find.
-
-			For FILE results:
-			  use knowledge_read_file(path=ref)
-
-			For DOCUMENT results:
-			  use knowledge_doc_read(title=ref)
+			For a known text pattern, prefer knowledge_grep.
+			For a known filename/path, use knowledge_find.
 			""")
 	@Transactional(readOnly = true)
 	public MintyToolResponse<List<SearchResult>> search(@ToolParam(description = "Text to search for") String filter) {
@@ -158,36 +149,21 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 	}
 
 	@Tool(name = "knowledge_find", description = """
-			Find files and folders recursively under a directory.
+			Find project files and folders by name or path.
 
-			Use this when you know approximately WHAT FILE or DIRECTORY you
-			want, but do not know its exact path.
+			Use this when you know approximately WHICH FILE or DIRECTORY you need,
+			but not its exact path.
 
-			This searches file and folder names/paths. It does NOT search the
-			contents of files.
+			Supports:
+			- path: directory subtree, default "/"
+			- name: filename pattern using * and ?
+			- type: File or Folder
+			- maxResults
 
-			Arguments:
-			- path: directory subtree to search, defaults to "/"
-			- name: optional filename pattern. Supports * for any characters
-			  and ? for one character.
-			- type: optional "File" or "Folder"
-			- maxResults: maximum number of results, default 100
+			This searches names and paths, not file contents.
 
-			Examples:
-
-			  Find Java files:
-			    knowledge_find(path="/src", name="*.java")
-
-			  Find controllers:
-			    knowledge_find(path="/src", name="*Controller.java")
-
-			  Find folders:
-			    knowledge_find(path="/src", type="Folder")
-
-			If you know the concept you are looking for but not the filename,
-			use knowledge_grep instead.
-
-			After finding a relevant file, use knowledge_read_file to inspect it.
+			Use knowledge_grep when you know WHAT text or concept you are looking for.
+			Use knowledge_read_file after finding a relevant file.
 			""")
 	@Transactional(readOnly = true)
 	public MintyToolResponse<List<NodeInfo>> findFiles(
@@ -207,8 +183,8 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 
 			int limit = maxResults == null ? 100 : maxResults;
 
-			if (limit < 1 || limit > 500) {
-				return MintyToolResponse.FailureResponse("maxResults must be between 1 and 500.");
+			if (limit < 1 || limit > 100) {
+				return MintyToolResponse.FailureResponse("maxResults must be between 1 and 100.");
 			}
 
 			NodeType nodeType = null;
@@ -234,64 +210,29 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 	@Tool(name = "knowledge_grep", description = """
 			Search the CONTENT of project files and knowledge-base documents.
 
-			Use this when you know a concept, term, class, method, field,
-			identifier, phrase, database object, configuration value, or other
-			text that you want to locate inside the project's knowledge.
+			Use this when you know a term, class, method, field, identifier, phrase,
+			configuration value, database object, or other text you want to locate.
 
-			This is the preferred tool for locating information by CONTENT.
+			IMPORTANT: pattern is literal text, not a list of search terms.
+			Use ONE distinctive term or phrase per call.
 
-			It searches both:
-			- project files
-			- knowledge-base documents
+			If the search is too broad, it is rejected. Refine the pattern or use
+			the path argument instead of increasing maxResults.
 
-			Use the optional path argument to restrict file searches to a
-			particular directory subtree.
+			FILE results contain a path, matching lines, and optional line context.
+			DOCUMENT results contain a title, matching sections, and optional context.
 
-			Examples:
+			After locating something, use knowledge_read_file or knowledge_doc_read
+			when the search result does not contain enough information.
 
-			  knowledge_grep(pattern="totalTokens")
-			  knowledge_grep(pattern="LlmRequest")
-			  knowledge_grep(pattern="Leaderboard")
-			  knowledge_grep(pattern="CREATE TABLE")
-			  knowledge_grep(pattern="timeout")
-			  knowledge_grep(pattern="timeout", path="/src/main/java")
-
-			Results identify whether each match came from a FILE or DOCUMENT.
-
-			FILE results contain:
-			- file path
-			- matching line numbers
-			- matching text
-			- optional surrounding lines
-
-			DOCUMENT results contain:
-			- document title
-			- matching section
-			- matching text
-			- optional surrounding sections
-
-			After finding matches:
-
-			- If the results contain enough information to answer the question,
-			  answer directly.
-			- Otherwise, use knowledge_read_file for a FILE result or
-			  knowledge_doc_read for a DOCUMENT result.
-			- Read only the files, sections, or line ranges needed to resolve
-			  the question.
-			- Stop searching once sufficient evidence has been found.
-
-			Use knowledge_find when you are searching for a file by filename or
-			path rather than searching its contents.
-
-			Use knowledge_list when you need to inspect the immediate contents
-			of a directory.
+			Use knowledge_find when searching for a filename or path.
 			""")
 	@Transactional(readOnly = true)
 	public MintyToolResponse<List<KnowledgeSearchResult>> grep(
-			@ToolParam(description = "Text to search for in file and document contents.") String pattern,
+			@ToolParam(description = "A single literal text pattern to search for in file and document contents. Do not provide multiple terms or expect AND/OR behavior.") String pattern,
 			@ToolParam(description = "Optional directory subtree for file searches. Defaults to /. Documents are searched across the project.", required = false) String path,
 			@ToolParam(description = "Whether matching is case-sensitive. Defaults to false.", required = false) Boolean caseSensitive,
-			@ToolParam(description = "Maximum total number of matching results to return. Default 100.", required = false) Integer maxResults,
+			@ToolParam(description = "Maximum number of matching results to consider. Defaults to 100. If the search exceeds this limit, refine the search instead of increasing the limit.", required = false) Integer maxResults,
 			@ToolParam(description = "Number of surrounding file lines or document sections before each match. Defaults to 0.", required = false) Integer contextBefore,
 			@ToolParam(description = "Number of surrounding file lines or document sections after each match. Defaults to 0.", required = false) Integer contextAfter) {
 
@@ -308,8 +249,8 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 			int before = contextBefore == null ? 0 : contextBefore;
 			int after = contextAfter == null ? 0 : contextAfter;
 
-			if (limit < 1 || limit > 500) {
-				return MintyToolResponse.FailureResponse("maxResults must be between 1 and 500.");
+			if (limit < 1 || limit > 100) {
+				return MintyToolResponse.FailureResponse("maxResults must be between 1 and 100.");
 			}
 
 			if (before < 0 || before > 20) {
@@ -320,14 +261,21 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 				return MintyToolResponse.FailureResponse("contextAfter must be between 0 and 20.");
 			}
 
-			List<KnowledgeSearchResult> results = pluginServices.getKnowledgeService().grep(userId, projectId, path,
-					pattern, sensitive, limit, before, after);
+			KnowledgeGrepResult grepResult = pluginServices.getKnowledgeService().grep(userId, projectId, path, pattern,
+					sensitive, limit, before, after);
 
-			if (results.isEmpty()) {
+			if (grepResult.isTruncated()) {
+				return MintyToolResponse.FailureResponse(
+						"Search returned too many matches. The results were not returned because the search is too broad. "
+								+ "Please refine the search by using a more specific pattern, identifier, phrase, "
+								+ "or path. You can also use knowledge_find to locate likely files first.");
+			}
+
+			if (grepResult.getResults().isEmpty()) {
 				return MintyToolResponse.FailureResponse("No files or documents found containing: \"" + pattern + "\"");
 			}
 
-			return MintyToolResponse.SuccessResponse(results);
+			return MintyToolResponse.SuccessResponse(grepResult.getResults());
 
 		} catch (Exception e) {
 			return MintyToolResponse.FailureResponse(e.getMessage());
@@ -394,45 +342,14 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 	}
 
 	@Tool(name = "knowledge_files_tree", description = """
-			Show the complete hierarchy of the project's files and folders.
+			Show the complete hierarchy of project files and folders.
 
-			This is an OVERVIEW tool, not a general-purpose content search tool.
+			Use only when understanding the overall project structure is relevant.
 
-			Use this when you genuinely need to understand the overall structure
-			of the project, for example:
-			- understanding the organization of a project
-			- determining the major directories or areas of the project
-			- explaining the project structure to the user
-			- comparing or describing project organization
-
-			Do NOT use this merely to locate a particular piece of information.
-
-			If you know WHAT you are looking for but do not know which file
-			contains it, prefer knowledge_grep.
-
-			If you know approximately where or what a filename is, prefer
-			knowledge_find.
-
-			If you want to inspect one directory, prefer knowledge_list.
-
-			If you know the file path, use knowledge_read_file.
-
-			Typical workflows:
-
-			  Unknown concept:
-			    knowledge_grep -> knowledge_read_file
-
-			  Known filename/path:
-			    knowledge_find -> knowledge_read_file
-
-			  Specific directory:
-			    knowledge_list -> knowledge_read_file
-
-			  Overall project structure:
-			    knowledge_files_tree
-
-			The complete tree can produce a large response, so avoid using it
-			when a narrower tool can answer the question.
+			Do not use this to search file contents.
+			Use knowledge_grep for content searches.
+			Use knowledge_find when looking for a particular filename or path.
+			Use knowledge_list to inspect one directory.
 			""")
 	@Transactional(readOnly = true)
 	public MintyToolResponse<List<NodeInfo>> getFilesTree() {
@@ -651,15 +568,27 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 			""")
 	@Transactional
 	public MintyToolResponse<EditResult> editFile(@ToolParam(description = "Absolute file path.") String path,
-			@ToolParam(description = "File version returned by knowledge_read_file.") int expectedVersion,
-			@ToolParam(description = "1-based first line to replace.") int startLine,
-			@ToolParam(description = "1-based last line to replace.") int endLine,
+			@ToolParam(description = "File version returned by knowledge_read_file.") Integer expectedVersion,
+			@ToolParam(description = "1-based first line to replace.") Integer startLine,
+			@ToolParam(description = "1-based last line to replace.") Integer endLine,
 			@ToolParam(description = "New text replacing the specified line range.") String replacement) {
 
 		try {
 			ensureProjectSelected();
 
 			PathValidator.validate(path);
+
+			if (expectedVersion == null) {
+				return MintyToolResponse.FailureResponse("expectedVersion is required.");
+			}
+
+			if (startLine == null) {
+				return MintyToolResponse.FailureResponse("startLine is required.");
+			}
+
+			if (endLine == null) {
+				return MintyToolResponse.FailureResponse("endLine is required.");
+			}
 
 			if (expectedVersion < 0) {
 				return MintyToolResponse.FailureResponse("expectedVersion must be >= 0.");
@@ -718,13 +647,9 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 	@Transactional(readOnly = true)
 	public MintyToolResponse<List<DocumentSearchResult>> grepDocuments(
 			@ToolParam(description = "Text to search for in document contents.") String pattern,
-
 			@ToolParam(description = "Whether matching is case-sensitive. Defaults to false.", required = false) Boolean caseSensitive,
-
 			@ToolParam(description = "Maximum matching sections to return. Default 100.", required = false) Integer maxResults,
-
 			@ToolParam(description = "Number of sections before each match. Defaults to 0.", required = false) Integer contextBefore,
-
 			@ToolParam(description = "Number of sections after each match. Defaults to 0.", required = false) Integer contextAfter) {
 
 		try {
@@ -901,99 +826,7 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 
 	@Override
 	public String description() {
-		return """
-				Tools for finding, reading, and modifying engineering knowledge.
-
-				Use the smallest number of tool calls necessary to obtain sufficient
-				evidence. When the user explicitly asks you to examine all files,
-				inspect all relevant files rather than stopping after understanding
-				the general architecture.
-
-				SEARCH WORKFLOW:
-
-				1. If you know a concept, class, method, variable, table, field, or other
-				   text you need to locate, use knowledge_grep.
-				2. If you know a filename or path pattern, use knowledge_find.
-				3. If you need to inspect one directory, use knowledge_list.
-				4. Use knowledge_read_file only when the search results do not contain
-				   enough information to answer the question.
-				5. Stop searching once sufficient evidence has been found.
-
-				Do not perform broad exploratory searches or retrieve the complete project
-				hierarchy unless the user's question actually requires it.
-
-				KNOWLEDGE DISCOVERY:
-
-				Choose the narrowest tool that can answer the question.
-
-				- knowledge_grep searches the CONTENT of project files.
-				  Use this when you know what concept, term, class, configuration,
-				  requirement, database object, or other information you are
-				  looking for but do not know which file contains it.
-
-				- knowledge_doc_grep searches the CONTENT of knowledge-base documents.
-				  Use this when you know what text or concept you are looking for but
-				  do not know which document or section contains it.
-
-				- knowledge_doc_read reads a knowledge-base document and its sections.
-
-				- knowledge_find searches FILE AND FOLDER NAMES/PATHS.
-				  Use this when you know approximately what file or directory
-				  you need.
-
-				- knowledge_list shows the immediate contents of ONE directory.
-
-				- knowledge_files_tree shows the COMPLETE project hierarchy.
-				  Use this only when overall project structure is itself relevant.
-
-				- knowledge_search performs broad discovery across both project
-				  files and knowledge-base documents when you do not know where
-				  the information is stored.
-
-				- knowledge_read_file reads the contents of a specific project
-				  file.
-
-				- knowledge_doc_read reads a knowledge-base document and its
-				  sections.
-
-				IMPORTANT:
-
-				Do not use knowledge_files_tree as a substitute for searching
-				file contents.
-
-				If you know WHAT you are looking for but not WHERE it is,
-				prefer knowledge_grep.
-
-				If you know approximately WHICH FILE you want,
-				prefer knowledge_find.
-
-				If you need to understand the OVERALL PROJECT STRUCTURE,
-				use knowledge_files_tree.
-
-				After locating relevant information, read the relevant file or
-				document before drawing conclusions.
-
-				FILE EDITING:
-
-				knowledge_read_file returns a file version. When editing a file,
-				pass that version to knowledge_edit_file as expectedVersion.
-				This prevents edits based on stale file contents.
-
-				Always read the relevant portion of a file before editing it.
-
-				Use knowledge_edit_file for targeted line-based changes.
-
-				Use knowledge_write_file when creating a file or intentionally
-				replacing an entire file.
-
-				DOCUMENT WORKFLOW:
-
-				Use knowledge_search to locate documents when you do not know
-				which document contains the information.
-
-				Use knowledge_doc_read to inspect document structure and then
-				read the relevant sections.
-				""";
+		return "Search, read, create, modify, and organize project files and knowledge-base documents.";
 	}
 
 	@Override

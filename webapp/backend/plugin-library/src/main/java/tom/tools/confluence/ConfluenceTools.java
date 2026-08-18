@@ -91,9 +91,12 @@ public class ConfluenceTools implements MintyTool, ServiceConsumer, Configuratio
 			""")
 	public MintyToolResponse<SearchResponse> searchPages(@ToolParam(description = "Search query") String query,
 			@ToolParam(description = "Spaces to search in") List<String> spaces,
-			@ToolParam(description = "Max results") int limit) {
+			@ToolParam(description = "Max results") Integer limit) {
 		logger.info("confluence_search_pages: {} {} {}", query, spaces, limit);
 		try {
+			if (limit == null) {
+				return MintyToolResponse.FailureResponse("limit is required.");
+			}
 			return MintyToolResponse.SuccessResponse(confluenceClient.search(new SearchRequest(query, spaces, limit)));
 		} catch (Exception e) {
 			return MintyToolResponse.FailureResponse("Search failed.");
@@ -112,6 +115,10 @@ public class ConfluenceTools implements MintyTool, ServiceConsumer, Configuratio
 			- metadata
 			""")
 	public MintyToolResponse<PageResponse> getPage(@ToolParam(description = "Page id") String pageId) {
+		if (pageId == null) {
+			return MintyToolResponse.FailureResponse("pageId is required.");
+		}
+
 		logger.info("confluence_get_page: {}", pageId);
 		try {
 			return MintyToolResponse.SuccessResponse(confluenceClient.getPage(pageId));
@@ -130,6 +137,10 @@ public class ConfluenceTools implements MintyTool, ServiceConsumer, Configuratio
 			Use this instead of repeated single-page calls.
 			""")
 	public MintyToolResponse<List<PageResponse>> getPages(@ToolParam(description = "Page ids") List<String> pageIds) {
+		if (pageIds == null) {
+			return MintyToolResponse.FailureResponse("pageIds is required.");
+		}
+
 		logger.info("confluence_get_pages: {}", pageIds);
 		try {
 			List<PageResponse> pages = pageIds.stream().map(id -> {
@@ -152,7 +163,11 @@ public class ConfluenceTools implements MintyTool, ServiceConsumer, Configuratio
 
 	@Tool(name = "confluence_get_children", description = "Get child pages of a Confluence page.")
 	public MintyToolResponse<ChildrenResponse> getChildren(@ToolParam(description = "Parent page id") String pageId,
-			@ToolParam(description = "Max results") int limit) {
+			@ToolParam(description = "Max results") Integer limit) {
+		if (limit == null) {
+			return MintyToolResponse.FailureResponse("limit is required.");
+		}
+
 		logger.info("confluence_get_children: {} {}", pageId, limit);
 		try {
 			return MintyToolResponse.SuccessResponse(confluenceClient.getChildren(pageId, limit));
@@ -167,7 +182,11 @@ public class ConfluenceTools implements MintyTool, ServiceConsumer, Configuratio
 
 	@Tool(name = "confluence_search_by_label", description = "Search pages by label.")
 	public MintyToolResponse<SearchResponse> searchByLabel(@ToolParam(description = "Labels") List<String> labels,
-			@ToolParam(description = "Max results") int limit) {
+			@ToolParam(description = "Max results") Integer limit) {
+		if (limit == null) {
+			return MintyToolResponse.FailureResponse("limit is required.");
+		}
+
 		logger.info("confluence_search_by_label: {} {}", labels, limit);
 		try {
 			return MintyToolResponse.SuccessResponse(confluenceClient.searchByLabels(labels, limit));
@@ -181,7 +200,7 @@ public class ConfluenceTools implements MintyTool, ServiceConsumer, Configuratio
 	// ---------------------------------------------------------------------
 
 	@Tool(name = "confluence_get_current_time", description = "Get current local time")
-	public MintyToolResponse<String> getCurrentLocalTime(int ignored) {
+	public MintyToolResponse<String> getCurrentLocalTime() {
 		String result = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);
 		return MintyToolResponse.SuccessResponse(result);
 	}
