@@ -30,6 +30,7 @@ public interface ProjectFileContentRepository extends JpaRepository<ProjectFileC
 			  AND n.type = 'File'
 			  AND LOWER(c.content) LIKE LOWER(:pattern)
 			  AND n.path LIKE :pathPattern
+			ORDER BY n.path
 			""", nativeQuery = true)
 	List<FileSearchRow> searchCurrentFileContents(@Param("projectId") UUID projectId, @Param("ownerId") UUID ownerId,
 			@Param("pattern") String pattern, @Param("pathPattern") String pathPattern);

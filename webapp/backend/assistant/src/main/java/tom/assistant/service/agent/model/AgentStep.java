@@ -2,6 +2,8 @@ package tom.assistant.service.agent.model;
 
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class AgentStep {
 
 	private String id;
@@ -77,6 +79,11 @@ public class AgentStep {
 	public String toString() {
 		return "AgentStep [id=" + id + ", type=" + type + ", name=" + name + ", worker=" + worker + ", input=" + input
 				+ ", visibility=" + visibility + "]";
+	}
+
+	@JsonIgnore
+	public boolean isValid() {
+		return id != null && type != null && visibility != null;
 	}
 
 }

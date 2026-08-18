@@ -1,7 +1,7 @@
 import { Component, ElementRef, forwardRef, Input, OnDestroy, ViewChild } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { retry } from 'rxjs';
+import { Observable, retry, Subscription } from 'rxjs';
 import { AssistantService } from '../../assistant.service';
 import { AgentStepResult, Assistant, createAssistant } from '../../model/assistant';
 import { ConversationService } from '../../conversation.service';
@@ -74,6 +74,7 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 	model: Model | undefined = undefined;
 	contextSize: number = 16384;
 
+	private streamSubscription: Subscription | undefined = undefined;
 	private conversationTimeoutId: NodeJS.Timeout | undefined = undefined;
 	confirmRestartConversationVisible: boolean = false;
 
@@ -84,6 +85,36 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 	}
 
 	initialize(): void {
+		this.userText = '';
+		this.chatHistory = [];
+		this.waitingForResponse = false;
+		this.responseComplete = true;
+		this.queueDepth = undefined;
+		this.image = undefined;
+		this.shouldReset = false;
+
+		this.nextId = 0;
+
+		this.files = [];
+		this.activeProject = undefined;
+		this.fileNode = undefined;
+		this.showFilesColumn = true;
+
+		this.assistant = createAssistant();
+		this.showChatOptions = false;
+		this.newestMessagesFirst = true;
+		this.reverseButtons = false;
+		this.metrics = undefined;
+		this.sourcesOpen = true;
+		this.sources = undefined;
+		this.thoughts = [];
+		this.statusMessages = [];
+		this.expandedSteps = {};
+		this.model = undefined;
+		this.contextSize = 16384;
+
+		this.streamSubscription?.unsubscribe();
+
 		this.userService.getUser().subscribe(user => {
 
 			this.user = user;
@@ -183,7 +214,7 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 		this.metrics = undefined;
 		this.thoughts = [];
 
-		this.assistantService.getStream(streamId).pipe(
+		this.streamSubscription = this.assistantService.getStream(streamId).pipe(
 			retry({
 				delay: 5000
 			})
