@@ -162,39 +162,39 @@
 		<section class="dashboard-section">
 			<div class="section-heading">
 				<h3>Assistants</h3>
-			</div>
-
-			<div class="row g-4">
-				<div class="col-xl-6">
+				</div>
+				<div class="row g-4">
+					<div class="col-xl-6">
 					<div class="card analytics-card h-100">
 						<div class="card-header">
 							Assistant Leaderboard
 						</div>
 						<div class="card-body">
 							@if (assistantLeaderboard.length > 0) {
-								<div class="ranking-list">
-									@for (row of assistantLeaderboard.slice(0, 10); track $index) {
-										<div class="ranking-row">
-											<div class="ranking-number">
-												{{$index + 1}}
-											</div>
-											<div class="ranking-content">
-												<div class="ranking-label">
-													{{findLabel(row, $index)}}
-												</div>
-												<div class="progress">
-													<div class="progress-bar" role="progressbar"
-														[style.width.%]="getChartPoints(assistantLeaderboard)[$index]?.percentage ?? 0">
-													</div>
-												</div>
-											</div>
-
-											<div class="ranking-value">
-												{{formatValue(row[getDefaultChartColumn(assistantLeaderboard) ?? ''])}}
-											</div>
-										</div>
-									}
-								</div>
+								<table class="table table-sm leaderboard-table">
+									<thead>
+										<tr>
+											<th scope="col">#</th>
+											<th scope="col">Assistant</th>
+											<th scope="col" class="text-end">Conversations</th>
+											<th scope="col" class="text-end">Messages</th>
+											<th scope="col" class="text-end">Users</th>
+											<th scope="col" class="text-end">Avg msgs/convo</th>
+										</tr>
+									</thead>
+									<tbody>
+										@for (row of assistantLeaderboard.slice(0, 10); track $index) {
+											<tr>
+												<td>{{$index + 1}}</td>
+												<td>{{findLabel(row, $index)}}</td>
+												<td class="text-end">{{formatValue(row.conversations)}}</td>
+												<td class="text-end">{{formatValue(row.messages)}}</td>
+												<td class="text-end">{{formatValue(row.users)}}</td>
+												<td class="text-end">{{formatValue(row.averageConversationLength)}}</td>
+											</tr>
+										}
+									</tbody>
+								</table>
 							}
 							@else {
 								<div class="empty-state">
@@ -423,7 +423,7 @@
 						</div>
 						<div class="card-body p-0">
 							<ng-container [ngTemplateOutlet]="tableTemplate"
-								[ngTemplateOutletContext]="{rows: llmUserMetrics}">
+								[ngTemplateOutletContext]="{rows: getSortedRows(llmUserMetrics, 'totalTokens'), priorityColumns: ['account', 'totalTokens', 'requests']}">
 							</ng-container>
 						</div>
 					</div>
@@ -466,8 +466,7 @@
 </div>
 
 <!-- Generic dataset table ----------------------------------------------- -->
-
-<ng-template #tableTemplate let-rows="rows">
+<ng-template #tableTemplate let-rows="rows" let-priorityColumns="priorityColumns">
 	@if (!rows || rows.length === 0) {
 		<div class="empty-state p-4">
 			No data available.
@@ -478,7 +477,7 @@
 			<table class="table table-sm table-hover analytics-table mb-0">
 				<thead>
 					<tr>
-						@for (column of getColumns(rows); track column) {
+						@for (column of getColumns(rows, priorityColumns); track column) {
 							<th scope="col">
 								{{formatColumnName(column)}}
 							</th>
@@ -488,7 +487,7 @@
 				<tbody>
 					@for (row of rows; track $index) {
 						<tr>
-							@for (column of getColumns(rows); track column) {
+							@for (column of getColumns(rows, priorityColumns); track column) {
 								<td>
 									{{formatValue(getValue(row, column))}}
 								</td>

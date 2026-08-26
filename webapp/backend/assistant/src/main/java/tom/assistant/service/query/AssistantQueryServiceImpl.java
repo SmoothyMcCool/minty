@@ -259,6 +259,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 			AtomicReference<Usage> usage = new AtomicReference<>();
 			AtomicBoolean failed = new AtomicBoolean(false);
 			AtomicBoolean firstToken = new AtomicBoolean(true);
+			AtomicReference<String> previousThoughts = new AtomicReference<>("");
 
 			responses.publishOn(Schedulers.immediate()).doOnNext(chatClientResponse -> {
 
@@ -314,9 +315,23 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 							"reasoningContent")) {
 						if (chunk.getMetadata().containsKey(thoughtsKey)) {
 							String thoughtsText = (String) chunk.getMetadata().get(thoughtsKey);
+
 							if (thoughtsText != null && !thoughtsText.isEmpty()) {
-								sr.addChunk(thoughtsText, ChunkType.THINKING);
+								String previous = previousThoughts.get();
+
+								if (thoughtsText.startsWith(previous)) {
+									String delta = thoughtsText.substring(previous.length());
+
+									if (!delta.isEmpty()) {
+										sr.addChunk(delta, ChunkType.THINKING);
+									}
+								} else {
+									sr.addChunk(thoughtsText, ChunkType.THINKING);
+								}
+
+								previousThoughts.set(thoughtsText);
 							}
+
 							break;
 						}
 					}

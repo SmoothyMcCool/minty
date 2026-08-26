@@ -38,6 +38,9 @@ import tools.jackson.databind.ObjectMapper;
 @Component
 public class KnowledgeTools implements MintyTool, ServiceConsumer {
 
+	private static final int SEARCH_RESULT_LIMIT = 100;
+	private static final int SEARCH_FETCH_LIMIT = SEARCH_RESULT_LIMIT + 1;
+
 	private static final ObjectMapper MAPPER = new ObjectMapper();
 
 	private PluginServices pluginServices;
@@ -109,39 +112,103 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 			@JsonPropertyDescription("Last line replaced.") int endLine) {
 	}
 
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public record KnowledgeSearchResponse(List<SearchResult> results,
+			@JsonPropertyDescription("True if more matching results existed than were returned.") boolean truncated) {
+	}
+
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public record KnowledgeFindResponse(List<NodeInfo> results,
+			@JsonPropertyDescription("True if more matching files or folders existed than were returned.") boolean truncated) {
+	}
+
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public record KnowledgeListResponse(List<NodeInfo> results,
+			@JsonPropertyDescription("True if more files or folders existed in the directory than were returned.") boolean truncated) {
+	}
+
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public record KnowledgeGrepResponse(List<KnowledgeSearchResult> results,
+			@JsonPropertyDescription("True if more matching lines or document sections existed than were returned.") boolean truncated) {
+	}
+
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public record KnowledgeDocumentGrepResponse(List<DocumentSearchResult> results,
+			@JsonPropertyDescription("True if more matching document sections existed than were returned.") boolean truncated) {
+	}
+
 	// =====================================================================
 	// SEARCH
 	// =====================================================================
 
 	@Tool(name = "knowledge_search", description = """
-			Broad discovery across both project files and knowledge documents.
+			Search for files and knowledge-base documents by NAME or metadata.
 
-			Use this when you do not know whether the information is in a file
-			or document, or when you only have a general description of what you
-			are looking for.
+			Use this for broad discovery when you want to find files or documents
+			based on their filename, document title, path, or description.
 
-			For a known text pattern, prefer knowledge_grep.
-			For a known filename/path, use knowledge_find.
+			IMPORTANT: This is NOT a full-text content search.
+			Do not use this tool to find text inside files or document sections.
+			Use knowledge_grep or knowledge_doc_grep for content searches.
+
+			The pattern normally performs substring matching, so "Controller"
+			finds names containing "Controller".
+
+			Wildcards are also supported:
+			  * matches zero or more characters
+			  ? matches exactly one character
+
+			Examples:
+			  "Controller"     -> names containing Controller
+			  "*Controller*"   -> names containing Controller
+			  "Test*"          -> names starting with Test
+			  "*Test.md"       -> names ending with Test.md
+			  "*.java"         -> Java files
+			  "*"              -> all files and documents
+
+			Use "*" when you want to enumerate all available files and documents.
+
+			If you know you are looking for text inside file contents, use
+			knowledge_grep.
+
+			If you know you are looking for text inside knowledge documents,
+			use knowledge_doc_grep.
+
+			If you know approximately which filename or path you need, use
+			knowledge_find.
+
+			The response may contain truncated=true when more matching items
+			existed than were returned. If truncated=true, refine the pattern
+			or use a more specific search rather than assuming the results
+			are complete.
 			""")
 	@Transactional(readOnly = true)
-	public MintyToolResponse<List<SearchResult>> search(@ToolParam(description = "Text to search for") String filter) {
+	public MintyToolResponse<KnowledgeSearchResponse> search(
+			@ToolParam(description = "Text to search for") String pattern) {
 
 		try {
 			ensureProjectSelected();
 
-			if (filter == null || filter.isBlank()) {
+			if (pattern == null || pattern.isBlank()) {
 				return MintyToolResponse.FailureResponse("Search text must not be empty.");
 			}
 
-			List<KnowledgeItemInfo> items = pluginServices.getKnowledgeService().find(userId, projectId, filter, 100);
+			List<KnowledgeItemInfo> items = pluginServices.getKnowledgeService().find(userId, projectId, pattern,
+					SEARCH_FETCH_LIMIT);
+
+			boolean truncated = items.size() > SEARCH_RESULT_LIMIT;
+
+			if (truncated) {
+				items = items.subList(0, SEARCH_RESULT_LIMIT);
+			}
 
 			if (items.isEmpty()) {
-				return MintyToolResponse.FailureResponse("No files or documents found matching: \"" + filter + "\"");
+				return MintyToolResponse.FailureResponse("No files or documents found matching: \"" + pattern + "\"");
 			}
 
 			List<SearchResult> results = items.stream().map(this::toSearchResult).toList();
 
-			return MintyToolResponse.SuccessResponse(results);
+			return MintyToolResponse.SuccessResponse(new KnowledgeSearchResponse(results, truncated));
 
 		} catch (Exception e) {
 			return MintyToolResponse.FailureResponse(e.getMessage());
@@ -160,17 +227,32 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 			- type: File or Folder
 			- maxResults
 
+			The name pattern supports wildcards:
+			- * matches any number of characters
+			- ? matches a single character
+
+			Examples:
+			- *Controller.java
+			- User*.java
+			- *.json
+			- Test?.java
+
 			This searches names and paths, not file contents.
+
+			If truncated is true, more matching files or folders existed than
+			were returned. Refine the path or name pattern before assuming that
+			all matches have been found.
 
 			Use knowledge_grep when you know WHAT text or concept you are looking for.
 			Use knowledge_read_file after finding a relevant file.
 			""")
 	@Transactional(readOnly = true)
-	public MintyToolResponse<List<NodeInfo>> findFiles(
+	public MintyToolResponse<KnowledgeFindResponse> findFiles(
 			@ToolParam(description = "Absolute directory subtree to search. Defaults to /.", required = false) String path,
 			@ToolParam(description = "Filename pattern using * and ?. Example: *Controller.java", required = false) String name,
 			@ToolParam(description = "Optional node type: File or Folder.", required = false) String type,
-			@ToolParam(description = "Maximum number of results. Default 100.", required = false) Integer maxResults) {
+			@ToolParam(description = "Maximum number of results. Default " + SEARCH_RESULT_LIMIT
+					+ ".", required = false) Integer maxResults) {
 
 		try {
 			ensureProjectSelected();
@@ -181,10 +263,11 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 
 			PathValidator.validate(path);
 
-			int limit = maxResults == null ? 100 : maxResults;
+			int limit = maxResults == null ? SEARCH_RESULT_LIMIT : maxResults;
 
-			if (limit < 1 || limit > 100) {
-				return MintyToolResponse.FailureResponse("maxResults must be between 1 and 100.");
+			if (limit < 1 || limit > SEARCH_RESULT_LIMIT) {
+				return MintyToolResponse
+						.FailureResponse("maxResults must be between 1 and " + SEARCH_RESULT_LIMIT + ".");
 			}
 
 			NodeType nodeType = null;
@@ -198,9 +281,15 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 			}
 
 			List<NodeInfo> results = pluginServices.getProjectService().find(userId, projectId, path, name, nodeType,
-					limit);
+					limit + 1);
 
-			return MintyToolResponse.SuccessResponse(results);
+			boolean truncated = results.size() > limit;
+
+			if (truncated) {
+				results = results.subList(0, limit);
+			}
+
+			return MintyToolResponse.SuccessResponse(new KnowledgeFindResponse(results, truncated));
 
 		} catch (Exception e) {
 			return MintyToolResponse.FailureResponse(e.getMessage());
@@ -213,11 +302,27 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 			Use this when you know a term, class, method, field, identifier, phrase,
 			configuration value, database object, or other text you want to locate.
 
-			IMPORTANT: pattern is literal text, not a list of search terms.
-			Use ONE distinctive term or phrase per call.
+			The pattern normally matches literal text and supports wildcards:
+			- * matches any sequence of characters
+			- ? matches a single character
 
-			If the search is too broad, it is rejected. Refine the pattern or use
-			the path argument instead of increasing maxResults.
+			Use ONE distinctive search pattern per call. Do not provide multiple
+			search terms expecting AND/OR behavior.
+
+			Examples:
+			  knowledge_grep(pattern="KnowledgeService")
+			  knowledge_grep(pattern="get*Service")
+			  knowledge_grep(pattern="spring.ai.*")
+			  knowledge_grep(pattern="*Controller")
+
+			Avoid using "*" by itself for content searches because it is usually
+			too broad and may produce a very large result set.
+
+			Searches are limited to a maximum number of results. If the response
+			contains truncated=true, more matches existed than were returned.
+			Do not assume the returned results are complete. Refine the pattern,
+			restrict the search using the path argument, or perform additional
+			searches to obtain the results you need.
 
 			FILE results contain a path, matching lines, and optional line context.
 			DOCUMENT results contain a title, matching sections, and optional context.
@@ -225,14 +330,16 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 			After locating something, use knowledge_read_file or knowledge_doc_read
 			when the search result does not contain enough information.
 
-			Use knowledge_find when searching for a filename or path.
+			Use knowledge_find when searching for a filename or path rather than
+			file or document contents.
 			""")
 	@Transactional(readOnly = true)
-	public MintyToolResponse<List<KnowledgeSearchResult>> grep(
+	public MintyToolResponse<KnowledgeGrepResponse> grep(
 			@ToolParam(description = "A single literal text pattern to search for in file and document contents. Do not provide multiple terms or expect AND/OR behavior.") String pattern,
 			@ToolParam(description = "Optional directory subtree for file searches. Defaults to /. Documents are searched across the project.", required = false) String path,
 			@ToolParam(description = "Whether matching is case-sensitive. Defaults to false.", required = false) Boolean caseSensitive,
-			@ToolParam(description = "Maximum number of matching results to consider. Defaults to 100. If the search exceeds this limit, refine the search instead of increasing the limit.", required = false) Integer maxResults,
+			@ToolParam(description = "Maximum number of matching results to return. Defaults to " + SEARCH_RESULT_LIMIT
+					+ ". If truncated is true, refine the search rather than assuming all matches were returned.", required = false) Integer maxResults,
 			@ToolParam(description = "Number of surrounding file lines or document sections before each match. Defaults to 0.", required = false) Integer contextBefore,
 			@ToolParam(description = "Number of surrounding file lines or document sections after each match. Defaults to 0.", required = false) Integer contextAfter) {
 
@@ -249,8 +356,9 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 			int before = contextBefore == null ? 0 : contextBefore;
 			int after = contextAfter == null ? 0 : contextAfter;
 
-			if (limit < 1 || limit > 100) {
-				return MintyToolResponse.FailureResponse("maxResults must be between 1 and 100.");
+			if (limit < 1 || limit > SEARCH_RESULT_LIMIT) {
+				return MintyToolResponse
+						.FailureResponse("maxResults must be between 1 and " + SEARCH_RESULT_LIMIT + ".");
 			}
 
 			if (before < 0 || before > 20) {
@@ -261,21 +369,19 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 				return MintyToolResponse.FailureResponse("contextAfter must be between 0 and 20.");
 			}
 
+			/*
+			 * KnowledgeService already performs the limit+1 query and reports truncation
+			 * through KnowledgeGrepResult.
+			 */
 			KnowledgeGrepResult grepResult = pluginServices.getKnowledgeService().grep(userId, projectId, path, pattern,
 					sensitive, limit, before, after);
-
-			if (grepResult.isTruncated()) {
-				return MintyToolResponse.FailureResponse(
-						"Search returned too many matches. The results were not returned because the search is too broad. "
-								+ "Please refine the search by using a more specific pattern, identifier, phrase, "
-								+ "or path. You can also use knowledge_find to locate likely files first.");
-			}
 
 			if (grepResult.getResults().isEmpty()) {
 				return MintyToolResponse.FailureResponse("No files or documents found containing: \"" + pattern + "\"");
 			}
 
-			return MintyToolResponse.SuccessResponse(grepResult.getResults());
+			return MintyToolResponse
+					.SuccessResponse(new KnowledgeGrepResponse(grepResult.getResults(), grepResult.isTruncated()));
 
 		} catch (Exception e) {
 			return MintyToolResponse.FailureResponse(e.getMessage());
@@ -346,6 +452,8 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 
 			Use only when understanding the overall project structure is relevant.
 
+			This returns the complete tree and is not truncated.
+
 			Do not use this to search file contents.
 			Use knowledge_grep for content searches.
 			Use knowledge_find when looking for a particular filename or path.
@@ -355,8 +463,10 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 	public MintyToolResponse<List<NodeInfo>> getFilesTree() {
 		try {
 			ensureProjectSelected();
+
 			return MintyToolResponse
 					.SuccessResponse(pluginServices.getProjectService().describeTree(userId, projectId));
+
 		} catch (Exception e) {
 			return MintyToolResponse.FailureResponse(e.getMessage());
 		}
@@ -378,18 +488,24 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 	public MintyToolResponse<NodeInfo> writeFile(@ToolParam(description = "Absolute file path") String path,
 			@ToolParam(description = "One of: code, markdown, json, text, diagram") String fileType,
 			@ToolParam(description = "Complete final file contents") String content) {
+
 		try {
 			ensureProjectSelected();
+
 			PathValidator.validate(path);
+
 			FileType parsedType;
+
 			try {
 				parsedType = FileType.valueOf(fileType);
 			} catch (Exception e) {
 				return MintyToolResponse
 						.FailureResponse("Invalid fileType. Must be one of: code, markdown, json, text, diagram");
 			}
+
 			return MintyToolResponse.SuccessResponse(
 					pluginServices.getProjectService().writeFile(userId, projectId, path, parsedType, content));
+
 		} catch (Exception e) {
 			return MintyToolResponse.FailureResponse(e.getMessage());
 		}
@@ -406,11 +522,15 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 			""")
 	@Transactional
 	public MintyToolResponse<NodeInfo> createFolder(@ToolParam(description = "Absolute folder path") String path) {
+
 		try {
 			ensureProjectSelected();
+
 			PathValidator.validate(path);
+
 			return MintyToolResponse
 					.SuccessResponse(pluginServices.getProjectService().createFolder(userId, projectId, path));
+
 		} catch (Exception e) {
 			return MintyToolResponse.FailureResponse(e.getMessage());
 		}
@@ -425,14 +545,19 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 			""")
 	@Transactional
 	public MintyToolResponse<Integer> deletePath(@ToolParam(description = "Absolute file or folder path") String path) {
+
 		try {
 			ensureProjectSelected();
+
 			PathValidator.validate(path);
+
 			if ("/".equals(path)) {
 				return MintyToolResponse.FailureResponse("Cannot delete root folder.");
 			}
+
 			return MintyToolResponse
 					.SuccessResponse(pluginServices.getProjectService().deleteNode(userId, projectId, path));
+
 		} catch (Exception e) {
 			return MintyToolResponse.FailureResponse(e.getMessage());
 		}
@@ -450,15 +575,179 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 	@Transactional
 	public MintyToolResponse<NodeInfo> movePath(@ToolParam(description = "Existing absolute path") String sourcePath,
 			@ToolParam(description = "New absolute path") String targetPath) {
+
 		try {
 			ensureProjectSelected();
+
 			PathValidator.validate(sourcePath);
 			PathValidator.validate(targetPath);
+
 			if (targetPath.startsWith(sourcePath + "/")) {
 				return MintyToolResponse.FailureResponse("Cannot move a folder inside itself.");
 			}
+
 			return MintyToolResponse.SuccessResponse(
 					pluginServices.getProjectService().moveNode(userId, projectId, sourcePath, targetPath));
+
+		} catch (Exception e) {
+			return MintyToolResponse.FailureResponse(e.getMessage());
+		}
+	}
+
+	@Tool(name = "knowledge_list", description = """
+			List files and folders in ONE project directory.
+
+			Use this when you want to inspect the immediate structure of a
+			specific directory.
+
+			This does NOT search file contents and does NOT recursively return
+			the entire project.
+
+			Arguments:
+			- path: directory to list, defaults to "/"
+			- maxResults: maximum number of entries to return, default """ + SEARCH_RESULT_LIMIT + """
+			The response includes a truncated flag. If truncated is true,
+			more entries existed than were returned. Refine the directory
+			or use knowledge_find if you need to locate specific files.
+
+			Examples:
+			  knowledge_list()
+			  knowledge_list(path="/src")
+			  knowledge_list(path="/src/main")
+
+			If you know what concept or text you are looking for, use
+			knowledge_grep instead.
+
+			If you need to find a file by name, use knowledge_find.
+
+			If you need the complete project structure, use
+			knowledge_files_tree.
+			""")
+	@Transactional(readOnly = true)
+	public MintyToolResponse<KnowledgeListResponse> listFiles(
+			@ToolParam(description = "Absolute directory path. Defaults to /.", required = false) String path,
+			@ToolParam(description = "Maximum number of entries to return. Default " + SEARCH_RESULT_LIMIT
+					+ ".", required = false) Integer maxResults) {
+
+		try {
+			ensureProjectSelected();
+
+			if (path == null || path.isBlank()) {
+				path = "/";
+			}
+
+			PathValidator.validate(path);
+
+			int limit = maxResults == null ? SEARCH_RESULT_LIMIT : maxResults;
+
+			if (limit < 1 || limit > 500) {
+				return MintyToolResponse.FailureResponse("maxResults must be between 1 and 500.");
+			}
+
+			/*
+			 * listChildren currently returns the directory contents without taking a limit,
+			 * so retrieve them and determine truncation here.
+			 */
+			List<NodeInfo> nodes = pluginServices.getProjectService().listChildren(userId, projectId, path);
+
+			boolean truncated = nodes.size() > limit;
+
+			if (truncated) {
+				nodes = nodes.subList(0, limit);
+			}
+
+			return MintyToolResponse.SuccessResponse(new KnowledgeListResponse(nodes, truncated));
+
+		} catch (Exception e) {
+			return MintyToolResponse.FailureResponse(e.getMessage());
+		}
+	}
+
+	@Tool(name = "knowledge_edit_file", description = """
+			Replace a specific range of lines in a project file.
+
+			Arguments:
+			- path: absolute file path
+			- expectedVersion: file version returned by knowledge_read_file
+			- startLine: first 1-based line to replace
+			- endLine: last 1-based line to replace
+			- replacement: new text that replaces those lines
+
+			The edit is rejected if the file has changed since it was read.
+
+			Line numbers refer to the file version that was read. Do not assume
+			that line numbers remain valid after another edit.
+
+			If you receive a version-conflict error, read the file again and
+			retry the edit using the new version.
+
+			IMPORTANT:
+			Always read the relevant portion of the file before editing it.
+			Use the version returned by knowledge_read_file as expectedVersion.
+
+			When possible, use knowledge_grep first to locate the relevant lines,
+			then knowledge_read_file to inspect the surrounding code before
+			editing.
+
+			Examples:
+
+			  knowledge_edit_file(
+			    path="/src/main.py",
+			    expectedVersion=7,
+			    startLine=42,
+			    endLine=45,
+			    replacement="new code here"
+			  )
+
+			The replacement completely replaces the specified line range.
+			Do not include the original lines in replacement unless they should
+			remain unchanged.
+
+			Use knowledge_write_file instead when replacing an entire file or
+			creating a new file.
+			""")
+	@Transactional
+	public MintyToolResponse<EditResult> editFile(@ToolParam(description = "Absolute file path.") String path,
+			@ToolParam(description = "File version returned by knowledge_read_file.") Integer expectedVersion,
+			@ToolParam(description = "1-based first line to replace.") Integer startLine,
+			@ToolParam(description = "1-based last line to replace.") Integer endLine,
+			@ToolParam(description = "New text replacing the specified line range.") String replacement) {
+
+		try {
+			ensureProjectSelected();
+
+			PathValidator.validate(path);
+
+			if (expectedVersion == null) {
+				return MintyToolResponse.FailureResponse("expectedVersion is required.");
+			}
+
+			if (startLine == null) {
+				return MintyToolResponse.FailureResponse("startLine is required.");
+			}
+
+			if (endLine == null) {
+				return MintyToolResponse.FailureResponse("endLine is required.");
+			}
+
+			if (expectedVersion < 0) {
+				return MintyToolResponse.FailureResponse("expectedVersion must be >= 0.");
+			}
+
+			if (startLine < 1) {
+				return MintyToolResponse.FailureResponse("startLine must be >= 1.");
+			}
+
+			if (endLine < startLine) {
+				return MintyToolResponse.FailureResponse("endLine must be >= startLine.");
+			}
+
+			NodeInfo result = pluginServices.getProjectService().editFile(userId, projectId, path, expectedVersion,
+					startLine, endLine, replacement);
+
+			return MintyToolResponse
+					.SuccessResponse(new EditResult(result.getPath(), result.getVersion(), startLine, endLine));
+
 		} catch (Exception e) {
 			return MintyToolResponse.FailureResponse(e.getMessage());
 		}
@@ -629,6 +918,11 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 
 			Results identify the document and the matching section number.
 
+			The response includes a truncated flag. If truncated is true,
+			more matching sections existed than were returned. Refine the
+			search pattern rather than assuming all matching sections were
+			returned.
+
 			After finding a relevant section, use knowledge_doc_read with the
 			document title and section number to retrieve the section if the
 			search result does not contain enough information.
@@ -645,10 +939,11 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 			is in a project file or a knowledge-base document.
 			""")
 	@Transactional(readOnly = true)
-	public MintyToolResponse<List<DocumentSearchResult>> grepDocuments(
+	public MintyToolResponse<KnowledgeDocumentGrepResponse> grepDocuments(
 			@ToolParam(description = "Text to search for in document contents.") String pattern,
 			@ToolParam(description = "Whether matching is case-sensitive. Defaults to false.", required = false) Boolean caseSensitive,
-			@ToolParam(description = "Maximum matching sections to return. Default 100.", required = false) Integer maxResults,
+			@ToolParam(description = "Maximum matching sections to return. Default " + SEARCH_RESULT_LIMIT
+					+ ". If truncated is true, refine the search rather than assuming all matches were returned.", required = false) Integer maxResults,
 			@ToolParam(description = "Number of sections before each match. Defaults to 0.", required = false) Integer contextBefore,
 			@ToolParam(description = "Number of sections after each match. Defaults to 0.", required = false) Integer contextAfter) {
 
@@ -661,10 +956,8 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 
 			boolean sensitive = caseSensitive != null && caseSensitive;
 
-			int limit = maxResults == null ? 100 : maxResults;
-
+			int limit = maxResults == null ? SEARCH_RESULT_LIMIT : maxResults;
 			int before = contextBefore == null ? 0 : contextBefore;
-
 			int after = contextAfter == null ? 0 : contextAfter;
 
 			if (limit < 1 || limit > 500) {
@@ -679,14 +972,24 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 				return MintyToolResponse.FailureResponse("contextAfter must be between 0 and 20.");
 			}
 
+			/*
+			 * Request one extra result so that we can determine whether the service had
+			 * more results than the requested maximum.
+			 */
 			List<DocumentSearchResult> results = pluginServices.getDocumentService().grep(userId, projectId, pattern,
-					sensitive, limit, before, after);
+					sensitive, limit + 1, before, after);
+
+			boolean truncated = results.size() > limit;
+
+			if (truncated) {
+				results = results.subList(0, limit);
+			}
 
 			if (results.isEmpty()) {
 				return MintyToolResponse.FailureResponse("No document sections found matching: \"" + pattern + "\"");
 			}
 
-			return MintyToolResponse.SuccessResponse(results);
+			return MintyToolResponse.SuccessResponse(new KnowledgeDocumentGrepResponse(results, truncated));
 
 		} catch (Exception e) {
 			return MintyToolResponse.FailureResponse(e.getMessage());
@@ -717,10 +1020,12 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 	@Transactional(readOnly = true)
 	public MintyToolResponse<?> readDocument(@ToolParam(description = "Document title", required = true) String title,
 			@ToolParam(description = "Section numbers to read, e.g. \"0,2,3\" or [0,2,3]. Leave empty to list sections only.", required = false) String sections) {
+
 		try {
 			ensureProjectSelected();
 
 			Document document = pluginServices.getDocumentService().findByTitle(userId, projectId, title).orElse(null);
+
 			if (document == null) {
 				return MintyToolResponse.FailureResponse("No document found with title: \"" + title + "\"");
 			}
@@ -730,12 +1035,14 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 			if (indices == null || indices.isEmpty()) {
 				// No sections requested -> return section list only
 				List<SectionInfo> sectionInfos;
+
 				if (document.summary() != null && !document.summary().isBlank()) {
 					sectionInfos = parseSectionMap(document.summary());
 				} else {
 					sectionInfos = document.sections().stream()
 							.map(s -> new SectionInfo(s.sequenceOrder(), s.title(), null)).toList();
 				}
+
 				return MintyToolResponse.SuccessResponse(new DocumentMap(document.title(), sectionInfos));
 			}
 
@@ -749,6 +1056,7 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 
 			List<Integer> outOfRange = indices.stream()
 					.filter(i -> sectionData.stream().noneMatch(s -> s.sequenceOrder() == i)).toList();
+
 			if (!outOfRange.isEmpty()) {
 				return MintyToolResponse.FailureResponse(
 						"Section numbers not found: " + outOfRange + ". Call knowledge_doc_read(title=\"" + title
@@ -759,6 +1067,7 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 					.map(s -> new SectionContent(s.sequenceOrder(), s.title(), s.content())).toList();
 
 			return MintyToolResponse.SuccessResponse(new DocumentContent(document.title(), contents));
+
 		} catch (Exception e) {
 			return MintyToolResponse.FailureResponse(e.getMessage());
 		}
@@ -776,15 +1085,20 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 		if (sections == null) {
 			return List.of();
 		}
+
 		String cleaned = sections.trim();
+
 		if (cleaned.isEmpty()) {
 			return List.of();
 		}
+
 		// Strip surrounding brackets/quotes if the model sent JSON-array-like syntax
 		cleaned = cleaned.replaceAll("^[\\[\"']+|[\\]\"']+$", "");
+
 		if (cleaned.isEmpty()) {
 			return List.of();
 		}
+
 		return Arrays.stream(cleaned.split("[,\\s]+")).filter(s -> !s.isBlank()).map(s -> {
 			try {
 				return Integer.parseInt(s.trim());
@@ -798,11 +1112,14 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 		if (summaryJson == null || summaryJson.isBlank()) {
 			return List.of();
 		}
+
 		try {
 			List<RawSectionMapEntry> raw = MAPPER.readValue(summaryJson, new TypeReference<List<RawSectionMapEntry>>() {
 			});
+
 			return raw.stream().filter(e -> e.summary() != null && !Boolean.TRUE.equals(e.summary().insufficient()))
 					.map(e -> new SectionInfo(e.index(), e.title(), e.summary().summary())).toList();
+
 		} catch (Exception e) {
 			return List.of();
 		}
@@ -853,6 +1170,7 @@ public class KnowledgeTools implements MintyTool, ServiceConsumer {
 		if (item.getType() == KnowledgeItemType.FILE) {
 			return new SearchResult(ResultType.FILE, item.getPath(), item.getDescription());
 		}
+
 		return new SearchResult(ResultType.DOCUMENT, item.getName(), item.getDescription());
 	}
 }
