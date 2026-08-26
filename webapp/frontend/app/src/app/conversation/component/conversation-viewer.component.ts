@@ -234,7 +234,6 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 					}
 
 					if (responseChunk.content && responseChunk.type) {
-						console.log(responseChunk);
 						switch (responseChunk.type) {
 						case 'STATUS':
 							this.statusMessages.push({ statusMessage: responseChunk.content, stepOutput: '' });
