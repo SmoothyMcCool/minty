@@ -232,7 +232,7 @@ export class AnalyticsDashboardComponent implements OnInit {
 			}));
 	}
 
-	getColumns(rows: AnalyticsRow[]): string[] {
+	getColumns(rows: AnalyticsRow[], priorityColumns: string[] = []): string[] {
 		if (!rows || rows.length === 0) {
 			return [];
 		}
@@ -241,19 +241,6 @@ export class AnalyticsDashboardComponent implements OnInit {
 
 		for (const row of rows) {
 			for (const key of Object.keys(row)) {
-				/*
-				 * IDs are useful internally but are not useful in the
-				 * dashboard tables. Hide anything whose property name
-				 * ends in "Id" or "ID".
-				 *
-				 * This covers:
-				 *   id
-				 *   userId
-				 *   assistantId
-				 *   workflowId
-				 *   conversationId
-				 *   etc.
-				 */
 				if (this.isIdColumn(key)) {
 					continue;
 				}
@@ -262,7 +249,17 @@ export class AnalyticsDashboardComponent implements OnInit {
 			}
 		}
 
-		return Array.from(columns);
+		const all = Array.from(columns);
+
+		const prioritized = priorityColumns.filter(
+			column => all.includes(column)
+		);
+
+		const rest = all.filter(
+			column => !prioritized.includes(column)
+		);
+
+		return [...prioritized, ...rest];
 	}
 
 	getNumericColumns(rows: AnalyticsRow[]): string[] {
@@ -344,6 +341,25 @@ export class AnalyticsDashboardComponent implements OnInit {
 			);
 	}
 
+	metricLabel(column: string | null): string {
+		if (!column) {
+			return '';
+		}
+
+		const labels: Record<string, string> = {
+			conversations: 'conversations',
+			conversationCount: 'conversations',
+			messages: 'total messages',
+			messageCount: 'messages',
+			users: 'users',
+			uniqueUsers: 'unique users',
+			averageConversationLength: 'avg msgs/convo',
+			averageMessages: 'avg msgs/convo'
+		};
+
+		return labels[column] ?? this.formatColumnName(column).toLowerCase();
+	}
+
 	formatValue(value: unknown): string {
 		if (value === null || value === undefined) {
 			return '';
@@ -375,17 +391,11 @@ export class AnalyticsDashboardComponent implements OnInit {
 		return String(value);
 	}
 
-	getValue(
-		row: AnalyticsRow,
-		column: string
-	): unknown {
+	getValue(row: AnalyticsRow, column: string): unknown {
 		return row[column];
 	}
 
-	findLabel(
-		row: AnalyticsRow,
-		index: number
-	): string {
+	findLabel(row: AnalyticsRow, index: number): string {
 
 		/*
 		 * Deliberately do not use ID fields here. Even though ID
@@ -412,6 +422,25 @@ export class AnalyticsDashboardComponent implements OnInit {
 		}
 
 		return String(index + 1);
+	}
+
+	getSortedRows(rows: AnalyticsRow[], column: string, direction: 'asc' | 'desc' = 'desc'): AnalyticsRow[] {
+
+		if (!rows || rows.length === 0) {
+			return [];
+		}
+
+		return [...rows].sort((a, b) => {
+			const aValue = Number(a[column]);
+			const bValue = Number(b[column]);
+
+			const aSafe = Number.isFinite(aValue) ? aValue : 0;
+			const bSafe = Number.isFinite(bValue) ? bValue : 0;
+
+			return direction === 'desc'
+				? bSafe - aSafe
+				: aSafe - bSafe;
+		});
 	}
 
 	private isNumeric(value: unknown): boolean {
@@ -512,7 +541,9 @@ export class AnalyticsDashboardComponent implements OnInit {
 		columns: string[]
 	): string | null {
 
-		if (columns.length === 0) {
+		const eligible = columns.filter(column => column.toLowerCase() !== 'ranking');
+
+		if (eligible.length === 0) {
 			return null;
 		}
 
@@ -531,10 +562,7 @@ export class AnalyticsDashboardComponent implements OnInit {
 
 		for (const preferred of preferredNames) {
 			const match = columns.find(
-				column =>
-					column.toLowerCase() ===
-					preferred.toLowerCase()
-			);
+				column => column.toLowerCase() === preferred.toLowerCase());
 
 			if (match) {
 				return match;

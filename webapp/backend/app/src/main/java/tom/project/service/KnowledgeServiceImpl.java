@@ -2,7 +2,7 @@ package tom.project.service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
+import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Service;
 <<<<<<< HEAD
@@ -49,7 +49,6 @@ public class KnowledgeServiceImpl implements KnowledgeService {
 			return List.of();
 		}
 
-		String normalizedQuery = query.toLowerCase(Locale.ROOT);
 		List<KnowledgeItemInfo> results = new ArrayList<>();
 
 		// Files
@@ -73,7 +72,7 @@ public class KnowledgeServiceImpl implements KnowledgeService {
 			if (document.title() == null) {
 				continue;
 			}
-			if (!document.title().toLowerCase(Locale.ROOT).contains(normalizedQuery)) {
+			if (!matchesPattern(document.title(), query)) {
 				continue;
 			}
 
@@ -86,6 +85,31 @@ public class KnowledgeServiceImpl implements KnowledgeService {
 		}
 
 		return results;
+	}
+
+	private boolean matchesPattern(String value, String pattern) {
+		StringBuilder regex = new StringBuilder(".*");
+
+		for (int i = 0; i < pattern.length(); i++) {
+			char c = pattern.charAt(i);
+
+			switch (c) {
+			case '*':
+				regex.append(".*");
+				break;
+			case '?':
+				regex.append('.');
+				break;
+			default:
+				regex.append(Pattern.quote(String.valueOf(c)));
+				break;
+			}
+		}
+
+		regex.append(".*");
+
+		return Pattern.compile(regex.toString(), Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE).matcher(value)
+				.matches();
 	}
 
 	@Override

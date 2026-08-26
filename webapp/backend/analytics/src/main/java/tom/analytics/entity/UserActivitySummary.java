@@ -30,12 +30,6 @@ public class UserActivitySummary {
 	@Column(name = "lastConversation")
 	private LocalDateTime lastConversation;
 
-	@Column(name = "openConversations")
-	private long openConversations;
-
-	@Column(name = "completedConversations")
-	private long completedConversations;
-
 	public UserActivitySummary() {
 	}
 
@@ -63,11 +57,4 @@ public class UserActivitySummary {
 		return lastConversation;
 	}
 
-	public long getOpenConversations() {
-		return openConversations;
-	}
-
-	public long getCompletedConversations() {
-		return completedConversations;
-	}
 }

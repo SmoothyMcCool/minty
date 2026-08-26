@@ -491,16 +491,15 @@ SELECT
     COUNT(*)                                    AS conversationCount,
     SUM(cs.messageCount)                         AS messageCount,
     ROUND(AVG(cs.messageCount),2)                AS averageMessages,
-    MAX(cs.lastActivity)                         AS lastConversation,
-    SUM(cs.completed IS NULL)                    AS openConversations,
-    SUM(cs.completed IS NOT NULL)                AS completedConversations
+    MAX(cs.lastActivity)                         AS lastConversation
 FROM ConversationStatistics cs
 JOIN User u
-ON u.id = cs.userId
+    ON u.id = cs.userId
+WHERE cs.messageCount > 0
 GROUP BY
     cs.userId,
     u.account;
-
+ 
 CREATE OR REPLACE VIEW UserAssistantSummary AS
 SELECT
     cs.userId,
@@ -513,15 +512,16 @@ SELECT
     MAX(cs.lastActivity)                        AS lastUsed
 FROM ConversationStatistics cs
 JOIN Assistant a
-ON a.id = cs.assistantId
+    ON a.id = cs.assistantId
 JOIN User u
-ON u.id = cs.userId
+    ON u.id = cs.userId
+WHERE cs.messageCount > 0
 GROUP BY
     cs.userId,
     u.account,
     cs.assistantId,
     a.name;
-
+ 
 CREATE OR REPLACE VIEW AssistantPopularity AS
 SELECT
     a.id,
@@ -534,24 +534,28 @@ SELECT
 FROM Assistant a
 LEFT JOIN ConversationStatistics cs
     ON cs.assistantId = a.id
+    AND cs.messageCount > 0
 GROUP BY
     a.id,
     a.name;
-
+ 
 CREATE OR REPLACE VIEW SystemOverview AS
 SELECT
     1                                                AS id,
     (SELECT COUNT(*) FROM User)                      AS users,
     (SELECT COUNT(*) FROM Assistant)                 AS assistants,
-    (SELECT COUNT(*) FROM ConversationStatistics)    AS conversations,
+    (SELECT COUNT(*)
+        FROM ConversationStatistics
+        WHERE messageCount > 0)                      AS conversations,
     (SELECT COALESCE(SUM(messageCount),0)
-        FROM ConversationStatistics)                 AS messages,
+        FROM ConversationStatistics
+        WHERE messageCount > 0)                      AS messages,
     (SELECT COUNT(*)
 	    FROM UserAction
 		WHERE actionType = 'UserLoggedIn')           AS logins,
     (SELECT COUNT(*) FROM WorkflowExecution)         AS workflowRuns,
     (SELECT COUNT(*) FROM LlmRequests)               AS llmRequests;
-
+ 
 CREATE OR REPLACE VIEW AssistantLeaderboard AS
 SELECT
     ROW_NUMBER() OVER (
@@ -568,6 +572,7 @@ SELECT
 FROM Assistant a
 LEFT JOIN ConversationStatistics cs
     ON cs.assistantId = a.id
+    AND cs.messageCount > 0
 GROUP BY
     a.id,
     a.name;
