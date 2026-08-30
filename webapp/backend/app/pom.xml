@@ -174,15 +174,15 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.ai</groupId>
-			<artifactId>spring-ai-model-chat-memory-repository-jdbc</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.ai</groupId>
 			<artifactId>spring-ai-openai</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.ai</groupId>
 			<artifactId>spring-ai-vector-store</artifactId>
+		</dependency>
+		<dependency>
+		    <groupId>org.springaicommunity</groupId>
+		    <artifactId>spring-ai-session</artifactId>
 		</dependency>
 
 		<!-- Spring Data -->

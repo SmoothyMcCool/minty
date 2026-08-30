@@ -1,5 +1,15 @@
+export const MessageTypes = [
+	'USER',
+	'ASSISTANT',
+	'REASONING',
+	'TOOL'
+] as const;
+
+export type MessageType =
+	typeof MessageTypes[number];
+
 export interface ChatMessage {
 	id?: number;
-	user: boolean;
+	type: MessageType;
 	message: string;
 };

@@ -99,7 +99,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		for (int i = 0; i < steps.size(); i++) {
 			Map<String, Object> config = request.getTaskConfigurationList().get(i);
-			config.forEach((k, v) -> {
+			config.forEach((k, _) -> {
 				if (defaults.containsKey(k)) {
 					config.put(k, defaults.get(k));
 				}
@@ -109,7 +109,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		if (workflow.getOutputStep() != null) {
 			Map<String, Object> config = request.getOutputConfiguration();
-			config.forEach((k, v) -> {
+			config.forEach((k, _) -> {
 				if (defaults.containsKey(k)) {
 					config.put(k, defaults.get(k));
 				}

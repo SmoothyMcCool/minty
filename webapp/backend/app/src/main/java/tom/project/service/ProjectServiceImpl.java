@@ -243,7 +243,7 @@ public class ProjectServiceImpl implements ProjectService {
 
 		// Prevent path collisions
 		if (!oldPath.equals(newPath)) {
-			nodeRepository.findByProjectIdAndPathAndOwnerId(projectId.getValue(), newPath, userId).ifPresent(n -> {
+			nodeRepository.findByProjectIdAndPathAndOwnerId(projectId.getValue(), newPath, userId).ifPresent(_ -> {
 				throw new IllegalStateException("Target path already exists.");
 			});
 		}

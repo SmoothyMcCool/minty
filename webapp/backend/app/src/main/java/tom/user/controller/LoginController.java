@@ -104,7 +104,7 @@ public class LoginController {
 		metadataService.userLoggedIn(user.getId());
 
 		result.setPassword("");
-		result.getDefaults().forEach((k, v) -> {
+		result.getDefaults().forEach((k, _) -> {
 			result.getDefaults().put(k, "Value hidden");
 		});
 

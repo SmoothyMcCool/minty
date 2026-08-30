@@ -5,10 +5,9 @@ import java.util.Set;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
-import org.springframework.ai.chat.memory.ChatMemory;
-import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.embedding.EmbeddingModel;
+import org.springframework.ai.session.SessionService;
 
 import tom.api.model.assistant.Assistant;
 import tom.api.model.assistant.AssistantQuery;
@@ -23,9 +22,7 @@ public interface LlmClientRegistry {
 
 	ChatModel buildSimpleModel(User user, String modelName);
 
-	ChatMemoryRepository getChatMemoryRepository();
-
-	ChatMemory getChatMemory();
+	SessionService getSessionService();
 
 	boolean has(String modelName);
 

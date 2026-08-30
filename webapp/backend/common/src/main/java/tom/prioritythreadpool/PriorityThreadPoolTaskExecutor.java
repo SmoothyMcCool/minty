@@ -4,6 +4,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.PriorityBlockingQueue;
 
+import org.jspecify.annotations.NonNull;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import tom.api.ConversationId;
@@ -16,7 +17,7 @@ public class PriorityThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 	private final ConcurrentHashMap<ConversationId, PriorityTask> pendingTasks = new ConcurrentHashMap<>();
 
 	@Override
-	protected BlockingQueue<Runnable> createQueue(int capacity) {
+	protected @NonNull BlockingQueue<Runnable> createQueue(int capacity) {
 		// The capacity argument is ignored by PriorityBlockingQueue
 		return new PriorityBlockingQueue<>();
 	}
@@ -37,7 +38,7 @@ public class PriorityThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 	}
 
 	@Override
-	protected void afterExecute(Runnable r, Throwable t) {
+	protected void afterExecute(@NonNull Runnable r, @NonNull Throwable t) {
 		super.afterExecute(r, t);
 		if (r instanceof PriorityTask pt) {
 			pendingTasks.remove(pt.getConversationId());

@@ -97,7 +97,7 @@ public class AssistantManagementServiceImpl implements AssistantManagementServic
 		List<tom.assistant.model.Assistant> asstList = linkRepository
 				.findById_UserIdIn(List.of(userId.getValue(), ResourceSharingSelection.AllUsersId.getValue())).stream()
 				.map(link -> link.getAssistant()).collect(Collectors.toMap(tom.assistant.model.Assistant::getId,
-						assistant -> assistant, (a, b) -> a, LinkedHashMap::new))
+						assistant -> assistant, (a, _) -> a, LinkedHashMap::new))
 				.values().stream().toList();
 
 		List<Assistant> result = new ArrayList<>();

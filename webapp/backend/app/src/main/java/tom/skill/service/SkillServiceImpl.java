@@ -120,7 +120,7 @@ public class SkillServiceImpl implements SkillServiceInternal {
 
 		List<UserSkillLink> links = linkRepository
 				.findById_UserIdIn(List.of(userId.getValue(), ResourceSharingSelection.AllUsersId.getValue())).stream()
-				.collect(Collectors.toMap(usl -> usl.getSkill().getId(), usl -> usl, (a, b) -> a, LinkedHashMap::new))
+				.collect(Collectors.toMap(usl -> usl.getSkill().getId(), usl -> usl, (a, _) -> a, LinkedHashMap::new))
 				.values().stream().toList();
 
 		for (UserSkillLink usl : links) {

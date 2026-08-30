@@ -1,11 +1,11 @@
 import { Component, ElementRef, forwardRef, Input, OnDestroy, ViewChild } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { CommonModule } from '@angular/common';
-import { Observable, retry, Subscription } from 'rxjs';
+import { CommonModule, PercentPipe } from '@angular/common';
+import { retry, Subscription } from 'rxjs';
 import { AssistantService } from '../../assistant.service';
 import { AgentStepResult, Assistant, createAssistant } from '../../model/assistant';
 import { ConversationService } from '../../conversation.service';
-import { ChatMessage } from '../../model/conversation/chat-message';
+import { ChatMessage, MessageType } from '../../model/conversation/chat-message';
 import { ConfirmationDialogComponent } from '../../app/component/confirmation-dialog.component';
 import { Conversation } from '../../model/conversation/conversation';
 import { LlmMetric } from '../../model/conversation/llm-metric';
@@ -24,9 +24,8 @@ import { SliderComponent } from './slider.component';
 
 @Component({
 	selector: 'minty-conversation-viewer',
-	imports: [CommonModule, FormsModule, ConversationComponent, ConfirmationDialogComponent, ImageInputComponent, SliderComponent, AutoResizeDirective, NodeViewerComponent],
+	imports: [CommonModule, FormsModule, PercentPipe, ConversationComponent, ConfirmationDialogComponent, ImageInputComponent, SliderComponent, AutoResizeDirective, NodeViewerComponent],
 	templateUrl: 'conversation-viewer.component.html',
-	styleUrl: 'conversation-viewer.component.css',
 	providers: [
 		{
 			provide: NG_VALUE_ACCESSOR,
@@ -134,14 +133,14 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 					this.conversationService.history(this.conversation!.id).subscribe((chatHistory: ChatMessage[]) => {
 						this.chatHistory = chatHistory.map(msg => ({ ...msg, id: this.nextId++ }));
 						chatHistory.forEach(message => {
-							if (!message.user) {
+							if (message.type === 'ASSISTANT') {
 								this.addFiles(this.assistantService.getFileListFromMessage(message.message));
 							}
 						})
 
 						// If the last message in the chathistory is from the user, a query is (almost certainly) in progress.
 						// Try to resume it.
-						if (this.chatHistory && this.chatHistory.length > 0 && this.chatHistory[0].user) {
+						if (this.chatHistory && this.chatHistory.length > 0 && this.chatHistory[0].type === 'USER') {
 							this.waitingForResponse = true;
 							this.stream(this.conversation!.id);
 						}
@@ -172,7 +171,7 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 	}
 
 	submit(text: string) {
-		this.chatHistory.unshift(this.newMessage(true, text));
+		this.chatHistory.unshift(this.newMessage('USER', text));
 
 		this.assistantService.ask(this.conversation!.id, this.assistant.id, text, this.image ?? null, this.contextSize).subscribe(streamId => {
 			this.waitingForResponse = true;
@@ -197,19 +196,20 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 		});
 	}
 
-	appendThought(type: 'THINKING' | 'TOOL', content: string) {
-		const last = this.thoughts[this.thoughts.length - 1];
+	appendMessage(type: MessageType, content: string) {
+		const last = this.chatHistory[0];
 
-		if (last && last.type === 'THINKING' && type === 'THINKING') {
-			last.content += content;
-		} else {
-			this.thoughts = [...this.thoughts, { type, content }];
+		if (last.type != type && last.message.length > 0) {
+			this.chatHistory.unshift(this.newMessage(type, ''));
 		}
+
+		const response = this.chatHistory[0].message + content;
+		this.chatHistory[0] = { type: type, message: response };
 	}
 
 	stream(streamId: string) {
-		let response = '';
-		this.chatHistory.unshift(this.newMessage(false, ''));
+		let responseReceived = false;
+		this.chatHistory.unshift(this.newMessage('ASSISTANT', ''));
 		this.sources = undefined;
 		this.metrics = undefined;
 		this.thoughts = [];
@@ -234,7 +234,6 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 					}
 
 					if (responseChunk.content && responseChunk.type) {
-						console.log(responseChunk);
 						switch (responseChunk.type) {
 						case 'STATUS':
 							this.statusMessages.push({ statusMessage: responseChunk.content, stepOutput: '' });
@@ -255,36 +254,33 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 							this.statusMessages = [...this.statusMessages];
 							break;	
 						case 'THINKING':
-							this.appendThought('THINKING', responseChunk.content);
+							this.appendMessage('REASONING', responseChunk.content);
+							responseReceived = true;
 							break;
 						case 'TOOL':
-							this.appendThought('TOOL', responseChunk.content);
+							this.appendMessage('TOOL', responseChunk.content);
+							responseReceived = true;
 							break;
 						case 'RESPONSE':
-							response += responseChunk.content;
+							this.appendMessage('ASSISTANT', responseChunk.content);
+							responseReceived = true;
 							break;
 						}
 
 					}
-					if (response.length > 0) {
+					if (responseReceived) {
 						this.waitingForResponse = false;
 					}
-					this.chatHistory[0] = { user: false, message: response };
 				}
 			},
 			error: () => {
-				response += '\n\n<strong>Oh no!</strong> An error occurred while streaming the response!\n\n';
+				this.chatHistory[0] = { type: 'ASSISTANT', message: '\n\n<strong>Oh no!</strong> An error occurred while streaming the response!\n\n' };
 			},
 			complete: () => {
 				this.waitingForResponse = false;
 				this.responseComplete = true;
-				if (response == '') {
-					this.chatHistory[0] = { user: false, message: '<em>No response from server. Your request likely failed.</em>' };
-				}
-				// Check to see if the response includes a list of files to display.
-				this.addFiles(this.assistantService.getFileListFromMessage(response));
-				if (this.files) {
-					console.log(JSON.stringify(this.files));
+				if (!responseReceived) {
+					this.chatHistory[0] = { type: 'ASSISTANT', message: '<em>No response from server. Your request likely failed.</em>' };
 				}
 			}
 		});
@@ -341,8 +337,8 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 		this.expandedSteps[i] = !this.expandedSteps[i];
 	}
 
-	private newMessage(user: boolean, message: string): ChatMessage {
-		return { id: this.nextId++, user, message };
+	private newMessage(type: MessageType, message: string): ChatMessage {
+		return { id: this.nextId++, type, message };
 	}
 
 	toggleSources(): void {
