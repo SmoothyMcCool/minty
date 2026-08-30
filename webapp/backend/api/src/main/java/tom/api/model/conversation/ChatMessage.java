@@ -2,25 +2,25 @@ package tom.api.model.conversation;
 
 public class ChatMessage {
 
-	private boolean user;
+	private MessageType type;
 	private String message;
 
 	public ChatMessage() {
-		user = false;
+		type = MessageType.ASSISTANT;
 		message = "";
 	}
 
-	public ChatMessage(boolean user, String message) {
-		this.user = user;
+	public ChatMessage(MessageType type, String message) {
+		this.type = type;
 		this.message = message;
 	}
 
-	public boolean isUser() {
-		return user;
+	public MessageType getType() {
+		return type;
 	}
 
-	public void setUser(boolean user) {
-		this.user = user;
+	public void setType(MessageType type) {
+		this.type = type;
 	}
 
 	public String getMessage() {

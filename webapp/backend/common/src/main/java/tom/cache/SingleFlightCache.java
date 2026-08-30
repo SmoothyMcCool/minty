@@ -5,6 +5,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.cache.Cache;
 
 public class SingleFlightCache implements Cache {
@@ -28,27 +30,24 @@ public class SingleFlightCache implements Cache {
 	/* ---------- Spring Cache API ---------- */
 
 	@Override
-	public String getName() {
+	public @NonNull String getName() {
 		return name;
 	}
 
 	@Override
-	public Object getNativeCache() {
+	public @NonNull Object getNativeCache() {
 		return map;
 	}
 
 	@Override
-	public ValueWrapper get(Object key) {
+	public @NonNull ValueWrapper get(@NonNull Object key) {
 		Object value = get(key, (Callable<?>) NullLoader);
 		return () -> value;
 	}
 
 	@Override
-	public <T> T get(Object key, Class<T> type) {
+	public @NonNull <T> T get(@NonNull Object key, @NonNull Class<T> type) {
 		ValueWrapper wrapper = get(key);
-		if (wrapper == null) {
-			return null;
-		}
 		Object val = wrapper.get();
 		if (type != null && !type.isInstance(val)) {
 			throw new IllegalStateException("Cached value is not of required type [" + type.getName() + "]");
@@ -64,7 +63,7 @@ public class SingleFlightCache implements Cache {
 	 */
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> T get(Object key, Callable<T> valueLoader) {
+	public @NonNull <T> T get(@NonNull Object key, @NonNull Callable<T> valueLoader) {
 		while (true) {
 			CompletableFuture<CacheValue<Object>> future = map.get(key);
 
@@ -112,12 +111,13 @@ public class SingleFlightCache implements Cache {
 	}
 
 	@Override
-	public void put(Object key, Object value) {
+	public void put(@NonNull Object key, @NonNull Object value) {
 		map.put(key, CompletableFuture.completedFuture(new CacheValue<>(value, System.currentTimeMillis())));
 	}
 
+	@SuppressWarnings("null")
 	@Override
-	public ValueWrapper putIfAbsent(Object key, Object value) {
+	public @Nullable ValueWrapper putIfAbsent(@NonNull Object key, @NonNull Object value) {
 		CompletableFuture<CacheValue<Object>> existing = map.get(key);
 		if (existing == null) {
 			final CompletableFuture<CacheValue<Object>> future = CompletableFuture
@@ -135,7 +135,7 @@ public class SingleFlightCache implements Cache {
 	}
 
 	@Override
-	public void evict(Object key) {
+	public void evict(@NonNull Object key) {
 		map.remove(key);
 	}
 

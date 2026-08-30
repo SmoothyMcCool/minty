@@ -5,15 +5,19 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.ai.chat.memory.ChatMemory;
-import org.springframework.ai.chat.memory.ChatMemoryRepository;
+import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
-import org.springframework.ai.chat.messages.MessageType;
+import org.springframework.ai.chat.messages.ToolResponseMessage;
+import org.springframework.ai.session.EventFilter;
+import org.springframework.ai.session.Session;
+import org.springframework.ai.session.SessionEvent;
+import org.springframework.ai.session.SessionService;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
@@ -25,6 +29,7 @@ import tom.api.UserId;
 import tom.api.model.assistant.Assistant;
 import tom.api.model.conversation.ChatMessage;
 import tom.api.model.conversation.Conversation;
+import tom.api.model.conversation.MessageType;
 import tom.api.services.assistant.AssistantManagementService;
 import tom.assistant.service.management.AssistantManagementServiceInternal;
 import tom.conversation.repository.ConversationRepository;
@@ -71,12 +76,19 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 		List<tom.conversation.model.Conversation> conversations = conversationRepository
 				.findAllByOwnerIdAndAssociatedAssistantId(userId, assistantId);
 
-		ChatMemoryRepository chatMemoryRepository = llmClientRegistry.getChatMemoryRepository();
+		SessionService sessionService = llmClientRegistry.getSessionService();
 
 		conversations.forEach(conversation -> {
-			chatMemoryRepository.deleteByConversationId(conversation.getId().toString());
-		});
+			String conversationKey = conversation.getId().toString();
 
+			try {
+				if (sessionService.findById(conversationKey) != null) {
+					sessionService.delete(conversationKey);
+				}
+			} catch (Exception e) {
+				logger.warn("Failed to delete session for conversation " + conversationKey, e);
+			}
+		});
 	}
 
 	@Override
@@ -114,16 +126,78 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 			return List.of();
 		}
 
-		List<ChatMessage> result = new ArrayList<>();
-		ChatMemory chatMemory = llmClientRegistry.getChatMemory();
+		SessionService sessionService = llmClientRegistry.getSessionService();
+		String sessionKey = conversationId.value().toString();
 
-		List<Message> messages = chatMemory.get(conversationId.value().toString());
-		result = messages.stream().filter(message -> message.getMessageType() != MessageType.SYSTEM)
-				.map(message -> new ChatMessage(message.getMessageType() == MessageType.USER, message.getText()))
-				.collect(Collectors.toList());
+		Session session = sessionService.findById(sessionKey);
+		if (session == null) {
+			return List.of();
+		}
+
+		EventFilter filter = EventFilter.builder().excludeArchived(true)
+				.messageTypes(Set.of(org.springframework.ai.chat.messages.MessageType.USER,
+						org.springframework.ai.chat.messages.MessageType.ASSISTANT,
+						org.springframework.ai.chat.messages.MessageType.TOOL))
+				.build();
+
+		List<SessionEvent> events = sessionService.getEvents(sessionKey, filter);
+
+		List<ChatMessage> result = toChatMessages(events.stream().map(SessionEvent::getMessage).toList());
 		Collections.reverse(result);
 
 		return result;
+	}
+
+	private static List<ChatMessage> toChatMessages(List<Message> messages) {
+		Map<String, AssistantMessage.ToolCall> pendingCalls = new HashMap<>();
+		List<ChatMessage> result = new ArrayList<>();
+
+		for (Message message : messages) {
+			switch (message.getMessageType()) {
+			case USER -> result.add(new ChatMessage(MessageType.USER, message.getText()));
+
+			case ASSISTANT -> {
+				AssistantMessage assistantMessage = (AssistantMessage) message;
+				if (assistantMessage.hasToolCalls()) {
+					// Empty-text assistant message: it's a tool-call request, not a reply.
+					// Stash each call; we'll emit it once we see the matching TOOL response.
+					for (AssistantMessage.ToolCall call : assistantMessage.getToolCalls()) {
+						pendingCalls.put(call.id(), call);
+					}
+				} else {
+					result.add(new ChatMessage(MessageType.ASSISTANT, assistantMessage.getText()));
+				}
+			}
+
+			case TOOL -> {
+				if (message instanceof ToolResponseMessage toolResponseMessage) {
+					for (ToolResponseMessage.ToolResponse response : toolResponseMessage.getResponses()) {
+						AssistantMessage.ToolCall call = pendingCalls.remove(response.id());
+						String arguments = call != null ? call.arguments() : "(unknown arguments)";
+						String toolName = response.name() + "(" + arguments + ")";
+						String toolResult = response.responseData();
+
+						result.add(new ChatMessage(MessageType.TOOL, toolName + "\n\n" + toolResult));
+					}
+				} else {
+					throw new IllegalStateException("Message type is TOOL but class is not ToolResponseMessage.");
+				}
+			}
+
+			default -> throw new IllegalArgumentException("Unexpected value: " + message.getMessageType());
+			}
+		}
+
+		return result;
+	}
+
+	private static MessageType toMessageType(org.springframework.ai.chat.messages.MessageType type) {
+		return switch (type) {
+		case USER -> MessageType.USER;
+		case ASSISTANT -> MessageType.ASSISTANT;
+		case TOOL -> MessageType.TOOL;
+		default -> throw new IllegalArgumentException("Unexpected value: " + type);
+		};
 	}
 
 	@Override
@@ -147,9 +221,9 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 			return false;
 		}
 
-		ChatMemory chatMemory = llmClientRegistry.getChatMemory();
+		SessionService sessionService = llmClientRegistry.getSessionService();
+		sessionService.delete(conversationId.value().toString());
 
-		chatMemory.clear(conversationId.value().toString());
 		conversationRepository.deleteById(conversationId.value());
 
 		return true;
@@ -165,9 +239,12 @@ public class ConversationServiceImpl implements ConversationServiceInternal {
 			return false;
 		}
 
-		ChatMemory chatMemory = llmClientRegistry.getChatMemory();
+		SessionService sessionService = llmClientRegistry.getSessionService();
+		String sessionKey = conversationId.value().toString();
 
-		chatMemory.clear(conversationId.value().toString());
+		if (sessionService.findById(sessionKey) != null) {
+			sessionService.delete(sessionKey);
+		}
 
 		return true;
 	}

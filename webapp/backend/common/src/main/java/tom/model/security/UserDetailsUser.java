@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,7 +27,7 @@ public class UserDetailsUser implements UserDetails {
 	}
 
 	@Override
-	public Collection<? extends GrantedAuthority> getAuthorities() {
+	public @NonNull Collection<? extends GrantedAuthority> getAuthorities() {
 		List<SimpleGrantedAuthority> auth = new ArrayList<>();
 		auth.add(new SimpleGrantedAuthority("ROLE_USER"));
 		return auth;
@@ -37,12 +38,12 @@ public class UserDetailsUser implements UserDetails {
 	}
 
 	@Override
-	public String getPassword() {
+	public @NonNull String getPassword() {
 		return password;
 	}
 
 	@Override
-	public String getUsername() {
+	public @NonNull String getUsername() {
 		return username;
 	}
 

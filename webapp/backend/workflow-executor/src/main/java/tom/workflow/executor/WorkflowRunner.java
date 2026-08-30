@@ -229,7 +229,7 @@ public class WorkflowRunner {
 
 			if (tasks.size() > 0) {
 				CompletableFuture<Void> allDone = FutureUtils.allOfFailFast(tasks, logger);
-				allDone.whenComplete((r, ex) -> {
+				allDone.whenComplete((_, ex) -> {
 					if (ex != null) {
 						executionState.setFailed(true);
 						logger.warn("A task failed with exception: ", ex);

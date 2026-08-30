@@ -20,7 +20,7 @@ public class FutureUtils {
 		AtomicInteger remaining = new AtomicInteger(futures.size());
 
 		for (CompletableFuture<? extends T> f : futures) {
-			f.whenComplete((r, ex) -> {
+			f.whenComplete((_, ex) -> {
 				if (ex != null) {
 					logger.warn("Future ended with exception!", ex);
 					result.completeExceptionally(ex);

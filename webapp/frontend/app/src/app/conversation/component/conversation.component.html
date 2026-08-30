@@ -21,79 +21,11 @@
 	</div>
 }
 
-<!-- Model thinking / tool call output -->
-@if (thoughts && thoughts.length > 0) {
-	<div class="d-flex align-items-center mb-1" style="cursor: pointer; user-select: none;"
-		(click)="isThinkingExpanded = !isThinkingExpanded">
-		<span class="small text-muted fw-semibold">
-			@if (isThinkingExpanded) {
-				<i class="bi bi-chevron-up me-1"></i>
-			} @else {
-				<i class="bi bi-chevron-down me-1"></i>
-			}
-			{{isThinkingExpanded ? 'Hide' : 'Show'}} Reasoning
-		</span>
-	</div>
-
-	<div class="collapse" [class.show]="isThinkingExpanded">
-		<div class="d-flex justify-content-end mb-1">
-			<button type="button" class="btn btn-sm btn-outline-secondary" (click)="copyReasoning()">
-				<i class="bi" [class.bi-clipboard-check]="copiedReasoning" [class.bi-clipboard]="!copiedReasoning"></i>
-				{{ copiedReasoning ? 'Copied!' : 'Copy all' }}
-			</button>
-		</div>
-		<ul class="list-group mb-2 shadow-sm thinking-container">
-			@for (entry of thoughts; track $index) {
-				<li class="list-group-item small" [class.bg-light]="entry.type === 'thinking'"
-					[class.bg-white]="entry.type === 'tool'" style="font-family: system-ui, -apple-system, sans-serif;
-							line-height: 1.5;
-							max-width: 100%;">
-					<div class="d-flex align-items-center justify-content-between"
-						style="cursor: pointer; user-select: none;" (click)="toggleEntry($index)">
-
-						@if (entry.type === 'TOOL') {
-							<span class="fw-semibold text-primary">
-								<i class="bi bi-tools me-1"></i>
-								Tool Call: {{getToolCallHeader(entry.content)}}
-							</span>
-						} @else {
-							<span class="fw-semibold text-secondary">
-								<i class="bi bi-lightbulb me-1"></i>
-								Thinking
-							</span>
-						}
-
-						@if (isEntryExpanded($index)) {
-							<i class="bi bi-chevron-up text-muted"></i>
-						} @else {
-							<i class="bi bi-chevron-down text-muted"></i>
-						}
-					</div>
-
-					@if (isEntryExpanded($index)) {
-						<div class="mt-1" style="white-space: pre-wrap;
-												overflow-wrap: break-word;
-												word-break: break-word;
-												max-width: 100%;" [class.text-dark]="entry.type === 'TOOL'"
-							[class.text-secondary]="entry.type === 'THINKING'">
-
-							@if (entry.type === 'TOOL') {
-								{{getToolCallResult(entry.content)}}
-							} @else {
-								{{entry.content}}
-							}
-						</div>
-					}
-				</li>
-			}
-		</ul>
-	</div>
-}
 <!-- The Message Stream -->
 <div [class.chat-container]="oldestMessagesFirst" class="chat-stream-container">
-	@for (message of messages; track message.id; let messageIndex = $index) {
+	@for (message of messages; track trackByMessage($index, message)) {
 		<minty-chat-message [message]="message" [useMarkdown]="useMarkdown" [useMermaid]="useMermaid"
-			[isFirst]="messageIndex === 0" [responsePending]="responsePending" [responseComplete]="responseComplete"
+			[isFirst]="$index === 0" [responsePending]="responsePending" [responseComplete]="responseComplete"
 			[queueDepth]="queueDepth">
 		</minty-chat-message>
 	}

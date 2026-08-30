@@ -258,7 +258,11 @@
 								<span><strong class="text-muted">Prompt:</strong> {{metrics.promptTokens}}</span>
 								<span><strong class="text-muted">Response:</strong> {{metrics.completionTokens}}</span>
 								<span class="border-start ps-3"><strong class="text-muted">Total:</strong>
-									{{metrics.promptTokens + metrics.completionTokens}}</span>
+									{{metrics.promptTokens + metrics.completionTokens}}
+								</span>
+								<span class="border-start ps-3"><strong class="text-muted">Context Used:</strong>
+									{{(metrics.promptTokens + metrics.completionTokens) / contextSize | percent:'1.0-0'}}
+								</span>
 							</div>
 						</div>
 					</div>

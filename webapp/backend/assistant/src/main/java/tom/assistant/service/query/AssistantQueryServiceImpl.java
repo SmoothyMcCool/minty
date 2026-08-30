@@ -14,6 +14,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
@@ -21,15 +22,19 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.ChatClient.ChatClientRequestSpec;
 import org.springframework.ai.chat.client.ChatClientResponse;
-import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
-import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.metadata.Usage;
+import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.content.Media;
+import org.springframework.ai.session.SessionService;
+import org.springframework.ai.session.advisor.SessionMemoryAdvisor;
+import org.springframework.ai.session.compaction.CompactionStrategy;
+import org.springframework.ai.session.compaction.RecursiveSummarizationCompactionStrategy;
+import org.springframework.ai.session.compaction.TokenCountTrigger;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskRejectedException;
 import org.springframework.http.MediaType;
@@ -40,6 +45,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import llm.compaction.NotifyingCompactionStrategy;
+import llm.estimator.CharacterRatioTokenCountEstimator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 import reactor.core.scheduler.Schedulers;
@@ -136,7 +143,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		TransactionTemplate tx = new TransactionTemplate(transactionManager);
 		tx.setPropagationBehavior(Propagation.REQUIRES_NEW.value());
 		LlmRequestId llmRequestId = tx
-				.execute(status -> llmRequestMetricsService.registerRequest(userId, query.getConversationId()));
+				.execute(_ -> llmRequestMetricsService.registerRequest(userId, query.getConversationId()));
 
 		// Committed by here, safe to execute
 		CompletableFuture<String> future = new CompletableFuture<>();
@@ -160,8 +167,8 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		TransactionTemplate tx = new TransactionTemplate(transactionManager);
 		tx.setPropagationBehavior(Propagation.REQUIRES_NEW.value());
 		LlmRequestId llmRequestId = tx
-				.execute(status -> llmRequestMetricsService.registerRequest(userId, query.getConversationId()));
-		tx.execute(status -> llmRequestMetricsService.markDequeued(llmRequestId));
+				.execute(_ -> llmRequestMetricsService.registerRequest(userId, query.getConversationId()));
+		tx.execute(_ -> llmRequestMetricsService.markDequeued(llmRequestId));
 
 		return runSingleLlmCall(userId, llmRequestId, query);
 	}
@@ -245,7 +252,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 
 			User user = userService.getUserFromId(userId).orElseThrow();
 
-			ChatClientRequestSpec spec = prepareFromQuery(user, query);
+			ChatClientRequestSpec spec = prepareFromQuery(user, query, text -> sr.addChunk(text, ChunkType.STATUS));
 
 			if (spec == null) {
 				logger.warn("runSingleLlmCallStreaming: failed to generate chat request");
@@ -350,7 +357,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 				failed.set(true);
 				llmRequestMetricsService.markFailed(llmRequestId, e.getMessage());
 				return Flux.empty();
-			}).doFinally(signalType -> {
+			}).doFinally(_ -> {
 				if (failed.get()) {
 					sr.addChunk("Failed to generate response.", ChunkType.RESPONSE);
 				}
@@ -399,7 +406,7 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 
 			User user = userService.getUserFromId(userId).orElseThrow();
 
-			ChatClientRequestSpec spec = prepareFromQuery(user, query);
+			ChatClientRequestSpec spec = prepareFromQuery(user, query, null);
 
 			if (spec == null) {
 				logger.warn("runSingleLlmCall: failed to generate chat request");
@@ -548,7 +555,8 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		return -1;
 	}
 
-	private ChatClientRequestSpec prepareFromQuery(User user, AssistantQuery query) {
+	private ChatClientRequestSpec prepareFromQuery(User user, AssistantQuery query,
+			Consumer<String> compactionNotifier) {
 
 		Objects.requireNonNull(user, "user must not be null");
 		Objects.requireNonNull(query, "query must not be null");
@@ -581,7 +589,8 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 						: Stream.empty())
 				.toList();
 
-		ChatClient chatClient = buildChatClient(user, assistant, computeContextSize(assistant, query, tools), query);
+		ChatClient chatClient = buildChatClient(user, assistant, computeContextSize(assistant, query, tools), query,
+				compactionNotifier);
 
 		StringBuilder systemPrompt = new StringBuilder();
 
@@ -601,8 +610,10 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		}
 
 		if (assistant.hasMemory()) {
-			spec = spec
-					.advisors(a -> a.param(ChatMemory.CONVERSATION_ID, query.getConversationId().value().toString()));
+			spec = spec.advisors(a -> a
+					.param(SessionMemoryAdvisor.SESSION_ID_CONTEXT_KEY, query.getConversationId().value().toString())
+					.param(SessionMemoryAdvisor.USER_ID_CONTEXT_KEY, user.getId().getValue().toString()));
+
 		}
 
 		UserMessage message = UserMessage.builder().text(query.getQuery()).media(images).build();
@@ -612,18 +623,34 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
 		return spec;
 	}
 
-	private ChatClient buildChatClient(User user, Assistant assistant, int contextSize, AssistantQuery query) {
-		List<Advisor> advisors = buildAdvisorList(assistant, query.getConversationId(), query.getQuery());
+	private ChatClient buildChatClient(User user, Assistant assistant, int contextSize, AssistantQuery query,
+			Consumer<String> compactionNotifier) {
+		List<Advisor> advisors = buildAdvisorList(user, assistant, query.getConversationId(), query,
+				compactionNotifier);
 
 		return llmClientRegistry.buildChatClient(user, assistant, query, contextSize, advisors);
 	}
 
-	private List<Advisor> buildAdvisorList(Assistant assistant, ConversationId conversationId, String query) {
+	private List<Advisor> buildAdvisorList(User user, Assistant assistant, ConversationId conversationId,
+			AssistantQuery query, Consumer<String> compactionNotifier) {
 		List<Advisor> advisors = new ArrayList<>();
 
 		if (assistant.hasMemory()) {
-			ChatMemory chatMemory = llmClientRegistry.getChatMemory();
-			advisors.add(MessageChatMemoryAdvisor.builder(chatMemory).build());
+			SessionService sessionService = llmClientRegistry.getSessionService();
+
+			ChatModel summarizationModel = llmClientRegistry.buildSimpleModel(user, assistant.model());
+			ChatClient summarizationClient = ChatClient.builder(summarizationModel).build();
+
+			CompactionStrategy compactionStrategy = new NotifyingCompactionStrategy(
+					RecursiveSummarizationCompactionStrategy.builder(summarizationClient).maxEventsToKeep(4).build(),
+					compactionNotifier);
+
+			SessionMemoryAdvisor advisor = SessionMemoryAdvisor.builder(sessionService)
+					.compactionTrigger(
+							TokenCountTrigger.builder().tokenCountEstimator(new CharacterRatioTokenCountEstimator())
+									.threshold((int) (query.getContextSize() * 0.75)).build())
+					.compactionStrategy(compactionStrategy).build();
+			advisors.add(advisor);
 		}
 
 		/*

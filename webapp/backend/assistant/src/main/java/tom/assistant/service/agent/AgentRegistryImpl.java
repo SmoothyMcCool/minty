@@ -11,8 +11,12 @@ import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.ToolResponseMessage;
+import org.springframework.ai.session.EventFilter;
+import org.springframework.ai.session.SessionEvent;
+import org.springframework.ai.session.SessionService;
 import org.springframework.stereotype.Service;
 
 import tom.api.ConversationId;
@@ -156,10 +160,14 @@ public class AgentRegistryImpl implements AgentRegistry {
 		Assistant assistant = orchestrators.get(plannerName);
 		AssistantBuilder builder = assistant.toBuilder();
 
-		ChatMemory chatMemory = llmClientRegistry.getChatMemory();
-		List<Message> history = chatMemory.get(userQuery.getConversationId().getValue().toString());
-		String chatHistory = history.stream().map(m -> m.getMessageType() + ": " + m.getText())
-				.collect(Collectors.joining("\n"));
+		SessionService sessionService = llmClientRegistry.getSessionService();
+		String conversationKey = userQuery.getConversationId().getValue().toString();
+
+		List<Message> history = sessionService.findById(conversationKey) != null ? sessionService
+				.getEvents(conversationKey, EventFilter.active()).stream().map(SessionEvent::getMessage).toList()
+				: List.of();
+
+		String chatHistory = history.stream().map(this::renderMessage).collect(Collectors.joining("\n"));
 
 		String prompt = AgentPlannerPromptBuilder.buildPrompt(assistant.prompt(), staticAgents.values(),
 				dynamicAgents.values(), chatHistory, state);
@@ -167,6 +175,24 @@ public class AgentRegistryImpl implements AgentRegistry {
 
 		return baseQuery(AgentResponseType.Structured, builder.build(), userQuery.getConversationId(),
 				userQuery.getQuery());
+	}
+
+	private String renderMessage(Message message) {
+		if (message instanceof AssistantMessage assistantMessage && !assistantMessage.getToolCalls().isEmpty()) {
+			String toolCallText = assistantMessage.getToolCalls().stream()
+					.map(tc -> tc.name() + "(" + tc.arguments() + ")").collect(Collectors.joining(", "));
+
+			String text = assistantMessage.getText();
+			return (text == null || text.isBlank()) ? "ASSISTANT (tool call): " + toolCallText
+					: "ASSISTANT: " + text + " [tool call: " + toolCallText + "]";
+		}
+
+		if (message instanceof ToolResponseMessage toolResponseMessage) {
+			return toolResponseMessage.getResponses().stream().map(r -> "TOOL (" + r.name() + "): " + r.responseData())
+					.collect(Collectors.joining("\n"));
+		}
+
+		return message.getMessageType() + ": " + message.getText();
 	}
 
 	public boolean hasAgent(String key) {

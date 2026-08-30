@@ -18,6 +18,7 @@ import tom.api.ConversationId;
 import tom.api.ProjectId;
 import tom.api.model.conversation.ChatMessage;
 import tom.api.model.conversation.Conversation;
+import tom.api.model.conversation.MessageType;
 import tom.api.services.assistant.AssistantQueryService;
 import tom.api.services.assistant.LlmResult;
 import tom.controller.ResponseWrapper;
@@ -106,7 +107,7 @@ public class ConversationController {
 		List<ChatMessage> messages = conversationService.getChatMessages(user.getId(), conversationId);
 		LlmResult result = assistantQueryService.peekLlmResult(conversationId);
 		if (result != null) {
-			ChatMessage inFlightMessage = new ChatMessage(true, result.getQuery());
+			ChatMessage inFlightMessage = new ChatMessage(MessageType.USER, result.getQuery());
 			messages.addFirst(inFlightMessage);
 		}
 

@@ -1,57 +1,110 @@
-<!-- Container: Uses flexbox to push user messages to the right -->
-<div class="d-flex mb-3 w-100" [class.justify-content-end]="message.user" [class.justify-content-start]="!message.user">
+@if (message.type === 'REASONING' || message.type === 'TOOL') {
 
-	<!-- The Bubble -->
-	<div class="chat-bubble p-3 shadow-sm"
-		[class.user-bubble]="message.user"
-		[class.bot-bubble]="!message.user"
-		style="max-width: 85%; border-radius: 1.2rem;">
+	<!-- Reasoning / Tool entry: collapsible, visually distinct from a chat bubble -->
+	<div class="list-group-item small shadow-sm thinking-container p-3" [class.bg-light]="message.type === 'REASONING'"
+		[class.bg-white]="message.type === 'TOOL'" style="font-family: system-ui, -apple-system, sans-serif;
+				line-height: 1.5;
+				max-width: 100%;
+				border-radius: 0.5rem;">
 
-		<!-- Status/Loading Indicator (Only for Bot) -->
-		@if (responsePending && isFirst && !message.user) {
-			<div class="d-flex align-items-center gap-2 text-muted small mb-1">
-				<minty-spinner></minty-spinner>
-				<span class="fst-italic">
-					@if (queueDepth === 1) { Thinking... }
-					@else if (queueDepth === 2) { One request ahead... }
-					@else if (queueDepth !== undefined) { {{queueDepth - 1}} requests ahead... }
+		<div class="d-flex align-items-center justify-content-between" style="cursor: pointer; user-select: none;"
+			(click)="toggleEntry()">
+
+			@if (message.type === 'TOOL') {
+				<span class="fw-semibold text-primary">
+					<i class="bi bi-tools me-1"></i>
+					Tool Call: {{getToolCallHeader(message.message)}}
 				</span>
+			} @else {
+				<span class="fw-semibold text-secondary">
+					<i class="bi bi-lightbulb me-1"></i>
+					Thinking
+				</span>
+			}
+
+			@if (isEntryExpanded()) {
+				<i class="bi bi-chevron-up text-muted"></i>
+			} @else {
+				<i class="bi bi-chevron-down text-muted"></i>
+			}
+		</div>
+
+		@if (isEntryExpanded()) {
+			<div class="mt-1" style="white-space: pre-wrap;
+						overflow-wrap: break-word;
+						word-break: break-word;
+						max-width: 100%;" [class.text-dark]="message.type === 'TOOL'"
+				[class.text-secondary]="message.type === 'REASONING'">
+
+				@if (message.type === 'TOOL') {
+					{{getToolCallResult(message.message)}}
+				} @else {
+					{{message.message}}
+				}
 			</div>
 		}
+	</div>
 
-		<!-- Content: Markdown or Plain Text -->
-		<div class="message-content">
-			@if (useMarkdown && !message.user) {
-				<markdown clipboard mermaidClipboard [mermaid]="useMermaid" [data]="message.message"
-					[clipboardButtonTemplate]="clipboardTemplate"></markdown>
+} @else {
 
-				<!-- Typing Indicator (The "pulsing" dots) -->
-				@if (!responsePending && !responseComplete && !message.user) {
-					<div class="mt-2 opacity-50">
-						<minty-spinner></minty-spinner>
-					</div>
-				}
-			} @else {
-				<div class="message-text" style="white-space: pre-wrap; word-break: break-word;">
-					{{message.message}}
+	<!-- Container: Uses flexbox to push user messages to the right -->
+	<div class="d-flex w-100" [class.justify-content-end]="message.type === 'USER'"
+		[class.justify-content-start]="message.type !== 'USER'">
+
+		<!-- The Bubble -->
+		<div class="chat-bubble p-3 shadow-sm" [class.user-bubble]="message.type === 'USER'"
+			[class.bot-bubble]="message.type !== 'USER'" style="max-width: 85%; border-radius: 1.2rem;">
+
+			<!-- Status/Loading Indicator (Only for Bot) -->
+			@if (responsePending && isFirst && message.type === 'ASSISTANT') {
+				<div class="d-flex align-items-center gap-2 text-muted small mb-1">
+					<minty-spinner></minty-spinner>
+					<span class="fst-italic">
+						@if (queueDepth === 1) { Thinking... }
+						@else if (queueDepth === 2) { One request ahead... }
+						@else if (queueDepth !== undefined) { {{queueDepth - 1}} requests ahead... }
+					</span>
 				</div>
 			}
-		</div>
 
-		<!-- Small Timestamp or Role Indicator (Optional/Visual Polish) -->
-		<div class="mt-1 d-flex justify-content-end">
-			@if (message.user) {
-				<span class="badge rounded-pill bg-primary-subtle text-primary" style="font-size: 0.6rem; opacity: 0.7;">You</span>
-			} @else {
-				<span class="badge rounded-pill bg-light text-muted" style="font-size: 0.6rem; opacity: 0.7;">AI</span>
-			}
+			<!-- Content: Markdown or Plain Text -->
+			<div class="message-content">
+				@if (useMarkdown && message.type === 'ASSISTANT') {
+					<markdown clipboard mermaidClipboard [mermaid]="useMermaid" [data]="message.message"
+						[clipboardButtonTemplate]="clipboardTemplate"></markdown>
+
+					<!-- Typing Indicator (The "pulsing" dots) -->
+					@if (!responsePending && !responseComplete && isFirst) {
+						<div class="mt-2 opacity-50">
+							<minty-spinner></minty-spinner>
+						</div>
+					}
+				} @else {
+					<div class="message-text" style="white-space: pre-wrap; word-break: break-word;">
+						{{message.message}}
+					</div>
+				}
+			</div>
+
+			<!-- Small Timestamp or Role Indicator (Optional/Visual Polish) -->
+			<div class="mt-1 d-flex justify-content-end">
+				@if (message.type === 'USER') {
+					<span class="badge rounded-pill bg-primary-subtle text-primary"
+						style="font-size: 0.6rem; opacity: 0.7;">You</span>
+				} @else {
+					<span class="badge rounded-pill bg-light text-muted"
+						style="font-size: 0.6rem; opacity: 0.7;">AI</span>
+				}
+			</div>
 		</div>
 	</div>
-</div>
+
+}
 
 <!-- Copy Button Template -->
 <ng-template #clipboardTemplate>
-	<button class="btn btn-sm btn-light border-0 clipboard-button" #copyButton (click)="onCopyClick(copyButton)" style="padding: 2px 5px;">
+	<button class="btn btn-sm btn-light border-0 clipboard-button" #copyButton (click)="onCopyClick(copyButton)"
+		style="padding: 2px 5px;">
 		@if (!isCopied(copyButton)) {
 			<i class="bi bi-copy small text-muted"></i>
 		}

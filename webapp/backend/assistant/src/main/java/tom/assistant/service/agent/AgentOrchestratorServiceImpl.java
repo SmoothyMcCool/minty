@@ -6,12 +6,14 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.MessageType;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.session.CreateSessionRequest;
+import org.springframework.ai.session.SessionEvent;
+import org.springframework.ai.session.SessionService;
 import org.springframework.stereotype.Service;
 
 import tom.api.MintyObjectMapper;
@@ -45,13 +47,13 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 	private AssistantQueryService assistantQueryService;
 	private final AgentRegistryImpl agentRegistry;
 	private final AgentPlanner planner;
-	private final ChatMemory chatMemory;
+	private final SessionService sessionService;
 
 	public AgentOrchestratorServiceImpl(AgentPlanner planner, AgentRegistryImpl agentRegistry,
 			LlmClientRegistry llmClientRegistry) {
 		this.planner = planner;
 		this.agentRegistry = agentRegistry;
-		this.chatMemory = llmClientRegistry.getChatMemory();
+		this.sessionService = llmClientRegistry.getSessionService();
 	}
 
 	public void setAssistantQueryService(AssistantQueryService assistantQueryService) {
@@ -64,7 +66,7 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 
 		String conversationId = query.getConversationId().getValue().toString();
 
-		planState = recoverPlan(sr, conversationId, query);
+		planState = recoverPlan(sr, userId, conversationId, query);
 
 		if (planState == null) {
 			planState = createPlan(sr, userId, query);
@@ -72,7 +74,7 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 		}
 
 		UserMessage userMessage = UserMessage.builder().text(query.getQuery()).build();
-		chatMemory.add(conversationId, userMessage);
+		sessionService.appendMessage(conversationId, userMessage);
 
 		StringBuilder assistantMessageBuilder = new StringBuilder();
 
@@ -104,24 +106,25 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 
 		AssistantMessage assistantMessage = AssistantMessage.builder().content(assistantMessageBuilder.toString())
 				.build();
-		chatMemory.add(conversationId, assistantMessage);
+		sessionService.appendMessage(conversationId, assistantMessage);
 
 		if (!planState.isDone() && !planState.isErrored()) { // isDone checks if the plan is complete or the current
 																// step errored.
 			try {
 				SystemMessage planCache = SystemMessage.builder()
 						.text(PlanStateMarker + Mapper.writeValueAsString(planState)).build();
-				chatMemory.add(conversationId, planCache);
+				sessionService.appendMessage(conversationId, planCache);
 			} catch (JacksonException e) {
 				logger.error("Failed to persist plan state.", e);
 			}
 		}
 	}
 
-	private PlanState recoverPlan(StreamResult sr, String conversationId, AssistantQuery query) {
+	private PlanState recoverPlan(StreamResult sr, UserId userId, String conversationId, AssistantQuery query) {
 		try {
 			PlanState planState = null;
-			List<Message> messages = chatMemory.get(conversationId);
+			List<Message> messages = sessionService.getEvents(conversationId).stream().map(SessionEvent::getMessage)
+					.toList();
 
 			if (messages != null && !messages.isEmpty()) {
 
@@ -165,8 +168,10 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 					// then plan or not it was an attempt at storing a plan, so lets remove it.
 					messages = new ArrayList<>(messages); // Clone it to guard against an API giving us a read-only list
 					messages.removeLast();
-					chatMemory.clear(conversationId);
-					chatMemory.add(conversationId, messages);
+					sessionService.delete(conversationId);
+					sessionService.create(CreateSessionRequest.builder().id(conversationId)
+							.userId(userId.value().toString()).build());
+					messages.forEach(m -> sessionService.appendMessage(conversationId, m));
 				}
 			}
 

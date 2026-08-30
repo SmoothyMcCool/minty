@@ -19,9 +19,9 @@
 	<properties>
 
 		<output.directory>d:/projects/Minty/</output.directory>
-		<tomcat.base>d:/projects/tomcat</tomcat.base>
+		<tomcat.base>d:/projects/Tomcat/11.0.25</tomcat.base>
 
-		<java.version>21</java.version>
+		<java.version>25</java.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
 		<maven.compiler.release>${java.version}</maven.compiler.release>
@@ -62,6 +62,7 @@
 		<spring.security.version>7.0.5</spring.security.version>
 		<spring.session.version>4.0.3</spring.session.version>
 		<spring.ai.version>2.0.1</spring.ai.version>
+		<spring.ai.session.version>0.7.0</spring.ai.session.version>
 		<tika.version>3.3.0</tika.version>
 
 		<junit.jupiter.version>5.14.2</junit.jupiter.version>
@@ -91,6 +92,14 @@
 				<groupId>org.springframework.ai</groupId>
 				<artifactId>spring-ai-bom</artifactId>
 				<version>${spring.ai.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.springaicommunity</groupId>
+				<artifactId>spring-ai-session-bom</artifactId>
+				<version>${spring.ai.session.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>

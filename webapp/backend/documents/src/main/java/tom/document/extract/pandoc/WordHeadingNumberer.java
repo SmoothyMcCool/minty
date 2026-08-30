@@ -251,7 +251,7 @@ public final class WordHeadingNumberer {
 				continue;
 			}
 
-			int[] counter = counters.computeIfAbsent(numIdStr, k -> {
+			int[] counter = counters.computeIfAbsent(numIdStr, _ -> {
 				int[] c = new int[9];
 				Arrays.fill(c, -1);
 				return c;
