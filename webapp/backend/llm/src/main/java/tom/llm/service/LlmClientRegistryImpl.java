@@ -10,13 +10,13 @@ import javax.sql.DataSource;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
-import org.springframework.ai.chat.memory.ChatMemory;
-import org.springframework.ai.chat.memory.ChatMemoryRepository;
-import org.springframework.ai.chat.memory.MessageWindowChatMemory;
-import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryRepository;
-import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryRepositoryDialect;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.embedding.EmbeddingModel;
+import org.springframework.ai.session.DefaultSessionService;
+import org.springframework.ai.session.SessionRepository;
+import org.springframework.ai.session.SessionService;
+import org.springframework.ai.session.jdbc.JdbcSessionRepository;
+import org.springframework.ai.session.jdbc.JdbcSessionRepositoryDialect;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -33,26 +33,22 @@ public class LlmClientRegistryImpl implements LlmClientRegistry {
 	private final Map<String, String> modelToEndpoint;
 	private final Map<String, LlmEndpointService> endpointServices;
 	private final MintyConfigurationImpl properties;
-	private final ChatMemoryRepository chatMemoryRepository;
-	private final ChatMemory chatMemory;
+	private final SessionRepository sessionRepository;
+	private final SessionService sessionService;
 
 	public LlmClientRegistryImpl(MintyConfigurationImpl properties, List<LlmProviderRegistrar> registrars,
 			JdbcTemplate vectorJdbcTemplate, DataSource dataSource) {
 		modelToEndpoint = new HashMap<>();
 		endpointServices = new HashMap<>();
 		this.properties = properties;
-
 		for (LlmProviderRegistrar registrar : registrars) {
 			registrar.registerEndpoints(endpointServices, modelToEndpoint);
 		}
 
-		chatMemoryRepository = JdbcChatMemoryRepository.builder().jdbcTemplate(vectorJdbcTemplate)
-				.dialect(JdbcChatMemoryRepositoryDialect.from(dataSource)).build();
-
-		int chatMemoryDepth = properties.getConfig().llm().chatMemoryDepth();
-		chatMemory = MessageWindowChatMemory.builder().maxMessages(chatMemoryDepth)
-				.chatMemoryRepository(chatMemoryRepository).build();
-
+		sessionRepository = JdbcSessionRepository.builder().jdbcTemplate(vectorJdbcTemplate)
+				.dialect(JdbcSessionRepositoryDialect.from(dataSource)).build();
+		sessionService = DefaultSessionService.builder().sessionRepository(sessionRepository)
+				.defaultTimeToLive(properties.getConfig().llm().chatMemoryStorageTime()).build();
 	}
 
 	@Override
@@ -67,13 +63,8 @@ public class LlmClientRegistryImpl implements LlmClientRegistry {
 	}
 
 	@Override
-	public ChatMemoryRepository getChatMemoryRepository() {
-		return chatMemoryRepository;
-	}
-
-	@Override
-	public ChatMemory getChatMemory() {
-		return chatMemory;
+	public SessionService getSessionService() {
+		return sessionService;
 	}
 
 	@Override
@@ -104,5 +95,4 @@ public class LlmClientRegistryImpl implements LlmClientRegistry {
 		LlmEndpointService endpointService = endpointServices.get(embeddingConfig.endpoint());
 		return endpointService.buildEmbeddingModel(user, embeddingConfig.model());
 	}
-
 }

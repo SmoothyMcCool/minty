@@ -253,7 +253,7 @@ public class TaskRunner {
 
 		CompletableFuture<Void> allDone = FutureUtils.allOfFailFast(activeTasks, logger);
 
-		allDone.whenComplete((v, ex) -> {
+		allDone.whenComplete((_, _) -> {
 			done = true;
 			logger.info("Task " + request.getStepName() + " signalling to all outputs that task is complete.");
 			outputs.forEach(output -> output.complete());

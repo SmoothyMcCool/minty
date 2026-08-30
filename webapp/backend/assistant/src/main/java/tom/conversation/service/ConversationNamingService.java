@@ -1,12 +1,17 @@
 package tom.conversation.service;
 
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.MessageType;
+import org.springframework.ai.session.EventFilter;
+import org.springframework.ai.session.SessionEvent;
+import org.springframework.ai.session.SessionService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -54,7 +59,15 @@ public class ConversationNamingService {
 				.getAssociatedAssistantId() != AssistantManagementService.DefaultAssistantId).toList();
 
 		conversations.forEach(conversation -> {
-			List<Message> messages = llmClientRegistry.getChatMemory().get(conversation.getId().value().toString());
+			SessionService sessionService = llmClientRegistry.getSessionService();
+			String conversationKey = conversation.getId().value().toString();
+
+			EventFilter filter = EventFilter.builder().excludeArchived(true)
+					.messageTypes(Set.of(MessageType.USER, MessageType.ASSISTANT)).build();
+
+			List<Message> messages = sessionService.findById(conversationKey) != null
+					? sessionService.getEvents(conversationKey, filter).stream().map(SessionEvent::getMessage).toList()
+					: List.of();
 
 			if (messages.size() > 1 || (messages.size() == 1 && messages.get(0).getText().length() > 80)) {
 				logger.info("Starting on conversation ID " + conversation.getId().value().toString());

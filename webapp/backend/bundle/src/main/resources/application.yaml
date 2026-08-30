@@ -97,7 +97,7 @@ llm:
     - gemma4:26b
     - gemma4:26b-a4b-it-qat
     - gemma4:26b-a4b-it-qat-no-temp
-  chatMemoryDepth: 100
+  chatMemoryStorageTime: PT240000H # 10,000 days
   # The number of documents to retrieve when doing RAG.
   defaultTopK: 5
   apiConnectTimeout: PT60S

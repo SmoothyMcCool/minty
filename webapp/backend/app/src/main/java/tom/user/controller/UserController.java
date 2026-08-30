@@ -66,7 +66,7 @@ public class UserController {
 		try {
 			user = userService.decrypt(encryptedUser);
 			user.setPassword("");
-			user.getDefaults().forEach((k, v) -> {
+			user.getDefaults().forEach((k, _) -> {
 				user.getDefaults().put(k, "Value hidden");
 			});
 		} catch (Exception e) {
@@ -108,7 +108,7 @@ public class UserController {
 		try {
 			User savedUser = userService.decrypt(userRepository.save(userService.encrypt(user)));
 			savedUser.setPassword("");
-			savedUser.getDefaults().forEach((k, v) -> {
+			savedUser.getDefaults().forEach((k, _) -> {
 				savedUser.getDefaults().put(k, "Value hidden");
 			});
 			userService.invalidateUserList();
@@ -188,7 +188,7 @@ public class UserController {
 	public ResponseEntity<ResponseWrapper<Map<String, String>>> systemDefaults(
 			@AuthenticationPrincipal UserDetailsUser userDetails) {
 		Map<String, String> systemProperties = new HashMap<>();
-		properties.getSystemDefaults().forEach((k, v) -> {
+		properties.getSystemDefaults().forEach((k, _) -> {
 			systemProperties.put(k, "Value hidden");
 		});
 		ResponseWrapper<Map<String, String>> response = ResponseWrapper.SuccessResponse(systemProperties);

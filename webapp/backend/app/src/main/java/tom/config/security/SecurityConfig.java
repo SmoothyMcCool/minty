@@ -72,7 +72,7 @@ public class SecurityConfig {
 				// "/api/login").permitAll().anyRequest().authenticated())
 				.requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()))
 
-				.httpBasic(httpBasic -> {
+				.httpBasic(_ -> {
 				})
 
 				.logout(logout -> logout.logoutUrl("/api/logout").logoutSuccessUrl("/login"));

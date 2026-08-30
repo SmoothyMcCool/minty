@@ -51,10 +51,6 @@ public class MintyConfigurationImpl implements MintyConfiguration {
 		Properties rawProps = yamlFactory.getObject();
 		Properties resolvedProps = new Properties();
 
-		if (rawProps == null) {
-			throw new NullPointerException("Failed to read raw properties from application.yaml");
-		}
-
 		for (String name : rawProps.stringPropertyNames()) {
 			String raw = rawProps.getProperty(name);
 			String resolved = placeholderHelper.replacePlaceholders(raw, rawProps::getProperty);
