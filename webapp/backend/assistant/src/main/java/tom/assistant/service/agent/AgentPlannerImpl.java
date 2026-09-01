@@ -10,6 +10,7 @@ import tom.api.MintyObjectMapper;
 import tom.api.UserId;
 import tom.api.model.assistant.AssistantQuery;
 import tom.api.services.assistant.AssistantQueryService;
+import tom.api.services.assistant.StreamResult;
 import tom.assistant.service.agent.model.AgentQuery;
 import tom.assistant.service.agent.model.AgentStep;
 import tom.assistant.service.agent.model.PlanState;
@@ -38,13 +39,14 @@ public class AgentPlannerImpl implements AgentPlanner {
 	}
 
 	@Override
-	public List<AgentStep> plan(UserId userId, AssistantQuery query, PlanState state) throws InterruptedException {
+	public List<AgentStep> plan(UserId userId, AssistantQuery query, PlanState state, StreamResult sr)
+			throws InterruptedException {
 		int retryCount = 0;
 		String json = null;
 		while (retryCount < 3) {
 			AgentQuery plannerQuery = buildPlannerQuery(query, state);
 			while (json == null) {
-				json = assistantQueryService.askDirect(userId, plannerQuery.query());
+				json = assistantQueryService.askStreamingDirect(userId, plannerQuery.query(), sr);
 			}
 
 			try {

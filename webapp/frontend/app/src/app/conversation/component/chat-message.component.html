@@ -1,8 +1,8 @@
-@if (message.type === 'REASONING' || message.type === 'TOOL') {
+@if (message.type === 'REASONING' || message.type === 'TOOL' || message.type === 'SUBAGENT') {
 
-	<!-- Reasoning / Tool entry: collapsible, visually distinct from a chat bubble -->
+	<!-- Reasoning / Tool / Subagent entry: collapsible, visually distinct from a chat bubble -->
 	<div class="list-group-item small shadow-sm thinking-container p-3" [class.bg-light]="message.type === 'REASONING'"
-		[class.bg-white]="message.type === 'TOOL'" style="font-family: system-ui, -apple-system, sans-serif;
+		[class.bg-white]="message.type === 'TOOL' || message.type === 'SUBAGENT'" style="font-family: system-ui, -apple-system, sans-serif;
 				line-height: 1.5;
 				max-width: 100%;
 				border-radius: 0.5rem;">
@@ -14,6 +14,11 @@
 				<span class="fw-semibold text-primary">
 					<i class="bi bi-tools me-1"></i>
 					Tool Call: {{getToolCallHeader(message.message)}}
+				</span>
+			} @else if (message.type === 'SUBAGENT') {
+				<span class="fw-semibold text-success">
+					<i class="bi bi-diagram-3 me-1"></i>
+					Subagent: {{message.name}}
 				</span>
 			} @else {
 				<span class="fw-semibold text-secondary">
@@ -33,7 +38,7 @@
 			<div class="mt-1" style="white-space: pre-wrap;
 						overflow-wrap: break-word;
 						word-break: break-word;
-						max-width: 100%;" [class.text-dark]="message.type === 'TOOL'"
+						max-width: 100%;" [class.text-dark]="message.type === 'TOOL' || message.type === 'SUBAGENT'"
 				[class.text-secondary]="message.type === 'REASONING'">
 
 				@if (message.type === 'TOOL') {

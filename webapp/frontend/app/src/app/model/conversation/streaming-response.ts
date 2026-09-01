@@ -17,6 +17,7 @@ export interface StreamingResponse {
 	status: LlmStatus,
 	metric: LlmMetric,
 	sources: string[],
+	name: string, // Used only by agents. If blank, this is a normal assistant response workflow.
 	type: ChunkType,
 	content: string
 }

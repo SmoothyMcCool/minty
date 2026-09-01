@@ -7,20 +7,24 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-
 public final class StreamResult implements LlmResult {
 
-	private final BlockingQueue<ImmutablePair<String, ChunkType>> chunks = new LinkedBlockingQueue<>();
+	public static record Chunk(ChunkType type, String name, String chunk) {
+	}
+
+	private final BlockingQueue<Chunk> chunks = new LinkedBlockingQueue<>();
 	private AtomicReference<LlmMetric> metric = new AtomicReference<>();
 	private AtomicReference<List<String>> sources = new AtomicReference<>();
 	private final AtomicBoolean complete = new AtomicBoolean(false);
 	private AtomicReference<LlmResultState> resultState = new AtomicReference<>();
 	private final String query;
+	private String name; // This is only used by agents to identify the name of the running sub-agent. It
+							// is ignored for normal assistants.
 
 	public StreamResult(String query) {
 		resultState.set(LlmResultState.QUEUED);
 		this.query = query;
+		name = "";
 	}
 
 	@Override
@@ -29,12 +33,12 @@ public final class StreamResult implements LlmResult {
 	}
 
 	public void addChunk(String chunk, ChunkType type) {
-		chunks.offer(ImmutablePair.of(chunk, type));
+		chunks.offer(new Chunk(type, name, chunk));
 	}
 
-	public ImmutablePair<String, ChunkType> takeChunk() throws InterruptedException {
+	public Chunk takeChunk() throws InterruptedException {
 		while (true) {
-			ImmutablePair<String, ChunkType> chunk = chunks.poll(100, TimeUnit.MILLISECONDS);
+			Chunk chunk = chunks.poll(100, TimeUnit.MILLISECONDS);
 
 			if (chunk != null) {
 				return chunk;
@@ -77,6 +81,14 @@ public final class StreamResult implements LlmResult {
 
 	public LlmResultState getState() {
 		return resultState.get();
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getName() {
+		return name;
 	}
 
 }

@@ -196,15 +196,21 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 		});
 	}
 
-	appendMessage(type: MessageType, content: string) {
+	appendMessage(type: MessageType, name: string, content: string) {
 		const last = this.chatHistory[0];
 
-		if (last.type != type && last.message.length > 0) {
-			this.chatHistory.unshift(this.newMessage(type, ''));
+		if (name && type === 'ASSISTANT') {
+			type = 'SUBAGENT';
+		}
+
+		if ((last.type != type || last.name != name) && last.message.length > 0) {
+			const msg = this.newMessage(type, '');
+			msg.name = name;
+			this.chatHistory.unshift(msg);
 		}
 
 		const response = this.chatHistory[0].message + content;
-		this.chatHistory[0] = { type: type, message: response };
+		this.chatHistory[0] = { type: type, name: name, message: response };
 	}
 
 	stream(streamId: string) {
@@ -254,15 +260,15 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 							this.statusMessages = [...this.statusMessages];
 							break;	
 						case 'THINKING':
-							this.appendMessage('REASONING', responseChunk.content);
+							this.appendMessage('REASONING', responseChunk.name, responseChunk.content);
 							responseReceived = true;
 							break;
 						case 'TOOL':
-							this.appendMessage('TOOL', responseChunk.content);
+							this.appendMessage('TOOL', responseChunk.name, responseChunk.content);
 							responseReceived = true;
 							break;
 						case 'RESPONSE':
-							this.appendMessage('ASSISTANT', responseChunk.content);
+							this.appendMessage('ASSISTANT', responseChunk.name, responseChunk.content);
 							responseReceived = true;
 							break;
 						}
@@ -274,13 +280,13 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 				}
 			},
 			error: () => {
-				this.chatHistory[0] = { type: 'ASSISTANT', message: '\n\n<strong>Oh no!</strong> An error occurred while streaming the response!\n\n' };
+				this.chatHistory[0] = { type: 'ASSISTANT', name: '', message: '\n\n<strong>Oh no!</strong> An error occurred while streaming the response!\n\n' };
 			},
 			complete: () => {
 				this.waitingForResponse = false;
 				this.responseComplete = true;
 				if (!responseReceived) {
-					this.chatHistory[0] = { type: 'ASSISTANT', message: '<em>No response from server. Your request likely failed.</em>' };
+					this.chatHistory[0] = { type: 'ASSISTANT', name: '', message: '<em>No response from server. Your request likely failed.</em>' };
 				}
 			}
 		});
@@ -338,7 +344,7 @@ export class ConversationViewerComponent implements ControlValueAccessor, OnDest
 	}
 
 	private newMessage(type: MessageType, message: string): ChatMessage {
-		return { id: this.nextId++, type, message };
+		return { id: this.nextId++, name: '', type, message };
 	}
 
 	toggleSources(): void {

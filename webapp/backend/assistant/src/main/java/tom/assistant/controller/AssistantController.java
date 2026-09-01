@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.core.io.ByteArrayResource;
@@ -44,6 +43,7 @@ import tom.api.services.assistant.LlmResult;
 import tom.api.services.assistant.LlmResultState;
 import tom.api.services.assistant.QueueFullException;
 import tom.api.services.assistant.StreamResult;
+import tom.api.services.assistant.StreamResult.Chunk;
 import tom.api.services.exception.NotOwnedException;
 import tom.assistant.service.management.AssistantManagementServiceInternal;
 import tom.config.model.ChatModelConfig;
@@ -311,7 +311,7 @@ public class AssistantController {
 							: RequestProcessingState.NOT_READY;
 
 					writeResponse(outputStream,
-							new StreamingResponse(new LlmStatus(state, queuePosition), null, null, null, null));
+							new StreamingResponse(new LlmStatus(state, queuePosition), null, null, null, null, null));
 					outputStream.flush();
 					httpResponse.flushBuffer();
 
@@ -327,7 +327,7 @@ public class AssistantController {
 				// Stream actual result
 				try {
 					while (true) {
-						ImmutablePair<String, ChunkType> chunk;
+						Chunk chunk;
 						try {
 							chunk = streamResult.get().takeChunk();
 						} catch (InterruptedException e) {
@@ -340,18 +340,19 @@ public class AssistantController {
 							writeResponse(outputStream,
 									new StreamingResponse(new LlmStatus(RequestProcessingState.COMPLETE, 0),
 											streamResult.get().getUsage(), streamResult.get().getSources(),
-											ChunkType.STATUS, ""));
+											streamResult.get().getName(), ChunkType.STATUS, ""));
 							outputStream.flush();
 							httpResponse.flushBuffer();
 							assistantQueryService.getResultAndRemoveIfComplete(streamId);
 							break;
 						}
 
-						String output = chunk.getLeft();
-						ChunkType chunkType = chunk.getRight();
+						String output = chunk.chunk();
+						ChunkType chunkType = chunk.type();
+						String name = chunk.name();
 
 						writeResponse(outputStream, new StreamingResponse(
-								new LlmStatus(RequestProcessingState.RUNNING, 0), null, null, chunkType, output));
+								new LlmStatus(RequestProcessingState.RUNNING, 0), null, null, name, chunkType, output));
 						outputStream.flush();
 						httpResponse.flushBuffer();
 					}

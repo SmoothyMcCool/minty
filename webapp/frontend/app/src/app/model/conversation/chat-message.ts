@@ -2,7 +2,8 @@ export const MessageTypes = [
 	'USER',
 	'ASSISTANT',
 	'REASONING',
-	'TOOL'
+	'TOOL',
+	'SUBAGENT'
 ] as const;
 
 export type MessageType =
@@ -10,6 +11,7 @@ export type MessageType =
 
 export interface ChatMessage {
 	id?: number;
+	name: string;
 	type: MessageType;
 	message: string;
 };
