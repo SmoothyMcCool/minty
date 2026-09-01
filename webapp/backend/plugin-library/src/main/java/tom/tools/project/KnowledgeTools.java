@@ -21,10 +21,7 @@ import tom.api.model.document.DocumentSearchResult;
 import tom.api.model.document.DocumentSection;
 import tom.api.model.project.ContextLine;
 import tom.api.model.project.FileType;
-<<<<<<< HEAD
-=======
 import tom.api.model.project.KnowledgeGrepResult;
->>>>>>> f3a09658f25295affdd4134f55633044ff186fcb
 import tom.api.model.project.KnowledgeItemInfo;
 import tom.api.model.project.KnowledgeItemType;
 import tom.api.model.project.KnowledgeSearchResult;

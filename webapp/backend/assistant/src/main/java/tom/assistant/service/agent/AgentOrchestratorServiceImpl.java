@@ -73,6 +73,12 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 			planState.start();
 		}
 
+		if (sessionService.findById(conversationId) == null) {
+			CreateSessionRequest request = CreateSessionRequest.builder().id(conversationId)
+					.userId(userId.value().toString()).build();
+			sessionService.create(request);
+		}
+
 		UserMessage userMessage = UserMessage.builder().text(query.getQuery()).build();
 		sessionService.appendMessage(conversationId, userMessage);
 
@@ -191,7 +197,7 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 		List<AgentStep> steps = null;
 
 		try {
-			steps = planner.plan(userId, query);
+			steps = planner.plan(userId, query, sr);
 		} catch (Exception e) {
 			logger.error("Planner failed to create a plan: " + e.toString());
 		}
@@ -247,7 +253,13 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 
 	private StepResult runAction(UserId userId, AssistantQuery query, AgentStep step, PlanState state, StreamResult sr)
 			throws InterruptedException {
-		AgentQuery agentQuery = agentRegistry.getAgent(step.getWorker(), query, state);
+
+		AgentQuery agentQuery = null;
+		try {
+			agentQuery = agentRegistry.getAgent(step.getWorker(), query, state);
+		} catch (Exception e) {
+			return StepResult.error(e.getMessage());
+		}
 
 		String raw = null;
 
@@ -256,11 +268,11 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 
 		while (raw == null) {
 			if (step.getVisibility() == AgentResponseVisibility.USER) {
-				raw = assistantQueryService.askStreamingDirect(userId, agentQuery.query(), sr);
-				sr.addChunk("<br><br>", ChunkType.RESPONSE);
+				sr.setName("");
 			} else {
-				raw = assistantQueryService.askDirect(userId, agentQuery.query());
+				sr.setName(step.getName());
 			}
+			raw = assistantQueryService.askStreamingDirect(userId, agentQuery.query(), sr);
 		}
 
 		LlmParseResult parsed = LlmResponse.parse(raw);
@@ -290,7 +302,7 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 	private StepResult runReplan(UserId userId, AssistantQuery query, AgentStep step, PlanState state, StreamResult sr)
 			throws InterruptedException {
 		// Re-run planner with current context
-		List<AgentStep> newSteps = planner.plan(userId, query, isPlanStateValid(state, sr) ? state : null);
+		List<AgentStep> newSteps = planner.plan(userId, query, isPlanStateValid(state, sr) ? state : null, sr);
 
 		if (newSteps == null || newSteps.isEmpty()) {
 			return StepResult.error("Replanning produced empty plan");
@@ -335,11 +347,7 @@ public class AgentOrchestratorServiceImpl implements AgentOrchestratorService {
 		case SUCCESS -> {
 			stepState.setResponse(result.getResponse());
 			stepState.setStatus(LlmStatus.SUCCESS);
-			if (state.currentStep().left().getVisibility() == AgentResponseVisibility.INTERNAL) {
-				sr.addChunk(
-						"[" + state.currentStep().left().getName() + "]" + result.getResponse().toString() + "<br><br>",
-						ChunkType.INTERNAL);
-			} else {
+			if (state.currentStep().left().getVisibility() == AgentResponseVisibility.USER) {
 				// User-facing message. Add it to chat history.
 				assistantMessageBuilder.append("\n\n").append(result.getResponse().getMessage());
 			}
