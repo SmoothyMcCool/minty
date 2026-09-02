@@ -30,14 +30,14 @@ export class ProjectNodeComponent implements OnChanges {
 	filteredChildren: ProjectNode[] = [];
 	fileName: string = '';
 	hasActiveFilter: boolean = false;
-	displayExpanded: boolean = true;
+	displayExpanded: boolean = false;
 
 	editNodeInfoVisible = false;
 	editName: string | undefined = undefined;
 	editNodeType: ProjectNodeType = 'File';
 	editFileType: ProjectFileType = 'text';
 	editParent: string | undefined = undefined;
-	isExpanded = true;
+	isExpanded = false;
 
 	public constructor(private alertService: AlertService) { }
 
@@ -85,6 +85,7 @@ export class ProjectNodeComponent implements OnChanges {
 		this.editNodeType = this.node.type;
 		this.editParent = this.getParentPath(this.node.path);
 		this.editNodeInfoVisible = true;
+		this.nodeSelected.emit(this.node);
 	}
 
 	onConfirmNodeInfo() {
