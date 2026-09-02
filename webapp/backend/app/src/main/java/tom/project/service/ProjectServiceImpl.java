@@ -161,6 +161,12 @@ public class ProjectServiceImpl implements ProjectService {
 				.orElse(null);
 
 		if (existing == null) {
+			// Ensure all parent folders exist before attempting to create the file.
+			// If path is /a/b/c/file.txt, ensure /a/b/c exists.
+			int lastSlash = path.lastIndexOf("/");
+			if (lastSlash > 0) {
+				ensureFolderPath(userId, projectId, path.substring(0, lastSlash));
+			}
 
 			ProjectNodeEntity parent = getParentNode(userId, projectId, path);
 
@@ -205,6 +211,12 @@ public class ProjectServiceImpl implements ProjectService {
 	public NodeInfo createFolder(UserId userId, ProjectId projectId, String path) {
 		if (nodeRepository.findByProjectIdAndPathAndOwnerId(projectId.getValue(), path, userId).isPresent()) {
 			throw new IllegalStateException("Path already exists.");
+		}
+
+		// Ensure all parent folders exist. If path is /a/b/c, ensure /a and /a/b exist.
+		int lastSlash = path.lastIndexOf("/");
+		if (lastSlash > 0) {
+			ensureFolderPath(userId, projectId, path.substring(0, lastSlash));
 		}
 
 		ProjectNodeEntity parent = getParentNode(userId, projectId, path);
